@@ -1,20 +1,20 @@
 import os
 import shutil
 
-directory = 'mini-GCD/'
-modified_directory = directory[:-1] + '-modified/'
+directory = 'GCD'
+modified_directory = directory + '-modified/'
 
 # Load the data from train and test folders into a common class dictionary
 def load_data(only_include_classes=None):
     data = {}
     for folder in ['train', 'test']:
-        for class_name in os.listdir(directory + folder):
+        for class_name in os.listdir(directory + '/' + folder):
             if only_include_classes and class_name not in only_include_classes:
                 continue
             if class_name not in data:
                 data[class_name] = []
-            for file in os.listdir(directory + folder + '/' + class_name):
-                data[class_name].append(directory + folder + '/' + class_name + '/' + file)
+            for file in os.listdir(directory + '/' + folder + '/' + class_name):
+                data[class_name].append(directory + '/' + folder + '/' + class_name + '/' + file)
 
     return data
 
@@ -53,7 +53,8 @@ mini_dataset_classes = ['1_cumulus', '4_clearsky', '6_cumulonimbus']
 data = load_data(only_include_classes=mini_dataset_classes)
 
 # Split the data
-train_data, test_data, val_data = split_data(data, limit_ratio=0.1)
+train_data, test_data, val_data = split_data(data, limit_ratio=0.4)
+# train_data, test_data, val_data = split_data(data)
 
 # Delete the existing modified directory
 delete_directory(modified_directory)
