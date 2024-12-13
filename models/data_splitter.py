@@ -2,6 +2,7 @@ import os
 import shutil
 
 directory = 'GCD'
+# directory = 'mini-GCD'
 modified_directory = directory + '-modified/'
 
 # Load the data from train and test folders into a common class dictionary
@@ -48,12 +49,15 @@ def save_data(data: dict[str, list[str]], folder: str):
             shutil.copy(file, modified_directory + folder + '/' + class_name + '/')
 
 mini_dataset_classes = ['1_cumulus', '4_clearsky', '6_cumulonimbus']
+# mini_dataset_classes = ['1_cumulus', '4_clearsky']
+# mini_dataset_classes = ['3_cirrus', '4_clearsky', '6_cumulonimbus']
 
 # Load the data
 data = load_data(only_include_classes=mini_dataset_classes)
+# data = load_data()
 
 # Split the data
-train_data, test_data, val_data = split_data(data, limit_ratio=0.4)
+train_data, test_data, val_data = split_data(data, limit_ratio=0.1)
 # train_data, test_data, val_data = split_data(data)
 
 # Delete the existing modified directory
