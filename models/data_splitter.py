@@ -1,8 +1,8 @@
 import os
 import shutil
 
-directory = 'GCD'
-# directory = 'mini-GCD'
+directory = 'datasets/GCD'
+# directory = 'datasets/mini-GCD'
 modified_directory = directory + '-modified/'
 
 # Load the data from train and test folders into a common class dictionary
