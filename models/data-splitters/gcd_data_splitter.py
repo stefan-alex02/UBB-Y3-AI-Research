@@ -1,9 +1,9 @@
 import os
 import shutil
 
-directory = '../datasets/GCD'
-# directory = '../datasets/mini-GCD'
-modified_directory = directory + '-modified/'
+# directory = '../datasets/GCD'
+directory = '../datasets/mini-GCD'
+modified_directory = directory + '-split/'
 
 # Load the data from train and test folders into a common class dictionary
 def load_data(only_include_classes=None):
@@ -47,6 +47,9 @@ def save_data(data: dict[str, list[str]], folder: str):
         os.makedirs(modified_directory + folder + '/' + class_name, exist_ok=True)
         for file in files:
             shutil.copy(file, modified_directory + folder + '/' + class_name + '/')
+
+# Go to the directory the script is in
+os.chdir(os.path.dirname(os.path.realpath(__file__)))
 
 # mini_dataset_classes = ['1_cumulus', '4_clearsky', '6_cumulonimbus']
 # mini_dataset_classes = ['1_cumulus', '4_clearsky']
