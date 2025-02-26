@@ -1,0 +1,13 @@
+                 precision    recall  f1-score   support
+
+      1_cumulus       0.94      1.00      0.97        15
+  2_altocumulus       1.00      1.00      1.00        15
+       3_cirrus       1.00      0.84      0.91        19
+     4_clearsky       1.00      1.00      1.00        37
+5_stratocumulus       0.82      0.92      0.87        36
+ 6_cumulonimbus       0.95      0.90      0.92        58
+        7_mixed       0.80      0.89      0.84         9
+
+       accuracy                           0.93       189
+      macro avg       0.93      0.93      0.93       189
+   weighted avg       0.94      0.93      0.93       189
