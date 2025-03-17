@@ -1,8 +1,10 @@
 import os
 import shutil
 
-# directory = '../datasets/GCD'
-directory = '../datasets/mini-GCD'
+from models.scripts.utils import delete_directory_recursively
+
+# directory = '../../datasets/GCD'
+directory = '../../datasets/mini-GCD'
 modified_directory = directory + '-split/'
 
 # Load the data from train and test folders into a common class dictionary
@@ -36,10 +38,6 @@ def split_data(data, train_size=0.8, test_size=0.1, limit_ratio=None):
 
     return train_data, test_data, val_data
 
-def delete_directory(directory):
-    if os.path.exists(directory):
-        shutil.rmtree(directory)
-
 # Save the data into train, test and validation folders
 def save_data(data: dict[str, list[str]], folder: str):
     os.makedirs(modified_directory + folder, exist_ok=True)
@@ -60,11 +58,11 @@ os.chdir(os.path.dirname(os.path.realpath(__file__)))
 data = load_data()
 
 # Split the data
-train_data, test_data, val_data = split_data(data, limit_ratio=0.1)
-# train_data, test_data, val_data = split_data(data)
+# train_data, test_data, val_data = split_data(data, limit_ratio=0.1)
+train_data, test_data, val_data = split_data(data)
 
 # Delete the existing modified directory
-delete_directory(modified_directory)
+delete_directory_recursively(modified_directory)
 
 # Save the data
 os.makedirs(modified_directory, exist_ok=True)

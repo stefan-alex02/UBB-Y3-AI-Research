@@ -1,0 +1,39 @@
+{
+    "random-seed": 42,
+
+    "root-data-folder": "../datasets",
+    "dataset": {
+        "names": [
+          "mini-GCD"
+        ],
+        "selected": "mini-GCD-split",
+
+        "split": {
+            "train": 0.8,
+            "validation": 0.1,
+            "test": 0.1,
+
+            "ratio": 1.0,
+
+            "limited-classes": [
+
+            ]
+        },
+        "cross-validation": {
+            "folds": 5
+        },
+        "mode": "split"
+    },
+
+    "augmentation": {
+
+    },
+
+    "batch-size": 16,
+
+    "training": {
+        "num-epochs": 50,
+        "learning-rate": 0.001,
+        "early-stopping-patience": 10
+    }
+}
