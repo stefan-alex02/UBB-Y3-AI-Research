@@ -1,11 +1,13 @@
 import os
 import shutil
 
-from models.scripts.utils import delete_directory_recursively
+from models.pipeline.utils import delete_directory_recursively
 
-# directory = '../../datasets/GCD'
-directory = '../../datasets/mini-GCD'
+# directory = '../datasets/GCD'
+directory = '../datasets/mini-GCD'
 modified_directory = directory + '-split/'
+
+test_size: float = config.get("test_size", 0.2)  # Default 20% test split
 
 # Load the data from train and test folders into a common class dictionary
 def load_data(only_include_classes=None):

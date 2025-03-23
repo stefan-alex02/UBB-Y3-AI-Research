@@ -1,0 +1,24 @@
+{
+    "random-seed": 43,
+
+    "data-folder": "../datasets",
+    "dataset": {
+        "selected": "mini-GCD",
+
+        "test-size": 0.1,
+        "validation-size": 0.2,
+        "k-folds": 3
+    },
+
+    "augmentation": {
+
+    },
+
+    "batch-size": 16,
+
+    "training": {
+        "num-epochs": 50,
+        "learning-rate": 0.001,
+        "early-stopping-patience": 10
+    }
+}
