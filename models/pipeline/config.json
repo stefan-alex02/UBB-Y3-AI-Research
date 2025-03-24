@@ -1,13 +1,17 @@
 {
     "random-seed": 43,
 
-    "data-folder": "../datasets",
+    "data-folder": "..\\datasets",
     "dataset": {
-        "selected": "mini-GCD",
+        "selected": "Swimcat-extend",
+        "all": [
+            "mini-GCD",
+            "Swimcat-extend"
+        ],
 
+        "val-size": 0.2,
         "test-size": 0.1,
-        "validation-size": 0.2,
-        "k-folds": 3
+        "k-folds": 1
     },
 
     "augmentation": {

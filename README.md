@@ -14,7 +14,7 @@ Clouds play an essential role in Earth's climate, being the source of precipitat
 - [ ] integrate diffusion classifier (reuse dataset and metrics code so that we can be sure that the results obtained with the two models are comparable)
 
 ## Additional TODOs for dataset processing
-- [ ] (?) add an option to choose between having an extra validation set out of the training set or using cross-validation, by randomly splitting or using fixed splits (choosing may be done in the config file)
-- [ ] (?) for cross-validation, try to keep the same distribution of classes in each fold
+- [x] add an option to choose between having an extra validation set out of the training set or using cross-validation
+- [x] for cross-validation, try to keep the same distribution of classes in each fold
 - [ ] plot distribution of content of each of the train and test sets (and percentage out of the total dataset)
 - [ ] plot class distribution for loaded dataset (to show class imbalance)

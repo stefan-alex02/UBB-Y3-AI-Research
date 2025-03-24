@@ -10,6 +10,8 @@ import numpy as np
 from collections import Counter
 from PIL import Image
 
+from models.pipeline.data_splitter import create_train_test_split_dataset
+
 
 class CustomImageDataset(Dataset):
     """
@@ -86,20 +88,16 @@ def load_datasets(config: dict, k_folds: int = 1, logger: logging.Logger = None)
         (k_folds, dataset, indices, class_names), if k_folds > 1
     """
     # Get configurations
-    root_folder: str = config["data-folder"]
-    dataset_name: str = config["dataset"]["selected"]
     batch_size: int = config["batch-size"]
     random_seed: int = config.get("random-seed", 42)
-    test_size: float = config.get("test-size", 0.2)  # Default 20% test split
-    val_size: float = config.get("val-size", 0.2)  # Default 20% validation split
+    test_size: float = config["dataset"].get("test-size", 0.2)  # Default 20% test split
+    val_size: float = config["dataset"].get("val-size", 0.2)  # Default 20% validation split
 
     # Set random seed for reproducibility
     set_random_seed(random_seed)
 
     # Prepare dataset directory and subdirectories
-    dataset_dir = os.path.join(root_folder, dataset_name)
-    train_dir = os.path.join(dataset_dir, "train")
-    test_dir = os.path.join(dataset_dir, "test")
+    dataset_name, train_dir, test_dir = get_dataset_split(config, logger)
 
     # Collect all image file paths and labels
     train_val_image_paths, train_val_labels, class_names = load_images(train_dir, logger)
@@ -141,7 +139,7 @@ def load_datasets(config: dict, k_folds: int = 1, logger: logging.Logger = None)
         # Train-Val-Test Split Mode
         train_indices, val_indices = train_test_split(
             range(len(train_val_labels)),
-            test_size=val_size / (1 - test_size),
+            test_size=val_size / (1 - test_size),  # Adjust train size based on test and val sizes
             stratify=train_val_labels,
             random_state=random_seed
         )
@@ -165,6 +163,40 @@ def load_datasets(config: dict, k_folds: int = 1, logger: logging.Logger = None)
             logger.info("=" * 30)
 
         return train_loader, val_loader, test_loader, class_names
+
+
+def get_dataset_split(config: dict, logger: logging.Logger = None) -> tuple:
+    """
+    Get dataset split directories or create a train-test split dataset if not found.
+    :param config: configuration dictionary
+    :param logger: logger object
+    :return: dataset_name, train_dir, test_dir
+    """
+    # Get dataset directories specified in the configuration
+    root_folder: str = config["data-folder"]
+    dataset_name: str = config["dataset"]["selected"]
+    dataset_dir = os.path.join(root_folder, dataset_name)
+    train_dir = os.path.join(dataset_dir, "train")
+    test_dir = os.path.join(dataset_dir, "test")
+
+    # Check if train and test directories exist
+    if not os.path.exists(train_dir) or not os.path.exists(test_dir):
+        if logger: logger.warning(f"Train or test directories not found in {dataset_dir}. Checking for '-split' suffix.")
+
+        # Check if the dataset has a duplicate with a "-split" suffix
+        dataset_name = dataset_name + "-split"
+        dataset_dir = os.path.join(root_folder, dataset_name)
+        train_dir = os.path.join(dataset_dir, "train")
+        test_dir = os.path.join(dataset_dir, "test")
+        if not os.path.exists(train_dir) or not os.path.exists(test_dir):
+            if logger: logger.warning(f"Train or test directories not found in {dataset_dir}.\n")
+
+            # Create train-test split dataset
+            create_train_test_split_dataset(config, logger)
+        else:
+            if logger: logger.info(f"Found train and test directories in {dataset_dir}.\n")
+
+    return dataset_name, train_dir, test_dir
 
 
 def load_images(directory: str, logger: logging.Logger = None):
@@ -205,11 +237,11 @@ def plot_datasets_statistics(dataset_info, fold=None):
     # Display split distribution
     show_datasets_split_distribution(datasets)
 
+    # Display class distributions
+    show_datasets_class_distributions(class_names, datasets)
+
     # Unpack datasets
     train_dataset, val_dataset, test_dataset = datasets.values()
-
-    # Display class distributions
-    show_datasets_class_distributions(class_names, test_dataset, train_dataset, val_dataset)
 
     # Display sample images
     show_sample_images(train_dataset, class_names, k=5, title="Sampled Train Images")
@@ -246,18 +278,33 @@ def show_datasets_split_distribution(datasets):
     :param datasets: Dictionary containing dataset splits.
     """
 
-    # Plot dataset split distribution
-    plt.figure(figsize=(8, 5))
+    # Calculate sizes and percentages
     sizes = [len(d) for d in datasets.values()]
-    labels = list(datasets.keys())
-    plt.bar(labels, sizes, color=['blue', 'green', 'red'])
+    total_size = sum(sizes)
+    percentages = [size / total_size * 100 for size in sizes]
+    labels = datasets.keys()
+
+    # Plot dataset split distribution
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(labels, sizes, color=['blue', 'green', 'red'])
     plt.xlabel("Dataset Split")
     plt.ylabel("Number of Samples")
     plt.title("Dataset Split Distribution")
+
+    # Add percentages on top of the bars
+    for bar, percent, size in zip(bars, percentages, sizes):
+        height = bar.get_height()
+        plt.text(bar.get_x() + bar.get_width() / 2.0, height, f'{percent:.1f}% ({size} instances)', ha='center', va='bottom')
+
     plt.show()
 
 
-def show_datasets_class_distributions(class_names, test_dataset, train_dataset, val_dataset):
+def show_datasets_class_distributions(class_names, datasets: dict):
+    """
+    Plots the class distribution across different datasets.
+    :param class_names: List of class names.
+    :param datasets: Dictionary containing dataset splits.
+    """
     # Get class counts
     def get_class_counts(dataset):
         if isinstance(dataset, Subset) and hasattr(dataset.dataset, "labels"):
@@ -268,19 +315,19 @@ def show_datasets_class_distributions(class_names, test_dataset, train_dataset, 
             labels = [label for _, label in dataset]  # General fallback
         return Counter(labels)
 
-    train_counts = get_class_counts(train_dataset)
-    val_counts = get_class_counts(val_dataset)
-    test_counts = get_class_counts(test_dataset)
     class_indices = np.arange(len(class_names))
     width = 0.25  # Width of each bar
     plt.figure(figsize=(8, 6))
-    plt.bar(class_indices - width, [train_counts.get(i, 0) for i in range(len(class_names))], width=width,
-            label="Train", color="blue")
-    plt.bar(class_indices, [val_counts.get(i, 0) for i in range(len(class_names))], width=width, label="Validation",
-            color="green")
-    plt.bar(class_indices + width, [test_counts.get(i, 0) for i in range(len(class_names))], width=width,
-            label="Test",
-            color="red")
+
+    [plt.bar(class_indices - width + ci * width,
+             [counts.get(i, 0) for i in range(len(class_names))],
+             width=width,
+             label=label,
+             color=color)
+    for ci, (counts, label, color) in enumerate(zip(map(lambda d: get_class_counts(d), datasets.values()),
+                                                    datasets.keys(),
+                                                    ["blue", "green", "red"]))]
+
     plt.xticks(class_indices, class_names, rotation=45, ha="right")
     plt.xlabel("Class")
     plt.ylabel("Number of Samples")

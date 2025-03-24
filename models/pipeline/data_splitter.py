@@ -1,73 +1,53 @@
 import os
 import shutil
+import logging
+from sklearn.model_selection import train_test_split
+from pathlib import Path
 
-from models.pipeline.utils import delete_directory_recursively
+def create_train_test_split_dataset(config: dict, logger: logging.Logger = None):
+    dataset_path = Path(config["data-folder"]) / config["dataset"]["selected"]
+    test_size = config["dataset"].get("test-size", 0.2)  # Default 20% test split
+    output_path = dataset_path.parent / f"{dataset_path.name}-split"
 
-# directory = '../datasets/GCD'
-directory = '../datasets/mini-GCD'
-modified_directory = directory + '-split/'
+    if logger: logger.info(f"Creating train-test split dataset at {output_path} with test_size={test_size}")
 
-test_size: float = config.get("test_size", 0.2)  # Default 20% test split
+    # Ensure the output folder is empty
+    if output_path.exists():
+        shutil.rmtree(output_path)  # Delete existing folder to avoid conflicts
+        if logger: logger.warning(f"Output folder already exists. Deleting existing folder.")
+    output_path.mkdir(parents=True)
 
-# Load the data from train and test folders into a common class dictionary
-def load_data(only_include_classes=None):
-    data = {}
-    for folder in ['train', 'test']:
-        for class_name in os.listdir(directory + '/' + folder):
-            if only_include_classes and class_name not in only_include_classes:
-                continue
-            if class_name not in data:
-                data[class_name] = []
-            for file in os.listdir(directory + '/' + folder + '/' + class_name):
-                data[class_name].append(directory + '/' + folder + '/' + class_name + '/' + file)
+    # Create train and test subdirectories
+    train_path = output_path / "train"
+    test_path = output_path / "test"
+    train_path.mkdir()
+    test_path.mkdir()
 
-    return data
+    # Iterate over each class folder in the dataset
+    for class_folder in dataset_path.iterdir():
+        if not class_folder.is_dir():
+            continue  # Ignore non-directory files
 
-# Split the data into train, test and validation sets
-def split_data(data, train_size=0.8, test_size=0.1, limit_ratio=None):
-    train_data = {}
-    test_data = {}
-    val_data = {}
+        class_name = class_folder.name
+        images = list(class_folder.glob("*"))  # Collect all images
 
-    if limit_ratio:
-        for class_name, files in data.items():
-            data[class_name] = files[:int(len(files) * limit_ratio)]
+        if not images:
+            if logger: logger.warning(f"Skipping empty class folder: {class_folder}")
+            continue
 
-    for class_name, files in data.items():
-        train_data[class_name] = files[:int(len(files) * train_size)]
-        test_data[class_name] = files[int(len(files) * train_size):int(len(files) * (train_size + test_size))]
-        val_data[class_name] = files[int(len(files) * (train_size + test_size)):]
+        # Split images into train and test sets
+        train_images, test_images = train_test_split(images, test_size=test_size, random_state=42)
 
-    return train_data, test_data, val_data
+        # Create class folders in train and test directories
+        (train_path / class_name).mkdir()
+        (test_path / class_name).mkdir()
 
-# Save the data into train, test and validation folders
-def save_data(data: dict[str, list[str]], folder: str):
-    os.makedirs(modified_directory + folder, exist_ok=True)
-    for class_name, files in data.items():
-        os.makedirs(modified_directory + folder + '/' + class_name, exist_ok=True)
-        for file in files:
-            shutil.copy(file, modified_directory + folder + '/' + class_name + '/')
+        # Move images to respective train/test folders
+        for img in train_images:
+            shutil.copy(img, train_path / class_name / img.name)
+        for img in test_images:
+            shutil.copy(img, test_path / class_name / img.name)
 
-# Go to the directory the script is in
-os.chdir(os.path.dirname(os.path.realpath(__file__)))
+        if logger: logger.info(f"Class '{class_name}': {len(train_images)} train, {len(test_images)} test")
 
-# mini_dataset_classes = ['1_cumulus', '4_clearsky', '6_cumulonimbus']
-# mini_dataset_classes = ['1_cumulus', '4_clearsky']
-# mini_dataset_classes = ['3_cirrus', '4_clearsky', '6_cumulonimbus']
-
-# Load the data
-# data = load_data(only_include_classes=mini_dataset_classes)
-data = load_data()
-
-# Split the data
-# train_data, test_data, val_data = split_data(data, limit_ratio=0.1)
-train_data, test_data, val_data = split_data(data)
-
-# Delete the existing modified directory
-delete_directory_recursively(modified_directory)
-
-# Save the data
-os.makedirs(modified_directory, exist_ok=True)
-save_data(train_data, 'train')
-save_data(test_data, 'test')
-save_data(val_data, 'val')
+    if logger: logger.info("Train-test split completed successfully!\n")
