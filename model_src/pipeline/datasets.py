@@ -10,7 +10,7 @@ import numpy as np
 from collections import Counter
 from PIL import Image
 
-from models.pipeline.data_splitter import create_train_test_split_dataset
+from model_src.pipeline.data_splitter import create_train_test_split_dataset
 
 
 class CustomImageDataset(Dataset):
@@ -19,7 +19,7 @@ class CustomImageDataset(Dataset):
     """
     def __init__(self, image_paths, labels, transform=None):
         """
-        Custom dataset class for loading
+        Constructor for CustomImageDataset.
         Args:
             image_paths: List of image paths.
             labels: List of labels.
@@ -88,10 +88,10 @@ def load_datasets(config: dict, k_folds: int = 1, logger: logging.Logger = None)
         (k_folds, dataset, indices, class_names), if k_folds > 1
     """
     # Get configurations
-    batch_size: int = config["batch-size"]
+    batch_size: int = config.get("batch-size", 16)
     random_seed: int = config.get("random-seed", 42)
-    test_size: float = config["dataset"].get("test-size", 0.2)  # Default 20% test split
-    val_size: float = config["dataset"].get("val-size", 0.2)  # Default 20% validation split
+    test_size: float = config.get("dataset", {}).get("test-size", 0.2)  # Default 20% test split
+    val_size: float = config.get("dataset", {}).get("val-size", 0.2)  # Default 20% validation split
 
     # Set random seed for reproducibility
     set_random_seed(random_seed)

@@ -1,4 +1,4 @@
 DiffusionClassifier_initial/mini-GCD.zip
-models/GCD.zip
+model_src/GCD.zip
 *.pth
-models/datasets/GCD.zip
+model_src/datasets/GCD.zip

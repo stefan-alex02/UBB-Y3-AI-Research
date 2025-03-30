@@ -14,7 +14,7 @@ def delete_directory_recursively(directory):
     if os.path.exists(directory):
         shutil.rmtree(directory)
 
-def load_device(logger: logging.Logger = None) -> str:
+def load_device(logger: logging.Logger = None) -> torch.device:
     """
     Load device (cuda or cpu)
     :param logger: Logger object
@@ -29,4 +29,4 @@ def load_device(logger: logging.Logger = None) -> str:
             logger.info(f"Current device name: {torch.cuda.get_device_name()}\n")
         else:
             logger.warning("CUDA is not available. Switching to CPU.")
-    return 'cuda' if is_cuda else 'cpu'
+    return torch.device("cuda" if is_cuda else "cpu")

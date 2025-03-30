@@ -1,7 +1,7 @@
 import os
 import shutil
 
-from models.pipeline.utils import delete_directory_recursively
+from model_src.pipeline.utils import delete_directory_recursively
 
 # directory = '../datasets/GCD'
 directory = '../datasets/mini-GCD'
