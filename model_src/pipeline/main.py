@@ -1,13 +1,14 @@
 # Import necessary functions and libraries
 from torch.utils.data import DataLoader
 
+from model_src.pipeline.datasets_stats import plot_datasets_statistics
 from model_src.pipeline.evaluate import evaluate_model_metrics
 from model_src.pipeline.models import SimpleCNN
 from model_src.pipeline.train import train_model
 from utils import load_config
 from logger import create_logger
 from utils import load_device
-from datasets import load_datasets, plot_datasets_statistics, show_sample_images
+from __datasets import load_datasets
 
 # Define configurations
 config = load_config("config.json")

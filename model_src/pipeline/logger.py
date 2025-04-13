@@ -5,8 +5,9 @@ import sys
 
 def create_logger(log_dir: str = 'logs') -> logging.Logger:
     """
-    Setup logging configuration
-    :param log_dir: Directory to store logs
+    Creates a logger that logs messages to both a file and the console.
+    :param log_dir: Directory to store log files (in UTF-8 encoding). Name of the log file will be
+                    'log_<timestamp>.txt'.
     :return: Logger object
     """
 
@@ -26,8 +27,8 @@ def create_logger(log_dir: str = 'logs') -> logging.Logger:
     console_formatter = logging.Formatter('%(asctime)s | %(message)s',
                                           datefmt='%H:%M:%S')
 
-    # Create and configure file handler
-    file_handler = logging.FileHandler(log_filename)
+    # Create and configure file handler (that supports UTF-8)
+    file_handler = logging.FileHandler(log_filename, mode='w', encoding='utf-8')
     file_handler.setLevel(logging.INFO)
     file_handler.setFormatter(file_formatter)
 
