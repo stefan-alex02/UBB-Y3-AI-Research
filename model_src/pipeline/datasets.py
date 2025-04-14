@@ -6,7 +6,7 @@ from typing import Tuple, List, Optional, Dict, Any, Union, Callable
 import numpy as np
 import torch
 from torch.utils.data import Dataset, DataLoader, Subset, random_split
-from sklearn.model_selection import KFold, train_test_split
+from sklearn.model_selection import StratifiedKFold, train_test_split
 from torchvision import transforms, datasets
 
 # Configure logging
@@ -47,6 +47,40 @@ def _default_test_transforms() -> transforms.Compose:
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
     ])
+
+
+def _create_dataloaders(
+        train_set: Dataset,
+        val_set: Dataset,
+        test_set: Dataset,
+        batch_size: int = 32,
+        num_workers: int = 4
+) -> Dict[str, DataLoader]:
+    """
+    Create DataLoaders for train, validation, and test sets.
+
+    Args:
+        train_set: Training dataset
+        val_set: Validation dataset
+        test_set: Test dataset
+        batch_size: Batch size for dataloaders
+        num_workers: Number of workers for dataloaders
+
+    Returns:
+        Dict containing train, validation, and test DataLoaders and datasets
+    """
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=num_workers)
+    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+    test_loader = DataLoader(test_set, batch_size=batch_size, shuffle=False, num_workers=num_workers)
+
+    return {
+        'train_loader': train_loader,
+        'val_loader': val_loader,
+        'test_loader': test_loader,
+        'train_dataset': train_set,
+        'val_dataset': val_set,
+        'test_dataset': test_set,
+    }
 
 
 class GenericDatasetLoader:
@@ -109,9 +143,19 @@ class GenericDatasetLoader:
         """
         # Check if the dataset contains train and test subdirectories
         if os.path.isdir(os.path.join(self.root_dir, 'train')) and os.path.isdir(os.path.join(self.root_dir, 'test')):
-            logger.info("🗃️ Detected TRAIN_TEST_SPLIT dataset structure")
-            # TODO - Check if train/test directories contain class subdirectories with images (like below)
-            return DatasetStructure.TRAIN_TEST_SPLIT
+            # Check if train/test directories contain class subdirectories with images
+            train_dir = os.path.join(self.root_dir, 'train')
+            train_subdirs = [d for d in os.listdir(train_dir) if os.path.isdir(os.path.join(train_dir, d))]
+
+            if train_subdirs and any(
+                    any(file.lower().endswith(('.jpg', '.jpeg', '.png'))
+                        for file in os.listdir(os.path.join(train_dir, subdir)))
+                    for subdir in train_subdirs
+            ):
+                logger.info("🗃️ Detected TRAIN_TEST_SPLIT dataset structure")
+                return DatasetStructure.TRAIN_TEST_SPLIT
+            else:
+                raise ValueError("❌ Train directory does not contain proper class subdirectories with images")
         else:
             # Get all subdirectories in the root directory
             subdirs = [d for d in os.listdir(self.root_dir) if os.path.isdir(os.path.join(self.root_dir, d))]
@@ -229,15 +273,21 @@ class GenericDatasetLoader:
             num_val = int(num_train_val * self.val_size)
             num_train = num_train_val - num_val
 
-            train_set, val_set = random_split(
-                self.train_dataset,
-                [num_train, num_val],
-                generator=torch.Generator().manual_seed(self.seed)
+            train_indices, val_indices = train_test_split(
+                list(range(num_train_val)),
+                test_size=self.val_size,
+                random_state=self.seed
             )
 
-            # TODO - Apply transformations to train_set and val_set in this case !!
+            # Create subsets
+            train_set = Subset(self.train_dataset, train_indices)
+            val_set = Subset(self.train_dataset, val_indices)
 
-            test_set = self.test_dataset
+            # No need to apply transformations as train_dataset already has train_transforms
+            # But we do need to apply test_transforms to the validation set
+            val_set = TransformSubset(val_set, transform=self.test_transforms)
+
+            test_set = self.test_dataset  # Already has test_transforms
 
         # Create data loaders
         train_loader = DataLoader(train_set, batch_size=32, shuffle=True, num_workers=4)
@@ -267,45 +317,37 @@ class GenericDatasetLoader:
         if self.structure == DatasetStructure.TRAIN_TEST_SPLIT:
             raise ValueError("💥 CV_EVALUATION is not supported with the TRAIN_TEST_SPLIT structure")
 
-        # Initialize KFold
-        # TODO - Use stratified KFold for better class distribution
-        kf = KFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
+        # Get all labels for stratification
+        all_labels = [label for _, label in self.full_dataset]
+
+        # Initialize Stratified KFold for better class distribution
+        skf = StratifiedKFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
 
         # Prepare cross-validation folds
         fold_dataloaders = []
         indices = list(range(len(self.full_dataset)))
 
-        for fold_idx, (train_val_idx, test_idx) in enumerate(kf.split(indices)):
-            # Split train_val into train and validation
+        for fold_idx, (train_val_idx, test_idx) in enumerate(skf.split(indices, all_labels)):
+            # Get labels for train_val subset for stratified split
+            train_val_labels = [all_labels[i] for i in train_val_idx]
+
+            # Split train_val into train and validation (stratified)
             train_idx, val_idx = train_test_split(
                 train_val_idx,
                 test_size=self.val_size,
-                random_state=self.seed
+                random_state=self.seed,
+                stratify=train_val_labels
             )
 
-            # Create subsets
-            train_set = Subset(self.full_dataset, train_idx)
-            val_set = Subset(self.full_dataset, val_idx)
-            test_set = Subset(self.full_dataset, test_idx)
+            # Create subsets and apply transforms
+            train_set, val_set, test_set = self._create_and_transform_subsets(train_idx, val_idx, test_idx)
 
-            # Apply transformations
-            train_set = TransformSubset(train_set, transform=self.train_transforms)
-            val_set = TransformSubset(val_set, transform=self.test_transforms)
-            test_set = TransformSubset(test_set, transform=self.test_transforms)
-
-            # Create data loaders
-            train_loader = DataLoader(train_set, batch_size=32, shuffle=True, num_workers=4)
-            val_loader = DataLoader(val_set, batch_size=32, shuffle=False, num_workers=4)
-            test_loader = DataLoader(test_set, batch_size=32, shuffle=False, num_workers=4)
+            # Create dataloaders
+            fold_loaders = _create_dataloaders(train_set, val_set, test_set)
 
             fold_dataloaders.append({
                 'fold': fold_idx,
-                'train_loader': train_loader,
-                'val_loader': val_loader,
-                'test_loader': test_loader,
-                'train_dataset': train_set,
-                'val_dataset': val_set,
-                'test_dataset': test_set,
+                **fold_loaders
             })
 
         return {
@@ -341,19 +383,19 @@ class GenericDatasetLoader:
             test_set = TransformSubset(test_set, transform=self.test_transforms)
 
             # Initialize KFold for cross-validation on the training set
-            kf = KFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
+            skf = StratifiedKFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
 
         else:  # TRAIN_TEST_SPLIT structure
             train_val_indices = list(range(len(self.train_dataset)))
             test_set = self.test_dataset
 
             # Initialize KFold for cross-validation on the training set
-            kf = KFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
+            skf = StratifiedKFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
 
         # Prepare cross-validation folds
         fold_dataloaders = []
 
-        for fold_idx, (train_idx, val_idx) in enumerate(kf.split(train_val_indices)):
+        for fold_idx, (train_idx, val_idx) in enumerate(skf.split(train_val_indices)):
             if self.structure == DatasetStructure.SINGLE_ROOT:
                 # Map to the original indices
                 train_subset_indices = [train_val_indices[i] for i in train_idx]
@@ -396,6 +438,174 @@ class GenericDatasetLoader:
             'num_folds': self.num_folds
         }
 
+    def _create_and_transform_subsets(
+            self,
+            train_indices: List[int],
+            val_indices: List[int],
+            test_indices: List[int],
+            dataset: Optional[Dataset] = None
+    ) -> Tuple[Dataset, Dataset, Dataset]:
+        """
+        Create and transform subsets from indices.
+
+        Args:
+            train_indices: Indices for training set
+            val_indices: Indices for validation set
+            test_indices: Indices for test set
+            dataset: Dataset to create subsets from (defaults to self.full_dataset)
+
+        Returns:
+            Tuple of (train_set, val_set, test_set) with transforms applied
+        """
+        dataset = dataset or self.full_dataset
+
+        # Create subsets
+        train_set = Subset(dataset, train_indices)
+        val_set = Subset(dataset, val_indices)
+        test_set = Subset(dataset, test_indices)
+
+        # Apply transformations
+        train_set = TransformSubset(train_set, transform=self.train_transforms)
+        val_set = TransformSubset(val_set, transform=self.test_transforms)
+        test_set = TransformSubset(test_set, transform=self.test_transforms)
+
+        return train_set, val_set, test_set
+
+    def get_cv_folds(self) -> Generator[Dict[str, Any], None, None]:
+        """
+        Generator function to yield data for each fold in cross-validation.
+        This is more memory-efficient for large datasets.
+
+        Yields:
+            Dict containing data loaders and datasets for the current fold
+        """
+        if self.loading_method not in [LoadingMethod.CV_EVALUATION, LoadingMethod.CV_TRAINING]:
+            raise ValueError(f"Cannot get CV folds for loading method {self.loading_method}")
+
+        if self.loading_method == LoadingMethod.CV_EVALUATION:
+            yield from self._yield_cv_evaluation_folds()
+        else:  # CV_TRAINING
+            yield from self._yield_cv_training_folds()
+
+    def _yield_cv_evaluation_folds(self) -> Generator[Dict[str, Any], None, None]:
+        """Yield folds for CV_EVALUATION loading method."""
+        if self.structure == DatasetStructure.TRAIN_TEST_SPLIT:
+            raise ValueError("💥 CV_EVALUATION is not supported with the TRAIN_TEST_SPLIT structure")
+
+        # Get all labels for stratification
+        all_labels = [label for _, label in self.full_dataset]
+
+        # Initialize Stratified KFold for better class distribution
+        skf = StratifiedKFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
+
+        # Prepare cross-validation folds
+        indices = list(range(len(self.full_dataset)))
+
+        for fold_idx, (train_val_idx, test_idx) in enumerate(skf.split(indices, all_labels)):
+            # Get labels for train_val subset for stratified split
+            train_val_labels = [all_labels[i] for i in train_val_idx]
+
+            # Split train_val into train and validation (stratified)
+            train_idx, val_idx = train_test_split(
+                train_val_idx,
+                test_size=self.val_size,
+                random_state=self.seed,
+                stratify=train_val_labels
+            )
+
+            # Create subsets and apply transforms
+            train_set, val_set, test_set = self._create_and_transform_subsets(train_idx, val_idx, test_idx)
+
+            # Create dataloaders
+            fold_loaders = self._create_dataloaders(train_set, val_set, test_set)
+
+            yield {
+                'fold': fold_idx,
+                **fold_loaders
+            }
+
+    def _yield_cv_training_folds(self) -> Generator[Dict[str, Any], None, None]:
+        """Yield folds for CV_TRAINING loading method."""
+        if self.structure == DatasetStructure.SINGLE_ROOT:
+            # Split into test and train_val sets
+            num_samples = len(self.full_dataset)
+            num_test = int(num_samples * self.test_size)
+            num_train_val = num_samples - num_test
+
+            indices = list(range(num_samples))
+            np.random.seed(self.seed)
+            np.random.shuffle(indices)
+
+            train_val_indices = indices[:num_train_val]
+            test_indices = indices[num_train_val:]
+
+            test_set = Subset(self.full_dataset, test_indices)
+            test_set = TransformSubset(test_set, transform=self.test_transforms)
+
+            # Get labels for stratification
+            all_labels = [self.full_dataset[i][1] for i in train_val_indices]
+
+            # Initialize Stratified KFold for cross-validation on the training set
+            skf = StratifiedKFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
+
+            for fold_idx, (train_idx, val_idx) in enumerate(skf.split(train_val_indices, all_labels)):
+                # Map to the original indices
+                train_subset_indices = [train_val_indices[i] for i in train_idx]
+                val_subset_indices = [train_val_indices[i] for i in val_idx]
+
+                # Create and transform subsets
+                train_set = Subset(self.full_dataset, train_subset_indices)
+                val_set = Subset(self.full_dataset, val_subset_indices)
+
+                train_set = TransformSubset(train_set, transform=self.train_transforms)
+                val_set = TransformSubset(val_set, transform=self.test_transforms)
+
+                # Create dataloaders
+                train_loader = DataLoader(train_set, batch_size=32, shuffle=True, num_workers=4)
+                val_loader = DataLoader(val_set, batch_size=32, shuffle=False, num_workers=4)
+                test_loader = DataLoader(test_set, batch_size=32, shuffle=False, num_workers=4)
+
+                yield {
+                    'fold': fold_idx,
+                    'train_loader': train_loader,
+                    'val_loader': val_loader,
+                    'test_loader': test_loader,
+                    'train_dataset': train_set,
+                    'val_dataset': val_set,
+                    'test_dataset': test_set,
+                }
+
+        else:  # TRAIN_TEST_SPLIT structure
+            train_val_indices = list(range(len(self.train_dataset)))
+            train_val_labels = [self.train_dataset[i][1] for i in train_val_indices]
+            test_set = self.test_dataset
+
+            # Initialize Stratified KFold for cross-validation on the training set
+            skf = StratifiedKFold(n_splits=self.num_folds, shuffle=True, random_state=self.seed)
+
+            for fold_idx, (train_idx, val_idx) in enumerate(skf.split(train_val_indices, train_val_labels)):
+                # Create subsets from the train dataset
+                train_subset = Subset(self.train_dataset, [train_val_indices[i] for i in train_idx])
+                val_subset = Subset(self.train_dataset, [train_val_indices[i] for i in val_idx])
+
+                # Apply transformations to val_set (train_set already has train_transforms applied)
+                val_subset = TransformSubset(val_subset, transform=self.test_transforms)
+
+                # Create dataloaders
+                train_loader = DataLoader(train_subset, batch_size=32, shuffle=True, num_workers=4)
+                val_loader = DataLoader(val_subset, batch_size=32, shuffle=False, num_workers=4)
+                test_loader = DataLoader(test_set, batch_size=32, shuffle=False, num_workers=4)
+
+                yield {
+                    'fold': fold_idx,
+                    'train_loader': train_loader,
+                    'val_loader': val_loader,
+                    'test_loader': test_loader,
+                    'train_dataset': train_subset,
+                    'val_dataset': val_subset,
+                    'test_dataset': test_set,
+                }
+
 
 class TransformSubset(Dataset):
     """
@@ -435,196 +645,264 @@ class TransformSubset(Dataset):
         return len(self.subset)
 
 
-# Main training and evaluation functions
-def train_model(
-        model: torch.nn.Module,
-        train_loader: DataLoader,
-        val_loader: DataLoader,
-        criterion: torch.nn.Module,
-        optimizer: torch.optim.Optimizer,
-        device: torch.device,
-        num_epochs: int = 10,
-        scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
-        early_stopping_patience: int = 5
-) -> Dict[str, Any]:
-    """
-    Train a model.
+class ModelTrainer:
+    """Model trainer with configurable training parameters."""
 
-    Args:
-        model: The model to train
-        train_loader: DataLoader for the training data
-        val_loader: DataLoader for the validation data
-        criterion: Loss function
-        optimizer: Optimizer
-        device: Device to use for training
-        num_epochs: Number of epochs to train for
-        scheduler: Learning rate scheduler
-        early_stopping_patience: Number of epochs to wait before stopping if validation loss doesn't improve
+    def __init__(
+            self,
+            model: torch.nn.Module,
+            criterion: torch.nn.Module = None,
+            optimizer: torch.optim.Optimizer = None,
+            scheduler: Optional[torch.optim.lr_scheduler._LRScheduler] = None,
+            device: torch.device = None,
+            config: Dict[str, Any] = None,
+    ):
+        """
+        Initialize trainer with model and training configurations.
 
-    Returns:
-        Dict containing training history and best model state
-    """
-    model = model.to(device)
-    history = {
-        'train_loss': [],
-        'val_loss': [],
-        'train_acc': [],
-        'val_acc': []
-    }
+        Args:
+            model: PyTorch model to train
+            criterion: Loss function (defaults to CrossEntropyLoss if None)
+            optimizer: Optimizer (defaults to Adam if None)
+            scheduler: Learning rate scheduler
+            device: Device to use (defaults to cuda if available)
+            config: Training configuration parameters
+        """
+        self.model = model
+        self.criterion = criterion or torch.nn.CrossEntropyLoss()
+        self.optimizer = optimizer or torch.optim.Adam(model.parameters(), lr=0.001)
+        self.scheduler = scheduler
+        self.device = device or torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    best_val_loss = float('inf')
-    best_model_state = model.state_dict().copy()
-    patience_counter = 0
+        # Default configuration
+        self.config = {
+            'num_epochs': 10,
+            'early_stopping_patience': 5,
+            'grad_clip_value': None,
+            'log_interval': 10,
+            'eval_interval': 1,
+            'save_best_model': True,
+            'metrics': ['accuracy']
+        }
 
-    for epoch in range(num_epochs):
-        # Training phase
-        model.train()
-        train_loss = 0.0
-        train_correct = 0
-        train_total = 0
+        # Update with user-provided config
+        if config:
+            self.config.update(config)
 
-        for inputs, labels in train_loader:
-            inputs, labels = inputs.to(device), labels.to(device)
+        # Move model to device
+        self.model = self.model.to(self.device)
+
+        # Setup metrics
+        self._setup_metrics()
+
+    def _setup_metrics(self):
+        """Setup metrics for evaluation."""
+        self.metrics = {}
+        for metric_name in self.config['metrics']:
+            if metric_name == 'accuracy':
+                self.metrics[metric_name] = lambda preds, labels: (preds.argmax(dim=1) == labels).float().mean().item()
+            # Add more metrics as needed
+
+    def train(
+            self,
+            train_loader: DataLoader,
+            val_loader: DataLoader,
+            fold_idx: Optional[int] = None
+    ) -> Dict[str, Any]:
+        """
+        Train the model.
+
+        Args:
+            train_loader: DataLoader for training data
+            val_loader: DataLoader for validation data
+            fold_idx: Optional fold index for cross-validation
+
+        Returns:
+            Dict containing training history and best model state
+        """
+        fold_prefix = f"Fold {fold_idx}: " if fold_idx is not None else ""
+        history = {
+            'train_loss': [],
+            'val_loss': [],
+            'train_metrics': {name: [] for name in self.metrics},
+            'val_metrics': {name: [] for name in self.metrics}
+        }
+
+        best_val_loss = float('inf')
+        best_model_state = self.model.state_dict().copy()
+        patience_counter = 0
+
+        for epoch in range(self.config['num_epochs']):
+            # Training phase
+            train_metrics = self._train_epoch(train_loader, epoch)
+
+            # Validation phase (if eval_interval matches)
+            if (epoch + 1) % self.config['eval_interval'] == 0:
+                val_metrics = self._eval_epoch(val_loader)
+
+                # Update history
+                for k, v in train_metrics.items():
+                    history[f'train_{k}'].append(v)
+                for k, v in val_metrics.items():
+                    history[f'val_{k}'].append(v)
+
+                # Print statistics
+                metrics_str = ', '.join([
+                                            f"Train {k}: {v:.4f}" for k, v in train_metrics.items()
+                                        ] + [
+                                            f"Val {k}: {v:.4f}" for k, v in val_metrics.items()
+                                        ])
+                logger.info(f"{fold_prefix}Epoch {epoch + 1}/{self.config['num_epochs']} - {metrics_str}")
+
+                # Early stopping check
+                if val_metrics['loss'] < best_val_loss:
+                    best_val_loss = val_metrics['loss']
+                    if self.config['save_best_model']:
+                        best_model_state = self.model.state_dict().copy()
+                    patience_counter = 0
+                else:
+                    patience_counter += 1
+                    if patience_counter >= self.config['early_stopping_patience']:
+                        logger.info(f"{fold_prefix}Early stopping at epoch {epoch + 1}")
+                        break
+
+            # Update scheduler
+            if self.scheduler is not None:
+                if isinstance(self.scheduler, torch.optim.lr_scheduler.ReduceLROnPlateau):
+                    self.scheduler.step(val_metrics['loss'])
+                else:
+                    self.scheduler.step()
+
+        # Load the best model if saved
+        if self.config['save_best_model']:
+            self.model.load_state_dict(best_model_state)
+
+        return {
+            'model': self.model,
+            'history': history,
+            'best_val_loss': best_val_loss,
+            'best_model_state': best_model_state
+        }
+
+    def _train_epoch(self, train_loader: DataLoader, epoch: int) -> Dict[str, float]:
+        """Run one training epoch and return metrics."""
+        self.model.train()
+        epoch_loss = 0.0
+        epoch_metrics = {name: 0.0 for name in self.metrics}
+        num_batches = len(train_loader)
+
+        for batch_idx, (inputs, labels) in enumerate(train_loader):
+            inputs, labels = inputs.to(self.device), labels.to(self.device)
 
             # Zero the parameter gradients
-            optimizer.zero_grad()
+            self.optimizer.zero_grad()
 
             # Forward pass
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
+            outputs = self.model(inputs)
+            loss = self.criterion(outputs, labels)
 
             # Backward pass and optimize
             loss.backward()
-            optimizer.step()
 
-            # Statistics
-            train_loss += loss.item() * inputs.size(0)
-            _, predicted = torch.max(outputs, 1)
-            train_total += labels.size(0)
-            train_correct += (predicted == labels).sum().item()
+            # Gradient clipping if configured
+            if self.config['grad_clip_value']:
+                torch.nn.utils.clip_grad_norm_(
+                    self.model.parameters(),
+                    self.config['grad_clip_value']
+                )
 
-        # Validation phase
-        model.eval()
-        val_loss = 0.0
-        val_correct = 0
-        val_total = 0
+            self.optimizer.step()
+
+            # Update running loss
+            epoch_loss += loss.item()
+
+            # Calculate metrics
+            with torch.no_grad():
+                for name, metric_fn in self.metrics.items():
+                    epoch_metrics[name] += metric_fn(outputs, labels)
+
+            # Log batch progress if configured
+            if self.config['log_interval'] and batch_idx % self.config['log_interval'] == 0:
+                logger.debug(f"Epoch: {epoch + 1}/{self.config['num_epochs']} "
+                             f"[{batch_idx + 1}/{num_batches} "
+                             f"({100. * batch_idx / num_batches:.0f}%)] "
+                             f"Loss: {loss.item():.6f}")
+
+        # Compute averages
+        avg_loss = epoch_loss / num_batches
+        avg_metrics = {name: value / num_batches for name, value in epoch_metrics.items()}
+
+        return {'loss': avg_loss, **avg_metrics}
+
+    def _eval_epoch(self, data_loader: DataLoader) -> Dict[str, float]:
+        """Evaluate model on data loader and return metrics."""
+        self.model.eval()
+        epoch_loss = 0.0
+        epoch_metrics = {name: 0.0 for name in self.metrics}
+        num_batches = len(data_loader)
 
         with torch.no_grad():
-            for inputs, labels in val_loader:
-                inputs, labels = inputs.to(device), labels.to(device)
+            for inputs, labels in data_loader:
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
 
                 # Forward pass
-                outputs = model(inputs)
-                loss = criterion(outputs, labels)
+                outputs = self.model(inputs)
+                loss = self.criterion(outputs, labels)
 
-                # Statistics
-                val_loss += loss.item() * inputs.size(0)
-                _, predicted = torch.max(outputs, 1)
-                val_total += labels.size(0)
-                val_correct += (predicted == labels).sum().item()
+                # Update running loss
+                epoch_loss += loss.item()
 
-        # Calculate average losses and accuracies
-        epoch_train_loss = train_loss / len(train_loader.dataset)
-        epoch_val_loss = val_loss / len(val_loader.dataset)
-        epoch_train_acc = train_correct / train_total
-        epoch_val_acc = val_correct / val_total
+                # Calculate metrics
+                for name, metric_fn in self.metrics.items():
+                    epoch_metrics[name] += metric_fn(outputs, labels)
 
-        # Update history
-        history['train_loss'].append(epoch_train_loss)
-        history['val_loss'].append(epoch_val_loss)
-        history['train_acc'].append(epoch_train_acc)
-        history['val_acc'].append(epoch_val_acc)
+        # Compute averages
+        avg_loss = epoch_loss / num_batches
+        avg_metrics = {name: value / num_batches for name, value in epoch_metrics.items()}
 
-        # Update learning rate
-        if scheduler is not None:
-            scheduler.step()
+        return {'loss': avg_loss, **avg_metrics}
 
-        # Print statistics
-        logger.info(f'Epoch {epoch + 1}/{num_epochs} - '
-                    f'Train Loss: {epoch_train_loss:.4f}, '
-                    f'Val Loss: {epoch_val_loss:.4f}, '
-                    f'Train Acc: {epoch_train_acc:.4f}, '
-                    f'Val Acc: {epoch_val_acc:.4f}')
+    def evaluate(self, test_loader: DataLoader) -> Dict[str, Any]:
+        """
+        Evaluate the model on test data.
 
-        # Early stopping check
-        if epoch_val_loss < best_val_loss:
-            best_val_loss = epoch_val_loss
-            best_model_state = model.state_dict().copy()
-            patience_counter = 0
-        else:
-            patience_counter += 1
-            if patience_counter >= early_stopping_patience:
-                logger.info(f'Early stopping at epoch {epoch + 1}')
-                break
+        Args:
+            test_loader: DataLoader for test data
 
-    # Load the best model
-    model.load_state_dict(best_model_state)
+        Returns:
+            Dict containing evaluation metrics and predictions
+        """
+        self.model.eval()
+        test_metrics = self._eval_epoch(test_loader)
 
-    return {
-        'model': model,
-        'history': history,
-        'best_val_loss': best_val_loss,
-        'best_model_state': best_model_state
-    }
+        # Get all predictions and labels for additional metrics
+        all_predictions = []
+        all_labels = []
+        all_outputs = []
 
+        with torch.no_grad():
+            for inputs, labels in test_loader:
+                inputs, labels = inputs.to(self.device), labels.to(self.device)
+                outputs = self.model(inputs)
 
-def evaluate_model(
-        model: torch.nn.Module,
-        test_loader: DataLoader,
-        criterion: torch.nn.Module,
-        device: torch.device
-) -> Dict[str, Any]:
-    """
-    Evaluate a model on the test set.
+                # Save predictions and labels
+                all_outputs.append(outputs.cpu())
+                all_predictions.append(outputs.argmax(dim=1).cpu())
+                all_labels.append(labels.cpu())
 
-    Args:
-        model: The model to evaluate
-        test_loader: DataLoader for the test data
-        criterion: Loss function
-        device: Device to use for evaluation
+        # Concatenate lists
+        all_outputs = torch.cat(all_outputs, dim=0)
+        all_predictions = torch.cat(all_predictions, dim=0)
+        all_labels = torch.cat(all_labels, dim=0)
 
-    Returns:
-        Dict containing evaluation metrics
-    """
-    model = model.to(device)
-    model.eval()
+        logger.info(f"Test evaluation - " + ", ".join([f"{k}: {v:.4f}" for k, v in test_metrics.items()]))
 
-    test_loss = 0.0
-    test_correct = 0
-    test_total = 0
-    all_predictions = []
-    all_labels = []
-
-    with torch.no_grad():
-        for inputs, labels in test_loader:
-            inputs, labels = inputs.to(device), labels.to(device)
-
-            # Forward pass
-            outputs = model(inputs)
-            loss = criterion(outputs, labels)
-
-            # Statistics
-            test_loss += loss.item() * inputs.size(0)
-            _, predicted = torch.max(outputs, 1)
-            test_total += labels.size(0)
-            test_correct += (predicted == labels).sum().item()
-
-            # Save predictions and labels for additional metrics
-            all_predictions.extend(predicted.cpu().numpy())
-            all_labels.extend(labels.cpu().numpy())
-
-    # Calculate average loss and accuracy
-    avg_test_loss = test_loss / len(test_loader.dataset)
-    test_accuracy = test_correct / test_total
-
-    logger.info(f'Test Loss: {avg_test_loss:.4f}, Test Accuracy: {test_accuracy:.4f}')
-
-    return {
-        'test_loss': avg_test_loss,
-        'test_accuracy': test_accuracy,
-        'predictions': np.array(all_predictions),
-        'labels': np.array(all_labels)
-    }
+        return {
+            **test_metrics,
+            'outputs': all_outputs.numpy(),
+            'predictions': all_predictions.numpy(),
+            'labels': all_labels.numpy()
+        }
 
 
 # Main function to demonstrate how to use the dataset loader with training and evaluation
@@ -632,12 +910,8 @@ def main(
         root_dir: str,
         loading_method: LoadingMethod,
         model_factory: Callable[..., torch.nn.Module],
-        num_folds: int = 5,
-        test_size: float = 0.2,
-        val_size: float = 0.1,
-        num_epochs: int = 10,
-        batch_size: int = 32,
-        learning_rate: float = 0.001,
+        training_config: Optional[Dict[str, Any]] = None,
+        dataset_config: Optional[Dict[str, Any]] = None,
         seed: int = 42
 ) -> Dict[str, Any]:
     """
@@ -647,12 +921,8 @@ def main(
         root_dir: Path to the dataset root directory
         loading_method: Method to use for loading the dataset
         model_factory: Function to create a model
-        num_folds: Number of folds for cross-validation
-        test_size: Proportion of the dataset to use for testing
-        val_size: Proportion of the non-test data to use for validation
-        num_epochs: Number of epochs to train for
-        batch_size: Batch size for training
-        learning_rate: Learning rate for the optimizer
+        training_config: Configuration for the training process
+        dataset_config: Configuration for the dataset loader
         seed: Random seed for reproducibility
 
     Returns:
@@ -662,18 +932,27 @@ def main(
     torch.manual_seed(seed)
     np.random.seed(seed)
 
+    # Default dataset config
+    default_dataset_config = {
+        'num_folds': 5,
+        'test_size': 0.2,
+        'val_size': 0.1,
+        'batch_size': 32,
+        'num_workers': 4
+    }
+
+    # Update with user-provided config
+    dataset_config = {**default_dataset_config, **(dataset_config or {})}
+
     # Initialize the dataset loader
     dataset_loader = GenericDatasetLoader(
         root_dir=root_dir,
         loading_method=loading_method,
-        num_folds=num_folds,
-        test_size=test_size,
-        val_size=val_size,
+        num_folds=dataset_config['num_folds'],
+        test_size=dataset_config['test_size'],
+        val_size=dataset_config['val_size'],
         seed=seed
     )
-
-    # Load the dataset
-    data = dataset_loader.load()
 
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -682,74 +961,53 @@ def main(
     # Initialize results dictionary
     results = {
         'loading_method': loading_method,
-        'num_classes': data['num_classes'],
-        'class_names': data['class_names']
     }
 
-    # Initialize criterion
-    criterion = torch.nn.CrossEntropyLoss()
-
     if loading_method == LoadingMethod.FIXED_SPLIT:
-        # Create model
-        model = model_factory(num_classes=data['num_classes'])
+        # Load the dataset with fixed split
+        data = dataset_loader.load()
+        results['num_classes'] = data['num_classes']
+        results['class_names'] = data['class_names']
 
-        # Initialize optimizer and scheduler
-        optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-        scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+        # Create model and trainer
+        model = model_factory(num_classes=data['num_classes'])
+        trainer = ModelTrainer(model, device=device, config=training_config)
 
         # Train the model
-        train_results = train_model(
-            model=model,
+        train_results = trainer.train(
             train_loader=data['train_loader'],
-            val_loader=data['val_loader'],
-            criterion=criterion,
-            optimizer=optimizer,
-            device=device,
-            num_epochs=num_epochs,
-            scheduler=scheduler
+            val_loader=data['val_loader']
         )
 
         # Evaluate the model
-        eval_results = evaluate_model(
-            model=train_results['model'],
-            test_loader=data['test_loader'],
-            criterion=criterion,
-            device=device
-        )
+        eval_results = trainer.evaluate(data['test_loader'])
 
         results['train_results'] = train_results
         results['eval_results'] = eval_results
 
     else:  # CV_EVALUATION or CV_TRAINING
+        # Load basic info
+        data_info = dataset_loader.load()
+        results['num_classes'] = data_info['num_classes']
+        results['class_names'] = data_info['class_names']
+
+        # For memory efficiency, use generator to iterate through folds
         fold_results = []
 
-        for fold_data in data['folds']:
-            # Create model
-            model = model_factory(num_classes=data['num_classes'])
-
-            # Initialize optimizer and scheduler
-            optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate)
-            scheduler = torch.optim.lr_scheduler.StepLR(optimizer, step_size=7, gamma=0.1)
+        for fold_data in dataset_loader.get_cv_folds():
+            # Create a new model for each fold
+            model = model_factory(num_classes=data_info['num_classes'])
+            trainer = ModelTrainer(model, device=device, config=training_config)
 
             # Train the model
-            train_results = train_model(
-                model=model,
+            train_results = trainer.train(
                 train_loader=fold_data['train_loader'],
                 val_loader=fold_data['val_loader'],
-                criterion=criterion,
-                optimizer=optimizer,
-                device=device,
-                num_epochs=num_epochs,
-                scheduler=scheduler
+                fold_idx=fold_data['fold']
             )
 
             # Evaluate the model
-            eval_results = evaluate_model(
-                model=train_results['model'],
-                test_loader=fold_data['test_loader'],
-                criterion=criterion,
-                device=device
-            )
+            eval_results = trainer.evaluate(fold_data['test_loader'])
 
             fold_results.append({
                 'fold': fold_data['fold'],
@@ -760,14 +1018,15 @@ def main(
         results['fold_results'] = fold_results
 
         # Calculate average metrics across folds
-        avg_test_accuracy = np.mean([fold['eval_results']['test_accuracy'] for fold in fold_results])
-        avg_test_loss = np.mean([fold['eval_results']['test_loss'] for fold in fold_results])
+        avg_metrics = {}
+        for metric in fold_results[0]['eval_results'].keys():
+            if metric not in ['outputs', 'predictions', 'labels']:
+                avg_metrics[f'avg_{metric}'] = np.mean([
+                    fold['eval_results'][metric] for fold in fold_results
+                ])
+                logger.info(f"Average {metric}: {avg_metrics[f'avg_{metric}']:.4f}")
 
-        results['avg_test_accuracy'] = avg_test_accuracy
-        results['avg_test_loss'] = avg_test_loss
-
-        logger.info(f"Average Test Accuracy: {avg_test_accuracy:.4f}")
-        logger.info(f"Average Test Loss: {avg_test_loss:.4f}")
+        results.update(avg_metrics)
 
     return results
 
@@ -782,12 +1041,30 @@ if __name__ == "__main__":
         return model
 
 
+    # Define training configuration
+    training_config = {
+        'num_epochs': 10,
+        'early_stopping_patience': 3,
+        'grad_clip_value': 1.0,
+        'metrics': ['accuracy']
+    }
+
+    # Define dataset configuration
+    dataset_config = {
+        'num_folds': 5,
+        'test_size': 0.2,
+        'val_size': 0.15,
+        'batch_size': 64,
+        'num_workers': 4
+    }
+
     # Example for SINGLE_ROOT structure with FIXED_SPLIT loading method
     results = main(
         root_dir="/path/to/cloud/dataset",
         loading_method=LoadingMethod.FIXED_SPLIT,
         model_factory=create_resnet18,
-        num_epochs=5
+        training_config=training_config,
+        dataset_config=dataset_config
     )
 
     # Example for TRAIN_TEST_SPLIT structure with CV_TRAINING loading method
