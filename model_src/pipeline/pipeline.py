@@ -99,6 +99,12 @@ class ClassificationPipeline:
         # Get transformations
         train_transform, val_transform = self.dataset_handler.get_transforms()
 
+        # --- Separate model-specific params from skorch params ---
+        # Default for pretrained if not specified by user
+        model_specific_params = self.base_model_params.copy() # Make a copy to modify
+        use_pretrained = model_specific_params.pop('pretrained', True) # Use pop to get value AND remove key
+        # Add any other model-specific params here if needed and pop them
+
         # Base skorch parameters
         skorch_params = {
             'lr': 1e-4,
@@ -112,21 +118,19 @@ class ClassificationPipeline:
             'val_transform': val_transform,
             # Add other skorch defaults if needed
         }
-        # Update with user-provided base params
-        skorch_params.update(self.base_model_params)
+        # Update with user-provided base params, EXCLUDING the ones we popped
+        skorch_params.update(model_specific_params) # Now `pretrained` is not in here
 
         if self.model_path_load and os.path.exists(self.model_path_load):
             self.logger.info(f"💾 Loading model state from: {self.model_path_load}")
-            # Instantiate underlying torch model first
-            pytorch_model = get_model(self.model_name, num_classes=self.num_classes,
-                                      pretrained=False)  # Don't use TIMM pretrained if loading state
+            # Instantiate underlying torch model first - DON'T use TIMM pretrained if loading state
+            pytorch_model = get_model(self.model_name, num_classes=self.num_classes, pretrained=False)
 
             # Instantiate adapter BEFORE loading params
             self.model_adapter = SkorchImageClassifier(
-                module=pytorch_model, **skorch_params
+                module=pytorch_model, **skorch_params  # Pass cleaned skorch_params
             )
             try:
-                # Load the entire skorch state
                 self.model_adapter.load_params(f_params=self.model_path_load)
                 self.logger.info("✅ Skorch model state loaded successfully.")
                 # Ensure the loaded model is on the correct device
@@ -136,9 +140,11 @@ class ClassificationPipeline:
                 self.logger.error(f"❌ Failed to load skorch model state from {self.model_path_load}: {e}",
                                   exc_info=True)
                 self.logger.warning("⚠️ Proceeding with a newly initialized model.")
-                # Fallback: re-initialize with potentially pretrained weights
-                pytorch_model = get_model(self.model_name, num_classes=self.num_classes, pretrained=True)
-                self.model_adapter = SkorchImageClassifier(module=pytorch_model, **skorch_params)
+                # Fallback: re-initialize with potentially pretrained weights if user intended
+                pytorch_model = get_model(self.model_name, num_classes=self.num_classes,
+                                          pretrained=use_pretrained)  # Use original intent
+                self.model_adapter = SkorchImageClassifier(module=pytorch_model,
+                                                           **skorch_params)  # Pass cleaned skorch_params
 
         else:
             if self.model_path_load:
@@ -146,11 +152,10 @@ class ClassificationPipeline:
                     f"⚠️ Model load path specified but not found: {self.model_path_load}. Initializing a new model.")
             # Initialize a new model
             self.logger.info(f"✨ Initializing NEW model: {self.model_name}...")
-            # Allow using pretrained weights from TIMM/Torchvision if not loading state
-            use_pretrained = self.base_model_params.get('pretrained', True) if self.base_model_params else True
+            # Use the extracted 'use_pretrained' value
             pytorch_model = get_model(self.model_name, num_classes=self.num_classes, pretrained=use_pretrained)
             self.model_adapter = SkorchImageClassifier(
-                module=pytorch_model, **skorch_params
+                module=pytorch_model, **skorch_params  # Pass cleaned skorch_params
             )
             self.logger.info("✅ New model adapter created.")
 

@@ -1,8 +1,9 @@
 import torch
 from torch.utils.data.dataloader import default_collate
 from skorch import NeuralNetClassifier
-from skorch.callbacks import EarlyStopping, LRScheduler
+from skorch.callbacks import EarlyStopping, LRScheduler, Callback
 from skorch.dataset import Dataset as SkorchDataset  # Avoid name collision
+from skorch.dataset import ValidSplit
 from typing import Callable, List, Tuple, Dict, Any, Optional
 from PIL import Image
 import numpy as np
@@ -12,13 +13,14 @@ from utils import logger
 
 # --- Collate Functions ---
 
-def load_and_transform(batch: List[Tuple[str, int]], transform: Callable) -> Tuple[torch.Tensor, torch.Tensor]:
+def load_and_transform(batch: List[Tuple[Tuple[str, int], int]], transform: Callable) -> Tuple[torch.Tensor, torch.Tensor]:
     """
     Loads images from paths in a batch and applies transformations.
-    Used by the skorch iterators via the collate_fn.
+    Assumes batch items are structured as ((path, label), label) due to
+    how SkorchDataset combines X=(path, label) and y=label during iteration.
 
     Args:
-        batch (List[Tuple[str, int]]): A list of (image_path, label) tuples.
+        batch (List[Tuple[Tuple[str, int], int]]): A list of items like ((path, label), label).
         transform (Callable): The torchvision transform to apply.
 
     Returns:
@@ -26,22 +28,24 @@ def load_and_transform(batch: List[Tuple[str, int]], transform: Callable) -> Tup
     """
     images = []
     labels = []
-    for img_path, label in batch:
+    # Unpack the ((path, inner_label), outer_label) structure
+    for item_tuple, _ in batch: # Ignore outer_label, we use the one bundled with path
+        img_path, label = item_tuple # Unpack the inner tuple to get path and label
         try:
             img = Image.open(img_path).convert('RGB')
             if transform:
                 img = transform(img)
             images.append(img)
-            labels.append(label)
+            labels.append(label) # Use the label that was originally paired with the path
         except Exception as e:
-            logger.error(f"❌ Error loading/transforming image {img_path} in collate_fn: {e}")
-            # Handle error: skip image, use placeholder, or raise?
-            # Using a placeholder might skew training/validation. Skipping changes batch size.
-            # Let's log and skip for now. A better approach might be pre-filtering bad images.
+            # Log the specific path that failed
+            logger.error(f"❌ Error loading/transforming image path='{img_path}' (label={label}) in collate_fn: {e}", exc_info=True)
             continue  # Skip this sample
 
     if not images:  # If all images in the batch failed
-        return torch.empty(0), torch.empty(0)  # Return empty tensors
+        # Return empty tensors with correct number of dimensions but size 0
+        # Assuming RGB images and integer labels
+        return torch.empty((0, 3, 224, 224)), torch.empty((0,), dtype=torch.long)
 
     # Stack images and convert labels to tensor
     images_tensor = default_collate(images)  # Stacks tensors correctly
@@ -58,22 +62,25 @@ class SkorchImageClassifier(NeuralNetClassifier):
     """
 
     def __init__(
-            self,
-            module: torch.nn.Module,
-            criterion: torch.nn.Module = torch.nn.CrossEntropyLoss,
-            optimizer: torch.optim.Optimizer = torch.optim.AdamW,
-            lr: float = 1e-4,
-            batch_size: int = 32,
-            max_epochs: int = 10,
-            device: str = 'cuda' if torch.cuda.is_available() else 'cpu',
-            callbacks: Optional[List[Any]] = None,  # Specify skorch callbacks type later if needed
-            train_transform: Optional[Callable] = None,
-            val_transform: Optional[Callable] = None,
-            patience: int = 5,  # for EarlyStopping
-            monitor: str = 'valid_loss',  # for EarlyStopping
-            lr_scheduler: bool = False,  # Add CosineAnnealingLR?
-            lr_scheduler_patience: int = 3,  # for ReduceLROnPlateau
-            *args, **kwargs
+        self,
+        module: torch.nn.Module,
+        criterion: torch.nn.Module = torch.nn.CrossEntropyLoss,
+        optimizer: torch.optim.Optimizer = torch.optim.AdamW,
+        lr: float = 1e-4,
+        batch_size: int = 32,
+        max_epochs: int = 10,
+        device: str = 'cuda' if torch.cuda.is_available() else 'cpu',
+        callbacks: Optional[List[Any]] = None,
+        train_transform: Optional[Callable] = None,
+        val_transform: Optional[Callable] = None,
+        patience: int = 5,
+        monitor: str = 'valid_loss',
+        lr_scheduler: bool = False,
+        lr_scheduler_patience: int = 3,
+        # Add train_split parameter here if you want it configurable,
+        # but for this use case, setting it to None is usually correct.
+        # train_split = ValidSplit(5) # Example if you wanted internal split
+        *args, **kwargs # Pass other skorch args
     ):
         """
         Args:
@@ -107,7 +114,7 @@ class SkorchImageClassifier(NeuralNetClassifier):
             return load_and_transform(batch, self.val_transform)
 
         # --- Setup Callbacks ---
-        default_callbacks = [
+        default_callbacks: List[Tuple[str, Callback]] = [
             ('early_stopping', EarlyStopping(monitor=monitor, patience=patience, lower_is_better=True, load_best=True)),
             # Add other default callbacks if needed
         ]
@@ -131,6 +138,8 @@ class SkorchImageClassifier(NeuralNetClassifier):
         else:
             final_callbacks = default_callbacks
 
+        final_callbacks = default_callbacks # Simplified for snippet
+
         logger.info(f"🤖 Initializing SkorchImageClassifier with device: {device}")
         logger.info(f"Callbacks: {[name for name, cb in final_callbacks]}")
 
@@ -146,9 +155,14 @@ class SkorchImageClassifier(NeuralNetClassifier):
             # Pass the collate functions to skorch iterators
             iterator_train__collate_fn=train_collate_fn,
             iterator_valid__collate_fn=val_collate_fn,
+            # --- Explicitly set train_split=None ---
+            # This tells skorch *not* to perform its own internal validation split.
+            # We handle validation either via sklearn CV or by passing
+            # 'validation_data' in fit_params.
+            train_split=None,
             # Skorch needs predict_nonlinearity for predict_proba
             predict_nonlinearity='auto',  # 'auto' usually works (softmax for classification)
-            *args, **kwargs
+            *args, **kwargs # Pass other skorch args
         )
 
     def fit(self, X, y=None, **fit_params):
@@ -157,75 +171,91 @@ class SkorchImageClassifier(NeuralNetClassifier):
         Sklearn CV methods will pass subsets of X (which are paths) here.
         We package X and y into a Skorch Dataset of tuples.
         """
-        # Skorch expects X, y. We have paths in X, labels in y.
-        # Create a dataset of (path, label) tuples.
-        # Skorch Dataset can handle various inputs, including lists.
-        # Ensure y is included if provided (needed for training)
-        if y is not None:
-            # Ensure y is list or np.array for indexing compatibility with Skorch Dataset
-            if isinstance(y, torch.Tensor):
-                y_processed = y.tolist()
-            else:
-                y_processed = y  # Assume list or np.array
+        # --- Input Validation and Processing ---
+        if y is None:
+            # This case should ideally not happen for training via sklearn CV/fit
+            logger.error("❌ SkorchImageClassifier.fit called with y=None during training setup. Labels are required.")
+            raise ValueError("Target labels (y) are required during training fit.")
 
-            # Check length consistency
-            if len(X) != len(y_processed):
-                raise ValueError(
-                    f"Input X (paths) and y (labels) must have the same length. Got {len(X)} and {len(y_processed)}")
-
-            # Package as list of tuples: [(path1, label1), (path2, label2), ...]
-            path_label_tuples = list(zip(X, y_processed))
-            dataset = SkorchDataset(path_label_tuples, y=None)  # y=None because labels are inside X now
-
-            # Handle validation split if provided in fit_params
-            # skorch expects validation data in fit_params['X_valid'], fit_params['y_valid']
-            # We need to adapt if user passes validation paths/labels
-            if 'X_valid' in fit_params and 'y_valid' in fit_params:
-                X_valid_paths = fit_params.pop('X_valid')
-                y_valid_labels = fit_params.pop('y_valid')
-                if isinstance(y_valid_labels, torch.Tensor):
-                    y_valid_processed = y_valid_labels.tolist()
-                else:
-                    y_valid_processed = y_valid_labels
-
-                valid_path_label_tuples = list(zip(X_valid_paths, y_valid_processed))
-                valid_dataset = SkorchDataset(valid_path_label_tuples, y=None)
-                fit_params['validation_data'] = valid_dataset  # Use skorch's validation_data parameter
-
-            # Call parent fit method with the structured dataset
-            # super().fit(X=dataset, y=None, **fit_params) # Pass y=None as labels are inside dataset
-            # Updated skorch versions might prefer passing validation data differently
-            # Check skorch docs for `validation_data` or alternative validation split methods
-            # Using `train_split=skorch.dataset.ValidSplit(...)` with `validation_data` might be preferred
-
-            # Let's use the standard skorch train_split=None and pass validation data explicitly if needed
-            # Skorch handles validation split internally if train_split is not None
-            # If we provide validation_data, train_split should typically be None
-
-            # If using skorch > 0.11, pass validation data directly to fit:
-            if 'validation_data' in fit_params:
-                logger.info("Fitting with provided validation data.")
-                super().fit(X=dataset, y=None, **fit_params)
-            else:
-                # If no explicit validation data, let skorch handle internal splitting if train_split is configured
-                # By default, skorch uses a 20% validation split if train_split is not specified and no validation_data
-                # We rely on EarlyStopping using this internal validation set.
-                logger.info("Fitting without explicit validation data. Skorch may use internal validation split.")
-                super().fit(X=dataset, y=None, **fit_params)
-
+        # Ensure X is a list of paths
+        if isinstance(X, np.ndarray):
+             X_processed = X.tolist() # Convert numpy array of paths to list
+        elif isinstance(X, list):
+             X_processed = X # Already a list
         else:
-            # If y is None (e.g., during prediction or certain CV scenarios where y is inferred)
-            # Create dataset with dummy labels (or handle appropriately based on context)
-            # This case needs careful handling depending on *why* y is None.
-            # For typical sklearn fit, y should not be None.
-            # For predict, fit is not called.
-            logger.warning("⚠️ SkorchImageClassifier.fit called with y=None. This might be unexpected during training.")
-            # Assuming X contains paths, we still need to pass *something* skorch Dataset expects
-            # Passing dummy labels might be necessary if skorch requires a target, even if unused later.
-            dummy_labels = [0] * len(X)
-            path_label_tuples = list(zip(X, dummy_labels))
-            dataset = SkorchDataset(path_label_tuples, y=None)
-            super().fit(X=dataset, y=None, **fit_params)
+            raise TypeError(f"Input X should be a list or numpy array of paths, got {type(X)}")
+
+        # Ensure y is suitable for skorch checks (numpy array) and for tuples (list/basic types)
+        if isinstance(y, torch.Tensor):
+            y_for_check = y.numpy() # Numpy array for skorch checks
+            y_for_tuples = y.tolist() # List for zipping
+        elif isinstance(y, list):
+             y_for_check = np.array(y) # Numpy array for skorch checks
+             y_for_tuples = y       # Keep as list for zipping
+        elif isinstance(y, np.ndarray):
+             y_for_check = y       # Already numpy array for skorch checks
+             y_for_tuples = y.tolist() # List for zipping
+        else:
+            raise TypeError(f"Input y should be a list, numpy array, or torch tensor, got {type(y)}")
+
+        # Check length consistency
+        if len(X_processed) != len(y_for_check):
+             raise ValueError(f"Input X (paths) length {len(X_processed)} and y (labels) length {len(y_for_check)} must match.")
+
+        # Package paths and labels as list of tuples for the Dataset used by collate_fn
+        path_label_tuples = list(zip(X_processed, y_for_tuples))
+
+        # Create the dataset where X contains the bundled data for iteration
+        # y=None here tells SkorchDataset not to expect a separate y target during iteration
+        dataset = SkorchDataset(path_label_tuples, y=None)
+
+        # --- Handle Validation Data ---
+        # Skorch handles validation data passed via fit_params['validation_data']
+        # We need to ensure it's also packaged correctly if provided
+        if 'X_valid' in fit_params and 'y_valid' in fit_params:
+            # Get raw validation data
+            X_valid_raw = fit_params.pop('X_valid')
+            y_valid_raw = fit_params.pop('y_valid')
+
+            # Process validation X (paths)
+            if isinstance(X_valid_raw, np.ndarray):
+                X_valid_paths = X_valid_raw.tolist()
+            elif isinstance(X_valid_raw, list):
+                X_valid_paths = X_valid_raw
+            else:
+                 raise TypeError(f"Input X_valid should be a list or numpy array of paths, got {type(X_valid_raw)}")
+
+            # Process validation y (labels)
+            if isinstance(y_valid_raw, torch.Tensor):
+                 y_valid_labels = y_valid_raw.tolist()
+            elif isinstance(y_valid_raw, np.ndarray):
+                 y_valid_labels = y_valid_raw.tolist()
+            elif isinstance(y_valid_raw, list):
+                 y_valid_labels = y_valid_raw
+            else:
+                 raise TypeError(f"Input y_valid should be a list, numpy array, or torch tensor, got {type(y_valid_raw)}")
+
+            # Check lengths
+            if len(X_valid_paths) != len(y_valid_labels):
+                 raise ValueError(f"Input X_valid length {len(X_valid_paths)} and y_valid length {len(y_valid_labels)} must match.")
+
+            # Package validation data into tuples and a SkorchDataset
+            valid_path_label_tuples = list(zip(X_valid_paths, y_valid_labels))
+            valid_dataset = SkorchDataset(valid_path_label_tuples, y=None)
+            # Pass the packaged validation dataset to skorch's fit method
+            fit_params['validation_data'] = valid_dataset
+            logger.info("Fitting with provided validation data (packaged as SkorchDataset).")
+        else:
+             logger.info("Fitting without explicit validation data. Skorch may use internal validation split if train_split is not None.")
+
+
+        # --- Call Parent Fit Method ---
+        # Pass our custom dataset (containing tuples) as X.
+        # Pass the original labels (y_for_check as numpy array) separately as y.
+        # Skorch uses the separate y for internal checks (like class inference)
+        # but iterates over the X dataset (our tuples) for training batches.
+        logger.debug(f"Calling super().fit with X=SkorchDataset, y=np.array(shape={y_for_check.shape})")
+        super().fit(X=dataset, y=y_for_check, **fit_params)
 
         return self
 

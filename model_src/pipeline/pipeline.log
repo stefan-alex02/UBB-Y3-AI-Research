@@ -1,2 +1,20 @@
 2025-04-26 14:12:11 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
 2025-04-26 14:12:12 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 14:41:02 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 14:41:02 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 14:41:03 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 14:57:58 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 14:57:58 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 14:58:00 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 14:59:02 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 14:59:02 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 14:59:03 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 15:23:47 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 15:23:47 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 15:23:48 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 15:38:27 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 15:38:27 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 15:38:28 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 15:39:39 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 15:39:39 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 15:39:40 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
