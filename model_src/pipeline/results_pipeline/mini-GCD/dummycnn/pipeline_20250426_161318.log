@@ -1,0 +1,21 @@
+2025-04-26 16:13:18 - ✨ INFO - [pipeline.py:69] - 🚀 Initializing Classification Pipeline...
+2025-04-26 16:13:18 - ✨ INFO - [pipeline.py:70] - Dataset: mini-GCD
+2025-04-26 16:13:18 - ✨ INFO - [pipeline.py:71] - Model: dummycnn
+2025-04-26 16:13:18 - ✨ INFO - [pipeline.py:72] - Output Dir: results_pipeline
+2025-04-26 16:13:18 - ✨ INFO - [pipeline.py:73] - Seed: 42
+2025-04-26 16:13:18 - ✨ INFO - [datasets.py:137] - FIXED: Loaded 75 train images and 75 test images.
+2025-04-26 16:13:18 - ✨ INFO - [datasets.py:83] - 📁 Dataset 'mini-GCD' loaded. Structure: FIXED. Classes: 3
+2025-04-26 16:13:18 - ✨ INFO - [pipeline.py:86] - 💻 Device: CUDA
+2025-04-26 16:13:18 - ✨ INFO - [pipeline.py:154] - ✨ Initializing NEW model: dummycnn...
+2025-04-26 16:13:18 - ✨ INFO - [adapters.py:132] - 🤖 Initializing SkorchImageClassifier with device: cuda
+2025-04-26 16:13:18 - ✨ INFO - [adapters.py:133] - Callbacks: ['early_stopping']
+2025-04-26 16:13:18 - ❌ ERROR - [pipeline.py:93] - ❌ Failed to initialize model adapter: NeuralNetClassifier.__init__() got multiple values for argument 'module'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline\pipeline.py", line 91, in __init__
+    self._initialize_model_adapter()
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline\pipeline.py", line 157, in _initialize_model_adapter
+    self.model_adapter = SkorchImageClassifier(
+                         ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline\adapters.py", line 135, in __init__
+    super().__init__(
+TypeError: NeuralNetClassifier.__init__() got multiple values for argument 'module'
