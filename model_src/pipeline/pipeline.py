@@ -1,3 +1,4 @@
+import logging
 import os
 import time
 from pathlib import Path
@@ -64,7 +65,7 @@ class ClassificationPipeline:
         log_dir = os.path.join(self.output_base_dir, self.dataset_name, self.model_name)
         os.makedirs(log_dir, exist_ok=True)
         log_file = os.path.join(log_dir, f"pipeline_{time.strftime('%Y%m%d_%H%M%S')}.log")
-        self.logger = setup_logger(log_file=log_file)  # Reconfigure logger to use specific file
+        self.logger = setup_logger(log_file=log_file, level=logging.DEBUG)
 
         self.logger.info(f"🚀 Initializing Classification Pipeline...")
         self.logger.info(f"Dataset: {self.dataset_path}")

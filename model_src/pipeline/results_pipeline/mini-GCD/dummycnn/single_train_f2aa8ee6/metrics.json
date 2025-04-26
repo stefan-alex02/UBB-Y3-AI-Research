@@ -1,0 +1,9 @@
+{
+    "method": "single_train",
+    "training_history": [
+        {
+            "batches": [],
+            "epoch": 1
+        }
+    ]
+}

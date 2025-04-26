@@ -1,0 +1,81 @@
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:69] - 🚀 Initializing Classification Pipeline...
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:70] - Dataset: mini-GCD
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:71] - Model: dummycnn
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:72] - Output Dir: results_pipeline
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:73] - Seed: 42
+2025-04-26 17:14:15 - ✨ INFO - [datasets.py:137] - FIXED: Loaded 75 train images and 75 test images.
+2025-04-26 17:14:15 - ✨ INFO - [datasets.py:83] - 📁 Dataset 'mini-GCD' loaded. Structure: FIXED. Classes: 3
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:86] - 💻 Device: CUDA
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:154] - ✨ Initializing NEW model: dummycnn...
+2025-04-26 17:14:15 - ✨ INFO - [adapters.py:120] - 🤖 Initializing SkorchImageClassifier with device: {device}
+2025-04-26 17:14:15 - ✨ INFO - [adapters.py:121] - Callbacks: [] (DEBUG: Forced empty)
+2025-04-26 17:14:15 - ✨ INFO - [adapters.py:159] - 🤖 Initializing SkorchImageClassifier with device: cuda
+2025-04-26 17:14:15 - ✨ INFO - [adapters.py:160] - Callbacks: ['early_stopping']
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:160] - ✅ New model adapter created.
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:185] - ➕ Added method to pipeline: single_train with config: {'val_size': 0.25, 'save_results': True, 'name': 'single_train', 'dataset_name': 'mini-GCD', 'model_name': 'dummycnn'}
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:185] - ➕ Added method to pipeline: single_eval with config: {'save_results': True, 'name': 'single_eval', 'dataset_name': 'mini-GCD', 'model_name': 'dummycnn'}
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:189] - 🏁 Starting pipeline execution with 2 steps...
+2025-04-26 17:14:15 - ✨ INFO - [pipeline.py:199] - 
+--- Running Step 1/2: single_train ---
+2025-04-26 17:14:15 - ✨ INFO - [methods.py:448] - 🚀 Starting Single Train process...
+2025-04-26 17:14:15 - ✨ INFO - [datasets.py:218] - Split data: 56 train, 19 validation samples.
+2025-04-26 17:14:15 - ✨ INFO - [methods.py:473] - 💪 Starting training on 56 samples, validating on 19 samples...
+2025-04-26 17:14:15 - ✨ INFO - [adapters.py:222] - Passing validation data (paths and labels) directly to super().fit.
+2025-04-26 17:14:16 - ❌ ERROR - [methods.py:514] - ❌ Single Train failed: "Key 'valid_loss' was not found in history."
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline\methods.py", line 485, in run_single_train
+    model_adapter.fit(X_train.tolist(), y_train.tolist(), **fit_params)
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline\adapters.py", line 227, in fit
+    super().fit(
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1226, in fit_loop
+    self.notify("on_epoch_end", **on_epoch_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 416, in notify
+    getattr(cb, method_name)(self, **cb_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\callbacks\training.py", line 429, in on_epoch_end
+    current_score = net.history[-1, self.monitor]
+                    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\history.py", line 291, in __getitem__
+    raise KeyError(keyerror_msg.format(key))
+KeyError: "Key 'valid_loss' was not found in history."
+2025-04-26 17:14:16 - ✨ INFO - [pipeline.py:199] - 
+--- Running Step 2/2: single_eval ---
+2025-04-26 17:14:16 - ✨ INFO - [methods.py:542] - 🚀 Starting Single Evaluation on Test Set...
+2025-04-26 17:14:16 - ✨ INFO - [methods.py:565] - 🧪 Evaluating model on 75 test samples...
+2025-04-26 17:14:16 - ❌ ERROR - [methods.py:607] - ❌ Single Evaluation failed: Dataset does not have consistent lengths.
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline\methods.py", line 569, in run_single_eval
+    y_pred = model_adapter.predict(X_test.tolist()) # Pass list of paths
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 232, in predict
+    return self.predict_proba(X).argmax(axis=1)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 200, in predict_proba
+    return super().predict_proba(X)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1625, in predict_proba
+    for yp in self.forward_iter(X, training=False):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1468, in forward_iter
+    dataset = self.get_dataset(X)
+              ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 159, in __init__
+    len_X = get_len(X)
+            ^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 82, in get_len
+    raise ValueError("Dataset does not have consistent lengths.")
+ValueError: Dataset does not have consistent lengths.
+2025-04-26 17:14:16 - ✨ INFO - [pipeline.py:284] - 
+🏁 Pipeline execution finished in 0.65 seconds.
+2025-04-26 17:14:16 - ✨ INFO - [pipeline.py:288] - 💾 Saving final model state to: results_pipeline\mini-GCD\dummycnn\final_pipeline_model.pt
+2025-04-26 17:14:16 - ✨ INFO - [pipeline.py:294] - ✅ Final model saved successfully.
+2025-04-26 17:14:16 - ✨ INFO - [main.py:148] - 
+--- Pipeline Completed ---

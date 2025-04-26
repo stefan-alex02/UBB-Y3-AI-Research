@@ -485,14 +485,47 @@ def run_single_train(
         model_adapter.fit(X_train.tolist(), y_train.tolist(), **fit_params)
 
         logger.info(f"✅ Single Train completed.")
-        # Log training history summary if available
+
+        # --- ADJUSTED HISTORY LOGGING ---
         history = model_adapter.history
         if history:
-             best_epoch = np.argmin(history[:, 'valid_loss']) # Assuming EarlyStopping loads best
-             best_val_loss = history[best_epoch, 'valid_loss']
-             train_loss_at_best = history[best_epoch, 'train_loss']
-             logger.info(f"📉 Training history summary: Best validation loss {best_val_loss:.4f} at epoch {best_epoch+1} (Train loss: {train_loss_at_best:.4f})")
+            # Check if validation loss was actually recorded
+            if 'valid_loss' in history[0]:  # Check the keys of the first epoch's record
+                try:
+                    # Find epoch with minimum validation loss
+                    valid_losses = history[:, 'valid_loss']
+                    # Handle potential NaN values if any validation step failed
+                    if np.isnan(valid_losses).any():
+                        logger.warning(
+                            "⚠️ NaN values found in valid_loss history. Cannot reliably determine best epoch.")
+                        # Optionally log the last epoch's stats or skip summary
+                        last_epoch_idx = len(history) - 1
+                        last_train_loss = history[last_epoch_idx, 'train_loss']
+                        last_valid_loss = history[last_epoch_idx, 'valid_loss']
+                        logger.info(
+                            f"📉 Training history (last epoch): Train loss {last_train_loss:.4f}, Valid loss {last_valid_loss:.4f}")
 
+                    else:
+                        best_epoch_idx = np.argmin(valid_losses)
+                        best_val_loss = history[best_epoch_idx, 'valid_loss']
+                        # Ensure train_loss exists before accessing
+                        train_loss_at_best = history[best_epoch_idx, 'train_loss'] if 'train_loss' in history[
+                            best_epoch_idx] else float('nan')
+                        logger.info(
+                            f"📉 Training history summary: Best validation loss {best_val_loss:.4f} at epoch {best_epoch_idx + 1} (Train loss: {train_loss_at_best:.4f})")
+
+                except Exception as hist_err:
+                    logger.error(f"❌ Error processing history for logging: {hist_err}")
+            else:
+                # Log only training loss if validation loss is missing
+                last_epoch_idx = len(history) - 1
+                last_train_loss = history[last_epoch_idx, 'train_loss'] if 'train_loss' in history[
+                    last_epoch_idx] else float('nan')
+                logger.info(
+                    f"📉 Training history summary (last epoch): Train loss {last_train_loss:.4f} (Validation loss not recorded in history)")
+        else:
+            logger.info("📉 Training history is empty.")
+        # --- END ADJUSTED HISTORY LOGGING ---
 
         if save_results:
             output_dir = _get_output_dir(
@@ -510,8 +543,14 @@ def run_single_train(
 
         return model_adapter
 
+
     except Exception as e:
         logger.error(f"❌ Single Train failed: {e}", exc_info=True)
+
+        # Ensure the model adapter is marked as uninitialized if fit failed
+        if hasattr(model_adapter, 'initialized_'):
+            model_adapter.initialized_ = False  # Explicitly mark failure
+
         return None
 
 
