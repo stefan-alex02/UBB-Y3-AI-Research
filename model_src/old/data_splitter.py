@@ -1,10 +1,10 @@
 import os
 import shutil
 
-from model_src.pipeline.utils import delete_directory_recursively
+from model_src.old_pipeline.utils import delete_directory_recursively
 
-# directory = '../datasets/GCD'
-directory = '../datasets/mini-GCD'
+# directory = '../data/GCD'
+directory = '../data/mini-GCD'
 modified_directory = directory + '-split/'
 
 # Load the data from train and test folders into a common class dictionary

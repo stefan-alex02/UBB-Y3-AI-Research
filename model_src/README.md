@@ -1,7 +1,9 @@
 
 # Pipeline description
 
-## Data loading
+The given dataset (by path) may be structured in the file system in 2 variants:
+  - root folder with multiple folders with images, each folder representing a class. In this case any combination of steps (1), (2) or alternatives is possible.
+  - root folder with train and test folders, each one having multiple subfolders (the same number) with images, each subfolder representing a class. This means that the test dataset is already fixed. As mentioned above, this means that step (2) cannot be performed, only a fixed split with a single training and eval process.
 
 Disclaimer: 
 
@@ -13,13 +15,6 @@ In general, the pipeline provides three possible methods of loading a dataset:
  - fixed train-test split: the dataset is split into training, validation and test subsets (e.g. 70% train, 20% validation, 10% test)
  - cross-validation on the training set: the dataset will have a fixed test set, and the rest of the dataset will be split into k folds, where k is a hyper-parameter. The training set will have k-1 folds, and the validation set will have 1 fold. The process is repeated k times, each time using a different fold as validation set.
  - cross-validation for evaluation: the dataset will be split into k folds, where k is a hyper-parameter. The test set will have 1 fold, and for the rest of the dataset a split between training and validation will be done (e.g. 70% train, 30% validation). The process is repeated k times, each time using a different fold as test set.
-
-The dataset which is being loaded may be structured in two specific ways:
-
- - the dataset is structured in folders, where each folder represents a class, and the images are stored in the folders. The folder names are used as class labels. (e.g. `dataset/class1`, `dataset/class2`, etc.). There are not splits between the training and test sets, so the dataset is loaded as a whole.
-    - In this case, the dataset can be loaded in all three methods described above.
- - the dataset is structured in two main folders, one for the training set and one for the test set. Each of these folders contains subfolders for each class, and the images are stored in the subfolders. The folder names are used as class labels. (e.g. `dataset/train/class1`, `dataset/train/class2`, etc.).
-    - In this case, the dataset can only be loaded as a fixed train-validation-test split, or as cross-validation on the training set.
 
 Loading operations/steps: When loading, a dataset may be processed in these steps:
 

@@ -10,7 +10,7 @@ import numpy as np
 from collections import Counter
 from PIL import Image
 
-from model_src.pipeline.data_splitter import create_train_test_split_dataset
+from model_src.old_pipeline.data_splitter import create_train_test_split_dataset
 
 
 class CustomImageDataset(Dataset):
@@ -144,7 +144,7 @@ def load_datasets(config: dict, k_folds: int = 1, logger: logging.Logger = None)
             random_state=random_seed
         )
 
-        # Subset datasets
+        # Subset data
         train_dataset = Subset(train_val_dataset, train_indices)
         val_dataset = Subset(train_val_dataset, val_indices)
 

@@ -3,7 +3,7 @@ from torch.utils.data import Dataset, DataLoader, Subset
 import matplotlib.pyplot as plt
 from collections import Counter
 
-from model_src.pipeline.__datasets import get_image_path_from_dataset
+from model_src.old_pipeline.datasets import get_image_path_from_dataset
 
 
 def plot_datasets_statistics(dataset_info, fold=None):
@@ -22,7 +22,7 @@ def plot_datasets_statistics(dataset_info, fold=None):
     # Display class distributions
     show_datasets_class_distributions(class_names, datasets)
 
-    # Unpack datasets
+    # Unpack data
     train_dataset, val_dataset, test_dataset = datasets.values()
 
     # Display sample images
@@ -83,7 +83,7 @@ def show_datasets_split_distribution(datasets):
 
 def show_datasets_class_distributions(class_names, datasets: dict):
     """
-    Plots the class distribution across different datasets.
+    Plots the class distribution across different data.
     :param class_names: List of class names.
     :param datasets: Dictionary containing dataset splits.
     """
