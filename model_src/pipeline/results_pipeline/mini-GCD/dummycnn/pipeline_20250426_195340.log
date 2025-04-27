@@ -1,0 +1,87 @@
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:70] - 🚀 Initializing Classification Pipeline...
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:71] - Dataset: mini-GCD
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:72] - Model: dummycnn
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:73] - Output Dir: results_pipeline
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:74] - Seed: 42
+2025-04-26 19:53:40 - 🐛 DEBUG - [datasets.py:93] - Detected FIXED dataset structure.
+2025-04-26 19:53:40 - ✨ INFO - [datasets.py:137] - FIXED: Loaded 75 train images and 75 test images.
+2025-04-26 19:53:40 - ✨ INFO - [datasets.py:83] - 📁 Dataset 'mini-GCD' loaded. Structure: FIXED. Classes: 3
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:87] - 💻 Device: CUDA
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:155] - ✨ Initializing NEW model: dummycnn...
+2025-04-26 19:53:40 - ✨ INFO - [adapters.py:134] - 🤖 Initializing SkorchImageClassifier with device: cuda
+2025-04-26 19:53:40 - ✨ INFO - [adapters.py:135] - Callbacks: ['early_stopping']
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:161] - ✅ New model adapter created.
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:186] - ➕ Added method to pipeline: single_train with config: {'val_size': 0.25, 'save_results': True, 'name': 'single_train', 'dataset_name': 'mini-GCD', 'model_name': 'dummycnn'}
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:186] - ➕ Added method to pipeline: single_eval with config: {'save_results': True, 'name': 'single_eval', 'dataset_name': 'mini-GCD', 'model_name': 'dummycnn'}
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:190] - 🏁 Starting pipeline execution with 2 steps...
+2025-04-26 19:53:40 - ✨ INFO - [pipeline.py:200] - 
+--- Running Step 1/2: single_train ---
+2025-04-26 19:53:40 - ✨ INFO - [methods.py:448] - 🚀 Starting Single Train process...
+2025-04-26 19:53:40 - ✨ INFO - [datasets.py:218] - Split data: 56 train, 19 validation samples.
+2025-04-26 19:53:40 - ✨ INFO - [methods.py:473] - 💪 Starting training on 56 samples, validating on 19 samples...
+2025-04-26 19:53:40 - ✨ INFO - [adapters.py:182] - Passing validation data (paths and labels) directly to super().fit.
+2025-04-26 19:53:40 - 🐛 DEBUG - [adapters.py:186] - Calling super().fit with: X=List(len=56), y=np.array(shape=(56,)), X_valid=<class 'list'>(len=19), y_valid=<class 'numpy.ndarray'>(shape=(19,))
+2025-04-26 19:53:41 - ❌ ERROR - [methods.py:548] - ❌ Single Train failed: "nll_loss_forward_reduce_cuda_kernel_2d_index" not implemented for 'Int'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline\methods.py", line 485, in run_single_train
+    model_adapter.fit(X_train.tolist(), y_train.tolist(), **fit_params)
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline\adapters.py", line 194, in fit
+    super().fit(
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1024, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: "nll_loss_forward_reduce_cuda_kernel_2d_index" not implemented for 'Int'
+2025-04-26 19:53:41 - ✨ INFO - [pipeline.py:200] - 
+--- Running Step 2/2: single_eval ---
+2025-04-26 19:53:41 - ❌ ERROR - [pipeline.py:217] - ❌ Skipping step 2 ('single_eval'): Requires a fitted/initialized model, but none is available.
+2025-04-26 19:53:41 - ✨ INFO - [pipeline.py:285] - 
+🏁 Pipeline execution finished in 0.82 seconds.
+2025-04-26 19:53:41 - ⚠️ WARNING - [pipeline.py:299] - ⚠️ Skipping final model save: No valid trained model available or path not specified correctly.
+2025-04-26 19:53:41 - ✨ INFO - [main.py:148] - 
+--- Pipeline Completed ---
