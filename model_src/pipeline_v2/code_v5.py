@@ -906,7 +906,7 @@ class SkorchModelAdapter(NeuralNetClassifier):
         max_epochs: int = 20,
         batch_size: int = 32,
         device: str = DEVICE,
-        callbacks: Optional[List[Tuple[str, Union[Callback, str]]]] = 'default', # Allow 'disable' string
+        callbacks: Optional[Union[List[Tuple[str, Callback]], str]] = 'default', # Allow None, 'default', list
         patience: int = 10,
         monitor: str = 'valid_loss',
         lr_scheduler_policy: str = 'ReduceLROnPlateau',
@@ -947,17 +947,21 @@ class SkorchModelAdapter(NeuralNetClassifier):
             self.module_init_kwargs['num_classes'] = module__num_classes
 
         # Handle default/disable callbacks
-        effective_callbacks = []
+        final_callbacks_arg = None  # Default to None if 'disable' or invalid
         if callbacks == 'default':
-            # Ensure default callbacks use the provided monitor/patience params
-             effective_callbacks = [
-                 ('early_stopping', EarlyStopping(monitor=monitor, patience=patience, load_best=True, lower_is_better=monitor.endswith('_loss'))),
-                 ('checkpoint', Checkpoint(monitor=f'{monitor}_best', f_params='best_model.pt', dirname=f"skorch_cp_{datetime.now().strftime('%Y%m%d_%H%M%S')}", load_best=False)),
-                 ('lr_scheduler', LRScheduler(policy=lr_scheduler_policy, monitor=monitor, mode='min' if monitor.endswith('_loss') else 'max', patience=lr_scheduler_patience, factor=0.1))
+            final_callbacks_arg = [
+                ('early_stopping', EarlyStopping(monitor=monitor, patience=patience, load_best=True,
+                                                 lower_is_better=monitor.endswith('_loss'))),
+                ('checkpoint', Checkpoint(monitor=f'{monitor}_best', f_params='best_model.pt',
+                                          dirname=f"skorch_cp_{datetime.now().strftime('%Y%m%d_%H%M%S')}",
+                                          load_best=False)),
+                ('lr_scheduler', LRScheduler(policy=lr_scheduler_policy, monitor=monitor,
+                                             mode='min' if monitor.endswith('_loss') else 'max',
+                                             patience=lr_scheduler_patience, factor=0.1))
             ]
         elif isinstance(callbacks, list):
-             effective_callbacks = callbacks
-        # Note: 'disable' or None results in empty list passed to super
+            final_callbacks_arg = callbacks  # Pass the list directly
+        # If callbacks is None or any other value, final_callbacks_arg remains None
 
         super().__init__(
             module=module,
@@ -969,7 +973,7 @@ class SkorchModelAdapter(NeuralNetClassifier):
             max_epochs=max_epochs,
             batch_size=batch_size,
             device=device,
-            callbacks=effective_callbacks, # Pass the processed list
+            callbacks=final_callbacks_arg,
             train_split=train_split,
             classes=classes,
             verbose=verbose,
@@ -1699,21 +1703,22 @@ class ClassificationPipeline:
 
 
         # --- Setup CV ---
-        estimator = clone(self.model_adapter)
-        # Disable skorch's internal train/val split for cross_validate
-        logger.debug("Setting train_split=None on cloned estimator for cross_validate.")
-        estimator.set_params(train_split=None)
+        # Clone the estimator AND set parameters for CV in one step
+        logger.debug("Cloning estimator with train_split=None and callbacks=None for cross_validate.")
+        estimator_cv = clone(self.model_adapter).set_params(train_split=None, callbacks=None)
+        # Alternatively, pass params directly to clone if supported (check sklearn/skorch version)
+        # estimator_cv = clone(self.model_adapter, safe=False) # safe=False might be needed depending on version
+        # estimator_cv.set_params(train_split=None, callbacks=None) # Still might need set_params
 
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
-        # Use standard sklearn scoring strings with NumPy data
         scoring_dict = ['accuracy', 'precision_macro', 'recall_macro', 'f1_macro']
 
         # --- Run Cross-Validation ---
         logger.info("Running cross_validate with NumPy arrays...")
         try:
              cv_results = cross_validate(
-                 estimator,
-                 X_np_full, y=y_np_full, # Pass NumPy data
+                 estimator_cv, # Use the specifically configured clone
+                 X_np_full, y=y_np_full,
                  cv=cv_splitter,
                  scoring=scoring_dict,
                  return_train_score=False,
@@ -1731,21 +1736,22 @@ class ClassificationPipeline:
         results = {
              'method': 'cv_model_evaluation',
              'params': {'cv': cv},
-             'cv_scores': {k: v.tolist() for k, v in cv_results.items() if k.startswith('test_')},
+             'cv_scores': {k: v.tolist() if isinstance(v, np.ndarray) else v for k, v in cv_results.items() if k.startswith('test_')},
              'fit_time_mean': float(np.mean(cv_results['fit_time'])),
              'score_time_mean': float(np.mean(cv_results['score_time'])),
-             'mean_test_accuracy': float(np.mean(cv_results['test_accuracy'])),
-             'std_test_accuracy': float(np.std(cv_results['test_accuracy'])),
-             'mean_test_precision_macro': float(np.mean(cv_results['test_precision_macro'])),
-             'mean_test_recall_macro': float(np.mean(cv_results['test_recall_macro'])),
-             'mean_test_f1_macro': float(np.mean(cv_results['test_f1_macro'])),
+             # Use np.nanmean in case some folds failed scoring for unforeseen reasons
+             'mean_test_accuracy': float(np.nanmean(cv_results.get('test_accuracy', [np.nan]))),
+             'std_test_accuracy': float(np.nanstd(cv_results.get('test_accuracy', [np.nan]))),
+             'mean_test_precision_macro': float(np.nanmean(cv_results.get('test_precision_macro', [np.nan]))),
+             'mean_test_recall_macro': float(np.nanmean(cv_results.get('test_recall_macro', [np.nan]))),
+             'mean_test_f1_macro': float(np.nanmean(cv_results.get('test_f1_macro', [np.nan]))),
         }
         results['accuracy'] = results['mean_test_accuracy']
         results['macro_avg'] = {
             'precision': results.get('mean_test_precision_macro', np.nan),
             'recall': results.get('mean_test_recall_macro', np.nan),
             'f1': results.get('mean_test_f1_macro', np.nan),
-            'roc_auc': np.nan, 'pr_auc': np.nan # Not computed
+            'roc_auc': np.nan, 'pr_auc': np.nan
         }
 
         if save_results:
@@ -2231,7 +2237,7 @@ if __name__ == "__main__":
     ]
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_sequence_1 # Select the sequence to run
+    chosen_sequence = methods_sequence_4 # Select the sequence to run
 
     logger.debug(f"Chosen sequence: {chosen_sequence}")
 

@@ -11654,3 +11654,452 @@ FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Stefan\\Docu
 2025-04-28 16:46:58 [INFO] ℹ️ --- Final Execution Results ---
 2025-04-28 16:46:58 [INFO] ℹ️ Method single_train_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
 2025-04-28 16:46:58 [INFO] ℹ️ Method single_eval_1: Completed. (Accuracy/MeanAccuracy: 0.5057, BestScore: nan)
+2025-04-28 22:31:46 [DEBUG] 🔍 Chosen sequence: [('single_train', {'max_epochs': 5, 'save_model': True}), ('single_eval', {'save_results': True})]
+2025-04-28 22:31:46 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 22:31:46 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 22:31:46 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-28 22:31:46 [INFO] ℹ️   Model Type: cnn
+2025-04-28 22:31:46 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 22:31:46 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 22:31:46 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-28 22:31:46 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 22:31:46 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 22:31:46 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 22:31:46 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-28 22:31:46 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 22:31:46 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 22:31:46 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 22:31:46 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 22:31:46 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 22:31:46 [DEBUG] 🔍 Method validation successful.
+2025-04-28 22:31:46 [INFO] ℹ️ Executor configured to run methods: single_train, single_eval
+2025-04-28 22:31:46 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 22:31:46 [INFO] ℹ️ --- Running Method 1/2: single_train ---
+2025-04-28 22:31:46 [DEBUG] 🔍 Parameters for single_train: {'max_epochs': 5, 'save_model': True}
+2025-04-28 22:31:46 [INFO] ℹ️ Starting single training run...
+2025-04-28 22:31:46 [INFO] ℹ️ Combining train (277) and validation (70) sets.
+2025-04-28 22:31:46 [INFO] ℹ️ Overriding adapter parameters for this run: {'max_epochs': 5}
+2025-04-28 22:31:46 [DEBUG] 🔍 Extracted combined targets (shape=(347,)) for skorch fit.
+2025-04-28 22:31:46 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 22:31:46 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X is Dataset and y is not None. Ignoring y.
+2025-04-28 22:31:52 [INFO] ℹ️ Training finished. Best validation performance at Epoch 5 (valid_loss=0.7532)
+2025-04-28 22:31:52 [INFO] ℹ️ Model state_dict saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cnn_epoch5_val_valid-loss0.7532_20250428_223152.pt
+2025-04-28 22:31:52 [INFO] ℹ️ Main pipeline model adapter updated with the model from single_train.
+2025-04-28 22:31:52 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_train_batch_size=16_early_stopping_patience=5_lr=0.001_max_epochs=5_20250428_223152.json
+2025-04-28 22:31:52 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-28 22:31:52 [INFO] ℹ️ --- Method single_train completed successfully ---
+2025-04-28 22:31:52 [INFO] ℹ️ --- Running Method 2/2: single_eval ---
+2025-04-28 22:31:52 [DEBUG] 🔍 Parameters for single_eval: {'save_results': True}
+2025-04-28 22:31:52 [INFO] ℹ️ Starting model evaluation on the test set...
+2025-04-28 22:31:52 [INFO] ℹ️ Loading test data into memory for evaluation...
+2025-04-28 22:31:52 [INFO] ℹ️ Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 87) into NumPy arrays...
+2025-04-28 22:31:52 [DEBUG] 🔍 Loading batch 1/3
+2025-04-28 22:31:52 [DEBUG] 🔍 Loading batch 2/3
+2025-04-28 22:31:52 [DEBUG] 🔍 Loading batch 3/3
+2025-04-28 22:31:52 [INFO] ℹ️ Finished loading. X shape: (87, 3, 64, 64), y shape: (87,)
+2025-04-28 22:31:52 [INFO] ℹ️ Evaluating on 87 test samples.
+2025-04-28 22:31:52 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 22:31:52 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 22:31:52 [DEBUG] 🔍 Computed Metrics: Acc=0.5287, Macro F1=0.4479, Macro ROC AUC=0.8947, Macro PR AUC=0.6038
+2025-04-28 22:31:52 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_eval_20250428_223152.json
+2025-04-28 22:31:52 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-28 22:31:52 [INFO] ℹ️ Evaluation Summary:
+2025-04-28 22:31:52 [INFO] ℹ️   Accuracy: 0.5287
+2025-04-28 22:31:52 [INFO] ℹ️ --- Method single_eval completed successfully ---
+2025-04-28 22:31:52 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 22:31:52 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 22:31:52 [INFO] ℹ️ Method single_train_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-28 22:31:52 [INFO] ℹ️ Method single_eval_1: Completed. (Accuracy/MeanAccuracy: 0.5287, BestScore: nan)
+2025-04-28 22:32:10 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-28 22:32:10 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 22:32:10 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 22:32:10 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-28 22:32:10 [INFO] ℹ️   Model Type: cnn
+2025-04-28 22:32:10 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 22:32:10 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 22:32:10 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-28 22:32:10 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 22:32:10 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 22:32:10 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 22:32:10 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-28 22:32:10 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 22:32:10 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 22:32:10 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 22:32:10 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 22:32:10 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 22:32:10 [DEBUG] 🔍 Method validation successful.
+2025-04-28 22:32:10 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-28 22:32:10 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 22:32:10 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-28 22:32:10 [DEBUG] 🔍 Parameters for cv_model_evaluation: {'cv': 5, 'save_results': True}
+2025-04-28 22:32:10 [INFO] ℹ️ Performing 5-fold cross-validation for model evaluation.
+2025-04-28 22:32:10 [INFO] ℹ️ Loading full dataset into memory for cross_validate...
+2025-04-28 22:32:10 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-28 22:32:10 [DEBUG] 🔍 Loading batch 1/14
+2025-04-28 22:32:10 [DEBUG] 🔍 Loading batch 2/14
+2025-04-28 22:32:10 [DEBUG] 🔍 Loading batch 3/14
+2025-04-28 22:32:10 [DEBUG] 🔍 Loading batch 4/14
+2025-04-28 22:32:10 [DEBUG] 🔍 Loading batch 5/14
+2025-04-28 22:32:10 [DEBUG] 🔍 Loading batch 6/14
+2025-04-28 22:32:10 [DEBUG] 🔍 Loading batch 7/14
+2025-04-28 22:32:10 [DEBUG] 🔍 Loading batch 8/14
+2025-04-28 22:32:11 [DEBUG] 🔍 Loading batch 9/14
+2025-04-28 22:32:11 [DEBUG] 🔍 Loading batch 10/14
+2025-04-28 22:32:11 [DEBUG] 🔍 Loading batch 11/14
+2025-04-28 22:32:11 [DEBUG] 🔍 Loading batch 12/14
+2025-04-28 22:32:11 [DEBUG] 🔍 Loading batch 13/14
+2025-04-28 22:32:11 [DEBUG] 🔍 Loading batch 14/14
+2025-04-28 22:32:11 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-28 22:32:11 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-28 22:32:11 [DEBUG] 🔍 Setting train_split=None on cloned estimator for cross_validate.
+2025-04-28 22:32:11 [INFO] ℹ️ Running cross_validate with NumPy arrays...
+2025-04-28 22:32:11 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 22:32:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 22:32:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 22:32:11 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 22:32:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 22:32:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 22:32:12 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 22:32:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 22:32:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 22:32:12 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 22:32:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 22:32:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 22:32:12 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 22:32:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 22:32:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 22:32:12 [ERROR] ❗ cross_validate failed: 
+All the 5 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+5 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1226, in fit_loop
+    self.notify("on_epoch_end", **on_epoch_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 416, in notify
+    getattr(cb, method_name)(self, **cb_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\callbacks\training.py", line 429, in on_epoch_end
+    current_score = net.history[-1, self.monitor]
+                    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\history.py", line 291, in __getitem__
+    raise KeyError(keyerror_msg.format(key))
+KeyError: "Key 'valid_loss' was not found in history."
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1714, in cv_model_evaluation
+    cv_results = cross_validate(
+                 ^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\utils\_param_validation.py", line 216, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 431, in cross_validate
+    _warn_or_raise_about_fit_failures(results, error_score)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 517, in _warn_or_raise_about_fit_failures
+    raise ValueError(all_fits_failed_message)
+ValueError: 
+All the 5 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+5 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1226, in fit_loop
+    self.notify("on_epoch_end", **on_epoch_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 416, in notify
+    getattr(cb, method_name)(self, **cb_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\callbacks\training.py", line 429, in on_epoch_end
+    current_score = net.history[-1, self.monitor]
+                    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\history.py", line 291, in __getitem__
+    raise KeyError(keyerror_msg.format(key))
+KeyError: "Key 'valid_loss' was not found in history."
+
+2025-04-28 22:32:12 [ERROR] ❗ !!! Method 'cv_model_evaluation' failed at step 1: cross_validate execution failed
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1714, in cv_model_evaluation
+    cv_results = cross_validate(
+                 ^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\utils\_param_validation.py", line 216, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 431, in cross_validate
+    _warn_or_raise_about_fit_failures(results, error_score)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 517, in _warn_or_raise_about_fit_failures
+    raise ValueError(all_fits_failed_message)
+ValueError: 
+All the 5 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+5 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1226, in fit_loop
+    self.notify("on_epoch_end", **on_epoch_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 416, in notify
+    getattr(cb, method_name)(self, **cb_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\callbacks\training.py", line 429, in on_epoch_end
+    current_score = net.history[-1, self.monitor]
+                    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\history.py", line 291, in __getitem__
+    raise KeyError(keyerror_msg.format(key))
+KeyError: "Key 'valid_loss' was not found in history."
+
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2163, in run
+    result = pipeline_method(**params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1726, in cv_model_evaluation
+    raise RuntimeError("cross_validate execution failed") from e
+RuntimeError: cross_validate execution failed
+2025-04-28 22:32:12 [ERROR] ❗ !!! Pipeline execution stopped due to error.
+2025-04-28 22:32:12 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 22:32:12 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 22:32:12 [ERROR] ❗ Method cv_model_evaluation_0: FAILED - cross_validate execution failed
+2025-04-28 23:03:35 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-28 23:03:35 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 23:03:35 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 23:03:35 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-28 23:03:35 [INFO] ℹ️   Model Type: cnn
+2025-04-28 23:03:35 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 23:03:35 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 23:03:35 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-28 23:03:35 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 23:03:35 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 23:03:35 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 23:03:35 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-28 23:03:35 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 23:03:35 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 23:03:35 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 23:03:35 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 23:03:35 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 23:03:35 [DEBUG] 🔍 Method validation successful.
+2025-04-28 23:03:35 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-28 23:03:35 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 23:03:35 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-28 23:03:35 [DEBUG] 🔍 Parameters for cv_model_evaluation: {'cv': 5, 'save_results': True}
+2025-04-28 23:03:35 [INFO] ℹ️ Performing 5-fold cross-validation for model evaluation.
+2025-04-28 23:03:35 [INFO] ℹ️ Loading full dataset into memory for cross_validate...
+2025-04-28 23:03:35 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 1/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 2/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 3/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 4/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 5/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 6/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 7/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 8/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 9/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 10/14
+2025-04-28 23:03:35 [DEBUG] 🔍 Loading batch 11/14
+2025-04-28 23:03:36 [DEBUG] 🔍 Loading batch 12/14
+2025-04-28 23:03:36 [DEBUG] 🔍 Loading batch 13/14
+2025-04-28 23:03:36 [DEBUG] 🔍 Loading batch 14/14
+2025-04-28 23:03:36 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-28 23:03:36 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-28 23:03:36 [DEBUG] 🔍 Setting train_split=None and callbacks=None on cloned estimator for cross_validate.
+2025-04-28 23:03:36 [INFO] ℹ️ Running cross_validate with NumPy arrays...
+2025-04-28 23:03:36 [ERROR] ❗ cross_validate failed: Cannot clone object <class '__main__.SkorchModelAdapter'>[uninitialized](
+  module=<class '__main__.SimpleCNN'>,
+  module__num_classes=7,
+  module_class=<class '__main__.SimpleCNN'>,
+  module_init_kwargs={'num_classes': 7},
+), as the constructor either does not set or modifies parameter callbacks
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1716, in cv_model_evaluation
+    cv_results = cross_validate(
+                 ^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\utils\_param_validation.py", line 216, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 411, in cross_validate
+    results = parallel(
+              ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\utils\parallel.py", line 77, in __call__
+    return super().__call__(iterable_with_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\joblib\parallel.py", line 1918, in __call__
+    return output if self.return_generator else list(output)
+                                                ^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\joblib\parallel.py", line 1844, in _get_sequential_output
+    for func, args, kwargs in iterable:
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\utils\parallel.py", line 73, in <genexpr>
+    iterable_with_config = (
+                           ^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 413, in <genexpr>
+    clone(estimator),
+    ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\base.py", line 94, in clone
+    return estimator.__sklearn_clone__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\base.py", line 300, in __sklearn_clone__
+    return _clone_parametrized(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\base.py", line 142, in _clone_parametrized
+    raise RuntimeError(
+RuntimeError: Cannot clone object <class '__main__.SkorchModelAdapter'>[uninitialized](
+  module=<class '__main__.SimpleCNN'>,
+  module__num_classes=7,
+  module_class=<class '__main__.SimpleCNN'>,
+  module_init_kwargs={'num_classes': 7},
+), as the constructor either does not set or modifies parameter callbacks
+2025-04-28 23:03:36 [ERROR] ❗ !!! Method 'cv_model_evaluation' failed at step 1: cross_validate execution failed
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1716, in cv_model_evaluation
+    cv_results = cross_validate(
+                 ^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\utils\_param_validation.py", line 216, in wrapper
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 411, in cross_validate
+    results = parallel(
+              ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\utils\parallel.py", line 77, in __call__
+    return super().__call__(iterable_with_config)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\joblib\parallel.py", line 1918, in __call__
+    return output if self.return_generator else list(output)
+                                                ^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\joblib\parallel.py", line 1844, in _get_sequential_output
+    for func, args, kwargs in iterable:
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\utils\parallel.py", line 73, in <genexpr>
+    iterable_with_config = (
+                           ^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 413, in <genexpr>
+    clone(estimator),
+    ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\base.py", line 94, in clone
+    return estimator.__sklearn_clone__()
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\base.py", line 300, in __sklearn_clone__
+    return _clone_parametrized(self)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\base.py", line 142, in _clone_parametrized
+    raise RuntimeError(
+RuntimeError: Cannot clone object <class '__main__.SkorchModelAdapter'>[uninitialized](
+  module=<class '__main__.SimpleCNN'>,
+  module__num_classes=7,
+  module_class=<class '__main__.SimpleCNN'>,
+  module_init_kwargs={'num_classes': 7},
+), as the constructor either does not set or modifies parameter callbacks
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2166, in run
+    result = pipeline_method(**params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1728, in cv_model_evaluation
+    raise RuntimeError("cross_validate execution failed") from e
+RuntimeError: cross_validate execution failed
+2025-04-28 23:03:36 [ERROR] ❗ !!! Pipeline execution stopped due to error.
+2025-04-28 23:03:36 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 23:03:36 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 23:03:36 [ERROR] ❗ Method cv_model_evaluation_0: FAILED - cross_validate execution failed
+2025-04-28 23:33:04 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-28 23:33:04 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 23:33:04 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 23:33:04 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-28 23:33:04 [INFO] ℹ️   Model Type: cnn
+2025-04-28 23:33:04 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 23:33:04 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 23:33:04 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-28 23:33:04 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 23:33:04 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 23:33:04 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 23:33:04 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-28 23:33:04 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 23:33:04 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 23:33:04 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 23:33:04 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 23:33:04 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 23:33:04 [DEBUG] 🔍 Method validation successful.
+2025-04-28 23:33:04 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-28 23:33:04 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 23:33:04 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-28 23:33:04 [DEBUG] 🔍 Parameters for cv_model_evaluation: {'cv': 5, 'save_results': True}
+2025-04-28 23:33:04 [INFO] ℹ️ Performing 5-fold cross-validation for model evaluation.
+2025-04-28 23:33:04 [INFO] ℹ️ Loading full dataset into memory for cross_validate...
+2025-04-28 23:33:04 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-28 23:33:04 [DEBUG] 🔍 Loading batch 1/14
+2025-04-28 23:33:04 [DEBUG] 🔍 Loading batch 2/14
+2025-04-28 23:33:04 [DEBUG] 🔍 Loading batch 3/14
+2025-04-28 23:33:04 [DEBUG] 🔍 Loading batch 4/14
+2025-04-28 23:33:04 [DEBUG] 🔍 Loading batch 5/14
+2025-04-28 23:33:04 [DEBUG] 🔍 Loading batch 6/14
+2025-04-28 23:33:04 [DEBUG] 🔍 Loading batch 7/14
+2025-04-28 23:33:04 [DEBUG] 🔍 Loading batch 8/14
+2025-04-28 23:33:05 [DEBUG] 🔍 Loading batch 9/14
+2025-04-28 23:33:05 [DEBUG] 🔍 Loading batch 10/14
+2025-04-28 23:33:05 [DEBUG] 🔍 Loading batch 11/14
+2025-04-28 23:33:05 [DEBUG] 🔍 Loading batch 12/14
+2025-04-28 23:33:05 [DEBUG] 🔍 Loading batch 13/14
+2025-04-28 23:33:05 [DEBUG] 🔍 Loading batch 14/14
+2025-04-28 23:33:05 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-28 23:33:05 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-28 23:33:05 [DEBUG] 🔍 Cloning estimator with train_split=None and callbacks=None for cross_validate.
+2025-04-28 23:33:05 [INFO] ℹ️ Running cross_validate with NumPy arrays...
+2025-04-28 23:33:05 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:33:05 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:05 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:33:06 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:06 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:33:06 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:06 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:33:07 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:07 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:33:07 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:07 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:33:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:09 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:33:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:33:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:10 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:33:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:33:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:33:11 [INFO] ℹ️ Cross-validation finished.
+2025-04-28 23:33:11 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cv_model_evaluation_cv=5_20250428_233311.json
+2025-04-28 23:33:11 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-28 23:33:11 [INFO] ℹ️ CV Evaluation Summary (Avg over 5 folds):
+2025-04-28 23:33:11 [INFO] ℹ️   Accuracy: 0.2926 +/- 0.0460
+2025-04-28 23:33:11 [INFO] ℹ️ --- Method cv_model_evaluation completed successfully ---
+2025-04-28 23:33:11 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 23:33:11 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 23:33:11 [INFO] ℹ️ Method cv_model_evaluation_0: Completed. (Accuracy/MeanAccuracy: 0.2926, BestScore: nan)
