@@ -1039,6 +1039,27 @@ class SkorchModelAdapter(NeuralNetClassifier):
             # Call parent with potentially modified y
             return super().get_dataset(X, y)
 
+    def infer(self, x, **fit_params):
+        """
+        Perform inference. Assumes 'x' is a Tensor.
+        Filters fit_params (like X_val, y_val) before passing to module.
+        Moves data to device.
+        """
+        if not isinstance(x, torch.Tensor):
+             logger.error(f"[ERROR] Infer received non-Tensor input: {type(x)}. Upstream issue likely.")
+             raise TypeError(f"SkorchModelAdapter.infer received input of type {type(x)}, expected torch.Tensor.")
+
+        # Filter out keys that should not go to the model's forward pass
+        module_forward_params = {
+            k: v for k, v in fit_params.items()
+            if k not in ['X_val', 'y_val'] # Add more if needed
+        }
+
+        # Move input tensor to the correct device
+        x = x.to(self.device)
+        # Call the underlying module with the input and filtered params
+        return self.module_(x, **module_forward_params)
+
     # The following overrides ensure target dtype is correct *just before* loss calculation,
     # acting as a safeguard if data loading/splitting somehow changes it.
     def train_step_single(self, batch, **fit_params):
@@ -1065,7 +1086,30 @@ class SkorchModelAdapter(NeuralNetClassifier):
             loss = self.get_loss(y_pred, yi, X=Xi, training=False)
         return {'loss': loss, 'y_pred': y_pred}
 
-    # NO fit, infer, get_split_datasets overrides are needed now
+    # This is needed to correctly handle X_val/y_val when train_split is None
+    def get_split_datasets(self, X, y=None, **fit_params):
+        """
+        Override to handle explicit validation data passed via fit_params
+        when train_split is None.
+        """
+        dataset_train = self.get_dataset(X, y)  # Process the training data input
+
+        if 'X_val' in fit_params:
+            # If X_val is explicitly provided in fit_params, use it as the validation set
+            logger.debug("[DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.")
+            # Process X_val using get_dataset to ensure it's a skorch-compatible Dataset object
+            dataset_valid = self.get_dataset(fit_params['X_val'], fit_params.get('y_val'))  # get_dataset handles y type
+            return dataset_train, dataset_valid
+        else:
+            # If X_val is not provided, check self.train_split (which should be None here)
+            if not self.train_split:
+                logger.debug("[DEBUG] Adapter.get_split_datasets: No X_val and self.train_split is None.")
+                return dataset_train, None
+            else:
+                # Fallback if train_split was somehow set (shouldn't happen for cv_model_evaluation)
+                logger.warning(
+                    "[DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).")
+                return self.train_split(dataset_train, y, **fit_params)  # y might be needed by splitter
 
 # --- Classification Pipeline ---
 
@@ -1683,83 +1727,145 @@ class ClassificationPipeline:
 
     def cv_model_evaluation(self, cv: int = 5, save_results: bool = True) -> Dict[str, Any]:
         """
-        Performs standard cross-validation for model evaluation.
-        Loads data into NumPy arrays for compatibility.
-        Disables internal validation splitting in the estimator for this task.
+        Performs cross-validation with an inner validation split for monitoring
+        and early stopping. Loads data into NumPy arrays.
+
+        Args:
+            cv (int): Number of outer cross-validation folds.
+            save_results (bool): Whether to save the results.
+
+        Returns:
+            Dict[str, Any]: Dictionary containing CV results (scores per fold, averages, std dev).
         """
-        logger.info(f"Performing {cv}-fold cross-validation for model evaluation.")
+        logger.info(f"Performing {cv}-fold CV with inner validation split.")
 
         if self.dataset_handler.structure == DatasetStructure.FIXED:
-            raise ValueError("Standard CV model evaluation is not suitable for FIXED dataset structures.")
+            raise ValueError("This CV method with inner validation is not designed for FIXED datasets.")
 
-        # --- Get Data as NumPy ---
-        logger.info("Loading full dataset into memory for cross_validate...")
+        # --- Load Full Data to NumPy ---
+        logger.info("Loading full dataset into memory...")
         try:
-             full_dataset_torch = self.dataset_handler.get_full_dataset()
-             X_np_full, y_np_full = self._load_dataset_to_numpy(full_dataset_torch)
+            full_dataset_torch = self.dataset_handler.get_full_dataset()
+            X_np_full, y_np_full = self._load_dataset_to_numpy(full_dataset_torch)
         except Exception as e:
-             raise RuntimeError("Could not load full dataset to NumPy for CV.") from e
+            raise RuntimeError("Could not load full dataset to NumPy for CV.") from e
         logger.info(f"Using full dataset ({len(X_np_full)} samples) for {cv}-fold CV.")
 
+        # --- Setup Outer CV ---
+        outer_cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
+        fold_results = []
+        fold_histories = [] # To store history from each fold
 
-        # --- Setup CV ---
-        # Clone the estimator AND set parameters for CV in one step
-        logger.debug("Cloning estimator with train_split=None and callbacks=None for cross_validate.")
-        estimator_cv = clone(self.model_adapter).set_params(train_split=None, callbacks=None)
-        # Alternatively, pass params directly to clone if supported (check sklearn/skorch version)
-        # estimator_cv = clone(self.model_adapter, safe=False) # safe=False might be needed depending on version
-        # estimator_cv.set_params(train_split=None, callbacks=None) # Still might need set_params
+        # --- Manual Outer CV Loop ---
+        for fold_idx, (outer_train_indices, outer_test_indices) in enumerate(outer_cv_splitter.split(X_np_full, y_np_full)):
+            logger.info(f"--- Starting Outer Fold {fold_idx + 1}/{cv} ---")
 
-        cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
-        scoring_dict = ['accuracy', 'precision_macro', 'recall_macro', 'f1_macro']
+            # --- Get Outer Fold Data (NumPy) ---
+            X_outer_train = X_np_full[outer_train_indices]
+            y_outer_train = y_np_full[outer_train_indices]
+            X_test        = X_np_full[outer_test_indices]
+            y_test        = y_np_full[outer_test_indices]
+            logger.debug(f"Outer split: {len(X_outer_train)} train+val samples, {len(X_test)} test samples.")
 
-        # --- Run Cross-Validation ---
-        logger.info("Running cross_validate with NumPy arrays...")
-        try:
-             cv_results = cross_validate(
-                 estimator_cv, # Use the specifically configured clone
-                 X_np_full, y=y_np_full,
-                 cv=cv_splitter,
-                 scoring=scoring_dict,
-                 return_train_score=False,
-                 n_jobs=1,
-                 verbose=3
-             )
-        except Exception as e:
-             logger.error(f"cross_validate failed: {e}", exc_info=True)
-             # Return partial results or re-raise? Re-raise for now.
-             raise RuntimeError("cross_validate execution failed") from e
+            # --- Create Inner Train/Validation Split ---
+            # Use a fixed validation split size (e.g., 20% of the outer train data)
+            inner_val_size = 0.20
+            if len(X_outer_train) < 2 : # Need at least 2 samples to split
+                 logger.warning(f"Outer fold {fold_idx+1} training set too small ({len(X_outer_train)}) to create inner validation split. Skipping fold.")
+                 # Store NaN results for this fold? Or skip? Skipping for now.
+                 continue
 
-        logger.info("Cross-validation finished.")
+            try:
+                X_inner_train, X_val, y_inner_train, y_val = train_test_split(
+                    X_outer_train, y_outer_train,
+                    test_size=inner_val_size,
+                    stratify=y_outer_train, # Stratify inner split
+                    random_state=RANDOM_SEED
+                )
+                logger.debug(f"Inner split: {len(X_inner_train)} train samples, {len(X_val)} validation samples.")
+            except ValueError as e_inner:
+                logger.warning(f"Stratified inner split failed ({e_inner}). Using non-stratified split.")
+                X_inner_train, X_val, y_inner_train, y_val = train_test_split(
+                    X_outer_train, y_outer_train,
+                    test_size=inner_val_size,
+                    random_state=RANDOM_SEED
+                )
 
-        # --- Process and Save Results ---
+            # --- Setup Estimator for this Fold ---
+            # Clone the main adapter (which has train_split=None default, callbacks=default)
+            estimator_fold = clone(self.model_adapter)
+            # No need to set_params here, defaults are correct
+
+            # --- Fit on Inner Train, Validate on Inner Val ---
+            logger.info(f"Fitting model for fold {fold_idx + 1}...")
+            try:
+                # Pass inner train and explicit validation data
+                estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+                fold_histories.append(estimator_fold.history) # Store history
+            except Exception as fit_err:
+                 logger.error(f"Fit failed for fold {fold_idx + 1}: {fit_err}", exc_info=True)
+                 # Store NaN results or skip fold? Store NaN for now.
+                 fold_results.append({'accuracy': np.nan, 'precision_macro': np.nan,
+                                      'recall_macro': np.nan, 'f1_macro': np.nan})
+                 continue # Skip scoring for this fold
+
+            # --- Evaluate on Outer Test Set ---
+            logger.info(f"Evaluating model on outer test set for fold {fold_idx + 1}...")
+            try:
+                 y_pred_test = estimator_fold.predict(X_test)
+                 # Calculate metrics for this fold
+                 fold_acc = accuracy_score(y_test, y_pred_test)
+                 fold_prec = precision_score(y_test, y_pred_test, average='macro', zero_division=0)
+                 fold_rec = recall_score(y_test, y_pred_test, average='macro', zero_division=0)
+                 fold_f1 = f1_score(y_test, y_pred_test, average='macro', zero_division=0)
+                 fold_results.append({'accuracy': fold_acc, 'precision_macro': fold_prec,
+                                       'recall_macro': fold_rec, 'f1_macro': fold_f1})
+                 logger.info(f"Fold {fold_idx + 1} Test Scores: Acc={fold_acc:.4f}, F1={fold_f1:.4f}")
+            except Exception as score_err:
+                 logger.error(f"Scoring failed for fold {fold_idx + 1}: {score_err}", exc_info=True)
+                 fold_results.append({'accuracy': np.nan, 'precision_macro': np.nan,
+                                      'recall_macro': np.nan, 'f1_macro': np.nan})
+
+        # --- Aggregate Results ---
+        if not fold_results: # Handle case where all folds failed
+             logger.error("CV evaluation failed for all folds.")
+             # Return a structure indicating failure
+             return {
+                 'method': 'cv_model_evaluation_manual',
+                 'params': {'cv': cv},
+                 'error': 'All folds failed during execution.',
+                 'cv_scores': {},
+                 'accuracy': np.nan,
+                 'macro_avg': {'precision': np.nan, 'recall': np.nan, 'f1': np.nan, 'roc_auc': np.nan, 'pr_auc': np.nan}
+             }
+
+        df_results = pd.DataFrame(fold_results)
         results = {
-             'method': 'cv_model_evaluation',
+             'method': 'cv_model_evaluation_manual',
              'params': {'cv': cv},
-             'cv_scores': {k: v.tolist() if isinstance(v, np.ndarray) else v for k, v in cv_results.items() if k.startswith('test_')},
-             'fit_time_mean': float(np.mean(cv_results['fit_time'])),
-             'score_time_mean': float(np.mean(cv_results['score_time'])),
-             # Use np.nanmean in case some folds failed scoring for unforeseen reasons
-             'mean_test_accuracy': float(np.nanmean(cv_results.get('test_accuracy', [np.nan]))),
-             'std_test_accuracy': float(np.nanstd(cv_results.get('test_accuracy', [np.nan]))),
-             'mean_test_precision_macro': float(np.nanmean(cv_results.get('test_precision_macro', [np.nan]))),
-             'mean_test_recall_macro': float(np.nanmean(cv_results.get('test_recall_macro', [np.nan]))),
-             'mean_test_f1_macro': float(np.nanmean(cv_results.get('test_f1_macro', [np.nan]))),
+             'cv_scores': df_results.to_dict(orient='list'), # Store scores per metric
+             'mean_test_accuracy': float(df_results['accuracy'].mean()),
+             'std_test_accuracy': float(df_results['accuracy'].std()),
+             'mean_test_precision_macro': float(df_results['precision_macro'].mean()),
+             'mean_test_recall_macro': float(df_results['recall_macro'].mean()),
+             'mean_test_f1_macro': float(df_results['f1_macro'].mean()),
+             # Add fold histories if needed (can be large)
+             # 'fold_histories': fold_histories
         }
         results['accuracy'] = results['mean_test_accuracy']
         results['macro_avg'] = {
-            'precision': results.get('mean_test_precision_macro', np.nan),
-            'recall': results.get('mean_test_recall_macro', np.nan),
-            'f1': results.get('mean_test_f1_macro', np.nan),
-            'roc_auc': np.nan, 'pr_auc': np.nan
+            'precision': results['mean_test_precision_macro'],
+            'recall': results['mean_test_recall_macro'],
+            'f1': results['mean_test_f1_macro'],
+            'roc_auc': np.nan, 'pr_auc': np.nan # Not calculated here
         }
 
         if save_results:
-            self._save_results(results, "cv_model_evaluation", params={'cv': cv})
+            self._save_results(results, "cv_model_evaluation_manual", params={'cv': cv})
 
-        logger.info(f"CV Evaluation Summary (Avg over {cv} folds):")
+        logger.info(f"Manual CV Evaluation Summary (Avg over {len(fold_results)} folds):")
         logger.info(f"  Accuracy: {results['mean_test_accuracy']:.4f} +/- {results['std_test_accuracy']:.4f}")
-        # ... (log other metrics) ...
+        logger.info(f"  Macro F1: {results['mean_test_f1_macro']:.4f} +/- {float(df_results['f1_macro'].std()):.4f}")
 
         return results
 
@@ -2237,7 +2343,7 @@ if __name__ == "__main__":
     ]
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_sequence_4 # Select the sequence to run
+    chosen_sequence = methods_sequence_3 # Select the sequence to run
 
     logger.debug(f"Chosen sequence: {chosen_sequence}")
 

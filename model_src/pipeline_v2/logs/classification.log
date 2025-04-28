@@ -12103,3 +12103,2428 @@ RuntimeError: cross_validate execution failed
 2025-04-28 23:33:11 [INFO] ℹ️ Pipeline execution finished.
 2025-04-28 23:33:11 [INFO] ℹ️ --- Final Execution Results ---
 2025-04-28 23:33:11 [INFO] ℹ️ Method cv_model_evaluation_0: Completed. (Accuracy/MeanAccuracy: 0.2926, BestScore: nan)
+2025-04-28 23:51:36 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-28 23:51:36 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 23:51:36 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 23:51:36 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-28 23:51:36 [INFO] ℹ️   Model Type: cnn
+2025-04-28 23:51:36 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 23:51:36 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 23:51:36 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-28 23:51:36 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 23:51:36 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 23:51:36 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 23:51:36 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-28 23:51:36 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 23:51:36 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 23:51:36 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 23:51:36 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 23:51:36 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 23:51:36 [DEBUG] 🔍 Method validation successful.
+2025-04-28 23:51:36 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-28 23:51:36 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 23:51:36 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-28 23:51:36 [DEBUG] 🔍 Parameters for cv_model_evaluation: {'cv': 5, 'save_results': True}
+2025-04-28 23:51:36 [INFO] ℹ️ Performing 5-fold CV with inner validation split.
+2025-04-28 23:51:36 [INFO] ℹ️ Loading full dataset into memory...
+2025-04-28 23:51:36 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 1/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 2/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 3/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 4/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 5/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 6/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 7/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 8/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 9/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 10/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 11/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 12/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 13/14
+2025-04-28 23:51:37 [DEBUG] 🔍 Loading batch 14/14
+2025-04-28 23:51:37 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-28 23:51:37 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-28 23:51:37 [INFO] ℹ️ --- Starting Outer Fold 1/5 ---
+2025-04-28 23:51:37 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-28 23:51:37 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-28 23:51:37 [INFO] ℹ️ Fitting model for fold 1...
+2025-04-28 23:51:37 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [ERROR] ❗ Fit failed for fold 1: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-28 23:51:38 [INFO] ℹ️ --- Starting Outer Fold 2/5 ---
+2025-04-28 23:51:38 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-28 23:51:38 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-28 23:51:38 [INFO] ℹ️ Fitting model for fold 2...
+2025-04-28 23:51:38 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [ERROR] ❗ Fit failed for fold 2: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-28 23:51:38 [INFO] ℹ️ --- Starting Outer Fold 3/5 ---
+2025-04-28 23:51:38 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-28 23:51:38 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-28 23:51:38 [INFO] ℹ️ Fitting model for fold 3...
+2025-04-28 23:51:38 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [ERROR] ❗ Fit failed for fold 3: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-28 23:51:38 [INFO] ℹ️ --- Starting Outer Fold 4/5 ---
+2025-04-28 23:51:38 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-28 23:51:38 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-28 23:51:38 [INFO] ℹ️ Fitting model for fold 4...
+2025-04-28 23:51:38 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [ERROR] ❗ Fit failed for fold 4: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-28 23:51:38 [INFO] ℹ️ --- Starting Outer Fold 5/5 ---
+2025-04-28 23:51:38 [DEBUG] 🔍 Outer split: 348 train+val samples, 86 test samples.
+2025-04-28 23:51:38 [DEBUG] 🔍 Inner split: 278 train samples, 70 validation samples.
+2025-04-28 23:51:38 [INFO] ℹ️ Fitting model for fold 5...
+2025-04-28 23:51:38 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-28 23:51:38 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-28 23:51:38 [ERROR] ❗ Fit failed for fold 5: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-28 23:51:38 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cv_model_evaluation_manual_cv=5_20250428_235138.json
+2025-04-28 23:51:38 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-28 23:51:38 [INFO] ℹ️ Manual CV Evaluation Summary (Avg over 5 folds):
+2025-04-28 23:51:38 [INFO] ℹ️   Accuracy: nan +/- nan
+2025-04-28 23:51:38 [INFO] ℹ️   Macro F1: nan +/- nan
+2025-04-28 23:51:38 [INFO] ℹ️ --- Method cv_model_evaluation completed successfully ---
+2025-04-28 23:51:38 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 23:51:38 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 23:51:38 [INFO] ℹ️ Method cv_model_evaluation_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-29 00:02:30 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-29 00:02:30 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:02:30 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:02:30 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:02:30 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:02:30 [DEBUG] 🔍 No standard 'train'/'test' structure found. Assuming FLAT.
+2025-04-29 00:02:30 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:02:30 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:02:30 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:02:30 [DEBUG] 🔍 Initial split: 347 train+val, 87 test.
+2025-04-29 00:02:30 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation.
+2025-04-29 00:02:30 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:02:30 [INFO] ℹ️ FLAT splits: 277 train, 70 val, 87 test.
+2025-04-29 00:02:30 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:02:30 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:02:30 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:02:30 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset.
+2025-04-29 00:02:30 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:02:30 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-29 00:02:30 [INFO] ℹ️ Starting execution...
+2025-04-29 00:02:30 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-29 00:02:30 [DEBUG] 🔍 Params: {'cv': 5, 'save_results': True}
+2025-04-29 00:02:30 [INFO] ℹ️ Performing 5-fold CV with inner validation split (manual loop).
+2025-04-29 00:02:30 [INFO] ℹ️ Loading full dataset into memory...
+2025-04-29 00:02:30 [INFO] ℹ️ Loading dataset type <class 'torchvision.datasets.folder.ImageFolder'> (len 434) to NumPy...
+2025-04-29 00:02:30 [DEBUG] 🔍 Loading batch 1/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 2/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 3/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 4/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 5/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 6/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 7/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 8/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 9/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 10/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 11/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 12/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 13/14
+2025-04-29 00:02:31 [DEBUG] 🔍 Loading batch 14/14
+2025-04-29 00:02:31 [INFO] ℹ️ Finished loading NumPy data. X:(434, 3, 64, 64), y:(434,)
+2025-04-29 00:02:31 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-29 00:02:31 [INFO] ℹ️ --- Starting Outer Fold 1/5 ---
+2025-04-29 00:02:31 [DEBUG] 🔍 Outer split: 347 train+val, 87 test.
+2025-04-29 00:02:31 [DEBUG] 🔍 Inner split: 277 train, 70 val.
+2025-04-29 00:02:31 [INFO] ℹ️ Fitting model for fold 1...
+2025-04-29 00:02:31 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Using default for X:<class 'numpy.ndarray'>, y:<class 'numpy.ndarray'>.
+2025-04-29 00:02:31 [ERROR] ❗ Fit failed for fold 1: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 876, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 512, in train_step_single
+    y_pred = self.infer(Xi, **fit_params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:02:31 [INFO] ℹ️ --- Starting Outer Fold 2/5 ---
+2025-04-29 00:02:31 [DEBUG] 🔍 Outer split: 347 train+val, 87 test.
+2025-04-29 00:02:31 [DEBUG] 🔍 Inner split: 277 train, 70 val.
+2025-04-29 00:02:31 [INFO] ℹ️ Fitting model for fold 2...
+2025-04-29 00:02:31 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Using default for X:<class 'numpy.ndarray'>, y:<class 'numpy.ndarray'>.
+2025-04-29 00:02:31 [ERROR] ❗ Fit failed for fold 2: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 876, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 512, in train_step_single
+    y_pred = self.infer(Xi, **fit_params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:02:31 [INFO] ℹ️ --- Starting Outer Fold 3/5 ---
+2025-04-29 00:02:31 [DEBUG] 🔍 Outer split: 347 train+val, 87 test.
+2025-04-29 00:02:31 [DEBUG] 🔍 Inner split: 277 train, 70 val.
+2025-04-29 00:02:31 [INFO] ℹ️ Fitting model for fold 3...
+2025-04-29 00:02:31 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Using default for X:<class 'numpy.ndarray'>, y:<class 'numpy.ndarray'>.
+2025-04-29 00:02:31 [ERROR] ❗ Fit failed for fold 3: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 876, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 512, in train_step_single
+    y_pred = self.infer(Xi, **fit_params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:02:31 [INFO] ℹ️ --- Starting Outer Fold 4/5 ---
+2025-04-29 00:02:31 [DEBUG] 🔍 Outer split: 347 train+val, 87 test.
+2025-04-29 00:02:31 [DEBUG] 🔍 Inner split: 277 train, 70 val.
+2025-04-29 00:02:31 [INFO] ℹ️ Fitting model for fold 4...
+2025-04-29 00:02:32 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Using default for X:<class 'numpy.ndarray'>, y:<class 'numpy.ndarray'>.
+2025-04-29 00:02:32 [ERROR] ❗ Fit failed for fold 4: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 876, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 512, in train_step_single
+    y_pred = self.infer(Xi, **fit_params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:02:32 [INFO] ℹ️ --- Starting Outer Fold 5/5 ---
+2025-04-29 00:02:32 [DEBUG] 🔍 Outer split: 348 train+val, 86 test.
+2025-04-29 00:02:32 [DEBUG] 🔍 Inner split: 278 train, 70 val.
+2025-04-29 00:02:32 [INFO] ℹ️ Fitting model for fold 5...
+2025-04-29 00:02:32 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Using default for X:<class 'numpy.ndarray'>, y:<class 'numpy.ndarray'>.
+2025-04-29 00:02:32 [ERROR] ❗ Fit failed for fold 5: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 876, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 512, in train_step_single
+    y_pred = self.infer(Xi, **fit_params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:02:32 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cv_model_evaluation_manual_cv=5_20250429_000232.json
+2025-04-29 00:02:32 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:02:32 [INFO] ℹ️ Manual CV Eval Summary (Avg over 5 folds): Acc=nan +/- nan, F1M=nan +/- nan
+2025-04-29 00:02:32 [INFO] ℹ️ --- Method cv_model_evaluation completed successfully ---
+2025-04-29 00:02:32 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:02:32 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:02:32 [INFO] ℹ️ Method cv_model_evaluation_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-29 00:03:09 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-29 00:03:09 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:03:09 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:03:09 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:03:09 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:03:09 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:03:09 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:03:09 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:03:09 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:03:09 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:03:09 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:03:09 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:03:09 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:03:09 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:03:09 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:03:09 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:03:09 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:03:09 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:03:09 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-29 00:03:09 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:03:09 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-29 00:03:09 [DEBUG] 🔍 Parameters for cv_model_evaluation: {'cv': 5, 'save_results': True}
+2025-04-29 00:03:09 [INFO] ℹ️ Performing 5-fold CV with inner validation split.
+2025-04-29 00:03:09 [INFO] ℹ️ Loading full dataset into memory...
+2025-04-29 00:03:09 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 1/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 2/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 3/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 4/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 5/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 6/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 7/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 8/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 9/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 10/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 11/14
+2025-04-29 00:03:09 [DEBUG] 🔍 Loading batch 12/14
+2025-04-29 00:03:10 [DEBUG] 🔍 Loading batch 13/14
+2025-04-29 00:03:10 [DEBUG] 🔍 Loading batch 14/14
+2025-04-29 00:03:10 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-29 00:03:10 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-29 00:03:10 [INFO] ℹ️ --- Starting Outer Fold 1/5 ---
+2025-04-29 00:03:10 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:03:10 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:03:10 [INFO] ℹ️ Fitting model for fold 1...
+2025-04-29 00:03:10 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [ERROR] ❗ Fit failed for fold 1: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:03:10 [INFO] ℹ️ --- Starting Outer Fold 2/5 ---
+2025-04-29 00:03:10 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:03:10 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:03:10 [INFO] ℹ️ Fitting model for fold 2...
+2025-04-29 00:03:10 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [ERROR] ❗ Fit failed for fold 2: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:03:10 [INFO] ℹ️ --- Starting Outer Fold 3/5 ---
+2025-04-29 00:03:10 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:03:10 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:03:10 [INFO] ℹ️ Fitting model for fold 3...
+2025-04-29 00:03:10 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [ERROR] ❗ Fit failed for fold 3: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:03:10 [INFO] ℹ️ --- Starting Outer Fold 4/5 ---
+2025-04-29 00:03:10 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:03:10 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:03:10 [INFO] ℹ️ Fitting model for fold 4...
+2025-04-29 00:03:10 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [ERROR] ❗ Fit failed for fold 4: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:03:10 [INFO] ℹ️ --- Starting Outer Fold 5/5 ---
+2025-04-29 00:03:10 [DEBUG] 🔍 Outer split: 348 train+val samples, 86 test samples.
+2025-04-29 00:03:10 [DEBUG] 🔍 Inner split: 278 train samples, 70 validation samples.
+2025-04-29 00:03:10 [INFO] ℹ️ Fitting model for fold 5...
+2025-04-29 00:03:10 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:03:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:03:10 [ERROR] ❗ Fit failed for fold 5: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1782, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1051, in train_step_single
+    y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-29 00:03:10 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cv_model_evaluation_manual_cv=5_20250429_000310.json
+2025-04-29 00:03:10 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:03:10 [INFO] ℹ️ Manual CV Evaluation Summary (Avg over 5 folds):
+2025-04-29 00:03:10 [INFO] ℹ️   Accuracy: nan +/- nan
+2025-04-29 00:03:10 [INFO] ℹ️   Macro F1: nan +/- nan
+2025-04-29 00:03:10 [INFO] ℹ️ --- Method cv_model_evaluation completed successfully ---
+2025-04-29 00:03:10 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:03:10 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:03:10 [INFO] ℹ️ Method cv_model_evaluation_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-29 00:07:20 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-29 00:07:20 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:07:20 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:07:20 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:07:20 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:07:20 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:07:20 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:07:20 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:07:20 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:07:20 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:07:20 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:07:20 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:07:20 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:07:20 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:07:20 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:07:20 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:07:20 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:07:20 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:07:20 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-29 00:07:20 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:07:20 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-29 00:07:20 [DEBUG] 🔍 Parameters for cv_model_evaluation: {'cv': 5, 'save_results': True}
+2025-04-29 00:07:20 [INFO] ℹ️ Performing 5-fold CV with inner validation split.
+2025-04-29 00:07:20 [INFO] ℹ️ Loading full dataset into memory...
+2025-04-29 00:07:20 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 1/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 2/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 3/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 4/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 5/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 6/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 7/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 8/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 9/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 10/14
+2025-04-29 00:07:20 [DEBUG] 🔍 Loading batch 11/14
+2025-04-29 00:07:21 [DEBUG] 🔍 Loading batch 12/14
+2025-04-29 00:07:21 [DEBUG] 🔍 Loading batch 13/14
+2025-04-29 00:07:21 [DEBUG] 🔍 Loading batch 14/14
+2025-04-29 00:07:21 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-29 00:07:21 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-29 00:07:21 [INFO] ℹ️ --- Starting Outer Fold 1/5 ---
+2025-04-29 00:07:21 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:07:21 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:07:21 [INFO] ℹ️ Fitting model for fold 1...
+2025-04-29 00:07:21 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:07:21 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:21 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:21 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:07:21 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:21 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:22 [INFO] ℹ️ Evaluating model on outer test set for fold 1...
+2025-04-29 00:07:22 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:22 [INFO] ℹ️ Fold 1 Test Scores: Acc=0.6437, F1=0.6445
+2025-04-29 00:07:22 [INFO] ℹ️ --- Starting Outer Fold 2/5 ---
+2025-04-29 00:07:22 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:07:22 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:07:22 [INFO] ℹ️ Fitting model for fold 2...
+2025-04-29 00:07:22 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:07:22 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:22 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:22 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:07:22 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:22 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:24 [INFO] ℹ️ Evaluating model on outer test set for fold 2...
+2025-04-29 00:07:24 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:24 [INFO] ℹ️ Fold 2 Test Scores: Acc=0.6897, F1=0.6617
+2025-04-29 00:07:24 [INFO] ℹ️ --- Starting Outer Fold 3/5 ---
+2025-04-29 00:07:24 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:07:24 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:07:24 [INFO] ℹ️ Fitting model for fold 3...
+2025-04-29 00:07:24 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:07:24 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:24 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:24 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:07:24 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:24 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:25 [INFO] ℹ️ Evaluating model on outer test set for fold 3...
+2025-04-29 00:07:25 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:25 [INFO] ℹ️ Fold 3 Test Scores: Acc=0.7011, F1=0.6792
+2025-04-29 00:07:25 [INFO] ℹ️ --- Starting Outer Fold 4/5 ---
+2025-04-29 00:07:25 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:07:25 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:07:25 [INFO] ℹ️ Fitting model for fold 4...
+2025-04-29 00:07:25 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:07:25 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:25 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:25 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:07:25 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:25 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:26 [INFO] ℹ️ Evaluating model on outer test set for fold 4...
+2025-04-29 00:07:26 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:26 [INFO] ℹ️ Fold 4 Test Scores: Acc=0.5862, F1=0.5803
+2025-04-29 00:07:26 [INFO] ℹ️ --- Starting Outer Fold 5/5 ---
+2025-04-29 00:07:26 [DEBUG] 🔍 Outer split: 348 train+val samples, 86 test samples.
+2025-04-29 00:07:26 [DEBUG] 🔍 Inner split: 278 train samples, 70 validation samples.
+2025-04-29 00:07:26 [INFO] ℹ️ Fitting model for fold 5...
+2025-04-29 00:07:26 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:07:26 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:26 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:26 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:07:26 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:26 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:07:28 [INFO] ℹ️ Evaluating model on outer test set for fold 5...
+2025-04-29 00:07:28 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:07:28 [INFO] ℹ️ Fold 5 Test Scores: Acc=0.6047, F1=0.5866
+2025-04-29 00:07:28 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cv_model_evaluation_manual_cv=5_20250429_000728.json
+2025-04-29 00:07:28 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:07:28 [INFO] ℹ️ Manual CV Evaluation Summary (Avg over 5 folds):
+2025-04-29 00:07:28 [INFO] ℹ️   Accuracy: 0.6451 +/- 0.0506
+2025-04-29 00:07:28 [INFO] ℹ️   Macro F1: 0.6305 +/- 0.0447
+2025-04-29 00:07:28 [INFO] ℹ️ --- Method cv_model_evaluation completed successfully ---
+2025-04-29 00:07:28 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:07:28 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:07:28 [INFO] ℹ️ Method cv_model_evaluation_0: Completed. (Accuracy/MeanAccuracy: 0.6451, BestScore: nan)
+2025-04-29 00:08:47 [DEBUG] 🔍 Chosen sequence: [('single_train', {'max_epochs': 5, 'save_model': True}), ('single_eval', {'save_results': True})]
+2025-04-29 00:08:47 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:08:47 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:08:47 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:08:47 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:08:47 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:08:47 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:08:47 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:08:47 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:08:47 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:08:47 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:08:47 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:08:47 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:08:47 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:08:47 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:08:47 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:08:47 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:08:47 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:08:47 [INFO] ℹ️ Executor configured to run methods: single_train, single_eval
+2025-04-29 00:08:47 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:08:47 [INFO] ℹ️ --- Running Method 1/2: single_train ---
+2025-04-29 00:08:47 [DEBUG] 🔍 Parameters for single_train: {'max_epochs': 5, 'save_model': True}
+2025-04-29 00:08:47 [INFO] ℹ️ Starting single training run...
+2025-04-29 00:08:47 [INFO] ℹ️ Combining train (277) and validation (70) sets.
+2025-04-29 00:08:47 [INFO] ℹ️ Overriding adapter parameters for this run: {'max_epochs': 5}
+2025-04-29 00:08:47 [DEBUG] 🔍 Extracted combined targets (shape=(347,)) for skorch fit.
+2025-04-29 00:08:47 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:08:47 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X is Dataset and y is not None. Ignoring y.
+2025-04-29 00:08:47 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:08:52 [INFO] ℹ️ Training finished. Best validation performance at Epoch 5 (valid_loss=0.7794)
+2025-04-29 00:08:52 [INFO] ℹ️ Model state_dict saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cnn_epoch5_val_valid-loss0.7794_20250429_000852.pt
+2025-04-29 00:08:52 [INFO] ℹ️ Main pipeline model adapter updated with the model from single_train.
+2025-04-29 00:08:52 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_train_batch_size=16_early_stopping_patience=5_lr=0.001_max_epochs=5_20250429_000852.json
+2025-04-29 00:08:52 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:08:52 [INFO] ℹ️ --- Method single_train completed successfully ---
+2025-04-29 00:08:52 [INFO] ℹ️ --- Running Method 2/2: single_eval ---
+2025-04-29 00:08:52 [DEBUG] 🔍 Parameters for single_eval: {'save_results': True}
+2025-04-29 00:08:52 [INFO] ℹ️ Starting model evaluation on the test set...
+2025-04-29 00:08:52 [INFO] ℹ️ Loading test data into memory for evaluation...
+2025-04-29 00:08:52 [INFO] ℹ️ Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 87) into NumPy arrays...
+2025-04-29 00:08:52 [DEBUG] 🔍 Loading batch 1/3
+2025-04-29 00:08:52 [DEBUG] 🔍 Loading batch 2/3
+2025-04-29 00:08:52 [DEBUG] 🔍 Loading batch 3/3
+2025-04-29 00:08:52 [INFO] ℹ️ Finished loading. X shape: (87, 3, 64, 64), y shape: (87,)
+2025-04-29 00:08:52 [INFO] ℹ️ Evaluating on 87 test samples.
+2025-04-29 00:08:52 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:08:52 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:08:52 [DEBUG] 🔍 Computed Metrics: Acc=0.5287, Macro F1=0.4479, Macro ROC AUC=0.8889, Macro PR AUC=0.6060
+2025-04-29 00:08:52 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_eval_20250429_000852.json
+2025-04-29 00:08:52 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:08:52 [INFO] ℹ️ Evaluation Summary:
+2025-04-29 00:08:52 [INFO] ℹ️   Accuracy: 0.5287
+2025-04-29 00:08:52 [INFO] ℹ️ --- Method single_eval completed successfully ---
+2025-04-29 00:08:52 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:08:52 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:08:52 [INFO] ℹ️ Method single_train_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-29 00:08:52 [INFO] ℹ️ Method single_eval_1: Completed. (Accuracy/MeanAccuracy: 0.5287, BestScore: nan)
+2025-04-29 00:10:09 [DEBUG] 🔍 Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-04-29 00:10:09 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:10:09 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:10:09 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:10:09 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:10:09 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:10:09 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:10:09 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:10:09 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:10:09 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:10:09 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:10:09 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:10:09 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:10:09 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:10:09 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:10:09 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:10:09 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:10:09 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:10:09 [INFO] ℹ️ Executor configured to run methods: non_nested_grid_search
+2025-04-29 00:10:09 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:10:09 [INFO] ℹ️ --- Running Method 1/1: non_nested_grid_search ---
+2025-04-29 00:10:09 [DEBUG] 🔍 Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-04-29 00:10:09 [INFO] ℹ️ Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-04-29 00:10:09 [INFO] ℹ️ Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-04-29 00:10:09 [INFO] ℹ️ Scoring Metric: accuracy
+2025-04-29 00:10:09 [INFO] ℹ️ Loading training data into memory for GridSearchCV...
+2025-04-29 00:10:09 [INFO] ℹ️ Loading dataset of type <class '__main__.TransformedSubset'> (length 277) into NumPy arrays...
+2025-04-29 00:10:09 [DEBUG] 🔍 Loading batch 1/9
+2025-04-29 00:10:09 [DEBUG] 🔍 Loading batch 2/9
+2025-04-29 00:10:09 [DEBUG] 🔍 Loading batch 3/9
+2025-04-29 00:10:10 [DEBUG] 🔍 Loading batch 4/9
+2025-04-29 00:10:10 [DEBUG] 🔍 Loading batch 5/9
+2025-04-29 00:10:10 [DEBUG] 🔍 Loading batch 6/9
+2025-04-29 00:10:10 [DEBUG] 🔍 Loading batch 7/9
+2025-04-29 00:10:10 [DEBUG] 🔍 Loading batch 8/9
+2025-04-29 00:10:10 [DEBUG] 🔍 Loading batch 9/9
+2025-04-29 00:10:10 [INFO] ℹ️ Finished loading. X shape: (277, 3, 64, 64), y shape: (277,)
+2025-04-29 00:10:10 [INFO] ℹ️ Fitting GridSearchCV with NumPy arrays...
+2025-04-29 00:10:10 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:10 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:11 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:11 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:12 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:12 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:13 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:13 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:13 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:13 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:13 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:13 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:14 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:14 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:14 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:14 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:14 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:14 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:15 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:15 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:15 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:15 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:15 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:15 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:16 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:16 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:16 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:16 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:16 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:16 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:17 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:17 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:17 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:17 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:17 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:17 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:18 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:18 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:18 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:18 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:18 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:18 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:19 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:19 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:19 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:19 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:19 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:19 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:20 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:20 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:20 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:20 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:20 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:20 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:21 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:21 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:21 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:21 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:21 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:21 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:22 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:22 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:22 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:10:22 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:22 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:10:22 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:10:23 [INFO] ℹ️ Search completed.
+2025-04-29 00:10:23 [INFO] ℹ️ Evaluating best model (params: {'lr': 0.001, 'optimizer__weight_decay': 0.01}) on the test set...
+2025-04-29 00:10:23 [INFO] ℹ️ Loading test data into memory for evaluation...
+2025-04-29 00:10:23 [INFO] ℹ️ Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 87) into NumPy arrays...
+2025-04-29 00:10:23 [DEBUG] 🔍 Loading batch 1/3
+2025-04-29 00:10:23 [DEBUG] 🔍 Loading batch 2/3
+2025-04-29 00:10:23 [DEBUG] 🔍 Loading batch 3/3
+2025-04-29 00:10:23 [INFO] ℹ️ Finished loading. X shape: (87, 3, 64, 64), y shape: (87,)
+2025-04-29 00:10:23 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:23 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:10:23 [DEBUG] 🔍 Computed Metrics: Acc=0.4943, Macro F1=0.4265, Macro ROC AUC=0.7936, Macro PR AUC=0.5156
+2025-04-29 00:10:23 [INFO] ℹ️ Test Set Evaluation: Accuracy=0.4943, Macro F1=0.4265
+2025-04-29 00:10:23 [ERROR] ❗ Failed to save detailed results to JSON C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\non_nested_grid_search_cv=3_method=grid_n_iter=N\A_scoring=accuracy_20250429_001023.json: [Errno 2] No such file or directory: 'C:\\Users\\Stefan\\Documents\\GitHub\\UBB-Y3-AI-Research\\model_src\\pipeline_v2\\results\\mini-GCD-flat\\cnn\\non_nested_grid_search_cv=3_method=grid_n_iter=N\\A_scoring=accuracy_20250429_001023.json'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1377, in _save_results
+    with open(json_filepath, 'w', encoding='utf-8') as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Stefan\\Documents\\GitHub\\UBB-Y3-AI-Research\\model_src\\pipeline_v2\\results\\mini-GCD-flat\\cnn\\non_nested_grid_search_cv=3_method=grid_n_iter=N\\A_scoring=accuracy_20250429_001023.json'
+2025-04-29 00:10:23 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:10:23 [INFO] ℹ️ Non-nested grid search finished. Best CV score (accuracy): 0.7474
+2025-04-29 00:10:23 [INFO] ℹ️ Best parameters found: {'lr': 0.001, 'optimizer__weight_decay': 0.01}
+2025-04-29 00:10:23 [INFO] ℹ️ --- Method non_nested_grid_search completed successfully ---
+2025-04-29 00:10:23 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:10:23 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:10:23 [INFO] ℹ️ Method non_nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.4943, BestScore: 0.7474)
+2025-04-29 00:12:00 [DEBUG] 🔍 Chosen sequence: [('single_train', {'max_epochs': 5, 'save_model': True}), ('single_eval', {'save_results': True})]
+2025-04-29 00:12:00 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:12:00 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:12:00 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:12:00 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:12:00 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:12:00 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:12:00 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:12:00 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:12:00 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:12:00 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:12:00 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:12:00 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:12:00 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:12:00 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:12:00 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:12:00 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:12:00 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:12:00 [INFO] ℹ️ Executor configured to run methods: single_train, single_eval
+2025-04-29 00:12:00 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:12:00 [INFO] ℹ️ --- Running Method 1/2: single_train ---
+2025-04-29 00:12:00 [DEBUG] 🔍 Parameters for single_train: {'max_epochs': 5, 'save_model': True}
+2025-04-29 00:12:00 [INFO] ℹ️ Starting single training run...
+2025-04-29 00:12:00 [INFO] ℹ️ Combining train (277) and validation (70) sets.
+2025-04-29 00:12:00 [INFO] ℹ️ Overriding adapter parameters for this run: {'max_epochs': 5}
+2025-04-29 00:12:00 [DEBUG] 🔍 Extracted combined targets (shape=(347,)) for skorch fit.
+2025-04-29 00:12:00 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:12:00 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: No X_val found. Processing input X, y.
+2025-04-29 00:12:00 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X is Dataset and y is not None. Ignoring y.
+2025-04-29 00:12:00 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Using self.train_split for internal validation.
+2025-04-29 00:12:04 [INFO] ℹ️ Training finished. Best validation performance at Epoch 5 (valid_loss=0.7755)
+2025-04-29 00:12:04 [INFO] ℹ️ Model state_dict saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cnn_epoch5_val_valid-loss0.7755_20250429_001204.pt
+2025-04-29 00:12:04 [INFO] ℹ️ Main pipeline model adapter updated with the model from single_train.
+2025-04-29 00:12:04 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_train_batch_size=16_early_stopping_patience=5_lr=0.001_max_epochs=5_20250429_001204.json
+2025-04-29 00:12:04 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:12:04 [INFO] ℹ️ --- Method single_train completed successfully ---
+2025-04-29 00:12:04 [INFO] ℹ️ --- Running Method 2/2: single_eval ---
+2025-04-29 00:12:04 [DEBUG] 🔍 Parameters for single_eval: {'save_results': True}
+2025-04-29 00:12:04 [INFO] ℹ️ Starting model evaluation on the test set...
+2025-04-29 00:12:04 [INFO] ℹ️ Loading test data into memory for evaluation...
+2025-04-29 00:12:04 [INFO] ℹ️ Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 87) into NumPy arrays...
+2025-04-29 00:12:05 [DEBUG] 🔍 Loading batch 1/3
+2025-04-29 00:12:05 [DEBUG] 🔍 Loading batch 2/3
+2025-04-29 00:12:05 [DEBUG] 🔍 Loading batch 3/3
+2025-04-29 00:12:05 [INFO] ℹ️ Finished loading. X shape: (87, 3, 64, 64), y shape: (87,)
+2025-04-29 00:12:05 [INFO] ℹ️ Evaluating on 87 test samples.
+2025-04-29 00:12:05 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:05 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:05 [DEBUG] 🔍 Computed Metrics: Acc=0.5402, Macro F1=0.4578, Macro ROC AUC=0.8921, Macro PR AUC=0.6094
+2025-04-29 00:12:05 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_eval_20250429_001205.json
+2025-04-29 00:12:05 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:12:05 [INFO] ℹ️ Evaluation Summary:
+2025-04-29 00:12:05 [INFO] ℹ️   Accuracy: 0.5402
+2025-04-29 00:12:05 [INFO] ℹ️ --- Method single_eval completed successfully ---
+2025-04-29 00:12:05 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:12:05 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:12:05 [INFO] ℹ️ Method single_train_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-29 00:12:05 [INFO] ℹ️ Method single_eval_1: Completed. (Accuracy/MeanAccuracy: 0.5402, BestScore: nan)
+2025-04-29 00:12:41 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-29 00:12:41 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:12:41 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:12:41 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:12:41 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:12:41 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:12:41 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:12:41 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:12:41 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:12:41 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:12:41 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:12:41 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:12:41 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:12:41 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:12:41 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:12:41 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:12:41 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:12:41 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:12:41 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-29 00:12:41 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:12:41 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-29 00:12:41 [DEBUG] 🔍 Parameters for cv_model_evaluation: {'cv': 5, 'save_results': True}
+2025-04-29 00:12:41 [INFO] ℹ️ Performing 5-fold CV with inner validation split.
+2025-04-29 00:12:41 [INFO] ℹ️ Loading full dataset into memory...
+2025-04-29 00:12:41 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 1/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 2/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 3/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 4/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 5/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 6/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 7/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 8/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 9/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 10/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 11/14
+2025-04-29 00:12:41 [DEBUG] 🔍 Loading batch 12/14
+2025-04-29 00:12:42 [DEBUG] 🔍 Loading batch 13/14
+2025-04-29 00:12:42 [DEBUG] 🔍 Loading batch 14/14
+2025-04-29 00:12:42 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-29 00:12:42 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-29 00:12:42 [INFO] ℹ️ --- Starting Outer Fold 1/5 ---
+2025-04-29 00:12:42 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:12:42 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:12:42 [INFO] ℹ️ Fitting model for fold 1...
+2025-04-29 00:12:42 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [ERROR] ❗ Fit failed for fold 1: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:12:42 [INFO] ℹ️ --- Starting Outer Fold 2/5 ---
+2025-04-29 00:12:42 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:12:42 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:12:42 [INFO] ℹ️ Fitting model for fold 2...
+2025-04-29 00:12:42 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [ERROR] ❗ Fit failed for fold 2: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:12:42 [INFO] ℹ️ --- Starting Outer Fold 3/5 ---
+2025-04-29 00:12:42 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:12:42 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:12:42 [INFO] ℹ️ Fitting model for fold 3...
+2025-04-29 00:12:42 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [ERROR] ❗ Fit failed for fold 3: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:12:42 [INFO] ℹ️ --- Starting Outer Fold 4/5 ---
+2025-04-29 00:12:42 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:12:42 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:12:42 [INFO] ℹ️ Fitting model for fold 4...
+2025-04-29 00:12:42 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [ERROR] ❗ Fit failed for fold 4: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:12:42 [INFO] ℹ️ --- Starting Outer Fold 5/5 ---
+2025-04-29 00:12:42 [DEBUG] 🔍 Outer split: 348 train+val samples, 86 test samples.
+2025-04-29 00:12:42 [DEBUG] 🔍 Inner split: 278 train samples, 70 validation samples.
+2025-04-29 00:12:42 [INFO] ℹ️ Fitting model for fold 5...
+2025-04-29 00:12:42 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:12:42 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:12:42 [ERROR] ❗ Fit failed for fold 5: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:12:42 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cv_model_evaluation_manual_cv=5_20250429_001242.json
+2025-04-29 00:12:42 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:12:42 [INFO] ℹ️ Manual CV Evaluation Summary (Avg over 5 folds):
+2025-04-29 00:12:42 [INFO] ℹ️   Accuracy: nan +/- nan
+2025-04-29 00:12:42 [INFO] ℹ️   Macro F1: nan +/- nan
+2025-04-29 00:12:42 [INFO] ℹ️ --- Method cv_model_evaluation completed successfully ---
+2025-04-29 00:12:42 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:12:42 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:12:42 [INFO] ℹ️ Method cv_model_evaluation_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-29 00:14:34 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-29 00:14:34 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:14:34 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:14:34 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:14:34 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:14:34 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:14:34 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:14:34 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:14:34 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:14:34 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:14:34 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:14:34 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:14:34 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:14:34 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:14:34 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:14:34 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:14:34 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:14:34 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:14:34 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-29 00:14:34 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:14:34 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-29 00:14:34 [DEBUG] 🔍 Parameters for cv_model_evaluation: {'cv': 5, 'save_results': True}
+2025-04-29 00:14:34 [INFO] ℹ️ Performing 5-fold CV with inner validation split.
+2025-04-29 00:14:34 [INFO] ℹ️ Loading full dataset into memory...
+2025-04-29 00:14:34 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-29 00:14:34 [DEBUG] 🔍 Loading batch 1/14
+2025-04-29 00:14:34 [DEBUG] 🔍 Loading batch 2/14
+2025-04-29 00:14:34 [DEBUG] 🔍 Loading batch 3/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 4/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 5/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 6/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 7/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 8/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 9/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 10/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 11/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 12/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 13/14
+2025-04-29 00:14:35 [DEBUG] 🔍 Loading batch 14/14
+2025-04-29 00:14:35 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-29 00:14:35 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-29 00:14:35 [INFO] ℹ️ --- Starting Outer Fold 1/5 ---
+2025-04-29 00:14:35 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:14:35 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:14:35 [INFO] ℹ️ Fitting model for fold 1...
+2025-04-29 00:14:35 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:35 [ERROR] ❗ Fit failed for fold 1: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:14:35 [INFO] ℹ️ --- Starting Outer Fold 2/5 ---
+2025-04-29 00:14:35 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:14:35 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:14:35 [INFO] ℹ️ Fitting model for fold 2...
+2025-04-29 00:14:35 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:14:35 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:36 [ERROR] ❗ Fit failed for fold 2: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:14:36 [INFO] ℹ️ --- Starting Outer Fold 3/5 ---
+2025-04-29 00:14:36 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:14:36 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:14:36 [INFO] ℹ️ Fitting model for fold 3...
+2025-04-29 00:14:36 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:36 [ERROR] ❗ Fit failed for fold 3: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:14:36 [INFO] ℹ️ --- Starting Outer Fold 4/5 ---
+2025-04-29 00:14:36 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:14:36 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:14:36 [INFO] ℹ️ Fitting model for fold 4...
+2025-04-29 00:14:36 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:36 [ERROR] ❗ Fit failed for fold 4: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:14:36 [INFO] ℹ️ --- Starting Outer Fold 5/5 ---
+2025-04-29 00:14:36 [DEBUG] 🔍 Outer split: 348 train+val samples, 86 test samples.
+2025-04-29 00:14:36 [DEBUG] 🔍 Inner split: 278 train samples, 70 validation samples.
+2025-04-29 00:14:36 [INFO] ℹ️ Fitting model for fold 5...
+2025-04-29 00:14:36 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it for validation.
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Processing X for training (ignoring y).
+2025-04-29 00:14:36 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:14:36 [ERROR] ❗ Fit failed for fold 5: 0D or 1D target tensor expected, multi-target not supported
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1825, in cv_model_evaluation
+    estimator_fold.fit(X_inner_train, y_inner_train, X_val=X_val, y_val=y_val)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1073, in train_step_single
+    loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 150, in get_loss
+    return super().get_loss(y_pred, y_true, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1695, in get_loss
+    return self.criterion_(y_pred, y_true)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\loss.py", line 1293, in forward
+    return F.cross_entropy(
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\functional.py", line 3479, in cross_entropy
+    return torch._C._nn.cross_entropy_loss(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: 0D or 1D target tensor expected, multi-target not supported
+2025-04-29 00:14:36 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cv_model_evaluation_manual_cv=5_20250429_001436.json
+2025-04-29 00:14:36 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:14:36 [INFO] ℹ️ Manual CV Evaluation Summary (Avg over 5 folds):
+2025-04-29 00:14:36 [INFO] ℹ️   Accuracy: nan +/- nan
+2025-04-29 00:14:36 [INFO] ℹ️   Macro F1: nan +/- nan
+2025-04-29 00:14:36 [INFO] ℹ️ --- Method cv_model_evaluation completed successfully ---
+2025-04-29 00:14:36 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:14:36 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:14:36 [INFO] ℹ️ Method cv_model_evaluation_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-29 00:15:08 [DEBUG] 🔍 Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-04-29 00:15:08 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:15:08 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:15:08 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:15:08 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:15:08 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:15:08 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:15:08 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:15:08 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:15:08 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:15:08 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:15:08 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:15:08 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:15:08 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:15:08 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:15:08 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:15:08 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:15:08 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:15:08 [INFO] ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-04-29 00:15:08 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:15:08 [INFO] ℹ️ --- Running Method 1/1: cv_model_evaluation ---
+2025-04-29 00:15:08 [DEBUG] 🔍 Parameters for cv_model_evaluation: {'cv': 5, 'save_results': True}
+2025-04-29 00:15:08 [INFO] ℹ️ Performing 5-fold CV with inner validation split.
+2025-04-29 00:15:08 [INFO] ℹ️ Loading full dataset into memory...
+2025-04-29 00:15:08 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-29 00:15:08 [DEBUG] 🔍 Loading batch 1/14
+2025-04-29 00:15:08 [DEBUG] 🔍 Loading batch 2/14
+2025-04-29 00:15:08 [DEBUG] 🔍 Loading batch 3/14
+2025-04-29 00:15:08 [DEBUG] 🔍 Loading batch 4/14
+2025-04-29 00:15:08 [DEBUG] 🔍 Loading batch 5/14
+2025-04-29 00:15:08 [DEBUG] 🔍 Loading batch 6/14
+2025-04-29 00:15:09 [DEBUG] 🔍 Loading batch 7/14
+2025-04-29 00:15:09 [DEBUG] 🔍 Loading batch 8/14
+2025-04-29 00:15:09 [DEBUG] 🔍 Loading batch 9/14
+2025-04-29 00:15:09 [DEBUG] 🔍 Loading batch 10/14
+2025-04-29 00:15:09 [DEBUG] 🔍 Loading batch 11/14
+2025-04-29 00:15:09 [DEBUG] 🔍 Loading batch 12/14
+2025-04-29 00:15:09 [DEBUG] 🔍 Loading batch 13/14
+2025-04-29 00:15:09 [DEBUG] 🔍 Loading batch 14/14
+2025-04-29 00:15:09 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-29 00:15:09 [INFO] ℹ️ Using full dataset (434 samples) for 5-fold CV.
+2025-04-29 00:15:09 [INFO] ℹ️ --- Starting Outer Fold 1/5 ---
+2025-04-29 00:15:09 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:15:09 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:15:09 [INFO] ℹ️ Fitting model for fold 1...
+2025-04-29 00:15:09 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:09 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:15:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:11 [INFO] ℹ️ Evaluating model on outer test set for fold 1...
+2025-04-29 00:15:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:11 [INFO] ℹ️ Fold 1 Test Scores: Acc=0.6092, F1=0.6128
+2025-04-29 00:15:11 [INFO] ℹ️ --- Starting Outer Fold 2/5 ---
+2025-04-29 00:15:11 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:15:11 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:15:11 [INFO] ℹ️ Fitting model for fold 2...
+2025-04-29 00:15:11 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:11 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:15:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:12 [INFO] ℹ️ Evaluating model on outer test set for fold 2...
+2025-04-29 00:15:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:12 [INFO] ℹ️ Fold 2 Test Scores: Acc=0.6667, F1=0.6406
+2025-04-29 00:15:12 [INFO] ℹ️ --- Starting Outer Fold 3/5 ---
+2025-04-29 00:15:12 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:15:12 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:15:12 [INFO] ℹ️ Fitting model for fold 3...
+2025-04-29 00:15:12 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:12 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:15:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:12 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:13 [INFO] ℹ️ Evaluating model on outer test set for fold 3...
+2025-04-29 00:15:13 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:13 [INFO] ℹ️ Fold 3 Test Scores: Acc=0.6782, F1=0.6771
+2025-04-29 00:15:13 [INFO] ℹ️ --- Starting Outer Fold 4/5 ---
+2025-04-29 00:15:13 [DEBUG] 🔍 Outer split: 347 train+val samples, 87 test samples.
+2025-04-29 00:15:13 [DEBUG] 🔍 Inner split: 277 train samples, 70 validation samples.
+2025-04-29 00:15:13 [INFO] ℹ️ Fitting model for fold 4...
+2025-04-29 00:15:13 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:13 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:13 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:13 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:15:13 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:13 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:15 [INFO] ℹ️ Evaluating model on outer test set for fold 4...
+2025-04-29 00:15:15 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:15 [INFO] ℹ️ Fold 4 Test Scores: Acc=0.5517, F1=0.5402
+2025-04-29 00:15:15 [INFO] ℹ️ --- Starting Outer Fold 5/5 ---
+2025-04-29 00:15:15 [DEBUG] 🔍 Outer split: 348 train+val samples, 86 test samples.
+2025-04-29 00:15:15 [DEBUG] 🔍 Inner split: 278 train samples, 70 validation samples.
+2025-04-29 00:15:15 [INFO] ℹ️ Fitting model for fold 5...
+2025-04-29 00:15:15 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:15 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:15 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:15 [DEBUG] 🔍 [DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.
+2025-04-29 00:15:15 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:15 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:16 [INFO] ℹ️ Evaluating model on outer test set for fold 5...
+2025-04-29 00:15:16 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:16 [INFO] ℹ️ Fold 5 Test Scores: Acc=0.6047, F1=0.5823
+2025-04-29 00:15:16 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cv_model_evaluation_manual_cv=5_20250429_001516.json
+2025-04-29 00:15:16 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:15:16 [INFO] ℹ️ Manual CV Evaluation Summary (Avg over 5 folds):
+2025-04-29 00:15:16 [INFO] ℹ️   Accuracy: 0.6221 +/- 0.0514
+2025-04-29 00:15:16 [INFO] ℹ️   Macro F1: 0.6106 +/- 0.0526
+2025-04-29 00:15:16 [INFO] ℹ️ --- Method cv_model_evaluation completed successfully ---
+2025-04-29 00:15:16 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:15:16 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:15:16 [INFO] ℹ️ Method cv_model_evaluation_0: Completed. (Accuracy/MeanAccuracy: 0.6221, BestScore: nan)
+2025-04-29 00:15:26 [DEBUG] 🔍 Chosen sequence: [('single_train', {'max_epochs': 5, 'save_model': True}), ('single_eval', {'save_results': True})]
+2025-04-29 00:15:26 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:15:26 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:15:26 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:15:26 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:15:26 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:15:26 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:15:26 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:15:26 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:15:26 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:15:26 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:15:26 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:15:26 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:15:26 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:15:26 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:15:26 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:15:26 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:15:26 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:15:26 [INFO] ℹ️ Executor configured to run methods: single_train, single_eval
+2025-04-29 00:15:26 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:15:26 [INFO] ℹ️ --- Running Method 1/2: single_train ---
+2025-04-29 00:15:26 [DEBUG] 🔍 Parameters for single_train: {'max_epochs': 5, 'save_model': True}
+2025-04-29 00:15:26 [INFO] ℹ️ Starting single training run...
+2025-04-29 00:15:26 [INFO] ℹ️ Combining train (277) and validation (70) sets.
+2025-04-29 00:15:26 [INFO] ℹ️ Overriding adapter parameters for this run: {'max_epochs': 5}
+2025-04-29 00:15:26 [DEBUG] 🔍 Extracted combined targets (shape=(347,)) for skorch fit.
+2025-04-29 00:15:26 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:26 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X is Dataset and y is not None. Ignoring y.
+2025-04-29 00:15:26 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:31 [INFO] ℹ️ Training finished. Best validation performance at Epoch 5 (valid_loss=0.7452)
+2025-04-29 00:15:31 [INFO] ℹ️ Model state_dict saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cnn_epoch5_val_valid-loss0.7452_20250429_001531.pt
+2025-04-29 00:15:31 [INFO] ℹ️ Main pipeline model adapter updated with the model from single_train.
+2025-04-29 00:15:31 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_train_batch_size=16_early_stopping_patience=5_lr=0.001_max_epochs=5_20250429_001531.json
+2025-04-29 00:15:31 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:15:31 [INFO] ℹ️ --- Method single_train completed successfully ---
+2025-04-29 00:15:31 [INFO] ℹ️ --- Running Method 2/2: single_eval ---
+2025-04-29 00:15:31 [DEBUG] 🔍 Parameters for single_eval: {'save_results': True}
+2025-04-29 00:15:31 [INFO] ℹ️ Starting model evaluation on the test set...
+2025-04-29 00:15:31 [INFO] ℹ️ Loading test data into memory for evaluation...
+2025-04-29 00:15:31 [INFO] ℹ️ Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 87) into NumPy arrays...
+2025-04-29 00:15:31 [DEBUG] 🔍 Loading batch 1/3
+2025-04-29 00:15:31 [DEBUG] 🔍 Loading batch 2/3
+2025-04-29 00:15:31 [DEBUG] 🔍 Loading batch 3/3
+2025-04-29 00:15:31 [INFO] ℹ️ Finished loading. X shape: (87, 3, 64, 64), y shape: (87,)
+2025-04-29 00:15:31 [INFO] ℹ️ Evaluating on 87 test samples.
+2025-04-29 00:15:31 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:31 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:31 [DEBUG] 🔍 Computed Metrics: Acc=0.5287, Macro F1=0.4468, Macro ROC AUC=0.8954, Macro PR AUC=0.6038
+2025-04-29 00:15:31 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_eval_20250429_001531.json
+2025-04-29 00:15:31 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:15:31 [INFO] ℹ️ Evaluation Summary:
+2025-04-29 00:15:31 [INFO] ℹ️   Accuracy: 0.5287
+2025-04-29 00:15:31 [INFO] ℹ️ --- Method single_eval completed successfully ---
+2025-04-29 00:15:31 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:15:31 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:15:31 [INFO] ℹ️ Method single_train_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-29 00:15:31 [INFO] ℹ️ Method single_eval_1: Completed. (Accuracy/MeanAccuracy: 0.5287, BestScore: nan)
+2025-04-29 00:15:45 [DEBUG] 🔍 Chosen sequence: [('nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'outer_cv': 3, 'inner_cv': 2, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-04-29 00:15:45 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-29 00:15:45 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-29 00:15:45 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-04-29 00:15:45 [INFO] ℹ️   Model Type: cnn
+2025-04-29 00:15:45 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-29 00:15:45 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-29 00:15:45 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-04-29 00:15:45 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-29 00:15:45 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-29 00:15:45 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-29 00:15:45 [DEBUG] 🔍 TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-04-29 00:15:45 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-29 00:15:45 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:15:45 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-29 00:15:45 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-29 00:15:45 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-29 00:15:45 [DEBUG] 🔍 Method validation successful.
+2025-04-29 00:15:45 [INFO] ℹ️ Executor configured to run methods: nested_grid_search
+2025-04-29 00:15:45 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-29 00:15:45 [INFO] ℹ️ --- Running Method 1/1: nested_grid_search ---
+2025-04-29 00:15:45 [DEBUG] 🔍 Parameters for nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'outer_cv': 3, 'inner_cv': 2, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-04-29 00:15:45 [INFO] ℹ️ Performing nested 'grid' search.
+2025-04-29 00:15:45 [INFO] ℹ️   Outer CV folds: 3, Inner CV folds: 2
+2025-04-29 00:15:45 [INFO] ℹ️   Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-04-29 00:15:45 [INFO] ℹ️   Scoring Metric: accuracy
+2025-04-29 00:15:45 [INFO] ℹ️ Loading full dataset into memory for standard nested CV (FLAT structure).
+2025-04-29 00:15:45 [INFO] ℹ️ Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 434) into NumPy arrays...
+2025-04-29 00:15:45 [DEBUG] 🔍 Loading batch 1/14
+2025-04-29 00:15:45 [DEBUG] 🔍 Loading batch 2/14
+2025-04-29 00:15:45 [DEBUG] 🔍 Loading batch 3/14
+2025-04-29 00:15:45 [DEBUG] 🔍 Loading batch 4/14
+2025-04-29 00:15:45 [DEBUG] 🔍 Loading batch 5/14
+2025-04-29 00:15:45 [DEBUG] 🔍 Loading batch 6/14
+2025-04-29 00:15:45 [DEBUG] 🔍 Loading batch 7/14
+2025-04-29 00:15:46 [DEBUG] 🔍 Loading batch 8/14
+2025-04-29 00:15:46 [DEBUG] 🔍 Loading batch 9/14
+2025-04-29 00:15:46 [DEBUG] 🔍 Loading batch 10/14
+2025-04-29 00:15:46 [DEBUG] 🔍 Loading batch 11/14
+2025-04-29 00:15:46 [DEBUG] 🔍 Loading batch 12/14
+2025-04-29 00:15:46 [DEBUG] 🔍 Loading batch 13/14
+2025-04-29 00:15:46 [DEBUG] 🔍 Loading batch 14/14
+2025-04-29 00:15:46 [INFO] ℹ️ Finished loading. X shape: (434, 3, 64, 64), y shape: (434,)
+2025-04-29 00:15:46 [INFO] ℹ️ Running standard nested CV using cross_validate with NumPy data...
+2025-04-29 00:15:46 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:46 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:46 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:46 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:47 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:47 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:47 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:47 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:47 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:48 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:48 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:48 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:48 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:48 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:49 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:49 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:49 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:49 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:49 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:50 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:50 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:50 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:50 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:50 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:50 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:50 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:50 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:50 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:50 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:51 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:51 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:51 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:51 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:51 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:52 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:52 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:52 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:52 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:52 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:53 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:53 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:53 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:53 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:53 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:54 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:54 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:54 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:54 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:54 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:55 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:55 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:55 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:55 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:55 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:56 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:56 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:56 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:56 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:56 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:56 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:56 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:56 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:56 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:56 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:57 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:57 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:57 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:57 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:57 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:58 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:58 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:58 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:58 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:58 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:15:59 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:59 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:15:59 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:15:59 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:15:59 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:00 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:00 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:00 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:00 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:00 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:00 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:01 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:01 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:01 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:01 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:02 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:02 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:02 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:02 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:02 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:03 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:03 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:03 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:03 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:03 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:04 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:04 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:04 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:04 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:04 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:06 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:06 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:06 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:06 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:06 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:07 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:07 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:07 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:07 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:07 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:08 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:08 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:08 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:08 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:08 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:09 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:09 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:09 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:09 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:09 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:10 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-29 00:16:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:10 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-04-29 00:16:10 [WARNING] ⚠️ [DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).
+2025-04-29 00:16:11 [DEBUG] 🔍 [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-04-29 00:16:11 [INFO] ℹ️ Nested cross-validation finished.
+2025-04-29 00:16:11 [ERROR] ❗ Failed to save detailed results to JSON C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\nested_grid_search_inner_cv=2_method=grid_n_iter=N\A_outer_cv=3_scoring=accuracy_20250429_001611.json: [Errno 2] No such file or directory: 'C:\\Users\\Stefan\\Documents\\GitHub\\UBB-Y3-AI-Research\\model_src\\pipeline_v2\\results\\mini-GCD-flat\\cnn\\nested_grid_search_inner_cv=2_method=grid_n_iter=N\\A_outer_cv=3_scoring=accuracy_20250429_001611.json'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1377, in _save_results
+    with open(json_filepath, 'w', encoding='utf-8') as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: 'C:\\Users\\Stefan\\Documents\\GitHub\\UBB-Y3-AI-Research\\model_src\\pipeline_v2\\results\\mini-GCD-flat\\cnn\\nested_grid_search_inner_cv=2_method=grid_n_iter=N\\A_outer_cv=3_scoring=accuracy_20250429_001611.json'
+2025-04-29 00:16:11 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-29 00:16:11 [INFO] ℹ️ --- Method nested_grid_search completed successfully ---
+2025-04-29 00:16:11 [INFO] ℹ️ Pipeline execution finished.
+2025-04-29 00:16:11 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-29 00:16:11 [INFO] ℹ️ Method nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.6405, BestScore: nan)
