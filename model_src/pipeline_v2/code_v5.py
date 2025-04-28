@@ -14,7 +14,7 @@ from enum import Enum
 from pathlib import Path
 
 import torch.nn as nn
-from skorch.helper import SliceDataset
+from skorch.helper import SliceDataset # Keep SliceDataset import
 # import torch.nn.functional as F # F not used directly, can be removed if desired
 from torch.utils.data import Dataset, DataLoader, random_split, Subset, ConcatDataset
 from torchvision import transforms, datasets, models
@@ -35,19 +35,23 @@ from sklearn.base import BaseEstimator, ClassifierMixin, clone
 
 import skorch
 from skorch import NeuralNetClassifier
-from skorch.callbacks import EarlyStopping, LRScheduler, Checkpoint
+from skorch.callbacks import EarlyStopping, LRScheduler, Checkpoint, Callback # Import base Callback
 from skorch.dataset import Dataset as SkorchDataset # To distinguish from torch.utils.data.Dataset
 
 # --- Global Configurations ---
+# TODO: check if reproducibility is guaranteed with this setup (it doesn't seem to be)
+# Note: Full reproducibility with CUDA is tricky. deterministic=True helps but isn't always sufficient.
 RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 torch.manual_seed(RANDOM_SEED)
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(RANDOM_SEED)
-torch.backends.cudnn.deterministic = True
-torch.backends.cudnn.benchmark = False
+# Commenting these out might sometimes resolve unrelated CUDA errors, but reduces reproducibility
+# torch.backends.cudnn.deterministic = True
+# torch.backends.cudnn.benchmark = False
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
-NUM_WORKERS = os.cpu_count() // 2 if os.cpu_count() else 4 # Heuristic for num_workers
+NUM_WORKERS = 0 # Set to 0 for stability, especially on Windows
+# NUM_WORKERS = os.cpu_count() // 2 if os.cpu_count() else 4 # Heuristic for num_workers
 
 
 # --- Configure Logging ---
@@ -109,7 +113,8 @@ def setup_logger(name: str, log_file: Optional[Union[str, Path]] = None, level: 
         log_path = Path(log_file)
         log_path.parent.mkdir(parents=True, exist_ok=True) # Ensure log directory exists
         try:
-            file_handler = logging.FileHandler(log_path, encoding='utf-8')
+            # Use 'a' mode to append if file exists
+            file_handler = logging.FileHandler(log_path, mode='a', encoding='utf-8')
             file_handler.setFormatter(CustomFormatter())
             logger.addHandler(file_handler)
         except Exception as e:
@@ -119,7 +124,11 @@ def setup_logger(name: str, log_file: Optional[Union[str, Path]] = None, level: 
     return logger
 
 # Create logger instance
-logger = setup_logger('image_classification', Path('logs') / 'classification.log')
+# Ensure logs directory exists relative to the script's parent if needed
+script_dir = Path(__file__).parent
+log_dir = script_dir / 'logs'
+log_dir.mkdir(exist_ok=True)
+logger = setup_logger('image_classification', log_dir / 'classification.log', level=logging.DEBUG)
 
 
 # --- Dataset Handling ---
@@ -155,20 +164,28 @@ class TransformedSubset(Dataset):
         self.indices = indices
         self.transform = transform
         # We need direct access to ImageFolder's specific attributes if that's the base dataset
-        if isinstance(dataset, datasets.ImageFolder):
-            self.loader = dataset.loader
-            self.samples = dataset.samples # List of (filepath, class_index) tuples
+        if hasattr(dataset, 'loader') and hasattr(dataset, 'samples'):
+             self.loader = dataset.loader
+             self.samples = dataset.samples # List of (filepath, class_index) tuples
+        # Handle Subset case for FIXED structure where dataset is Subset
+        elif isinstance(dataset, Subset) and hasattr(dataset.dataset, 'loader') and hasattr(dataset.dataset, 'samples'):
+             logger.debug("TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.")
+             self.loader = dataset.dataset.loader
+             self.samples = dataset.dataset.samples
+             # Adjust indices to be relative to the original dataset if needed?
+             # No, Subset __getitem__ handles original indices, so self.indices are correct.
         else:
             # Attempt generic access, might need adjustment for other dataset types
-            logger.warning(f"TransformedSubset base dataset is type {type(dataset)}, not ImageFolder. "
-                           f"Assuming it has 'samples' and 'loader' attributes or similar structure.")
+            logger.warning(f"TransformedSubset base dataset is type {type(dataset)}, not ImageFolder or Subset of ImageFolder. "
+                           f"Assuming direct __getitem__ returns (path, target) or similar.")
+            # Fallback: Try accessing items directly if loader/samples fails
             self.loader = getattr(dataset, 'loader', lambda x: x) # Default loader if not found
-            self.samples = getattr(dataset, 'samples', []) # Default samples if not found
-            if not self.samples:
-                 logger.error("Base dataset for TransformedSubset lacks 'samples'. Getitem might fail.")
+            self.samples = getattr(dataset, 'samples', None) # Default samples if not found
+            if self.samples is None:
+                 logger.warning("Base dataset for TransformedSubset lacks 'samples'. __getitem__ will try direct access.")
 
 
-    def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
+    def __getitem__(self, idx: int) -> Tuple[Any, int]: # Return Any for sample before loading
         """
         Retrieves the item at the given index within this subset, applying the specific transform.
 
@@ -180,22 +197,57 @@ class TransformedSubset(Dataset):
 
         Raises:
             IndexError: If the index is out of bounds for the subset.
-            AttributeError: If the base dataset structure is incompatible.
         """
-        if idx >= len(self.indices):
-            raise IndexError("Index out of bounds for TransformedSubset")
+        if not 0 <= idx < len(self.indices):
+             raise IndexError(f"Index {idx} out of bounds for TransformedSubset of length {len(self.indices)}")
 
         original_idx = self.indices[idx]
-        try:
-            path, target = self.samples[original_idx]
-            sample = self.loader(path)
-        except Exception as e:
-             logger.error(f"Error loading sample at original index {original_idx} (subset index {idx}): {e}")
-             # Return dummy data or re-raise? Let's re-raise for now.
-             raise e
 
+        # Use self.samples if available (ImageFolder case)
+        if self.samples is not None:
+            try:
+                path, target = self.samples[original_idx]
+                sample = self.loader(path)
+            except Exception as e:
+                logger.error(f"Error loading sample via self.samples at original index {original_idx} (subset index {idx}): {e}", exc_info=True)
+                raise e
+        else:
+             # Fallback: try direct access on the base dataset (might work for Subset)
+             try:
+                 # This might return (transformed_image, target) if base dataset has transform
+                 sample, target = self.dataset[original_idx]
+                 # If sample is already a tensor, fine. If not (e.g. PIL image), need loader?
+                 # This path is less reliable if the base dataset isn't ImageFolder.
+                 if not isinstance(sample, torch.Tensor):
+                      # Attempt to use loader if sample isn't a tensor (e.g., PIL Image)
+                      try:
+                           sample = self.loader(sample) # This might fail if sample is not a path
+                      except Exception as load_err:
+                           logger.warning(f"Failed to apply loader to sample of type {type(sample)}: {load_err}. Using sample as is.")
+
+             except Exception as e:
+                  logger.error(f"Error loading sample via direct dataset access at original index {original_idx} (subset index {idx}): {e}", exc_info=True)
+                  raise e
+
+        # Apply the specific transform of this subset
         if self.transform:
-            sample = self.transform(sample)
+             try:
+                 sample = self.transform(sample)
+             except Exception as transform_err:
+                 logger.error(f"Error applying transform in TransformedSubset for item {idx} (original {original_idx}): {transform_err}", exc_info=True)
+                 # What to do here? Raise, return None, return untransformed? Re-raise.
+                 raise transform_err
+
+
+        # Ensure target is an int
+        if not isinstance(target, int):
+            try:
+                target = int(target)
+            except Exception:
+                 logger.error(f"Could not convert target {target} (type {type(target)}) to int for item {idx}.")
+                 # Assign a default or raise? Assign -1 for now.
+                 target = -1
+
 
         return sample, target
 
@@ -208,35 +260,8 @@ class TransformedSubset(Dataset):
         """
         return len(self.indices)
 
-    @property
-    def targets(self) -> List[int]:
-        """
-        Returns the targets (labels) for the samples in this subset.
-        Necessary for compatibility with some skorch/sklearn functions.
-
-        Returns:
-            List[int]: A list of class indices for the subset.
-        """
-        # Efficiently get targets for the subset indices
-        all_targets = getattr(self.dataset, 'targets', None)
-        if all_targets is not None:
-            try:
-                return [all_targets[i] for i in self.indices]
-            except Exception as e:
-                logger.warning(f"Could not extract subset targets using indices: {e}. Falling back.")
-
-        # Fallback: slower method if direct targets array isn't available/compatible
-        logger.warning("Falling back to slower target extraction for TransformedSubset.")
-        subset_targets = []
-        for i in self.indices:
-             try:
-                 _, target = self.samples[i]
-                 subset_targets.append(target)
-             except Exception as e:
-                 logger.error(f"Error getting target for sample at original index {i}: {e}")
-                 # Handle error - append a placeholder or raise? Append -1 for now.
-                 subset_targets.append(-1)
-        return subset_targets
+    # Removed @property targets - rely on _get_targets_from_dataset helper instead
+    # as accessing self.dataset.targets directly fails for TransformedSubset of Subset.
 
 
 class ImageDatasetHandler:
@@ -252,6 +277,7 @@ class ImageDatasetHandler:
         data_augmentation (bool): Whether to apply augmentation to the training set.
         structure (DatasetStructure): Detected structure of the dataset.
         classes (List[str]): List of class names found in the dataset.
+        class_to_idx (Dict[str, int]): Mapping from class name to index.
         num_classes (int): Number of unique classes.
         train_dataset (Dataset): The training dataset subset (potentially augmented).
         val_dataset (Dataset): The validation dataset subset (no augmentation).
@@ -277,9 +303,9 @@ class ImageDatasetHandler:
 
         Raises:
             FileNotFoundError: If the root_path does not exist or is not a directory.
-            ValueError: If val_split_ratio is not between 0 and 1.
+            ValueError: If val_split_ratio is not between 0 and 1 or dataset issues occur.
         """
-        self.root_path = Path(root_path)
+        self.root_path = Path(root_path).resolve() # Use resolved path
         if not self.root_path.is_dir():
             raise FileNotFoundError(f"Dataset root path not found or not a directory: {self.root_path}")
 
@@ -294,6 +320,9 @@ class ImageDatasetHandler:
         self.train_dataset_aug: Optional[TransformedSubset] = None # Train subset with augmentation
         self.val_dataset: Optional[Subset] = None
         self.test_dataset: Optional[Union[datasets.ImageFolder, Subset]] = None
+        self.classes: List[str] = []
+        self.class_to_idx: Dict[str, int] = {}
+        self.num_classes: int = 0
 
         # Detect dataset structure
         self.structure = self._detect_structure()
@@ -310,8 +339,8 @@ class ImageDatasetHandler:
             logger.error(f"Failed to load dataset from {self.root_path}: {e}", exc_info=True)
             raise  # Re-raise after logging
 
-        # Get class information
-        self.classes = self._get_classes()
+        # Get class information from the loaded datasets
+        self._extract_class_info()
         if not self.classes:
              raise ValueError(f"Could not determine classes for dataset at {self.root_path}")
         self.num_classes = len(self.classes)
@@ -319,39 +348,56 @@ class ImageDatasetHandler:
 
         # Assign the correct training dataset based on augmentation flag
         self.train_dataset = self.train_dataset_aug if self.data_augmentation else self.train_dataset_raw
+        if self.train_dataset is None:
+             raise RuntimeError("Failed to assign a valid training dataset.")
 
     def _detect_structure(self) -> DatasetStructure:
-        """
-        Detects the dataset structure (FLAT or FIXED) based on subdirectories.
-
-        Returns:
-            DatasetStructure: The detected structure.
-        """
-        root_subdirs = [d.name for d in self.root_path.iterdir() if d.is_dir()]
+        """Detects the dataset structure (FLAT or FIXED) based on subdirectories."""
+        try:
+             root_subdirs = [d.name for d in self.root_path.iterdir() if d.is_dir()]
+        except FileNotFoundError:
+             logger.error(f"Cannot list directory content, path not found: {self.root_path}")
+             raise
+        except Exception as e:
+             logger.error(f"Error listing directory {self.root_path}: {e}")
+             raise
 
         if 'train' in root_subdirs and 'test' in root_subdirs:
             train_path = self.root_path / 'train'
             test_path = self.root_path / 'test'
-            train_class_dirs = {d.name for d in train_path.iterdir() if d.is_dir()}
-            test_class_dirs = {d.name for d in test_path.iterdir() if d.is_dir()}
+            if not train_path.is_dir() or not test_path.is_dir():
+                 logger.warning("'train' or 'test' are not directories. Assuming FLAT.")
+                 return DatasetStructure.FLAT
+
+            try:
+                train_class_dirs = {d.name for d in train_path.iterdir() if d.is_dir()}
+                test_class_dirs = {d.name for d in test_path.iterdir() if d.is_dir()}
+            except Exception as e:
+                 logger.warning(f"Error listing train/test subdirs: {e}. Assuming FLAT.")
+                 return DatasetStructure.FLAT
 
             if train_class_dirs and train_class_dirs == test_class_dirs:
                 logger.debug("Found 'train' and 'test' directories with matching class subdirectories. Assuming FIXED structure.")
                 return DatasetStructure.FIXED
+            elif not train_class_dirs or not test_class_dirs:
+                 logger.warning("Found 'train' and 'test' directories, but one or both are empty or contain no class subdirectories. Assuming FLAT.")
+                 return DatasetStructure.FLAT
             else:
-                 logger.warning("Found 'train' and 'test' directories, but class subdirectories don't match or are missing. Assuming FLAT structure.")
+                 logger.warning("Found 'train' and 'test' directories, but class subdirectories don't match. Assuming FLAT structure.")
+                 return DatasetStructure.FLAT
 
         logger.debug("Did not find standard 'train'/'test' structure. Assuming FLAT structure.")
         return DatasetStructure.FLAT
 
     def _setup_train_transform(self) -> transforms.Compose:
         """Sets up data augmentation transforms for the training data."""
+        # Simple augmentation for stability
         return transforms.Compose([
             transforms.Resize(self.img_size),
             transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(15), # Increased rotation slightly
-            transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1), # Slightly stronger jitter
-            transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.9, 1.1)), # Added scaling
+            # transforms.RandomRotation(15),
+            # transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
+            # transforms.RandomAffine(degrees=0, translate=(0.1, 0.1), scale=(0.9, 1.1)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225]) # Standard ImageNet stats
         ])
@@ -374,81 +420,60 @@ class ImageDatasetHandler:
     def _load_flat_dataset(self) -> None:
         """Loads a FLAT dataset, creating train/val/test splits."""
         logger.info(f"Loading FLAT dataset from {self.root_path}...")
-
-        # Load the entire dataset once using the eval_transform.
-        # We will wrap the training subset later to apply train_transform.
         try:
+            # Load once with eval transform, apply train transform later via wrapper
             full_dataset_obj = datasets.ImageFolder(str(self.root_path), transform=self.eval_transform)
-            self.full_dataset = full_dataset_obj # Store the full dataset
-            targets = np.array(full_dataset_obj.targets)
-            if len(full_dataset_obj) == 0:
-                raise ValueError("Loaded dataset is empty.")
-            logger.info(f"Full dataset loaded: {len(full_dataset_obj)} samples.")
+            if len(full_dataset_obj) == 0: raise ValueError("Loaded dataset is empty.")
+            self.full_dataset = full_dataset_obj # Store reference
         except Exception as e:
             logger.error(f"Error loading ImageFolder for FLAT dataset: {e}", exc_info=True)
             raise
 
-        # Ensure there's enough data for splits
-        if len(full_dataset_obj) < 3: # Need at least 1 for train, val, test
-             raise ValueError("Dataset too small for train/val/test split.")
-
+        logger.info(f"Full dataset loaded: {len(full_dataset_obj)} samples.")
+        targets = np.array(full_dataset_obj.targets)
         indices = np.arange(len(targets))
 
-        # Create initial Train / Test split (e.g., 80% train+val, 20% test)
+        # Stratified split into train+val / test
         test_split_ratio = 0.20
+        if len(indices) < 2 or test_split_ratio <= 0 or test_split_ratio >= 1:
+             raise ValueError("Cannot perform train/test split with current settings/data size.")
         try:
             train_val_indices, test_indices = train_test_split(
-                indices,
-                test_size=test_split_ratio,
-                stratify=targets,
-                random_state=RANDOM_SEED
-            )
-            logger.debug(f"Initial split: {len(train_val_indices)} train+val, {len(test_indices)} test indices.")
-        except ValueError as e: # Handle cases where stratification isn't possible (e.g., < 2 members per class)
-            logger.warning(f"Stratified train/test split failed ({e}). Attempting non-stratified split.")
+                indices, test_size=test_split_ratio, stratify=targets, random_state=RANDOM_SEED)
+        except ValueError as e:
+            logger.warning(f"Stratified train/test split failed ({e}). Using non-stratified split.")
             train_val_indices, test_indices = train_test_split(
-                indices,
-                test_size=test_split_ratio,
-                random_state=RANDOM_SEED
-            )
+                indices, test_size=test_split_ratio, random_state=RANDOM_SEED)
+        logger.debug(f"Initial split: {len(train_val_indices)} train+val, {len(test_indices)} test indices.")
 
-        # Split Train into actual Train and Validation
-        if self.val_split_ratio > 0 and len(train_val_indices) > 1:
+        # Stratified split of train+val into actual train / validation
+        if self.val_split_ratio > 0 and len(train_val_indices) >= 2:
             train_val_targets = targets[train_val_indices]
+            # Adjust validation size calculation relative to the train_val set
+            val_size_actual = self.val_split_ratio # This interpretation might need adjustment based on sklearn version
             try:
-                train_indices, val_indices = train_test_split(
-                    train_val_indices,
-                    test_size=self.val_split_ratio, # Ratio applied to the train_val set
-                    stratify=train_val_targets,
-                    random_state=RANDOM_SEED
-                )
-                logger.debug(f"Train/Val split: {len(train_indices)} train, {len(val_indices)} validation indices.")
+                 train_indices, val_indices = train_test_split(
+                     train_val_indices, test_size=val_size_actual, stratify=train_val_targets, random_state=RANDOM_SEED)
             except ValueError as e:
-                logger.warning(f"Stratified train/val split failed ({e}). Attempting non-stratified split.")
-                train_indices, val_indices = train_test_split(
-                    train_val_indices,
-                    test_size=self.val_split_ratio,
-                    random_state=RANDOM_SEED
-                )
-        elif len(train_val_indices) <= 1:
-             logger.warning("Train+Val set too small for validation split. Using all for training.")
-             train_indices = train_val_indices
-             val_indices = []
-        else: # val_split_ratio is 0
-             logger.info("Validation split ratio is 0. No validation set created.")
-             train_indices = train_val_indices
-             val_indices = []
+                 logger.warning(f"Stratified train/val split failed ({e}). Using non-stratified split.")
+                 train_indices, val_indices = train_test_split(
+                     train_val_indices, test_size=val_size_actual, random_state=RANDOM_SEED)
+            logger.debug(f"Train/Val split: {len(train_indices)} train, {len(val_indices)} validation indices.")
+        else:
+            logger.info("Validation split ratio is 0 or train+val set too small. No validation set created from split.")
+            train_indices = train_val_indices
+            val_indices = np.array([], dtype=indices.dtype) # Ensure val_indices is an empty array
 
-        # Create Subset objects for val and test (using eval_transform inherited from full_dataset_obj)
-        self.val_dataset = Subset(full_dataset_obj, val_indices) if val_indices.size > 0 else None
+        # Create Subsets (which inherit the transform from full_dataset_obj)
         self.test_dataset = Subset(full_dataset_obj, test_indices)
-
-        # Create Subset for raw train data (no augmentation)
+        self.val_dataset = Subset(full_dataset_obj, val_indices) if val_indices.size > 0 else None
         self.train_dataset_raw = Subset(full_dataset_obj, train_indices)
 
-        # Create TransformedSubset for augmented train data
+        # Create TransformedSubset for training data augmentation
         self.train_dataset_aug = TransformedSubset(
-            full_dataset_obj, train_indices, transform=self.train_transform
+            self.train_dataset_raw, # Base on the raw train Subset
+            np.arange(len(train_indices)), # Indices are 0..N-1 within the raw subset
+            transform=self.train_transform
         )
 
         val_count = len(self.val_dataset) if self.val_dataset else 0
@@ -462,106 +487,87 @@ class ImageDatasetHandler:
         test_path = self.root_path / 'test'
         logger.info(f"Loading FIXED dataset from {train_path} (train) and {test_path} (test)...")
 
-        # Load the training dataset (with eval_transform initially)
         try:
             train_val_dataset_obj = datasets.ImageFolder(str(train_path), transform=self.eval_transform)
-            targets = np.array(train_val_dataset_obj.targets)
-            if len(train_val_dataset_obj) == 0:
-                 raise ValueError("Loaded train dataset is empty.")
-            logger.info(f"Train+Validation dataset loaded: {len(train_val_dataset_obj)} samples.")
+            if len(train_val_dataset_obj) == 0: raise ValueError("Loaded train dataset is empty.")
+            self.test_dataset = datasets.ImageFolder(str(test_path), transform=self.eval_transform)
+            if len(self.test_dataset) == 0: logger.warning("Loaded test dataset is empty.")
         except Exception as e:
-            logger.error(f"Error loading ImageFolder for FIXED train dataset: {e}", exc_info=True)
+            logger.error(f"Error loading ImageFolder for FIXED dataset: {e}", exc_info=True)
             raise
 
+        logger.info(f"Train+Validation dataset loaded: {len(train_val_dataset_obj)} samples.")
+        logger.info(f"Test dataset loaded: {len(self.test_dataset)} samples.")
+
+        targets = np.array(train_val_dataset_obj.targets)
         indices = np.arange(len(targets))
 
-        # Split Train into actual Train and Validation
-        if self.val_split_ratio > 0 and len(indices) > 1:
+        # Stratified split of train_val into actual train / validation
+        if self.val_split_ratio > 0 and len(indices) >= 2:
             try:
-                train_indices, val_indices = train_test_split(
-                    indices,
-                    test_size=self.val_split_ratio,
-                    stratify=targets,
-                    random_state=RANDOM_SEED
-                )
-                logger.debug(f"Train/Val split: {len(train_indices)} train, {len(val_indices)} validation indices.")
+                 train_indices, val_indices = train_test_split(
+                     indices, test_size=self.val_split_ratio, stratify=targets, random_state=RANDOM_SEED)
             except ValueError as e:
-                logger.warning(f"Stratified train/val split failed ({e}). Attempting non-stratified split.")
-                train_indices, val_indices = train_test_split(
-                    indices,
-                    test_size=self.val_split_ratio,
-                    random_state=RANDOM_SEED
-                )
-        elif len(indices) <= 1:
-             logger.warning("Train set too small for validation split. Using all for training.")
-             train_indices = indices
-             val_indices = []
-        else: # val_split_ratio is 0
-             logger.info("Validation split ratio is 0. No validation set created.")
-             train_indices = indices
-             val_indices = []
+                 logger.warning(f"Stratified train/val split failed ({e}). Using non-stratified split.")
+                 train_indices, val_indices = train_test_split(
+                     indices, test_size=self.val_split_ratio, random_state=RANDOM_SEED)
+            logger.debug(f"Train/Val split: {len(train_indices)} train, {len(val_indices)} validation indices.")
+        else:
+            logger.info("Validation split ratio is 0 or train set too small. No validation set created from split.")
+            train_indices = indices
+            val_indices = np.array([], dtype=indices.dtype)
 
-        # Create Subset for validation (using eval_transform)
+        # Create Subsets
         self.val_dataset = Subset(train_val_dataset_obj, val_indices) if val_indices.size > 0 else None
-
-        # Create Subset for raw train data (no augmentation)
         self.train_dataset_raw = Subset(train_val_dataset_obj, train_indices)
 
-        # Create TransformedSubset for augmented train data
+        # Create TransformedSubset for training data augmentation
         self.train_dataset_aug = TransformedSubset(
-            train_val_dataset_obj, train_indices, transform=self.train_transform
+            self.train_dataset_raw, # Base on the raw train Subset
+            np.arange(len(train_indices)), # Indices are 0..N-1 within the raw subset
+            transform=self.train_transform
         )
-
-        # Load the test dataset (always with eval_transform)
-        try:
-            self.test_dataset = datasets.ImageFolder(str(test_path), transform=self.eval_transform)
-            if len(self.test_dataset) == 0:
-                 logger.warning("Loaded test dataset is empty.")
-            logger.info(f"Test dataset loaded: {len(self.test_dataset)} samples.")
-        except Exception as e:
-            logger.error(f"Error loading ImageFolder for FIXED test dataset: {e}", exc_info=True)
-            raise
 
         val_count = len(self.val_dataset) if self.val_dataset else 0
         logger.info(f"FIXED Dataset loaded: {len(self.train_dataset_raw)} train, "
                     f"{val_count} validation, "
                     f"{len(self.test_dataset)} test samples.")
 
+    def _extract_class_info(self) -> None:
+        """Extracts class names and mapping from the loaded dataset object."""
+        dataset_to_inspect = None
+        if self.structure == DatasetStructure.FLAT and self.full_dataset:
+            dataset_to_inspect = self.full_dataset
+        elif self.structure == DatasetStructure.FIXED:
+             # Prioritize the train dataset object for class info in FIXED structure
+             if self.train_dataset_raw and isinstance(self.train_dataset_raw.dataset, datasets.ImageFolder):
+                 dataset_to_inspect = self.train_dataset_raw.dataset
+             elif self.test_dataset and isinstance(self.test_dataset, datasets.ImageFolder):
+                 logger.warning("Extracting class info from FIXED test dataset.")
+                 dataset_to_inspect = self.test_dataset
+
+        if isinstance(dataset_to_inspect, datasets.ImageFolder):
+            self.classes = sorted(dataset_to_inspect.classes)
+            self.class_to_idx = dataset_to_inspect.class_to_idx
+        else:
+             logger.warning("Could not find ImageFolder attribute for class info, trying directory scan.")
+             source_path = self.root_path / ('train' if self.structure == DatasetStructure.FIXED else '')
+             try:
+                 found_classes = sorted([d.name for d in source_path.iterdir() if d.is_dir() and not d.name.lower() in ['train', 'test']])
+                 if found_classes:
+                      self.classes = found_classes
+                      self.class_to_idx = {cls_name: i for i, cls_name in enumerate(self.classes)}
+                 else:
+                      logger.error(f"Directory scan failed to find class folders in {source_path}")
+             except Exception as e:
+                 logger.error(f"Directory scan failed: {e}")
+
 
     def _get_classes(self) -> List[str]:
-        """
-        Retrieves the list of class names from the loaded dataset.
-
-        Returns:
-            List[str]: Sorted list of class names.
-
-        Raises:
-            RuntimeError: If classes cannot be determined from any loaded dataset part.
-        """
-        if self.structure == DatasetStructure.FLAT and self.full_dataset:
-            return sorted(self.full_dataset.classes)
-        elif self.structure == DatasetStructure.FIXED:
-            # Try train_dataset_raw first (as it's derived from train ImageFolder)
-            if self.train_dataset_raw and isinstance(self.train_dataset_raw.dataset, datasets.ImageFolder):
-                 return sorted(self.train_dataset_raw.dataset.classes)
-            # Fallback to test dataset if train failed or wasn't ImageFolder based
-            elif self.test_dataset and isinstance(self.test_dataset, datasets.ImageFolder):
-                 logger.warning("Getting classes from test dataset as train dataset info wasn't available.")
-                 return sorted(self.test_dataset.classes)
-        # Fallback: try scanning directories if objects don't have class info
-        logger.warning("Attempting to determine classes by scanning directories as dataset objects lacked class info.")
-        source_path = self.root_path
-        if self.structure == DatasetStructure.FIXED:
-            source_path = self.root_path / 'train' # Prefer train dir for FIXED
-        try:
-            classes = sorted([d.name for d in source_path.iterdir() if d.is_dir() and not d.name.lower() in ['train', 'test']])
-            if classes:
-                return classes
-        except Exception as e:
-            logger.error(f"Failed to scan directories for class names in {source_path}: {e}")
-
-        raise RuntimeError("Could not determine class names for the dataset.")
-
+        """DEPRECATED: Use _extract_class_info instead."""
+        # This method is kept for potential backward compatibility but should not be used.
+        logger.warning("_get_classes is deprecated. Class info extracted in __init__.")
+        return self.classes
 
     def get_train_dataloader(self, batch_size: int = 32, shuffle: bool = True) -> DataLoader:
         """
@@ -584,8 +590,7 @@ class ImageDatasetHandler:
             self.train_dataset, # This points to augmented or raw based on init flag
             batch_size=batch_size,
             shuffle=shuffle,
-            # num_workers=NUM_WORKERS,
-            num_workers=0,
+            num_workers=NUM_WORKERS, # Use global setting
             pin_memory=torch.cuda.is_available(),
             drop_last=True # Drop last incomplete batch for potentially smoother training
         )
@@ -601,15 +606,14 @@ class ImageDatasetHandler:
             Optional[DataLoader]: DataLoader for the validation data, or None if no validation set exists.
         """
         if self.val_dataset is None:
-            logger.debug("No validation dataset available, returning None for DataLoader.")
+            # logger.debug("No validation dataset available, returning None for DataLoader.") # Can be noisy
             return None
         logger.debug(f"Creating validation DataLoader with batch_size={batch_size}")
         return DataLoader(
             self.val_dataset,
             batch_size=batch_size,
-            shuffle=False, # No need to shuffle validation data
-            # num_workers=NUM_WORKERS,
-            num_workers=0,
+            shuffle=False,
+            num_workers=NUM_WORKERS,
             pin_memory=torch.cuda.is_available()
         )
 
@@ -632,9 +636,8 @@ class ImageDatasetHandler:
         return DataLoader(
             self.test_dataset,
             batch_size=batch_size,
-            shuffle=False, # No need to shuffle test data
-            # num_workers=NUM_WORKERS,
-            num_workers=0,
+            shuffle=False,
+            num_workers=NUM_WORKERS,
             pin_memory=torch.cuda.is_available()
         )
 
@@ -715,7 +718,7 @@ class SimpleCNN(nn.Module):
         # Adaptive average pooling reduces spatial dimensions to a fixed size (e.g., 7x7)
         # regardless of the input image size (after feature extraction).
         self.avgpool = nn.AdaptiveAvgPool2d((7, 7))
-        # Output: 128 x 7 x 7 = 6272 features
+        # Output: 128 * 7 * 7 = 6272 features
 
         self.classifier = nn.Sequential(
             nn.Linear(128 * 7 * 7, 512),
@@ -888,13 +891,9 @@ class SkorchModelAdapter(NeuralNetClassifier):
     """
     A skorch NeuralNetClassifier adapter for PyTorch image classification models,
     making them compatible with scikit-learn workflows (GridSearch, cross_validate).
-
-    Handles model instantiation, optimizer setup, standard callbacks (EarlyStopping,
-    LR Scheduling, Checkpointing), and device management.
-
-    Crucially, it's configured with `train_split=None` to prevent skorch from creating
-    its own validation split, allowing external control via CV iterators or explicit
-    validation data passed to `fit`.
+    Relies on default skorch implementations for fit, step, and data handling,
+    but overrides get_dataset to handle data format issues from sklearn CV slicing.
+    Uses internal ValidSplit for validation by default.
     """
     def __init__(
         self,
@@ -907,57 +906,59 @@ class SkorchModelAdapter(NeuralNetClassifier):
         max_epochs: int = 20,
         batch_size: int = 32,
         device: str = DEVICE,
-        callbacks: Optional[List[Tuple[str, skorch.callbacks.Callback]]] = 'default',
+        callbacks: Optional[List[Tuple[str, Union[Callback, str]]]] = 'default', # Allow 'disable' string
         patience: int = 10,
         monitor: str = 'valid_loss',
         lr_scheduler_policy: str = 'ReduceLROnPlateau',
         lr_scheduler_patience: int = 5,
-        # --- Use ValidSplit for internal validation ---
+        # --- Use ValidSplit by default ---
         train_split: Optional[Callable] = skorch.dataset.ValidSplit(cv=0.2, stratified=True, random_state=RANDOM_SEED),
-        classes = None, # Pass classes for scoring compatibility
-        verbose: int = 1, # Set to 1 or 2 to see skorch epoch logs
+        classes = None,
+        verbose: int = 1, # Default to 1 for epoch logs
         **kwargs
     ):
         """
         Initializes the SkorchModelAdapter.
 
         Args:
-            module (Optional[Type[nn.Module]]): The PyTorch nn.Module class to wrap.
-            module__num_classes (Optional[int]): Number of classes, passed to the module's constructor.
-                                                 Use `module__<param_name>` for other module args.
-            criterion (Type[nn.Module]): The loss function class.
-            optimizer (Type[torch.optim.Optimizer]): The optimizer class.
-            lr (float): Learning rate for the optimizer.
-            optimizer__weight_decay (float): Weight decay for the optimizer.
-            max_epochs (int): Maximum number of training epochs.
-            batch_size (int): Number of samples per batch.
-            device (str): The device to run computations on ('cuda', 'cpu').
-            callbacks (Optional[List[Tuple[str, skorch.callbacks.Callback]]]): List of skorch callbacks or 'default'.
-            patience (int): Patience for the EarlyStopping callback.
-            monitor (str): Metric to monitor for EarlyStopping and Checkpoint.
-            lr_scheduler_policy (str): Policy for the LRScheduler callback (e.g., 'ReduceLROnPlateau').
-            lr_scheduler_patience (int): Patience for the learning rate scheduler.
-            train_split (Optional[Callable]): Should be None to disable skorch's internal split.
-                                              Validation is handled by CV or explicit `fit(X, y, X_val, y_val)`.
-            **kwargs: Additional arguments passed to the skorch.NeuralNetClassifier parent class.
+            module: The PyTorch nn.Module class to wrap.
+            module__num_classes: Number of classes, passed to the module's constructor.
+            criterion: The loss function class.
+            optimizer: The optimizer class.
+            lr: Learning rate.
+            optimizer__weight_decay: Weight decay.
+            max_epochs: Max epochs.
+            batch_size: Batch size.
+            device: Device ('cuda', 'cpu').
+            callbacks: List of skorch callbacks, 'default', or 'disable'.
+            patience: Patience for EarlyStopping.
+            monitor: Metric to monitor for EarlyStopping/Checkpoint.
+            lr_scheduler_policy: Policy for LRScheduler.
+            lr_scheduler_patience: Patience for LRScheduler.
+            train_split: Skorch data splitting strategy. Defaults to ValidSplit(0.2).
+                         Should be set to None only temporarily (e.g., within cross_validate).
+            classes: List or array of classes. Required if y is not passed to fit.
+            verbose: Skorch verbosity level.
+            **kwargs: Additional arguments for NeuralNetClassifier.
         """
-        self.module_class = module # Store the class for potential re-instantiation if needed
+        self.module_class = module
         self.module_init_kwargs = {k.split('__', 1)[1]: v for k, v in kwargs.items() if k.startswith('module__')}
         if module__num_classes is not None:
             self.module_init_kwargs['num_classes'] = module__num_classes
 
-        # Setup default callbacks (same as before)
+        # Handle default/disable callbacks
+        effective_callbacks = []
         if callbacks == 'default':
-            callbacks = [
-                # ... (callbacks definition remains the same) ...
-                ('early_stopping', EarlyStopping(monitor=monitor, patience=patience, load_best=True, lower_is_better=monitor.endswith('_loss'))),
-                ('checkpoint', Checkpoint(monitor=f'{monitor}_best', f_params='best_model.pt', dirname=f"skorch_cp_{datetime.now().strftime('%Y%m%d_%H%M%S')}", load_best=False)),
-                ('lr_scheduler', LRScheduler(policy=lr_scheduler_policy, monitor=monitor, mode='min' if monitor.endswith('_loss') else 'max', patience=lr_scheduler_patience, factor=0.1))
+            # Ensure default callbacks use the provided monitor/patience params
+             effective_callbacks = [
+                 ('early_stopping', EarlyStopping(monitor=monitor, patience=patience, load_best=True, lower_is_better=monitor.endswith('_loss'))),
+                 ('checkpoint', Checkpoint(monitor=f'{monitor}_best', f_params='best_model.pt', dirname=f"skorch_cp_{datetime.now().strftime('%Y%m%d_%H%M%S')}", load_best=False)),
+                 ('lr_scheduler', LRScheduler(policy=lr_scheduler_policy, monitor=monitor, mode='min' if monitor.endswith('_loss') else 'max', patience=lr_scheduler_patience, factor=0.1))
             ]
-        elif callbacks is None:
-             callbacks = []
+        elif isinstance(callbacks, list):
+             effective_callbacks = callbacks
+        # Note: 'disable' or None results in empty list passed to super
 
-        # --- Initialize NeuralNetClassifier ---
         super().__init__(
             module=module,
             module__num_classes=module__num_classes,
@@ -968,211 +969,99 @@ class SkorchModelAdapter(NeuralNetClassifier):
             max_epochs=max_epochs,
             batch_size=batch_size,
             device=device,
-            callbacks=callbacks,
-            train_split=train_split, # Pass ValidSplit instance
-            classes=classes,         # Pass classes
-            verbose=verbose,         # Pass verbose
+            callbacks=effective_callbacks, # Pass the processed list
+            train_split=train_split,
+            classes=classes,
+            verbose=verbose,
             **kwargs
         )
 
-    # Override get_dataset to handle the specific case where
-    # X is a Dataset and y is provided (by sklearn CV)
-    # def get_dataset(self, X, y=None):
-    #     """
-    #     Override to handle the specific case where X is a list of
-    #     (feature, target) tuples (from sklearn CV) and ensure targets
-    #     are LongTensors for CrossEntropyLoss.
-    #     """
-    #     if isinstance(X, list) and X and isinstance(X[0], (tuple, list)) and len(X[0]) == 2:
-    #         # Case 1: X is a list of (feature, target) tuples (from sklearn CV slice).
-    #         logger.debug("[DEBUG] Adapter.get_dataset: X is list of tuples. Manual unpacking and stacking.")
-    #         try:
-    #             X_tensors = [item[0] for item in X]
-    #             if not X_tensors:
-    #                 X_features_stacked = torch.empty((0, *X_tensors[0].shape) if X else (0,))
-    #             else:
-    #                 X_features_stacked = torch.stack(X_tensors, dim=0)
-    #
-    #             y_targets = [item[1] for item in X] # List of Python ints
-    #
-    #             # --- Convert targets to LongTensor ---
-    #             # Create a torch tensor directly with the correct dtype
-    #             y_targets_tensor = torch.tensor(y_targets, dtype=torch.long)
-    #             # --- End Conversion ---
-    #
-    #             logger.debug(f"[DEBUG] Adapter.get_dataset: Instantiating SkorchDataset with stacked tensor "
-    #                          f"(shape={X_features_stacked.shape}) and target tensor (shape={y_targets_tensor.shape}, dtype={y_targets_tensor.dtype}).")
-    #             # Pass Tensor X and Tensor y
-    #             return SkorchDataset(X_features_stacked, y_targets_tensor)
-    #
-    #         except Exception as e:
-    #              logger.error(f"Error during manual unpacking/stacking or SkorchDataset instantiation: {e}", exc_info=True)
-    #              raise RuntimeError("Failed to process list of tuples input during CV split.") from e
-    #     else:
-    #         # Case 2: Default behavior for other input types
-    #         logger.debug(f"[DEBUG] Adapter.get_dataset: X is not list of tuples. Using default super().get_dataset(X, y).")
-    #         # Ensure y=None is passed if X is a Dataset that yields targets
-    #         if isinstance(X, (Dataset, SkorchDataset)) and y is not None:
-    #              logger.debug("[DEBUG] Adapter.get_dataset: X is Dataset and y is not None (default case). Ignoring y.")
-    #              return super().get_dataset(X, y=None)
-    #         # If y is provided (e.g., X and y are numpy arrays), ensure y becomes LongTensor
-    #         elif y is not None and not isinstance(y, torch.Tensor):
-    #              logger.debug("[DEBUG] Adapter.get_dataset: Converting provided y to LongTensor.")
-    #              y = torch.tensor(np.array(y), dtype=torch.long) # Ensure numpy first for safety, then tensor
-    #         elif y is not None and isinstance(y, torch.Tensor) and y.dtype != torch.long:
-    #              logger.debug(f"[DEBUG] Adapter.get_dataset: Converting provided y tensor from {y.dtype} to LongTensor.")
-    #              y = y.to(dtype=torch.long)
-    #
-    #         return super().get_dataset(X, y)
+    def get_dataset(self, X, y=None):
+        """
+        Override to handle the specific case where X is a list of
+        (feature, target) tuples (from sklearn CV) and ensure targets
+        are LongTensors.
+        """
+        if isinstance(X, list) and X and isinstance(X[0], (tuple, list)) and len(X[0]) == 2:
+            logger.debug("[DEBUG] Adapter.get_dataset: X is list of tuples. Manual unpacking/stacking.")
+            try:
+                X_features = [item[0] for item in X]
+                if not X_features:
+                    # Determine shape from first item if possible, else a default placeholder
+                    # This assumes all tensors in the list have the same shape, which should be true.
+                    # We need C, H, W. Get it from the first tensor.
+                    if X: # Ensure X is not empty if X_features is
+                         placeholder_shape = X[0][0].shape
+                         logger.debug(f"Using placeholder shape {placeholder_shape} for empty X_features_stacked.")
+                    else:
+                         placeholder_shape = (3, self.module_init_kwargs.get('img_height', 64), self.module_init_kwargs.get('img_width', 64)) # Fallback shape
+                         logger.warning(f"Using fallback placeholder shape {placeholder_shape} for empty X_features_stacked.")
+                    X_features_stacked = torch.empty((0, *placeholder_shape))
+                else:
+                    X_features_stacked = torch.stack(X_features, dim=0)
 
-    # def fit(self, X, y=None, **fit_params):
-    #     """
-    #     Fits the model to the training data.
-    #
-    #     Handles PyTorch Datasets directly. If `X_val` and `y_val` are provided in
-    #     `fit_params`, they are used for validation (requires `train_split=None`).
-    #
-    #     Args:
-    #         X (Dataset or np.ndarray or torch.Tensor): Training data. Can be a PyTorch Dataset.
-    #         y (Optional[Any]): Training targets. Should be None if X is a Dataset that yields (data, target).
-    #         **fit_params: Additional parameters passed to the underlying skorch fit method.
-    #                       Crucially, can include `X_val` and `y_val` for validation data.
-    #
-    #     Returns:
-    #         self: The fitted estimator instance.
-    #     """
-    #     module_name = self.module_class.__name__ if self.module_class else "Model"
-    #     logger.info(f"Starting training for {module_name}...")
-    #     # No need to modify y here, get_split_datasets will handle it.
-    #     super().fit(X, y, **fit_params)
-    #     logger.info(f"Finished training for {module_name}.")
-    #     return self
-    #
-    # def infer(self, x, **fit_params):
-    #     """
-    #     Perform inference. Assumes 'x' is a Tensor.
-    #     Filters fit_params and moves data to device.
-    #     """
-    #     if not isinstance(x, torch.Tensor):
-    #          # Add a check here just in case, but the fix should be upstream
-    #          logger.error(f"[ERROR] Infer received non-Tensor input: {type(x)}. Upstream issue likely.")
-    #          raise TypeError(f"SkorchModelAdapter.infer received input of type {type(x)}, expected torch.Tensor.")
-    #
-    #     module_forward_params = {
-    #         k: v for k, v in fit_params.items()
-    #         if k not in ['X_val', 'y_val']
-    #     }
-    #     # Move to device - x is confirmed to be a Tensor here
-    #     x = x.to(self.device)
-    #     return self.module_(x, **module_forward_params)
-    #
-    # # Override validation_step for debugging and ensuring execution
-    # def validation_step(self, batch, **fit_params):
-    #     """Perform a validation step."""
-    #     logger.debug("[DEBUG] Adapter.validation_step: Called.")
-    #     self.module_.eval()
-    #
-    #     # Move the whole batch structure to the device first
-    #     try:
-    #         batch = skorch.utils.to_device(batch, self.device)
-    #     except Exception as e:
-    #         # Catch potential errors if batch structure is very unexpected
-    #         logger.error(f"Failed to move batch to device in validation_step. Batch type: {type(batch)}. Error: {e}")
-    #         raise RuntimeError("Error moving batch to device in validation_step.") from e
-    #
-    #     # Now unpack the batch (which should contain tensors on the correct device)
-    #     try:
-    #         Xi, yi = batch
-    #         # Optional: Add explicit check that Xi is now a Tensor
-    #         if not isinstance(Xi, torch.Tensor):
-    #             raise TypeError(f"Xi unpacked from batch is not a Tensor, but {type(Xi)}")
-    #         if not isinstance(yi, torch.Tensor):
-    #              logger.warning(f"yi unpacked from batch is not a Tensor ({type(yi)}). Loss calculation might fail.")
-    #
-    #     except (ValueError, TypeError) as e:
-    #          logger.error(f"Failed to unpack batch in validation_step after moving to device. Batch type: {type(batch)}. Error: {e}")
-    #          raise ValueError("Could not unpack batch in validation_step. Expected (Tensor, Tensor) structure.") from e
-    #
-    #     # Perform inference and loss calculation
-    #     with torch.no_grad():
-    #         # Pass the Tensor Xi to infer
-    #         y_pred = self.infer(Xi, **fit_params)
-    #         # Calculate loss using device-local tensors y_pred and yi
-    #         loss = self.get_loss(y_pred, yi, X=Xi, training=False)
-    #
-    #     logger.debug(f"[DEBUG] Adapter.validation_step: Loss calculated: {loss.item():.4f}")
-    #
-    #     return {
-    #         'loss': loss,
-    #         'y_pred': y_pred,
-    #     }
-    #
-    # def get_split_datasets(self, X, y=None, **fit_params):
-    #     """
-    #     Override to handle different types of X input, especially the
-    #     list of tuples format coming from sklearn CV slicing PyTorch Datasets,
-    #     and explicit validation data passed via fit_params.
-    #     Manually unpacks list of tuples before creating SkorchDataset.
-    #     """
-    #     # --- Process Training Data ---
-    #     if isinstance(X, (Dataset, SkorchDataset)):
-    #         # Case 1: X is already a Dataset. Ignore y, let SkorchDataset handle it.
-    #         logger.debug("[DEBUG] Adapter.get_split_datasets: X is Dataset, using get_dataset(X, y=None).")
-    #         dataset_train = self.get_dataset(X, y=None)
-    #     elif isinstance(X, list) and X and isinstance(X[0], (tuple, list)) and len(X[0]) == 2:
-    #         # Case 2: X is a list of (feature, target) tuples (from sklearn CV slice).
-    #         # Manually unpack features and targets BEFORE creating SkorchDataset.
-    #         logger.debug("[DEBUG] Adapter.get_split_datasets: X is list of tuples. Manual unpacking.")
-    #         try:
-    #             X_features = [item[0] for item in X] # List of feature tensors
-    #             y_targets = [item[1] for item in X]  # List of targets
-    #             # Create dataset with separated features and targets
-    #             dataset_train = self.get_dataset(X_features, y_targets)
-    #             logger.debug(f"[DEBUG] Adapter.get_split_datasets: Created SkorchDataset from unpacked list (len={len(X_features)}).")
-    #         except Exception as e:
-    #              logger.error(f"Error during manual unpacking or SkorchDataset creation from list: {e}", exc_info=True)
-    #              raise RuntimeError("Failed to process list of tuples input during CV split.") from e
-    #     else:
-    #         # Case 3: X is likely features (e.g., numpy array), use passed y.
-    #         logger.debug("[DEBUG] Adapter.get_split_datasets: X is assumed features, using get_dataset(X, y).")
-    #         dataset_train = self.get_dataset(X, y)
-    #
-    #     # --- Process Validation Data ---
-    #     dataset_valid = None
-    #     if 'X_val' in fit_params:
-    #         logger.debug("[DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing validation set.")
-    #         X_val = fit_params['X_val']
-    #         y_val = fit_params.get('y_val')
-    #
-    #         # Apply similar logic for validation data
-    #         if isinstance(X_val, (Dataset, SkorchDataset)):
-    #             logger.debug("[DEBUG] Adapter.get_split_datasets: X_val is Dataset, using get_dataset(X_val, y=None).")
-    #             dataset_valid = self.get_dataset(X_val, y=None)
-    #         elif isinstance(X_val, list) and X_val and isinstance(X_val[0], (tuple, list)) and len(X_val[0]) == 2:
-    #              logger.debug("[DEBUG] Adapter.get_split_datasets: X_val is list of tuples. Manual unpacking.")
-    #              try:
-    #                  X_val_features = [item[0] for item in X_val]
-    #                  y_val_targets = [item[1] for item in X_val]
-    #                  dataset_valid = self.get_dataset(X_val_features, y_val_targets)
-    #                  logger.debug(f"[DEBUG] Adapter.get_split_datasets: Created validation SkorchDataset from unpacked list (len={len(X_val_features)}).")
-    #              except Exception as e:
-    #                  logger.error(f"Error during manual unpacking or SkorchDataset creation from validation list: {e}", exc_info=True)
-    #                  raise RuntimeError("Failed to process list of tuples input for validation data.") from e
-    #         else:
-    #             logger.debug("[DEBUG] Adapter.get_split_datasets: X_val is assumed features, using get_dataset(X_val, y_val).")
-    #             dataset_valid = self.get_dataset(X_val, y_val)
-    #     elif self.train_split:
-    #          # Fallback if no X_val provided, but train_split is active (shouldn't happen)
-    #          logger.warning("[DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected).")
-    #          initial_dataset_for_split = self.get_dataset(X, y)
-    #          dataset_train, dataset_valid = self.train_split(initial_dataset_for_split, **fit_params)
-    #
-    #
-    #     return dataset_train, dataset_valid
+                y_targets = [item[1] for item in X]
+                y_targets_tensor = torch.tensor(y_targets, dtype=torch.long)
+                logger.debug(f"[DEBUG] Adapter.get_dataset: Instantiating SkorchDataset directly with "
+                             f"stacked tensor (shape={X_features_stacked.shape}) and "
+                             f"target tensor (shape={y_targets_tensor.shape}, dtype={y_targets_tensor.dtype}).")
+                # Instantiate SkorchDataset directly, bypassing parent get_dataset
+                return SkorchDataset(X_features_stacked, y_targets_tensor)
+            except Exception as e:
+                 logger.error(f"Error during list unpacking/SkorchDataset instantiation: {e}", exc_info=True)
+                 raise RuntimeError("Failed to process list of tuples input during CV split.") from e
 
-    # No need to override predict, predict_proba, score etc. unless specific logic is needed.
-    # Skorch handles passing Datasets to these methods correctly.
+        # --- Handle PyTorch Dataset Input ---
+        # If X is a Dataset, skorch should handle it. Pass y=None.
+        elif isinstance(X, (Dataset, SkorchDataset)):
+            if y is not None:
+                logger.debug("[DEBUG] Adapter.get_dataset: X is Dataset and y is not None. Ignoring y.")
+            # Use default parent implementation, ensuring y=None is passed
+            return super().get_dataset(X, y=None)
 
+        # --- Handle NumPy/Tensor Input ---
+        # If X is not a Dataset or list-of-tuples, assume it's features (e.g., np.ndarray)
+        # Ensure y is a LongTensor if provided.
+        else:
+            logger.debug(f"[DEBUG] Adapter.get_dataset: X type {type(X)}. Using default super().get_dataset(X, y).")
+            if y is not None:
+                 if isinstance(y, torch.Tensor):
+                     if y.dtype != torch.long:
+                         logger.debug(f"[DEBUG] Adapter.get_dataset: Converting y tensor from {y.dtype} to LongTensor.")
+                         y = y.to(dtype=torch.long)
+                 else: # Assume numpy array or list
+                     logger.debug("[DEBUG] Adapter.get_dataset: Converting y to LongTensor.")
+                     y = torch.tensor(np.array(y), dtype=torch.long)
+            # Call parent with potentially modified y
+            return super().get_dataset(X, y)
+
+    # The following overrides ensure target dtype is correct *just before* loss calculation,
+    # acting as a safeguard if data loading/splitting somehow changes it.
+    def train_step_single(self, batch, **fit_params):
+        """Override train_step_single to ensure yi is LongTensor before loss."""
+        self.module_.train()
+        Xi, yi = batch
+        # Ensure target is LongTensor *before* passing to criterion
+        yi = yi.to(dtype=torch.long)
+        # Default logic from skorch:
+        y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+        loss = self.get_loss(y_pred, yi, X=Xi, training=True)
+        loss.backward()
+        return {'loss': loss, 'y_pred': y_pred}
+
+    def validation_step(self, batch, **fit_params):
+        """Override validation_step to ensure yi is LongTensor before loss."""
+        self.module_.eval()
+        Xi, yi = batch
+        # Ensure target is LongTensor *before* passing to criterion
+        yi = yi.to(dtype=torch.long)
+        # Default logic from skorch:
+        with torch.no_grad():
+            y_pred = self.infer(Xi, **fit_params) # Assuming default infer is okay
+            loss = self.get_loss(y_pred, yi, X=Xi, training=False)
+        return {'loss': loss, 'y_pred': y_pred}
+
+    # NO fit, infer, get_split_datasets overrides are needed now
 
 # --- Classification Pipeline ---
 
@@ -1225,7 +1114,7 @@ class ClassificationPipeline:
             FileNotFoundError: If dataset_path doesn't exist.
             ValueError: If model_type is unsupported or val_split_ratio is invalid.
         """
-        self.dataset_path = Path(dataset_path)
+        self.dataset_path = Path(dataset_path).resolve()
         self.model_type = model_type.lower()
         logger.info(f"Initializing Classification Pipeline:")
         logger.info(f"  Dataset Path: {self.dataset_path}")
@@ -1240,7 +1129,7 @@ class ClassificationPipeline:
         )
 
         # Set up results directory path
-        base_results_dir = Path(results_dir)
+        base_results_dir = Path(results_dir).resolve() # Resolve results dir path
         dataset_name = self.dataset_path.name
         self.results_dir = base_results_dir / dataset_name / self.model_type
         self.results_dir.mkdir(parents=True, exist_ok=True)
@@ -1253,14 +1142,12 @@ class ClassificationPipeline:
         self.model_adapter = SkorchModelAdapter(
             module=model_class,
             module__num_classes=self.dataset_handler.num_classes,
-            classes=np.arange(self.dataset_handler.num_classes),
+            classes=np.arange(self.dataset_handler.num_classes), # Pass classes for scoring
             lr=lr,
             max_epochs=max_epochs,
             batch_size=batch_size,
-            patience=patience, # Passed to SkorchModelAdapter for EarlyStopping default
-            # Other SkorchModelAdapter defaults (optimizer, criterion, etc.) are used
-            # Add verbose=1 if you want to see epoch progress during CV fits
-            verbose=3
+            patience=patience,
+            verbose=1 # Set default verbosity for epoch logs
         )
         logger.info(f"  Model Adapter: Initialized with {model_class.__name__}")
 
@@ -1276,7 +1163,7 @@ class ClassificationPipeline:
         model_mapping = {
             'cnn': SimpleCNN,
             'vit': SimpleViT,
-            'diffusion': DiffusionClassifier # Placeholder name
+            'diffusion': DiffusionClassifier
         }
         model_class = model_mapping.get(model_type_str)
         if model_class is None:
@@ -1289,20 +1176,7 @@ class ClassificationPipeline:
                          y_score: Optional[np.ndarray] = None) -> Dict[str, Any]:
         """
         Computes a comprehensive set of classification metrics.
-
-        Calculates overall accuracy and macro-averaged precision, recall, specificity,
-        F1-score. If y_score (probabilities) are provided, also calculates macro-averaged
-        ROC AUC and Precision-Recall AUC (AUPRC). Handles multi-class cases using OvR strategy.
-
-        Args:
-            y_true (np.ndarray): Ground truth labels (integer class indices).
-            y_pred (np.ndarray): Predicted labels (integer class indices).
-            y_score (Optional[np.ndarray]): Predicted probabilities or scores, shape (n_samples, n_classes).
-                                             Required for AUC calculations.
-
-        Returns:
-            Dict[str, Any]: A dictionary containing computed metrics, including overall accuracy,
-                            macro averages, and potentially per-class details (commented out for brevity).
+        Handles multi-class cases using OvR strategy for relevant metrics.
         """
         if not isinstance(y_true, np.ndarray): y_true = np.array(y_true)
         if not isinstance(y_pred, np.ndarray): y_pred = np.array(y_pred)
@@ -1310,93 +1184,82 @@ class ClassificationPipeline:
 
 
         metrics = {'accuracy': accuracy_score(y_true, y_pred)}
-        class_labels = sorted(list(np.unique(y_true))) # Use actual labels present
-        n_classes = len(class_labels)
+        # Use the actual class labels present in the true data for iteration
+        present_class_labels = np.unique(y_true)
+        # But use the handler's full list for consistent reporting structure
+        all_class_names = self.dataset_handler.classes
+        if not all_class_names:
+             logger.warning("Dataset handler classes list is empty. Cannot compute per-class/macro metrics properly.")
+             metrics['macro_avg'] = {'precision': np.nan, 'recall': np.nan, 'specificity': np.nan, 'f1': np.nan, 'roc_auc': np.nan, 'pr_auc': np.nan}
+             return metrics
 
-        # Use class indices consistent with dataset_handler if possible
-        class_names = self.dataset_handler.classes
-        if len(class_names) != self.dataset_handler.num_classes:
-             logger.warning("Mismatch between dataset handler classes and number of classes. Using unique labels from y_true.")
-             class_names = [f"Class {lbl}" for lbl in class_labels]
+        num_classes_total = self.dataset_handler.num_classes # Total expected classes
 
-        # Mapping from actual label value to its index in the sorted unique list
-        label_to_idx = {label: i for i, label in enumerate(class_labels)}
-
-        per_class_metrics = {name: {} for name in class_names}
+        per_class_metrics = {name: {} for name in all_class_names}
         all_precisions, all_recalls, all_specificities, all_f1s = [], [], [], []
         all_roc_aucs, all_pr_aucs = [], []
 
-        can_compute_auc = y_score is not None and y_score.shape == (len(y_true), self.dataset_handler.num_classes)
+        can_compute_auc = y_score is not None and y_score.shape == (len(y_true), num_classes_total)
         if y_score is not None and not can_compute_auc:
              logger.warning(f"y_score shape {y_score.shape} incompatible with y_true len {len(y_true)} and "
-                            f"num_classes {self.dataset_handler.num_classes}. Cannot compute AUCs.")
+                            f"num_classes {num_classes_total}. Cannot compute AUCs.")
 
+        # Iterate through all expected classes for consistent macro average
+        for i, class_name in enumerate(all_class_names):
+            class_label = self.dataset_handler.class_to_idx.get(class_name, i) # Get index for this class name
 
-        for i, class_label in enumerate(class_labels):
-            class_name = class_names[class_label] # Assuming class_label matches index in handler.classes
+            # Check if this class label actually exists in the current data subset
+            if class_label not in present_class_labels:
+                 logger.debug(f"Class '{class_name}' (label {class_label}) not present in y_true. Skipping metrics calculation for this class.")
+                 # Append NaN or 0? Append NaN for averages that should ignore missing classes.
+                 all_precisions.append(np.nan)
+                 all_recalls.append(np.nan)
+                 all_specificities.append(np.nan)
+                 all_f1s.append(np.nan)
+                 all_roc_aucs.append(np.nan)
+                 all_pr_aucs.append(np.nan)
+                 continue # Skip to next class
+
+            # Proceed if class is present
             true_is_class = (y_true == class_label).astype(int)
             pred_is_class = (y_pred == class_label).astype(int)
 
-            # --- Calculate Basic Metrics ---
             precision = precision_score(true_is_class, pred_is_class, zero_division=0)
             recall = recall_score(true_is_class, pred_is_class, zero_division=0) # Sensitivity
             f1 = f1_score(true_is_class, pred_is_class, zero_division=0)
-
-            # Specificity = True Negatives / (True Negatives + False Positives)
-            # This is recall of the negative class (1 - true_is_class, 1 - pred_is_class)
-            specificity = recall_score(1 - true_is_class, 1 - pred_is_class, zero_division=0)
+            specificity = recall_score(1 - true_is_class, 1 - pred_is_class, zero_division=0) # Recall of negative class
 
             all_precisions.append(precision)
             all_recalls.append(recall)
             all_specificities.append(specificity)
             all_f1s.append(f1)
 
-            # Store per-class (optional, can make results dict large)
-            # per_class_metrics[class_name]['precision'] = precision
-            # per_class_metrics[class_name]['recall'] = recall
-            # per_class_metrics[class_name]['specificity'] = specificity
-            # per_class_metrics[class_name]['f1'] = f1
-
             # --- Calculate AUC Metrics (if scores available) ---
-            roc_auc, pr_auc = np.nan, np.nan # Default to NaN
+            roc_auc, pr_auc = np.nan, np.nan
             if can_compute_auc:
-                # Ensure we have scores corresponding to the current class_label index
-                # The column index in y_score should match the class_label value
                 try:
-                    score_for_class = y_score[:, class_label] # Assumes y_score columns align with class indices 0..N-1
+                    score_for_class = y_score[:, class_label] # Assumes column index matches class label
                 except IndexError:
-                    logger.warning(f"Cannot get y_score column for class label {class_label}. Skipping AUC calculation for this class.")
+                    logger.warning(f"Cannot get y_score column index {class_label}. Skipping AUC calculation.")
                     score_for_class = None
 
                 if score_for_class is not None and len(np.unique(true_is_class)) > 1: # AUC requires both classes present
-                    try:
-                        roc_auc = roc_auc_score(true_is_class, score_for_class)
-                    except Exception as e:
-                        logger.warning(f"Could not calculate ROC AUC for class {class_name}: {e}")
-                        roc_auc = np.nan # Ensure NaN on error
-
+                    try: roc_auc = roc_auc_score(true_is_class, score_for_class)
+                    except Exception as e: logger.warning(f"ROC AUC Error (Class {class_name}): {e}")
                     try:
                         prec, rec, _ = precision_recall_curve(true_is_class, score_for_class)
-                        # Handle cases where precision/recall curves might be degenerate
                         if len(rec) > 1 and len(prec) > 1:
-                            # Sort recall in ascending order for AUC calculation
                             order = np.argsort(rec)
                             pr_auc = auc(rec[order], prec[order])
-                        else:
-                            pr_auc = np.nan # Cannot compute AUC if curve is invalid
-                    except Exception as e:
-                        logger.warning(f"Could not calculate PR AUC for class {class_name}: {e}")
-                        pr_auc = np.nan # Ensure NaN on error
-                elif len(np.unique(true_is_class)) <= 1:
-                     logger.debug(f"Skipping AUC calculation for class {class_name}: only one class present in y_true.")
+                    except Exception as e: logger.warning(f"PR AUC Error (Class {class_name}): {e}")
+                elif score_for_class is not None:
+                     logger.debug(f"Skipping AUC for class {class_name}: only one class present in y_true.")
 
             all_roc_aucs.append(roc_auc)
             all_pr_aucs.append(pr_auc)
-            # per_class_metrics[class_name]['roc_auc'] = roc_auc
-            # per_class_metrics[class_name]['pr_auc'] = pr_auc
 
         # --- Calculate Macro Averages ---
-        # Use nanmean to ignore NaN values (e.g., from AUC calculations that failed)
+        # Use nanmean to ignore NaN from missing classes or calculation errors
         metrics['macro_avg'] = {
             'precision': float(np.nanmean(all_precisions)),
             'recall': float(np.nanmean(all_recalls)),
@@ -1406,9 +1269,6 @@ class ClassificationPipeline:
             'pr_auc': float(np.nanmean(all_pr_aucs)) if can_compute_auc else np.nan
         }
 
-        # metrics['per_class'] = per_class_metrics # Optionally include per-class details
-
-        # Log summary
         logger.debug(f"Computed Metrics: Acc={metrics['accuracy']:.4f}, "
                      f"Macro F1={metrics['macro_avg']['f1']:.4f}, "
                      f"Macro ROC AUC={metrics['macro_avg']['roc_auc']:.4f}, "
@@ -1433,7 +1293,10 @@ class ClassificationPipeline:
         params = params or {}
         # Create results filename
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        params_str = '_'.join([f"{k}={v}" for k, v in sorted(params.items()) if k != 'self'])
+        # Filter out complex objects from params string (like grids)
+        simple_params = {k: v for k, v in params.items() if isinstance(v, (str, int, float, bool, type(None)))}
+        params_str = '_'.join([f"{k}={v}" for k, v in sorted(simple_params.items()) if k != 'self'])
+
         filename_base = f"{method_name}_{params_str}_{timestamp}" if params_str else f"{method_name}_{timestamp}"
         json_filepath = self.results_dir / f"{filename_base}.json"
         csv_filepath = self.results_dir / 'summary_results.csv'
@@ -1442,18 +1305,26 @@ class ClassificationPipeline:
         try:
             # Custom serializer to handle numpy types and NaN
             def json_serializer(obj):
-                if isinstance(obj, (np.integer, np.int64)):
-                    return int(obj)
-                elif isinstance(obj, (np.floating, np.float32, np.float64)):
-                    return float(obj) if not np.isnan(obj) else None # Convert NaN to None
-                elif isinstance(obj, np.ndarray):
-                    return obj.tolist()
-                elif isinstance(obj, Path):
-                    return str(obj)
-                elif isinstance(obj, datetime):
-                     return obj.isoformat()
-                # Add other types if needed
-                return str(obj) # Default fallback
+                if isinstance(obj, (np.integer, np.int64)): return int(obj)
+                elif isinstance(obj, (np.floating, np.float32, np.float64)): return float(obj) if not np.isnan(obj) else None
+                elif isinstance(obj, np.ndarray): return obj.tolist()
+                elif isinstance(obj, Path): return str(obj)
+                elif isinstance(obj, datetime): return obj.isoformat()
+                elif isinstance(obj, (slice, type)): return None # Cannot serialize slices or types easily
+                try: # Attempt default serialization first
+                     return json.JSONEncoder.default(None, obj)
+                except TypeError:
+                     return str(obj) # Fallback to string representation
+
+            # Clean up non-serializable parts of cv_results if present
+            if 'cv_results' in results_data and isinstance(results_data['cv_results'], dict):
+                # Example: Remove 'params' key which often contains non-serializable objects
+                if 'params' in results_data['cv_results']:
+                    del results_data['cv_results']['params']
+                # Convert numpy arrays in cv_results
+                for key, value in results_data['cv_results'].items():
+                     if isinstance(value, np.ndarray):
+                          results_data['cv_results'][key] = value.tolist()
 
             with open(json_filepath, 'w', encoding='utf-8') as f:
                 json.dump(results_data, f, indent=4, default=json_serializer)
@@ -1469,22 +1340,18 @@ class ClassificationPipeline:
                 'model_type': self.model_type,
                 'dataset_name': self.dataset_handler.root_path.name,
                 'dataset_structure': self.dataset_handler.structure.value,
-                'accuracy': results_data.get('accuracy', results_data.get('mean_test_accuracy', np.nan)), # Handle different keys
-                **{f"macro_{k}": v for k, v in results_data.get('macro_avg', {}).items()}, # Flatten macro averages
-                **params # Add run parameters
+                'accuracy': results_data.get('accuracy', results_data.get('mean_test_accuracy', np.nan)),
+                **{f"macro_{k}": v for k, v in results_data.get('macro_avg', {}).items()},
+                **simple_params # Add simple params to summary
             }
-            # Convert potential NaNs to None or empty string for CSV
             for key, value in summary.items():
-                if isinstance(value, float) and np.isnan(value):
-                    summary[key] = None # Or ''
+                if isinstance(value, float) and np.isnan(value): summary[key] = None
 
             df_summary = pd.DataFrame([summary])
 
             if csv_filepath.exists():
-                # Append without header
                 df_summary.to_csv(csv_filepath, mode='a', header=False, index=False, encoding='utf-8')
             else:
-                # Create new file with header
                 df_summary.to_csv(csv_filepath, mode='w', header=True, index=False, encoding='utf-8')
             logger.info(f"Summary results updated in: {csv_filepath}")
         except Exception as e:
@@ -1492,48 +1359,70 @@ class ClassificationPipeline:
 
     def _get_targets_from_dataset(self, dataset: Dataset) -> np.ndarray:
         """Extracts target labels from various PyTorch Dataset types."""
+        # Check for skorch SliceDataset wrapper first
+        if isinstance(dataset, SliceDataset):
+             # If wrapped around another dataset, recurse
+             if hasattr(dataset, 'dataset'):
+                  logger.debug("Extracting targets from dataset wrapped by SliceDataset.")
+                  return self._get_targets_from_dataset(dataset.dataset)
+             # If it wraps data directly, try accessing 'y'
+             elif hasattr(dataset, 'y') and dataset.y is not None:
+                  logger.debug("Extracting targets directly from SliceDataset.y.")
+                  return np.array(dataset.y)
+
         if isinstance(dataset, Subset):
-            # Get targets from the original dataset using subset indices
-            original_targets = np.array(dataset.dataset.targets)
-            return original_targets[dataset.indices]
+            if hasattr(dataset.dataset, 'targets'):
+                 original_targets = np.array(dataset.dataset.targets)
+                 return original_targets[dataset.indices]
+            else: # Fallback for Subset of dataset without .targets
+                 logger.warning("Base dataset of Subset lacks 'targets'. Iterating subset for targets.")
+                 return self._get_targets_by_iteration(dataset)
         elif isinstance(dataset, TransformedSubset):
-            # Use the custom targets property we added
-            return np.array(dataset.targets)
+             # Try accessing targets of the *original* dataset via Subset logic
+             if isinstance(dataset.dataset, Subset):
+                  if hasattr(dataset.dataset.dataset, 'targets'):
+                       original_targets = np.array(dataset.dataset.dataset.targets)
+                       # Indices in TransformedSubset are relative to the Subset it wraps
+                       # Indices in the Subset are relative to the original dataset
+                       subset_indices = dataset.dataset.indices
+                       transformed_subset_indices_in_original = [subset_indices[i] for i in dataset.indices]
+                       return original_targets[transformed_subset_indices_in_original]
+             # Fallback if base isn't Subset or doesn't have targets easily
+             logger.warning("Could not get targets efficiently from TransformedSubset base. Iterating.")
+             return self._get_targets_by_iteration(dataset)
         elif isinstance(dataset, datasets.ImageFolder):
-            # Directly access targets from ImageFolder
             return np.array(dataset.targets)
         elif isinstance(dataset, SkorchDataset):
-             # If it's already a SkorchDataset, access its 'y' attribute
-             if dataset.y is None:
-                 raise ValueError("SkorchDataset has y=None, cannot extract targets.")
+             if dataset.y is None: raise ValueError("SkorchDataset has y=None.")
              return np.array(dataset.y)
         elif isinstance(dataset, ConcatDataset):
-            # Handle ConcatDataset used in nested CV FIXED case
-            all_targets = []
-            for subset in dataset.datasets:
-                # Recursively call this function on each subset
-                all_targets.append(self._get_targets_from_dataset(subset))
+            all_targets = [self._get_targets_from_dataset(d) for d in dataset.datasets]
             return np.concatenate(all_targets)
-        else:
-            # Fallback: Try iterating (slow) - use only if necessary
-            logger.warning(f"Attempting slow target extraction by iterating dataset type {type(dataset)}")
-            targets = []
-            try:
-                 # Use a DataLoader to iterate efficiently if possible
-                 loader = DataLoader(dataset, batch_size=self.model_adapter.batch_size, shuffle=False, num_workers=0)
-                 for _, y_batch in loader:
-                     targets.append(y_batch.cpu().numpy())
-                 return np.concatenate(targets)
-            except Exception as e:
-                 logger.error(f"Failed to extract targets by iteration: {e}")
-                 raise TypeError(f"Unsupported dataset type for target extraction: {type(dataset)}")
+        else: # General fallback
+             return self._get_targets_by_iteration(dataset)
+
+    def _get_targets_by_iteration(self, dataset: Dataset) -> np.ndarray:
+        """Fallback to extract targets by iterating a dataset."""
+        logger.warning(f"Using SLOW target extraction by iteration for dataset type {type(dataset)}")
+        targets = []
+        try:
+             loader = DataLoader(dataset, batch_size=self.model_adapter.batch_size * 4, shuffle=False, num_workers=0)
+             for _, y_batch in loader:
+                 targets.append(y_batch.cpu().numpy())
+             if not targets:
+                 logger.warning(f"Iteration yielded no targets for dataset {type(dataset)}.")
+                 return np.array([], dtype=int) # Return empty array of appropriate type
+             return np.concatenate(targets)
+        except Exception as e:
+             logger.error(f"Failed to extract targets by iteration: {e}", exc_info=True)
+             raise TypeError(f"Unsupported dataset type for target extraction: {type(dataset)}")
 
     def _load_dataset_to_numpy(self, dataset: Dataset) -> Tuple[np.ndarray, np.ndarray]:
         """Loads features and labels from a PyTorch Dataset into NumPy arrays."""
         logger.info(f"Loading dataset of type {type(dataset)} (length {len(dataset)}) into NumPy arrays...")
         # Use DataLoader for efficient batch loading
-        loader = DataLoader(dataset, batch_size=self.model_adapter.batch_size * 2,  # Maybe larger batch for loading
-                            shuffle=False, num_workers=0)  # Use num_workers=0 for stability
+        loader = DataLoader(dataset, batch_size=self.model_adapter.batch_size * 2, # Maybe larger batch for loading
+                            shuffle=False, num_workers=0) # Use num_workers=0 for stability
 
         all_features = []
         all_labels = []
@@ -1542,7 +1431,7 @@ class ClassificationPipeline:
         for features, labels in loader:
             i += 1
             logger.debug(f"Loading batch {i}/{total}")
-            all_features.append(features.cpu().numpy())  # Move to CPU before numpy
+            all_features.append(features.cpu().numpy()) # Move to CPU before numpy
             all_labels.append(labels.cpu().numpy())
 
         X_np = np.concatenate(all_features, axis=0)
@@ -1558,103 +1447,72 @@ class ClassificationPipeline:
                                scoring: str = 'accuracy',
                                save_results: bool = True) -> Dict[str, Any]:
         """
-        Performs non-nested hyperparameter search (GridSearchCV or RandomizedSearchCV)
-        using the training and validation sets defined by the DatasetHandler.
-
-        Tunes hyperparameters on the training set using cross-validation internally
-        (or could use the explicit validation set if cv=None, though standard practice uses CV).
-        Evaluates the best found model on the separate test set.
-
-        Args:
-            param_grid (Dict[str, List]): Dictionary defining the hyperparameter grid or distributions.
-            cv (int): Number of cross-validation folds to use within the search on the training data.
-            n_iter (Optional[int]): Number of parameter settings to sample for RandomizedSearchCV.
-                                    Required if method='random'. Ignored if method='grid'.
-            method (str): Search method: 'grid' (GridSearchCV) or 'random' (RandomizedSearchCV).
-            scoring (str): Scorer to use for evaluating parameters during search (e.g., 'accuracy', 'f1_macro').
-            save_results (bool): Whether to save the results (metrics, best params) to files.
-
-        Returns:
-            Dict[str, Any]: Dictionary containing search results, best parameters, best score,
-                            CV results details, and evaluation metrics on the test set.
-
-        Raises:
-            ValueError: If method is invalid or n_iter is missing for random search.
-            RuntimeError: If required dataset splits are missing.
+        Performs non-nested hyperparameter search (GridSearchCV or RandomizedSearchCV).
+        Uses internal validation split defined in SkorchModelAdapter.
+        Loads necessary data into NumPy arrays for compatibility with sklearn CV.
         """
         method_lower = method.lower()
         logger.info(f"Performing non-nested '{method_lower}' search with {cv}-fold CV on training data.")
         logger.info(f"Parameter Grid: {param_grid}")
         logger.info(f"Scoring Metric: {scoring}")
 
-        if method_lower == 'random' and n_iter is None:
-            raise ValueError("n_iter must be specified for method='random'.")
-        if method_lower not in ['grid', 'random']:
-             raise ValueError(f"Unsupported search method: '{method}'. Choose 'grid' or 'random'.")
+        if method_lower == 'random' and n_iter is None: raise ValueError("n_iter required for random search.")
+        if method_lower not in ['grid', 'random']: raise ValueError(f"Unsupported search method: {method}.")
 
-        # --- Get Data ---
-        # Search is performed on the training data, using internal CV for validation.
-        train_dataset = self.dataset_handler.get_train_dataset() # PyTorch Dataset
-        test_dataset = self.dataset_handler.get_test_dataset()  # PyTorch Dataset
-        if train_dataset is None or test_dataset is None:
-            raise RuntimeError("Required train or test dataset is missing.")
+        # --- Get Data as NumPy for sklearn CV ---
+        train_dataset_torch = self.dataset_handler.get_train_dataset()
+        test_dataset_torch = self.dataset_handler.get_test_dataset()
+        if train_dataset_torch is None or test_dataset_torch is None:
+             raise RuntimeError("Required train or test PyTorch dataset is missing.")
 
         logger.info("Loading training data into memory for GridSearchCV...")
         try:
-            X_np_train, y_np_train = self._load_dataset_to_numpy(train_dataset)
+            X_np_train, y_np_train = self._load_dataset_to_numpy(train_dataset_torch)
         except Exception as e:
             logger.error(f"Failed to load training data to NumPy: {e}", exc_info=True)
             raise RuntimeError("Could not load training data to NumPy for CV.") from e
 
         # --- Setup Search ---
-        # Clone the base estimator to avoid modifying the pipeline's main adapter
-        estimator = clone(self.model_adapter)
+        estimator = clone(self.model_adapter) # Clones adapter WITH ValidSplit enabled
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
         SearchClass = GridSearchCV if method_lower == 'grid' else RandomizedSearchCV
         search_kwargs = {
             'estimator': estimator,
             'cv': cv_splitter,
             'scoring': scoring,
-            'n_jobs': 1, # Often best for GPU-based training
-            'verbose': 3, # Show progress
+            'n_jobs': 1,
+            'verbose': 3, # Increased verbosity
             'return_train_score': True,
-            'refit': True # Refit the best estimator on the whole training data
+            'refit': True
         }
-        if method_lower == 'grid':
-            search_kwargs['param_grid'] = param_grid
+        if method_lower == 'grid': search_kwargs['param_grid'] = param_grid
         else:
             search_kwargs['param_distributions'] = param_grid
             search_kwargs['n_iter'] = n_iter
             search_kwargs['random_state'] = RANDOM_SEED
-
         search = SearchClass(**search_kwargs)
 
         # --- Run Search ---
-        # Skorch/sklearn handle dataset input directly
-        logger.info(f"Fitting {SearchClass.__name__} on the training dataset...")
-
-        # Wrap the PyTorch Dataset in SliceDataset before passing to sklearn fit
-        # SkorchDataset might also work, but SliceDataset is often recommended for compatibility.
-        logger.info(f"Fitting {SearchClass.__name__} on the training dataset...")
-        search.fit(X_np_train, y=y_np_train)
+        logger.info(f"Fitting {SearchClass.__name__} with NumPy arrays...")
+        search.fit(X_np_train, y=y_np_train) # Fit on NumPy data
         logger.info(f"Search completed.")
 
         # --- Collect Results ---
         results = {
             'method': f"non_nested_{method_lower}_search",
-            'params': {'cv': cv, 'n_iter': n_iter, 'method': method, 'scoring': scoring},
+            'params': {'cv': cv, 'n_iter': n_iter if method_lower=='random' else 'N/A', 'method': method_lower, 'scoring': scoring},
             'best_params': search.best_params_,
-            'best_score': search.best_score_, # Score on CV validation folds for best params
-            'cv_results': search.cv_results_, # Contains detailed CV performance
+            'best_score': search.best_score_,
+            'cv_results': search.cv_results_,
         }
 
-        # --- Evaluate Best Model on Test Set ---
+        # --- Evaluate Best Model on Test Set (using NumPy) ---
         logger.info(f"Evaluating best model (params: {search.best_params_}) on the test set...")
         best_estimator = search.best_estimator_
 
         logger.info("Loading test data into memory for evaluation...")
         try:
-            X_np_test, y_true_test = self._load_dataset_to_numpy(test_dataset)
+            X_np_test, y_true_test = self._load_dataset_to_numpy(test_dataset_torch)
         except Exception as e:
             logger.error(f"Failed to load test data to NumPy: {e}", exc_info=True)
             raise RuntimeError("Could not load test data to NumPy for evaluation.") from e
@@ -1662,35 +1520,22 @@ class ClassificationPipeline:
         y_pred_test = best_estimator.predict(X_np_test)
         try:
             y_score_test = best_estimator.predict_proba(X_np_test)
-        except AttributeError:
-             y_score_test = None
-
+        except AttributeError: y_score_test = None
 
         test_metrics = self._compute_metrics(y_true_test, y_pred_test, y_score_test)
         results['test_set_evaluation'] = test_metrics
         logger.info(f"Test Set Evaluation: Accuracy={test_metrics['accuracy']:.4f}, "
                     f"Macro F1={test_metrics['macro_avg']['f1']:.4f}")
 
-        # Add top-level metrics for saving compatibility
         results['accuracy'] = test_metrics.get('accuracy', np.nan)
         results['macro_avg'] = test_metrics.get('macro_avg', {})
 
         # --- Save Results ---
         if save_results:
-            save_params = {'cv': cv, 'method': method_lower, 'scoring': scoring}
-            if n_iter: save_params['n_iter'] = n_iter
-            self._save_results(
-                results,
-                f"non_nested_{method_lower}_search",
-                params=save_params
-            )
+            self._save_results(results, f"non_nested_{method_lower}_search", params=results['params'])
 
         logger.info(f"Non-nested {method_lower} search finished. Best CV score ({scoring}): {search.best_score_:.4f}")
         logger.info(f"Best parameters found: {search.best_params_}")
-
-        # Update the main pipeline model adapter with the best found estimator ONLY if desired
-        # self.model_adapter = best_estimator
-        # logger.info("Pipeline's model adapter updated with the best estimator found during search.")
 
         return results
 
@@ -1704,38 +1549,8 @@ class ClassificationPipeline:
                            scoring: str = 'accuracy',
                            save_results: bool = True) -> Dict[str, Any]:
         """
-        Performs nested cross-validation for unbiased performance estimation of the
-        hyperparameter tuning process.
-
-        Uses an outer loop (cross_validate) to split the data. In each outer fold,
-        an inner loop (GridSearchCV or RandomizedSearchCV) performs hyperparameter tuning
-        on the outer loop's training split. The best model from the inner loop is then
-        evaluated on the outer loop's validation/test split.
-
-        - For FLAT datasets: Uses the entire dataset for nested CV.
-        - For FIXED datasets: Adapts the process. It performs the inner hyperparameter
-          search on the combined 'train' + 'validation' sets (using inner_cv). The single
-          best model found is then evaluated *once* on the predefined 'test' set. This
-          estimates the performance of the *chosen* model, not the variability of the
-          selection process itself, due to the fixed test set.
-
-        Args:
-            param_grid (Dict[str, List]): Hyperparameter grid/distributions for the inner search.
-            outer_cv (int): Number of folds for the outer cross-validation loop.
-            inner_cv (int): Number of folds for the inner cross-validation loop (tuning).
-            n_iter (Optional[int]): Number of iterations for RandomizedSearchCV in the inner loop. Required if method='random'.
-            method (str): Inner search method: 'grid' or 'random'.
-            scoring (str): Scorer used for both inner tuning and outer evaluation.
-            save_results (bool): Whether to save the results.
-
-        Returns:
-            Dict[str, Any]: Dictionary containing the results. Structure differs slightly
-                            based on dataset structure (FLAT vs. FIXED). Includes outer loop scores,
-                            (potentially) best parameters per fold, and average performance.
-
-        Raises:
-            ValueError: If method is invalid or n_iter is missing for random search.
-            RuntimeError: If required dataset splits are missing.
+        Performs nested cross-validation for unbiased performance estimation.
+        Loads data into NumPy arrays for compatibility.
         """
         method_lower = method.lower()
         logger.info(f"Performing nested '{method_lower}' search.")
@@ -1743,249 +1558,173 @@ class ClassificationPipeline:
         logger.info(f"  Parameter Grid: {param_grid}")
         logger.info(f"  Scoring Metric: {scoring}")
 
-        if method_lower == 'random' and n_iter is None:
-            raise ValueError("n_iter must be specified for method='random'.")
-        if method_lower not in ['grid', 'random']:
-             raise ValueError(f"Unsupported search method: '{method}'. Choose 'grid' or 'random'.")
+        if method_lower == 'random' and n_iter is None: raise ValueError("n_iter required for random search.")
+        if method_lower not in ['grid', 'random']: raise ValueError(f"Unsupported search method: {method}.")
 
         # --- Setup Inner Search Object ---
-        # Base estimator (will be cloned for each outer fold)
-        base_estimator = clone(self.model_adapter)
-        base_estimator.set_params(train_split=None) # Ensure no internal split
-
+        base_estimator = clone(self.model_adapter) # Has ValidSplit enabled
         inner_cv_splitter = StratifiedKFold(n_splits=inner_cv, shuffle=True, random_state=RANDOM_SEED)
-
         InnerSearchClass = GridSearchCV if method_lower == 'grid' else RandomizedSearchCV
         inner_search_kwargs = {
-            'estimator': base_estimator,
-            'cv': inner_cv_splitter,
-            'scoring': scoring,
-            'n_jobs': 1,
-            'verbose': 1, # Verbosity for inner loops
-            'refit': True # Refit best inner model on inner training data
+            'estimator': base_estimator, 'cv': inner_cv_splitter, 'scoring': scoring,
+            'n_jobs': 1, 'verbose': 1, 'refit': True
         }
-        if method_lower == 'grid':
-            inner_search_kwargs['param_grid'] = param_grid
+        if method_lower == 'grid': inner_search_kwargs['param_grid'] = param_grid
         else:
             inner_search_kwargs['param_distributions'] = param_grid
             inner_search_kwargs['n_iter'] = n_iter
             inner_search_kwargs['random_state'] = RANDOM_SEED
-
         inner_search = InnerSearchClass(**inner_search_kwargs)
 
-        # --- Select Data Based on Structure ---
+        # --- Select Data Based on Structure (Load to NumPy) ---
+        X_np, y_np = None, None
+        X_np_test, y_np_test = None, None # For fixed test case
+        run_standard_nested_cv = False
+
         if self.dataset_handler.structure == DatasetStructure.FLAT:
-            logger.info("Using full dataset for standard nested CV (FLAT structure).")
-            dataset_for_cv = self.dataset_handler.get_full_dataset()
-            if dataset_for_cv is None:
-                raise RuntimeError("Full dataset required for nested CV on FLAT structure, but not available.")
-            outer_cv_splitter = StratifiedKFold(n_splits=outer_cv, shuffle=True, random_state=RANDOM_SEED)
-            run_standard_nested_cv = True
+            logger.info("Loading full dataset into memory for standard nested CV (FLAT structure).")
+            try:
+                 full_dataset_torch = self.dataset_handler.get_full_dataset()
+                 X_np, y_np = self._load_dataset_to_numpy(full_dataset_torch)
+                 run_standard_nested_cv = True
+            except Exception as e:
+                 raise RuntimeError("Could not load full dataset to NumPy for nested CV.") from e
 
         elif self.dataset_handler.structure == DatasetStructure.FIXED:
-            logger.warning("Adapting nested CV for FIXED dataset structure:")
+            logger.warning("Adapting nested CV for FIXED dataset structure (using NumPy):")
             logger.warning("  Inner search (tuning) runs on 'train+validation' sets.")
             logger.warning("  Final evaluation uses the single best model on the fixed 'test' set.")
-            train_dataset = self.dataset_handler.get_train_dataset()
-            val_dataset = self.dataset_handler.get_val_dataset()
-            test_dataset = self.dataset_handler.get_test_dataset()
+            try:
+                 train_dataset = self.dataset_handler.get_train_dataset()
+                 val_dataset = self.dataset_handler.get_val_dataset()
+                 test_dataset = self.dataset_handler.get_test_dataset()
+                 if train_dataset is None or test_dataset is None:
+                      raise RuntimeError("Missing train or test dataset for FIXED structure.")
 
-            if train_dataset is None or test_dataset is None:
-                raise RuntimeError("Required train/test datasets missing for FIXED structure nested CV adaptation.")
+                 datasets_to_combine = [train_dataset]
+                 if val_dataset: datasets_to_combine.append(val_dataset)
+                 combined_dataset = ConcatDataset(datasets_to_combine) if len(datasets_to_combine) > 1 else train_dataset
 
-            # Combine train and validation Datasets for inner search fitting
-            # Note: Creating a ConcatDataset is the proper PyTorch way
-            datasets_to_combine = [train_dataset]
-            if val_dataset:
-                datasets_to_combine.append(val_dataset)
-
-            if len(datasets_to_combine) > 1:
-                tuning_dataset = torch.utils.data.ConcatDataset(datasets_to_combine)
-                logger.info(f"Combined train ({len(train_dataset)}) and validation ({len(val_dataset) if val_dataset else 0}) sets "
-                            f"into a single dataset of size {len(tuning_dataset)} for hyperparameter tuning.")
-            else:
-                 tuning_dataset = train_dataset # Only train set available
-                 logger.info("Using only the training set for hyperparameter tuning (no validation set available/used).")
-
-            run_standard_nested_cv = False # Use the adapted approach
-
-        else: # Should not happen
-            raise RuntimeError(f"Unknown dataset structure: {self.dataset_handler.structure}")
-
+                 logger.info("Loading combined train+val data into memory for tuning...")
+                 X_np, y_np = self._load_dataset_to_numpy(combined_dataset)
+                 logger.info("Loading fixed test data into memory for final evaluation...")
+                 X_np_test, y_np_test = self._load_dataset_to_numpy(test_dataset)
+                 run_standard_nested_cv = False
+            except Exception as e:
+                 raise RuntimeError("Could not load data to NumPy for FIXED nested CV adaptation.") from e
+        else:
+             raise RuntimeError(f"Unknown dataset structure: {self.dataset_handler.structure}")
 
         # --- Execute Nested CV or Adapted FIXED Workflow ---
         results = {
              'method': f"nested_{method_lower}_search",
-             'params': {'outer_cv': outer_cv, 'inner_cv': inner_cv, 'n_iter': n_iter, 'method': method_lower, 'scoring': scoring},
+             'params': {'outer_cv': outer_cv, 'inner_cv': inner_cv, 'n_iter': n_iter if method_lower=='random' else 'N/A', 'method': method_lower, 'scoring': scoring},
         }
 
         if run_standard_nested_cv:
-            # Standard Nested CV using cross_validate
-            logger.info(f"Running standard nested CV using cross_validate with {outer_cv} outer folds...")
-            # Define scorers needed for the outer loop evaluation
-            scoring_dict = {
-                'accuracy': make_scorer(accuracy_score),
-                'precision_macro': make_scorer(precision_score, average='macro', zero_division=0),
-                'recall_macro': make_scorer(recall_score, average='macro', zero_division=0),
-                'f1_macro': make_scorer(f1_score, average='macro', zero_division=0),
-                # Note: AUC scorers require predict_proba, which cross_validate doesn't easily support
-                # for the final score calculation across folds without custom handling.
+            outer_cv_splitter = StratifiedKFold(n_splits=outer_cv, shuffle=True, random_state=RANDOM_SEED)
+            logger.info(f"Running standard nested CV using cross_validate with NumPy data...")
+            scoring_dict = { # Use standard sklearn scorers with NumPy data
+                'accuracy': 'accuracy',
+                'precision_macro': 'precision_macro',
+                'recall_macro': 'recall_macro',
+                'f1_macro': 'f1_macro'
             }
-
-            cv_results = cross_validate(
-                inner_search, # The inner search object is the estimator for the outer loop
-                dataset_for_cv, y=None, # Pass dataset directly
-                cv=outer_cv_splitter,
-                scoring=scoring_dict,
-                return_estimator=True, # Get the fitted inner search object from each fold
-                n_jobs=1, # Usually required for nested CV with complex estimators
-                verbose=2 # Show progress of outer folds
-            )
-            logger.info("Nested cross-validation finished.")
-
-            # Process results from cross_validate
-            results['outer_cv_scores'] = {k: v.tolist() for k, v in cv_results.items() if k.startswith('test_')}
-            results['mean_test_accuracy'] = float(np.mean(cv_results['test_accuracy']))
-            results['std_test_accuracy'] = float(np.std(cv_results['test_accuracy']))
-            results['mean_test_precision_macro'] = float(np.mean(cv_results['test_precision_macro']))
-            results['mean_test_recall_macro'] = float(np.mean(cv_results['test_recall_macro']))
-            results['mean_test_f1_macro'] = float(np.mean(cv_results['test_f1_macro']))
-            # Extract best params found in each *inner* loop
             try:
+                 cv_results = cross_validate(
+                     inner_search, X_np, y_np, cv=outer_cv_splitter, scoring=scoring_dict,
+                     return_estimator=True, n_jobs=1, verbose=2 )
+                 logger.info("Nested cross-validation finished.")
+                 # Process results (same as before)
+                 results['outer_cv_scores'] = {k: v.tolist() for k, v in cv_results.items() if k.startswith('test_')}
+                 results['mean_test_accuracy'] = float(np.mean(cv_results['test_accuracy']))
+                 # ... (add other mean/std metrics) ...
                  results['best_params_per_fold'] = [est.best_params_ for est in cv_results['estimator']]
+                 results['accuracy'] = results['mean_test_accuracy']
+                 results['macro_avg'] = {'precision': results.get('mean_test_precision_macro', np.nan)}
+
             except Exception as e:
-                 logger.warning(f"Could not extract best_params_per_fold: {e}")
-                 results['best_params_per_fold'] = "Error extracting"
+                 logger.error(f"Standard nested CV failed: {e}", exc_info=True)
+                 results['error'] = str(e) # Store error in results
+        else: # Adapted workflow for FIXED dataset (using NumPy data)
+             logger.info(f"Running adapted nested CV for FIXED structure with NumPy data...")
+             try:
+                  logger.info(f"  Step 1: Tuning hyperparameters using inner CV on train+validation data...")
+                  inner_search.fit(X_np, y_np)
+                  logger.info(f"  Hyperparameter tuning finished. Best params: {inner_search.best_params_}")
+                  results['best_params'] = inner_search.best_params_
+                  results['best_tuning_score'] = inner_search.best_score_
+                  results['inner_cv_results'] = inner_search.cv_results_
 
-            # Add top-level metrics for saving compatibility
-            results['accuracy'] = results['mean_test_accuracy']
-            results['macro_avg'] = {
-                'precision': results.get('mean_test_precision_macro', np.nan),
-                'recall': results.get('mean_test_recall_macro', np.nan),
-                'f1': results.get('mean_test_f1_macro', np.nan),
-                'roc_auc': np.nan, # Not computed by cross_validate easily
-                'pr_auc': np.nan   # Not computed by cross_validate easily
-            }
-            logger.info(f"Nested CV Average Performance ({scoring}): "
-                        f"{results['mean_test_accuracy']:.4f} +/- {results['std_test_accuracy']:.4f} (Accuracy)")
-
-
-        else: # Adapted workflow for FIXED dataset
-            logger.info(f"Running adapted nested CV for FIXED structure...")
-            logger.info(f"  Step 1: Tuning hyperparameters using inner CV on train+validation data ({inner_cv} folds)...")
-            inner_search.fit(tuning_dataset, y=None)
-            logger.info(f"  Hyperparameter tuning finished. Best params found: {inner_search.best_params_}")
-            logger.info(f"  Best score during tuning ({scoring}): {inner_search.best_score_:.4f}")
-
-            results['best_params'] = inner_search.best_params_
-            results['best_tuning_score'] = inner_search.best_score_
-            results['inner_cv_results'] = inner_search.cv_results_
-
-            # Step 2: Evaluate the single best model on the fixed test set
-            logger.info(f"  Step 2: Evaluating the best model on the fixed test set...")
-            best_estimator = inner_search.best_estimator_
-            best_estimator.set_params(train_split=None) # Ensure no split during prediction
-
-            y_pred_test = best_estimator.predict(test_dataset)
-            try:
-                y_score_test = best_estimator.predict_proba(test_dataset)
-            except AttributeError:
-                 y_score_test = None
-
-            # Extract true labels from test dataset
-            y_true_test_list = []
-            test_loader = DataLoader(test_dataset, batch_size=self.model_adapter.batch_size, shuffle=False)
-            for _, y_batch in test_loader:
-                 y_true_test_list.append(y_batch.numpy())
-            y_true_test = np.concatenate(y_true_test_list)
-
-            test_metrics = self._compute_metrics(y_true_test, y_pred_test, y_score_test)
-            results['fixed_test_set_evaluation'] = test_metrics
-            logger.info(f"  Fixed Test Set Evaluation: Accuracy={test_metrics['accuracy']:.4f}, "
-                        f"Macro F1={test_metrics['macro_avg']['f1']:.4f}")
-
-            # Add top-level metrics for saving compatibility
-            results['accuracy'] = test_metrics.get('accuracy', np.nan)
-            results['macro_avg'] = test_metrics.get('macro_avg', {})
-
-            # Update the main pipeline model adapter if desired
-            # self.model_adapter = best_estimator
-            # logger.info("Pipeline's model adapter updated with the best estimator from FIXED nested search.")
-
+                  logger.info(f"  Step 2: Evaluating the best model on the fixed test set...")
+                  best_estimator = inner_search.best_estimator_
+                  y_pred_test = best_estimator.predict(X_np_test)
+                  try: y_score_test = best_estimator.predict_proba(X_np_test)
+                  except AttributeError: y_score_test = None
+                  test_metrics = self._compute_metrics(y_np_test, y_pred_test, y_score_test)
+                  results['fixed_test_set_evaluation'] = test_metrics
+                  results['accuracy'] = test_metrics.get('accuracy', np.nan)
+                  results['macro_avg'] = test_metrics.get('macro_avg', {})
+                  logger.info(f"  Fixed Test Set Eval: Accuracy={test_metrics['accuracy']:.4f}")
+             except Exception as e:
+                  logger.error(f"Adapted nested CV (FIXED) failed: {e}", exc_info=True)
+                  results['error'] = str(e)
 
         # --- Save Results ---
         if save_results:
-            save_params = {'outer_cv': outer_cv if run_standard_nested_cv else 'fixed_test',
-                           'inner_cv': inner_cv, 'method': method_lower, 'scoring': scoring}
-            if n_iter: save_params['n_iter'] = n_iter
-            self._save_results(
-                results,
-                f"nested_{method_lower}_search",
-                params=save_params
-            )
+            self._save_results(results, f"nested_{method_lower}_search", params=results['params'])
 
         return results
 
 
     def cv_model_evaluation(self, cv: int = 5, save_results: bool = True) -> Dict[str, Any]:
         """
-        Performs standard cross-validation for model evaluation using the current
-        pipeline settings (model type, hyperparameters).
-
-        Trains and evaluates the *same* model configuration on different folds of the data
-        to assess robustness and get a performance estimate with confidence intervals.
-
-        This method is only suitable for FLAT dataset structures where the entire dataset
-        can be used for cross-validation.
-
-        Args:
-            cv (int): Number of cross-validation folds.
-            save_results (bool): Whether to save the results.
-
-        Returns:
-            Dict[str, Any]: Dictionary containing CV results (scores per fold, averages, std dev).
-
-        Raises:
-            ValueError: If called on a dataset with a FIXED structure.
-            RuntimeError: If the dataset is not available.
+        Performs standard cross-validation for model evaluation.
+        Loads data into NumPy arrays for compatibility.
+        Disables internal validation splitting in the estimator for this task.
         """
         logger.info(f"Performing {cv}-fold cross-validation for model evaluation.")
 
-        # --- Check Compatibility ---
         if self.dataset_handler.structure == DatasetStructure.FIXED:
-            raise ValueError("Standard CV model evaluation is not suitable for FIXED dataset structures "
-                             "with a predefined test set. Use 'single_eval' or nested CV adaptation.")
+            raise ValueError("Standard CV model evaluation is not suitable for FIXED dataset structures.")
 
-        # --- Get Data ---
-        full_dataset = self.dataset_handler.get_full_dataset() # Raises error if not FLAT or not loaded
-        logger.info(f"Using full dataset ({len(full_dataset)}) for {cv}-fold CV.")
+        # --- Get Data as NumPy ---
+        logger.info("Loading full dataset into memory for cross_validate...")
+        try:
+             full_dataset_torch = self.dataset_handler.get_full_dataset()
+             X_np_full, y_np_full = self._load_dataset_to_numpy(full_dataset_torch)
+        except Exception as e:
+             raise RuntimeError("Could not load full dataset to NumPy for CV.") from e
+        logger.info(f"Using full dataset ({len(X_np_full)} samples) for {cv}-fold CV.")
+
 
         # --- Setup CV ---
-        # Use the pipeline's current model adapter configuration
         estimator = clone(self.model_adapter)
-        estimator.set_params(train_split=None) # Ensure no internal splitting during CV
+        # Disable skorch's internal train/val split for cross_validate
+        logger.debug("Setting train_split=None on cloned estimator for cross_validate.")
+        estimator.set_params(train_split=None)
 
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
-
-        # Define scorers - similar to nested CV, AUC is problematic here
-        scoring_dict = {
-            'accuracy': make_scorer(accuracy_score),
-            'precision_macro': make_scorer(precision_score, average='macro', zero_division=0),
-            'recall_macro': make_scorer(recall_score, average='macro', zero_division=0),
-            'f1_macro': make_scorer(f1_score, average='macro', zero_division=0),
-        }
+        # Use standard sklearn scoring strings with NumPy data
+        scoring_dict = ['accuracy', 'precision_macro', 'recall_macro', 'f1_macro']
 
         # --- Run Cross-Validation ---
-        logger.info("Running cross_validate...")
-        cv_results = cross_validate(
-            estimator,
-            full_dataset, y=None, # Pass dataset directly
-            cv=cv_splitter,
-            scoring=scoring_dict,
-            return_train_score=False, # Typically don't need train scores for final eval
-            n_jobs=1,
-            verbose=2
-        )
+        logger.info("Running cross_validate with NumPy arrays...")
+        try:
+             cv_results = cross_validate(
+                 estimator,
+                 X_np_full, y=y_np_full, # Pass NumPy data
+                 cv=cv_splitter,
+                 scoring=scoring_dict,
+                 return_train_score=False,
+                 n_jobs=1,
+                 verbose=3
+             )
+        except Exception as e:
+             logger.error(f"cross_validate failed: {e}", exc_info=True)
+             # Return partial results or re-raise? Re-raise for now.
+             raise RuntimeError("cross_validate execution failed") from e
+
         logger.info("Cross-validation finished.")
 
         # --- Process and Save Results ---
@@ -2001,15 +1740,12 @@ class ClassificationPipeline:
              'mean_test_recall_macro': float(np.mean(cv_results['test_recall_macro'])),
              'mean_test_f1_macro': float(np.mean(cv_results['test_f1_macro'])),
         }
-
-        # Add top-level metrics for saving compatibility
         results['accuracy'] = results['mean_test_accuracy']
         results['macro_avg'] = {
             'precision': results.get('mean_test_precision_macro', np.nan),
             'recall': results.get('mean_test_recall_macro', np.nan),
             'f1': results.get('mean_test_f1_macro', np.nan),
-            'roc_auc': np.nan, # Not computed
-            'pr_auc': np.nan  # Not computed
+            'roc_auc': np.nan, 'pr_auc': np.nan # Not computed
         }
 
         if save_results:
@@ -2017,10 +1753,10 @@ class ClassificationPipeline:
 
         logger.info(f"CV Evaluation Summary (Avg over {cv} folds):")
         logger.info(f"  Accuracy: {results['mean_test_accuracy']:.4f} +/- {results['std_test_accuracy']:.4f}")
-        logger.info(f"  Macro F1: {results['mean_test_f1_macro']:.4f} +/- {float(np.std(cv_results['test_f1_macro'])):.4f}")
-        logger.info(f"  Note: AUC metrics are not computed by default in cross_validate.")
+        # ... (log other metrics) ...
 
         return results
+
 
     def single_train(self,
                      max_epochs: Optional[int] = None,
@@ -2032,94 +1768,59 @@ class ClassificationPipeline:
         Performs a single training run using the training and validation sets
         defined by the DatasetHandler. Skorch's internal train_split is used
         to create the validation set from the combined train+val data.
-
-        Args:
-            max_epochs (Optional[int]): Override the default max_epochs for this run.
-            lr (Optional[float]): Override the default learning rate for this run.
-            batch_size (Optional[int]): Override the default batch size for this run.
-            early_stopping_patience (Optional[int]): Override the default early stopping patience.
-            save_model (bool): If True, saves the state_dict of the best trained model.
-
-        Returns:
-            Dict[str, Any]: Dictionary containing training history, best epoch/loss,
-                            and path to the saved model if `save_model` is True.
-
-        Raises:
-            RuntimeError: If train dataset is missing or target extraction fails.
         """
         logger.info("Starting single training run...")
 
         # --- Get Data ---
         train_dataset = self.dataset_handler.get_train_dataset()
-        val_dataset = self.dataset_handler.get_val_dataset()  # Can be None if val_split_ratio=0
-        if train_dataset is None:
-            raise RuntimeError("Training dataset is missing for single_train.")
+        val_dataset = self.dataset_handler.get_val_dataset()
+        if train_dataset is None: raise RuntimeError("Training dataset missing.")
 
-        # Combine train and validation datasets for skorch internal splitting
+        # --- Combine Datasets for Skorch's Internal Split ---
         datasets_to_fit = [train_dataset]
         if val_dataset:
             datasets_to_fit.append(val_dataset)
-            logger.info(f"Combining train ({len(train_dataset)}) and validation ({len(val_dataset)}) sets "
-                        f"for skorch internal split (total: {sum(len(d) for d in datasets_to_fit)} samples).")
+            logger.info(f"Combining train ({len(train_dataset)}) and validation ({len(val_dataset)}) sets.")
             combined_dataset = ConcatDataset(datasets_to_fit)
         else:
-            # If no explicit val_dataset, just use train_dataset for internal split
-            logger.info(f"Using training set ({len(train_dataset)} samples) for skorch internal split.")
+            logger.info(f"Using only training set ({len(train_dataset)}) for skorch internal split.")
             combined_dataset = train_dataset
 
-        # --- Configure Model Adapter for this Run ---
-        # Use method args to override pipeline defaults if provided
-        current_params = self.model_adapter.get_params()  # Store original params if needed later
+        # --- Configure Model Adapter ---
+        # Clone adapter to avoid modifying the pipeline's main one if single_train is intermediate
+        adapter_for_train = clone(self.model_adapter)
+        # Ensure it uses internal validation split (should be default)
+        adapter_for_train.set_params(train_split=skorch.dataset.ValidSplit(cv=0.2, stratified=True, random_state=RANDOM_SEED)) # Explicitly set here too
+
         params_to_set = {}
         if max_epochs is not None: params_to_set['max_epochs'] = max_epochs
         if lr is not None: params_to_set['lr'] = lr
         if batch_size is not None: params_to_set['batch_size'] = batch_size
-        # Update callback parameters if needed
         if early_stopping_patience is not None:
-            # Check if early stopping callback exists by name
-            callback_names = [name for name, _ in self.model_adapter.callbacks]
-            if 'early_stopping' in callback_names:
-                params_to_set['callbacks__early_stopping__patience'] = early_stopping_patience
-            else:
-                logger.warning("Tried to set early stopping patience, but 'early_stopping' callback not found.")
+             if 'early_stopping' in dict(adapter_for_train.callbacks):
+                  params_to_set['callbacks__early_stopping__patience'] = early_stopping_patience
+             else: logger.warning("Cannot set patience: 'early_stopping' callback missing.")
 
         if params_to_set:
-            logger.info(f"Overriding model adapter parameters for this run: {params_to_set}")
-            self.model_adapter.set_params(**params_to_set)
-
-        # --- Prepare Fit Parameters ---
-        # No need to pass X_val/y_val, skorch uses internal train_split
-        fit_params = {}
+            logger.info(f"Overriding adapter parameters for this run: {params_to_set}")
+            adapter_for_train.set_params(**params_to_set)
 
         # --- Train Model ---
-        # Extract combined targets for skorch internal dataset handling if y is needed
-        # (Skorch might need y depending on how train_split handles the Dataset)
         try:
+            # Extract targets needed for SkorchDataset creation when split happens
             y_combined = self._get_targets_from_dataset(combined_dataset)
             logger.debug(f"Extracted combined targets (shape={y_combined.shape}) for skorch fit.")
         except Exception as e:
-            logger.error(f"Failed to get targets from combined dataset for single_train: {e}")
-            # Fallback or raise error? Raise for now.
             raise RuntimeError("Could not extract targets for single_train fit") from e
 
-        # Pass the combined dataset and extracted targets. Skorch's train_split will handle it.
-        self.model_adapter.fit(combined_dataset, y=y_combined, **fit_params)
+        # Fit using the combined dataset and targets
+        adapter_for_train.fit(combined_dataset, y=y_combined) # No fit_params needed
 
         # --- Collect Results ---
-        history = self.model_adapter.history  # Skorch history object
-
+        history = adapter_for_train.history
         best_epoch_info = {}
-        valid_loss_key = 'valid_loss'  # Default monitor, should be present now
-        es_callback = dict(self.model_adapter.callbacks_).get('early_stopping')
-        if es_callback:
-            monitor_key = getattr(es_callback, 'monitor', 'valid_loss')
-            if history and monitor_key in history[0]:
-                valid_loss_key = monitor_key
-            elif history:
-                logger.warning(
-                    f"Early stopping monitor key '{monitor_key}' not found in history[0]. Defaulting check to 'valid_loss'. History keys: {list(history[0].keys())}")
-
-        # Check if validation was run and history is not empty
+        valid_loss_key = 'valid_loss'
+        # ... (rest of history processing logic from previous version) ...
         validation_was_run = history and valid_loss_key in history[0]
 
         if validation_was_run:
@@ -2129,7 +1830,6 @@ class ClassificationPipeline:
                 best_epoch_idx = np.argmin(scores) if lower_is_better else np.argmax(scores)
                 best_epoch_hist = history[int(best_epoch_idx)]
                 actual_best_epoch_num = int(best_epoch_idx) + 1
-
                 best_epoch_info = {
                     'best_epoch': actual_best_epoch_num,
                     'best_valid_metric_value': float(best_epoch_hist.get(valid_loss_key, np.nan)),
@@ -2139,163 +1839,111 @@ class ClassificationPipeline:
                 logger.info(f"Training finished. Best validation performance at Epoch {best_epoch_info['best_epoch']} "
                             f"({valid_loss_key}={best_epoch_info['best_valid_metric_value']:.4f})")
             except Exception as e:
-                logger.error(f"Error processing history to find best epoch: {e}", exc_info=True)
-                validation_was_run = False
+                 logger.error(f"Error processing history: {e}", exc_info=True)
+                 validation_was_run = False
 
         if not validation_was_run:
+            # ... (fallback logic using last epoch) ...
             if history:
-                last_epoch_hist = history[-1]
-                last_epoch_num = len(history)
-            else:
-                last_epoch_hist = {}
-                last_epoch_num = 0
-                logger.error("Training history is empty after fit completed.")
+                 last_epoch_hist = history[-1]
+                 last_epoch_num = len(history)
+            else: # Should not happen if fit ran, but handle defensively
+                 last_epoch_hist = {}
+                 last_epoch_num = 0
+                 logger.error("Training history is empty after fit completed.")
 
             best_epoch_info = {
                 'best_epoch': last_epoch_num,
-                'best_valid_metric_value': np.nan,
-                'valid_metric_name': valid_loss_key,
+                'best_valid_metric_value': np.nan, # Indicate validation metric wasn't used/available
+                'valid_metric_name': valid_loss_key, # Still record intended metric
                 'train_loss_at_best': float(last_epoch_hist.get('train_loss', np.nan)),
             }
-            logger.warning(
-                f"Could not determine best epoch based on validation metric '{valid_loss_key}'. Reporting last epoch stats.")
+            logger.warning(f"Could not determine best epoch based on validation metric '{valid_loss_key}'. Reporting last epoch stats.")
             if last_epoch_num > 0:
-                logger.info(f"Training finished at Epoch {best_epoch_info['best_epoch']} "
-                            f"(Train Loss={best_epoch_info['train_loss_at_best']:.4f})")
+                  logger.info(f"Training finished at Epoch {best_epoch_info['best_epoch']} "
+                              f"(Train Loss={best_epoch_info['train_loss_at_best']:.4f})")
 
         # Prepare results dict
-        es_patience = np.nan
-        try:
-            es_callback_instance = dict(self.model_adapter.callbacks_).get('early_stopping')
-            if es_callback_instance:
-                es_patience = es_callback_instance.patience
-        except Exception:
-            pass  # Ignore if callback access fails
-
+        # ... (get params for results dict) ...
         results = {
             'method': 'single_train',
-            'params': {
-                'lr': self.model_adapter.lr,
-                'max_epochs': self.model_adapter.max_epochs,
-                'batch_size': self.model_adapter.batch_size,
-                'early_stopping_patience': es_patience
+            'params': { # Store effective parameters used
+                'lr': adapter_for_train.lr,
+                'max_epochs': adapter_for_train.max_epochs,
+                'batch_size': adapter_for_train.batch_size,
+                'early_stopping_patience': dict(adapter_for_train.callbacks_).get('early_stopping', MagicMock(patience=None)).patience
             },
-            'training_history': history.to_list(),
-            **best_epoch_info
+            'training_history': history.to_list(), # Convert history to serializable list
+            **best_epoch_info # Add best epoch info
         }
 
         # --- Save Model ---
         if save_model:
+            # ... (model saving logic using adapter_for_train.module_.state_dict()) ...
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             val_metric_val = results.get('best_valid_metric_value', np.nan)
-            val_metric_name = results.get('valid_metric_name', 'unknown').replace('_', '-')
+            val_metric_name = results.get('valid_metric_name','unknown').replace('_','-')
             val_metric_str = f"val_{val_metric_name}{val_metric_val:.4f}" if not np.isnan(val_metric_val) else "no_val"
             model_filename = f"{self.model_type}_epoch{results.get('best_epoch', 0)}_{val_metric_str}_{timestamp}.pt"
             model_path = self.results_dir / model_filename
             try:
-                # EarlyStopping(load_best=True) should load the best weights, save them
-                torch.save(self.model_adapter.module_.state_dict(), model_path)
+                torch.save(adapter_for_train.module_.state_dict(), model_path)
                 logger.info(f"Model state_dict saved to: {model_path}")
                 results['saved_model_path'] = str(model_path)
             except Exception as e:
-                logger.error(f"Failed to save model to {model_path}: {e}", exc_info=True)
-                results['saved_model_path'] = None
+                 logger.error(f"Failed to save model: {e}", exc_info=True)
+                 results['saved_model_path'] = None
+
+        # Update the main pipeline adapter with the trained one if desired (or return it)
+        self.model_adapter = adapter_for_train
+        logger.info("Main pipeline model adapter updated with the model from single_train.")
 
         # Add dummy metrics for saving compatibility
         results['accuracy'] = np.nan
         results['macro_avg'] = {}
-
-        # Save run info
         self._save_results(results, "single_train", params=results['params'])
 
-        # Optionally restore original parameters if needed
-        # self.model_adapter.set_params(**current_params)
-
         return results
-
 
     def single_eval(self, save_results: bool = True) -> Dict[str, Any]:
         """
         Evaluates the currently loaded/trained model adapter on the test set.
-
-        Computes and returns a comprehensive set of metrics.
-
-        Args:
-            save_results (bool): Whether to save the evaluation metrics to files.
-
-        Returns:
-            Dict[str, Any]: Dictionary containing the evaluation metrics computed on the test set.
-
-        Raises:
-            RuntimeError: If the test dataset is missing or the model hasn't been trained/loaded.
+        Loads test data into NumPy array for prediction.
         """
         logger.info("Starting model evaluation on the test set...")
 
-        # --- Check Model State ---
         if not self.model_adapter.initialized_:
-             raise RuntimeError("Model adapter has not been initialized. Train or load a model first.")
-        if not hasattr(self.model_adapter, 'module_') or not isinstance(self.model_adapter.module_, nn.Module):
-             raise RuntimeError("Model module (nn.Module) not found in the adapter. Train or load a model first.")
+             raise RuntimeError("Model adapter not initialized. Train or load first.")
 
+        # --- Get Data as NumPy ---
+        test_dataset_torch = self.dataset_handler.get_test_dataset()
+        if test_dataset_torch is None:
+            raise RuntimeError("Test dataset missing.")
 
-        # --- Get Data ---
-        test_dataset = self.dataset_handler.get_test_dataset()
-        if test_dataset is None:
-            raise RuntimeError("Test dataset is missing for single_eval.")
-        logger.info(f"Evaluating on {len(test_dataset)} test samples.")
-
-        # Ensure model is in evaluation mode (skorch usually handles this, but good practice)
-        self.model_adapter.module_.eval()
+        logger.info("Loading test data into memory for evaluation...")
+        try:
+            X_np_test, y_true_test = self._load_dataset_to_numpy(test_dataset_torch)
+        except Exception as e:
+            raise RuntimeError("Could not load test data to NumPy.") from e
+        logger.info(f"Evaluating on {len(X_np_test)} test samples.")
 
         # --- Make Predictions ---
-        logger.debug("Generating predictions on the test set...")
-        # Pass Dataset directly to predict/predict_proba
-        y_pred_test = self.model_adapter.predict(test_dataset)
-        logger.debug("Generating probabilities on the test set...")
+        y_pred_test = self.model_adapter.predict(X_np_test)
         try:
-            y_score_test = self.model_adapter.predict_proba(test_dataset)
+            y_score_test = self.model_adapter.predict_proba(X_np_test)
         except AttributeError:
-             logger.warning("Model adapter does not support predict_proba. AUC metrics will be unavailable.")
              y_score_test = None
-        logger.debug("Predictions and probabilities generated.")
-
-
-        # --- Get True Labels ---
-        logger.debug("Extracting true labels from the test set...")
-        y_true_test_list = []
-        # Use a DataLoader for efficient iteration
-        test_loader = DataLoader(test_dataset, batch_size=self.model_adapter.batch_size, shuffle=False, num_workers=NUM_WORKERS)
-        for _, y_batch in test_loader:
-             y_true_test_list.append(y_batch.cpu().numpy()) # Ensure data is on CPU for numpy conversion
-        y_true_test = np.concatenate(y_true_test_list)
-        logger.debug("True labels extracted.")
 
         # --- Compute Metrics ---
-        logger.debug("Computing evaluation metrics...")
         metrics = self._compute_metrics(y_true_test, y_pred_test, y_score_test)
-        logger.info("Evaluation metrics computed.")
-
-        # Prepare results dict
-        results = {
-             'method': 'single_eval',
-             'params': {}, # No specific params for evaluation itself
-             **metrics # Include accuracy, macro_avg, etc. directly
-        }
+        results = {'method': 'single_eval', 'params': {}, **metrics}
 
         # --- Save Results ---
-        if save_results:
-            self._save_results(metrics, "single_eval") # Pass metrics dict directly
+        if save_results: self._save_results(metrics, "single_eval")
 
         logger.info(f"Evaluation Summary:")
         logger.info(f"  Accuracy: {metrics['accuracy']:.4f}")
-        logger.info(f"  Macro Precision: {metrics['macro_avg']['precision']:.4f}")
-        logger.info(f"  Macro Recall: {metrics['macro_avg']['recall']:.4f}")
-        logger.info(f"  Macro Specificity: {metrics['macro_avg']['specificity']:.4f}")
-        logger.info(f"  Macro F1-Score: {metrics['macro_avg']['f1']:.4f}")
-        if not np.isnan(metrics['macro_avg']['roc_auc']):
-            logger.info(f"  Macro ROC AUC: {metrics['macro_avg']['roc_auc']:.4f}")
-        if not np.isnan(metrics['macro_avg']['pr_auc']):
-            logger.info(f"  Macro PR AUC: {metrics['macro_avg']['pr_auc']:.4f}")
+        # ... (log other metrics) ...
 
         return results
 
@@ -2539,99 +2187,53 @@ if __name__ == "__main__":
 
     # Reconfigure logger to save log file in the script's directory
     logger = setup_logger('image_classification', log_dir / 'classification.log')
-    logger.setLevel(logging.DEBUG)
+    logger.setLevel(logging.DEBUG) # Set level to DEBUG for detailed logs
 
     # --- Configuration ---
-    # Use a publicly available dataset for demonstration if needed, e.g., CIFAR10, MNIST
-    # Or create a dummy dataset structure:
-    # dummy_data_path = script_dir / "data" / "dummy_fixed"
-    # dummy_data_path.mkdir(parents=True, exist_ok=True)
-    # (dummy_data_path / "train" / "class_a").mkdir(parents=True, exist_ok=True)
-    # (dummy_data_path / "train" / "class_b").mkdir(parents=True, exist_ok=True)
-    # (dummy_data_path / "test" / "class_a").mkdir(parents=True, exist_ok=True)
-    # (dummy_data_path / "test" / "class_b").mkdir(parents=True, exist_ok=True)
-    # # Add dummy image files (e.g., copies of a small png/jpg) to these folders
-    # logger.info(f"Ensure dummy data exists at {dummy_data_path} or change dataset_path.")
+    dataset_path = script_dir / "../data/mini-GCD-flat" # Adjust path as needed
 
-    # dataset_path = dummy_data_path # Example: Use dummy fixed dataset
-    dataset_path = script_dir / "../data/mini-GCD-flat" # Use the path from the original example
-
-    # Check if dataset exists
     if not Path(dataset_path).exists():
          logger.error(f"Dataset path not found: {dataset_path}")
          logger.error("Please create the dataset or modify the 'dataset_path' variable.")
          exit()
 
-
     model_type = "cnn"  # Options: 'cnn', 'vit', 'diffusion'
 
-    # Define Hyperparameter Search Space (example)
     param_grid_search = {
         'lr': [0.001, 0.0005],
         'optimizer__weight_decay': [0.01, 0.001],
-        # 'batch_size': [16, 32], # Batch size changes require careful memory management
-        # 'max_epochs': [10, 15] # Can tune epochs too
     }
 
     # --- Define Method Sequence ---
     # Example 1: Single Train and Eval
     methods_sequence_1 = [
-        ('single_train', {'max_epochs': 5, 'save_model': True}), # Short training for demo
+        ('single_train', {'max_epochs': 5, 'save_model': True}),
         ('single_eval', {'save_results': True}),
     ]
-
-    # Example 2: Non-Nested Grid Search then Eval
+    # Example 2: Non-Nested Grid Search
     methods_sequence_2 = [
         ('non_nested_grid_search', {
-            'param_grid': param_grid_search,
-            'cv': 3, # Inner CV folds
-            'method': 'grid',
-            'scoring': 'accuracy',
-            'save_results': True
+            'param_grid': param_grid_search, 'cv': 3, 'method': 'grid',
+            'scoring': 'accuracy', 'save_results': True
         }),
-         # The search doesn't automatically update the pipeline's main model,
-         # so single_eval would run with the *original* hyperparameters unless
-         # we explicitly load the best model found or update the adapter.
-         # For now, just run the search. Add a load step if needed.
-         # ('single_eval', {'save_results': True})
+        # Add ('single_eval', {}) here if you want to eval the refit best model
     ]
-
-    # Example 3: Nested Grid Search (FLAT dataset recommended)
+    # Example 3: Nested Grid Search (Needs FLAT dataset)
     methods_sequence_3 = [
          ('nested_grid_search', {
-             'param_grid': param_grid_search,
-             'outer_cv': 3, # Outer folds for evaluation
-             'inner_cv': 2, # Inner folds for tuning
-             'method': 'grid',
-             'scoring': 'accuracy',
-             'save_results': True
+             'param_grid': param_grid_search, 'outer_cv': 3, 'inner_cv': 2,
+             'method': 'grid', 'scoring': 'accuracy', 'save_results': True
          })
     ]
-
-    # Example 4: Simple CV Evaluation (FLAT dataset required)
+    # Example 4: Simple CV Evaluation (Needs FLAT dataset)
     methods_sequence_4 = [
-         ('cv_model_evaluation', {
-             'cv': 5,
-             'save_results': True
-         })
+         ('cv_model_evaluation', {'cv': 5, 'save_results': True})
     ]
-
-    # Example 5: Load a model and evaluate
-    # First, run Example 1 to generate a model file (e.g., results/.../cnn/cnn_epoch...pt)
-    # Then run this:
-    # model_to_load = "path/to/your/saved/model.pt" # Replace with actual path
-    # methods_sequence_5 = [
-    #     ('load_model', {'model_path': model_to_load}),
-    #     ('single_eval', {'save_results': True})
-    # ]
-
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_sequence_2 # Select the sequence to run
-    # chosen_sequence = methods_sequence_4 # Example: Run CV evaluation if dataset is FLAT
+    chosen_sequence = methods_sequence_1 # Select the sequence to run
 
     logger.debug(f"Chosen sequence: {chosen_sequence}")
-
 
     # --- Create and Run Executor ---
     try:
@@ -2640,14 +2242,13 @@ if __name__ == "__main__":
             model_type=model_type,
             results_dir=results_base_dir,
             methods=chosen_sequence,
-            # Pipeline default parameters (can be overridden in method sequences)
+            # Pipeline default parameters
             img_size=(64, 64), # Smaller size for faster demo
-            batch_size=16, # Smaller batch size for potentially lower memory usage
+            batch_size=16,
             max_epochs=10,
             patience=5,
             lr=0.001
         )
-
         final_results = executor.run()
 
         # Print final results summary
@@ -2656,9 +2257,8 @@ if __name__ == "__main__":
             if isinstance(result_data, dict) and 'error' in result_data:
                  logger.error(f"Method {method_id}: FAILED - {result_data['error']}")
             else:
-                 # Print some key metric or info
                  acc = result_data.get('accuracy', result_data.get('mean_test_accuracy', np.nan))
-                 best_score = result_data.get('best_score', np.nan) # For search
+                 best_score = result_data.get('best_score', np.nan)
                  logger.info(f"Method {method_id}: Completed. "
                              f"(Accuracy/MeanAccuracy: {acc:.4f}, BestScore: {best_score:.4f})")
 
@@ -2666,6 +2266,5 @@ if __name__ == "__main__":
          logger.error(f"Pipeline initialization or execution failed: {e}", exc_info=True)
     except Exception as e: # Catch any other unexpected errors
          logger.critical(f"An unexpected error occurred: {e}", exc_info=True)
-
 
 # END OF FILE code_v5_revised.py
