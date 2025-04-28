@@ -15,7 +15,7 @@ from pathlib import Path
 
 import torch.nn as nn
 # import torch.nn.functional as F # F not used directly, can be removed if desired
-from torch.utils.data import Dataset, DataLoader, random_split, Subset
+from torch.utils.data import Dataset, DataLoader, random_split, Subset, ConcatDataset
 from torchvision import transforms, datasets, models
 # from torchvision.transforms import v2 # v2 not explicitly used, stick to v1 for now
 
@@ -583,7 +583,8 @@ class ImageDatasetHandler:
             self.train_dataset, # This points to augmented or raw based on init flag
             batch_size=batch_size,
             shuffle=shuffle,
-            num_workers=NUM_WORKERS,
+            # num_workers=NUM_WORKERS,
+            num_workers=0,
             pin_memory=torch.cuda.is_available(),
             drop_last=True # Drop last incomplete batch for potentially smoother training
         )
@@ -606,7 +607,8 @@ class ImageDatasetHandler:
             self.val_dataset,
             batch_size=batch_size,
             shuffle=False, # No need to shuffle validation data
-            num_workers=NUM_WORKERS,
+            # num_workers=NUM_WORKERS,
+            num_workers=0,
             pin_memory=torch.cuda.is_available()
         )
 
@@ -630,7 +632,8 @@ class ImageDatasetHandler:
             self.test_dataset,
             batch_size=batch_size,
             shuffle=False, # No need to shuffle test data
-            num_workers=NUM_WORKERS,
+            # num_workers=NUM_WORKERS,
+            num_workers=0,
             pin_memory=torch.cuda.is_available()
         )
 
@@ -1003,38 +1006,116 @@ class SkorchModelAdapter(NeuralNetClassifier):
         """
         module_name = self.module_class.__name__ if self.module_class else "Model"
         logger.info(f"Starting training for {module_name}...")
-
-        # Skorch automatically handles validation data if train_split=None and X_val/y_val are passed.
-        # We will pass X_val/y_val in the `single_train` method.
-        # For CV methods, skorch works with the CV splitter automatically when train_split=None.
-
-        # Ensure y is None if X is a Dataset, as required by skorch >= 0.10
-        if isinstance(X, (Dataset, SkorchDataset)) and y is not None:
-            logger.warning("Input X is a Dataset, setting y=None as required by skorch.")
-            y = None
-
+        # No need to modify y here, get_split_datasets will handle it.
         super().fit(X, y, **fit_params)
         logger.info(f"Finished training for {module_name}.")
         return self
 
     def infer(self, x, **fit_params):
         """
-        Override the default infer method to filter out skorch-specific
-        fit_params (like X_val, y_val) before passing them to the
-        underlying module's forward method.
+        Perform inference. Assumes 'x' is a Tensor.
+        Filters fit_params and moves data to device.
         """
-        # Filter out known skorch validation parameters from fit_params
-        # that should not be passed to the module's forward method.
+        if not isinstance(x, torch.Tensor):
+             # Add a check here just in case, but the fix should be upstream
+             logger.error(f"[ERROR] Infer received non-Tensor input: {type(x)}. Upstream issue likely.")
+             raise TypeError(f"SkorchModelAdapter.infer received input of type {type(x)}, expected torch.Tensor.")
+
         module_forward_params = {
             k: v for k, v in fit_params.items()
-            if k not in ['X_val', 'y_val'] # Add other params to filter if needed
+            if k not in ['X_val', 'y_val']
+        }
+        # Move to device - x is confirmed to be a Tensor here
+        x = x.to(self.device)
+        return self.module_(x, **module_forward_params)
+
+    # Override validation_step for debugging and ensuring execution
+    def validation_step(self, batch, **fit_params):
+        """Perform a validation step."""
+        logger.debug("[DEBUG] Adapter.validation_step: Called.")
+        self.module_.eval()
+
+        # Move the whole batch structure to the device first
+        try:
+            batch = skorch.utils.to_device(batch, self.device)
+        except Exception as e:
+            # Catch potential errors if batch structure is very unexpected
+            logger.error(f"Failed to move batch to device in validation_step. Batch type: {type(batch)}. Error: {e}")
+            raise RuntimeError("Error moving batch to device in validation_step.") from e
+
+        # Now unpack the batch (which should contain tensors on the correct device)
+        try:
+            Xi, yi = batch
+            # Optional: Add explicit check that Xi is now a Tensor
+            if not isinstance(Xi, torch.Tensor):
+                raise TypeError(f"Xi unpacked from batch is not a Tensor, but {type(Xi)}")
+            if not isinstance(yi, torch.Tensor):
+                 logger.warning(f"yi unpacked from batch is not a Tensor ({type(yi)}). Loss calculation might fail.")
+
+        except (ValueError, TypeError) as e:
+             logger.error(f"Failed to unpack batch in validation_step after moving to device. Batch type: {type(batch)}. Error: {e}")
+             raise ValueError("Could not unpack batch in validation_step. Expected (Tensor, Tensor) structure.") from e
+
+        # Perform inference and loss calculation
+        with torch.no_grad():
+            # Pass the Tensor Xi to infer
+            y_pred = self.infer(Xi, **fit_params)
+            # Calculate loss using device-local tensors y_pred and yi
+            loss = self.get_loss(y_pred, yi, X=Xi, training=False)
+
+        logger.debug(f"[DEBUG] Adapter.validation_step: Loss calculated: {loss.item():.4f}")
+
+        return {
+            'loss': loss,
+            'y_pred': y_pred,
         }
 
-        # Ensure input tensor 'x' is on the same device as the module
-        x = x.to(self.device)
+    def get_split_datasets(self, X, y=None, **fit_params):
+        """
+        Override to handle explicit validation data passed via fit_params
+        when train_split is None AND to correctly call get_dataset when X
+        is a Dataset and y might be provided by sklearn CV.
+        """
+        # --- Process Training Data ---
+        # Decide how to call get_dataset based on the type of X
+        if isinstance(X, (Dataset, SkorchDataset)):
+            # If X is a Dataset, ignore the passed y (which came from sklearn splitter)
+            # because the Dataset X already contains features and targets.
+            if y is not None:
+                logger.debug("[DEBUG] Adapter.get_split_datasets: X is Dataset, ignoring provided y for training set.")
+            dataset_train = self.get_dataset(X, y=None) # Call with y=None
+        else:
+            # If X is not a Dataset (e.g., numpy array), pass y as is.
+            logger.debug("[DEBUG] Adapter.get_split_datasets: X is not Dataset, passing y for training set.")
+            dataset_train = self.get_dataset(X, y)
 
-        # Call the underlying module's forward pass with the filtered params
-        return self.module_(x, **module_forward_params)
+        # --- Process Validation Data (if provided via fit_params) ---
+        if 'X_val' in fit_params:
+            logger.debug("[DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing validation set.")
+            X_val = fit_params['X_val']
+            y_val = fit_params.get('y_val') # Get y_val if provided
+
+            # Decide how to call get_dataset based on the type of X_val
+            if isinstance(X_val, (Dataset, SkorchDataset)):
+                if y_val is not None:
+                    logger.debug("[DEBUG] Adapter.get_split_datasets: X_val is Dataset, ignoring provided y_val.")
+                dataset_valid = self.get_dataset(X_val, y=None) # Call with y=None
+            else:
+                logger.debug("[DEBUG] Adapter.get_split_datasets: X_val is not Dataset, passing y_val.")
+                dataset_valid = self.get_dataset(X_val, y_val)
+
+            return dataset_train, dataset_valid
+        else:
+            # --- Fallback if no X_val provided (use self.train_split logic) ---
+            logger.debug("[DEBUG] Adapter.get_split_datasets: No X_val in fit_params. Checking self.train_split.")
+            if not self.train_split:
+                logger.debug("[DEBUG] Adapter.get_split_datasets: self.train_split is None, returning None for validation dataset.")
+                return dataset_train, None
+            else:
+                # This block should ideally not be reached with our config, but keep for completeness
+                logger.warning("[DEBUG] Adapter.get_split_datasets: self.train_split is set, using it to split train data (unexpected).")
+                # The train_split callable receives the *original* X and y passed to get_split_datasets
+                return self.train_split(X, y, **fit_params)
 
     # No need to override predict, predict_proba, score etc. unless specific logic is needed.
     # Skorch handles passing Datasets to these methods correctly.
@@ -1119,6 +1200,7 @@ class ClassificationPipeline:
         self.model_adapter = SkorchModelAdapter(
             module=model_class,
             module__num_classes=self.dataset_handler.num_classes,
+            classes=np.arange(self.dataset_handler.num_classes),
             lr=lr,
             max_epochs=max_epochs,
             batch_size=batch_size,
@@ -1353,6 +1435,43 @@ class ClassificationPipeline:
         except Exception as e:
             logger.error(f"Failed to save summary results to CSV {csv_filepath}: {e}", exc_info=True)
 
+    def _get_targets_from_dataset(self, dataset: Dataset) -> np.ndarray:
+        """Extracts target labels from various PyTorch Dataset types."""
+        if isinstance(dataset, Subset):
+            # Get targets from the original dataset using subset indices
+            original_targets = np.array(dataset.dataset.targets)
+            return original_targets[dataset.indices]
+        elif isinstance(dataset, TransformedSubset):
+            # Use the custom targets property we added
+            return np.array(dataset.targets)
+        elif isinstance(dataset, datasets.ImageFolder):
+            # Directly access targets from ImageFolder
+            return np.array(dataset.targets)
+        elif isinstance(dataset, SkorchDataset):
+             # If it's already a SkorchDataset, access its 'y' attribute
+             if dataset.y is None:
+                 raise ValueError("SkorchDataset has y=None, cannot extract targets.")
+             return np.array(dataset.y)
+        elif isinstance(dataset, ConcatDataset):
+            # Handle ConcatDataset used in nested CV FIXED case
+            all_targets = []
+            for subset in dataset.datasets:
+                # Recursively call this function on each subset
+                all_targets.append(self._get_targets_from_dataset(subset))
+            return np.concatenate(all_targets)
+        else:
+            # Fallback: Try iterating (slow) - use only if necessary
+            logger.warning(f"Attempting slow target extraction by iterating dataset type {type(dataset)}")
+            targets = []
+            try:
+                 # Use a DataLoader to iterate efficiently if possible
+                 loader = DataLoader(dataset, batch_size=self.model_adapter.batch_size, shuffle=False, num_workers=0)
+                 for _, y_batch in loader:
+                     targets.append(y_batch.cpu().numpy())
+                 return np.concatenate(targets)
+            except Exception as e:
+                 logger.error(f"Failed to extract targets by iteration: {e}")
+                 raise TypeError(f"Unsupported dataset type for target extraction: {type(dataset)}")
 
     def non_nested_grid_search(self,
                                param_grid: Dict[str, List],
@@ -1433,8 +1552,18 @@ class ClassificationPipeline:
         # --- Run Search ---
         # Skorch/sklearn handle dataset input directly
         logger.info(f"Fitting {SearchClass.__name__} on the training dataset...")
-        # We pass the Dataset object directly. `y` should be None.
-        search.fit(train_dataset, y=None)
+
+        # Extract y_train explicitly for the splitter
+        try:
+            y_train = self._get_targets_from_dataset(train_dataset)
+            logger.debug(f"Extracted y_train with shape {y_train.shape} for CV splitter.")
+        except Exception as e:
+            logger.error(f"Failed to extract targets from training dataset: {e}", exc_info=True)
+            raise RuntimeError("Could not extract targets for CV splitting.") from e
+
+        # Pass both dataset (X) and targets (y) to fit
+        search.fit(train_dataset, y=y_train)
+
         logger.info(f"Search completed.")
 
         # --- Collect Results ---
@@ -1860,6 +1989,14 @@ class ClassificationPipeline:
         val_dataset = self.dataset_handler.get_val_dataset() # Can be None if val_split_ratio=0
         if train_dataset is None:
             raise RuntimeError("Training dataset is missing for single_train.")
+
+        logger.debug(f"Validation dataset type: {type(val_dataset)}, Is None: {val_dataset is None}")
+        if val_dataset:
+            logger.debug(f"Validation dataset length: {len(val_dataset)}")
+            # Check if it has targets attribute (useful for skorch)
+            has_targets = hasattr(val_dataset, 'targets') or (isinstance(val_dataset, Subset) and hasattr(val_dataset.dataset, 'targets'))
+            logger.debug(f"Validation dataset has targets attribute (potentially): {has_targets}")
+
         if val_dataset is None:
              logger.warning("No validation dataset available. Early stopping and best model saving based on validation loss will not work.")
              # Skorch might default to training loss if valid_loss isn't available
@@ -1891,8 +2028,9 @@ class ClassificationPipeline:
         # --- Prepare Fit Parameters (Validation Data) ---
         fit_params = {}
         if val_dataset:
-            # Skorch expects validation data as X_val, y_val when train_split=None
-            # Since our val_dataset yields (data, target), we pass it as X_val and set y_val=None
+            # Pass the original validation Subset directly.
+            # The get_split_datasets override in SkorchModelAdapter will handle it.
+            logger.debug("Passing validation Subset directly as X_val.")
             fit_params['X_val'] = val_dataset
             fit_params['y_val'] = None
 
@@ -1904,31 +2042,59 @@ class ClassificationPipeline:
 
         # Find the best epoch based on validation loss (if available)
         best_epoch_info = {}
-        valid_loss_key = 'valid_loss' # Default monitor
-        # Try to get the actual monitor used by EarlyStopping if possible
+        valid_loss_key = 'valid_loss'
         es_callback = dict(self.model_adapter.callbacks_).get('early_stopping')
         if es_callback:
-            valid_loss_key = es_callback.monitor
+            # Ensure monitor key actually exists before assigning
+            monitor_key = getattr(es_callback, 'monitor', 'valid_loss')
+            if monitor_key in history[0]:
+                 valid_loss_key = monitor_key
+            else:
+                 logger.warning(f"Early stopping monitor key '{monitor_key}' not found in history[0]. Defaulting check to 'valid_loss'. History keys: {list(history[0].keys())}")
 
-        if val_dataset and valid_loss_key in history[0]: # Check if key exists in history items
-            best_epoch_idx = np.argmin([epoch_hist[valid_loss_key] for epoch_hist in history])
-            best_epoch_hist = history[best_epoch_idx]
-            best_epoch_info = {
-                'best_epoch': best_epoch_hist.get('epoch', best_epoch_idx + 1), # Epoch number
-                'best_valid_loss': float(best_epoch_hist.get(valid_loss_key, np.nan)),
-                'train_loss_at_best': float(best_epoch_hist.get('train_loss', np.nan)),
-            }
-            logger.info(f"Training finished. Best validation performance at Epoch {best_epoch_info['best_epoch']} "
-                        f"({valid_loss_key}={best_epoch_info['best_valid_loss']:.4f})")
-        else:
-            # Fallback if no validation data or key not found
+
+        # Check if the key exists in the history *before* trying to find the minimum
+        validation_was_run = valid_loss_key in history[0]
+
+        if validation_was_run:
+            try:
+                # Find the best epoch based on the monitored validation metric
+                scores = [epoch_hist[valid_loss_key] for epoch_hist in history]
+                # Determine if lower is better based on the key name
+                lower_is_better = valid_loss_key.endswith('_loss')
+                best_epoch_idx = np.argmin(scores) if lower_is_better else np.argmax(scores)
+
+                # Access history as a list using the integer index
+                # Convert numpy int to standard Python int for safety
+                best_epoch_hist = history[int(best_epoch_idx)]
+
+                # Calculate epoch number from the index (0-based index -> 1-based epoch)
+                actual_best_epoch_num = int(best_epoch_idx) + 1
+
+                best_epoch_info = {
+                    'best_epoch': actual_best_epoch_num,  # Use calculated epoch number
+                    'best_valid_metric_value': float(best_epoch_hist.get(valid_loss_key, np.nan)),
+                    'valid_metric_name': valid_loss_key,
+                    'train_loss_at_best': float(best_epoch_hist.get('train_loss', np.nan)),
+                }
+
+                logger.info(f"Training finished. Best validation performance at Epoch {best_epoch_info['best_epoch']} "
+                            f"({valid_loss_key}={best_epoch_info['best_valid_metric_value']:.4f})")
+            except Exception as e:
+                 logger.error(f"Error processing history to find best epoch: {e}", exc_info=True)
+                 # Fallback if history processing fails
+                 validation_was_run = False # Treat as if validation didn't happen for reporting
+
+        if not validation_was_run:
+            # Fallback if no validation data or key not found or history processing error
             last_epoch_hist = history[-1]
             best_epoch_info = {
                 'best_epoch': last_epoch_hist.get('epoch', len(history)),
-                'best_valid_loss': np.nan, # Indicate validation loss wasn't used/available
+                'best_valid_metric_value': np.nan, # Indicate validation metric wasn't used/available
+                'valid_metric_name': valid_loss_key, # Still record intended metric
                 'train_loss_at_best': float(last_epoch_hist.get('train_loss', np.nan)),
             }
-            logger.warning("Could not determine best epoch based on validation loss. Reporting last epoch stats.")
+            logger.warning(f"Could not determine best epoch based on validation metric '{valid_loss_key}'. Reporting last epoch stats.")
             logger.info(f"Training finished at Epoch {best_epoch_info['best_epoch']} "
                         f"(Train Loss={best_epoch_info['train_loss_at_best']:.4f})")
 
@@ -1951,8 +2117,8 @@ class ClassificationPipeline:
         if save_model:
             timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
             # Include key performance metric in filename
-            val_loss_str = f"vl{results['best_valid_loss']:.4f}" if not np.isnan(results['best_valid_loss']) else "no_val"
-            model_filename = f"{self.model_type}_epoch{results['best_epoch']}_{val_loss_str}_{timestamp}.pt"
+            val_metric_str = f"val_{results['valid_metric_name'].replace('_','-')}{results['best_valid_metric_value']:.4f}" if not np.isnan(results['best_valid_metric_value']) else "no_val"
+            model_filename = f"{self.model_type}_epoch{results['best_epoch']}_{val_metric_str}_{timestamp}.pt"
             model_path = self.results_dir / model_filename
             try:
                 # Save the state dict of the underlying PyTorch module
@@ -2302,6 +2468,7 @@ if __name__ == "__main__":
 
     # Reconfigure logger to save log file in the script's directory
     logger = setup_logger('image_classification', log_dir / 'classification.log')
+    logger.setLevel(logging.DEBUG)
 
     # --- Configuration ---
     # Use a publicly available dataset for demonstration if needed, e.g., CIFAR10, MNIST
@@ -2389,8 +2556,10 @@ if __name__ == "__main__":
 
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_sequence_1 # Select the sequence to run
+    chosen_sequence = methods_sequence_2 # Select the sequence to run
     # chosen_sequence = methods_sequence_4 # Example: Run CV evaluation if dataset is FLAT
+
+    logger.debug(f"Chosen sequence: {chosen_sequence}")
 
 
     # --- Create and Run Executor ---
