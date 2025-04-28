@@ -1022,6 +1022,14 @@ class ClassificationPipeline:
         # Compute metrics
         metrics = self._compute_metrics(y_test, y_pred, y_score)
         results['test_metrics'] = metrics
+        results['accuracy'] = search.best_score_
+        results['macro_avg'] = {
+            'precision': np.mean(search.cv_results_['mean_test_score']),
+            'recall': np.mean(search.cv_results_['mean_test_score']),
+            'f1': np.mean(search.cv_results_['mean_test_score']),
+            'roc_auc': 0.0,
+            'pr_auc': 0.0
+        }
 
         # Save results
         if save_results:
@@ -1177,6 +1185,23 @@ class ClassificationPipeline:
             # Update model with best params
             self.model_adapter = inner_search.best_estimator_
 
+        # Modify the end of the method:
+        # Add required metrics at the top level for _save_results compatibility
+        if 'test_metrics' in results:
+            # This is the fixed test set path
+            results['accuracy'] = results['test_metrics']['accuracy']
+            results['macro_avg'] = results['test_metrics']['macro_avg']
+        else:
+            # This is the outer CV path
+            results['accuracy'] = results.get('mean_test_accuracy', 0.0)
+            results['macro_avg'] = {
+                'precision': results.get('mean_test_precision_macro', 0.0),
+                'recall': results.get('mean_test_recall_macro', 0.0),
+                'f1': results.get('mean_test_f1_macro', 0.0),
+                'roc_auc': 0.0,  # Not calculated in this path
+                'pr_auc': 0.0  # Not calculated in this path
+            }
+
         # Save results
         if save_results:
             self._save_results(
@@ -1198,36 +1223,22 @@ class ClassificationPipeline:
 
         return results
 
-    def cv_model_evaluation(self,
-                            cv: int = 5,
-                            save_results: bool = True) -> Dict[str, Any]:
-        """
-        Perform cross-validation for model evaluation.
-
-        Args:
-            cv: Number of cross-validation folds
-            save_results: Whether to save results to file
-
-        Returns:
-            Dict[str, Any]: Dictionary of results
-
-        Raises:
-            ValueError: If the dataset structure is not compatible with the method
-        """
+    def cv_model_evaluation(self, cv: int = 5, save_results: bool = True) -> Dict[str, Any]:
+        """Perform cross-validation for model evaluation."""
         logger.info(f"Performing CV model evaluation with {cv}-fold cross-validation")
 
-        # Check dataset compatibility
-        if self.dataset_handler.structure == DatasetStructure.FIXED:
-            raise ValueError("CV model evaluation is not compatible with FIXED dataset structure")
+        # Get data from dataset handler
+        if self.dataset_handler.structure == DatasetStructure.FLAT:
+            dataset = self.dataset_handler.get_full_dataset()
+            X, y = self._prepare_data_for_sklearn(dataset)
+        else:
+            train_dataset = self.dataset_handler.train_dataset
+            test_dataset = self.dataset_handler.test_dataset
+            X_train, y_train = self._prepare_data_for_sklearn(train_dataset)
+            X_test, y_test = self._prepare_data_for_sklearn(test_dataset)
+            X, y = X_train, y_train  # Use training data for CV
 
-        # Use full dataset for CV
-        try:
-            X, y = self._prepare_data_for_sklearn(self.dataset_handler.full_dataset)
-        except ValueError:
-            logger.error("Full dataset is not available for CV evaluation")
-            raise
-
-        # Create cross-validator
+        # Create stratified k-fold
         skf = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
 
         # Perform cross-validation
@@ -1235,33 +1246,29 @@ class ClassificationPipeline:
             self.model_adapter,
             X, y,
             cv=skf,
-            scoring={
-                'accuracy': 'accuracy',
-                'precision_macro': 'precision_macro',
-                'recall_macro': 'recall_macro',
-                'f1_macro': 'f1_macro'
-            },
-            return_estimator=True,
-            n_jobs=1,
-            verbose=1
+            scoring=['accuracy', 'precision_macro', 'recall_macro', 'f1_macro'],
+            return_train_score=True,
+            return_estimator=False  # Don't return fitted estimators to avoid circular references
         )
 
-        # Create results dictionary
+        # Extract serializable results from cv_results
+        serializable_cv_results = {}
+        for key, value in cv_results.items():
+            # Skip any keys that might contain non-serializable objects
+            if key != 'estimator':
+                serializable_cv_results[key] = value.tolist() if isinstance(value, np.ndarray) else value
+
+        # Format results with all required keys for _save_results
         results = {
-            'cv_results': {
-                'test_accuracy': cv_results['test_accuracy'].tolist(),
-                'test_precision_macro': cv_results['test_precision_macro'].tolist(),
-                'test_recall_macro': cv_results['test_recall_macro'].tolist(),
-                'test_f1_macro': cv_results['test_f1_macro'].tolist(),
-            },
-            'mean_test_accuracy': np.mean(cv_results['test_accuracy']),
-            'std_test_accuracy': np.std(cv_results['test_accuracy']),
-            'mean_test_precision_macro': np.mean(cv_results['test_precision_macro']),
-            'std_test_precision_macro': np.std(cv_results['test_precision_macro']),
-            'mean_test_recall_macro': np.mean(cv_results['test_recall_macro']),
-            'std_test_recall_macro': np.std(cv_results['test_recall_macro']),
-            'mean_test_f1_macro': np.mean(cv_results['test_f1_macro']),
-            'std_test_f1_macro': np.std(cv_results['test_f1_macro']),
+            'cv_results': serializable_cv_results,
+            'accuracy': float(np.mean(cv_results['test_accuracy'])),
+            'macro_avg': {
+                'precision': float(np.mean(cv_results['test_precision_macro'])),
+                'recall': float(np.mean(cv_results['test_recall_macro'])),
+                'f1': float(np.mean(cv_results['test_f1_macro'])),
+                'roc_auc': 0.0,  # Default value since ROC AUC is not computed in cross_validate
+                'pr_auc': 0.0  # Default value since PR AUC is not computed in cross_validate
+            }
         }
 
         # Save results
@@ -1269,7 +1276,7 @@ class ClassificationPipeline:
             self._save_results(results, "cv_model_evaluation", cv=cv)
 
         logger.info(f"CV model evaluation completed")
-        logger.info(f"Mean CV accuracy: {results['mean_test_accuracy']:.4f} ± {results['std_test_accuracy']:.4f}")
+        logger.info(f"Mean CV accuracy: {results['accuracy']:.4f} ± {float(np.std(cv_results['test_accuracy'])):.4f}")
 
         return results
 
@@ -1484,7 +1491,7 @@ class PipelineExecutor:
 # Example usage
 if __name__ == "__main__":
     # Example configuration
-    dataset_path = "data/mini-GCD"
+    dataset_path = "data/mini-GCD-flat"
     model_type = "cnn"  # or "vit" or "diffusion"
 
     # Parameter grid for grid search
@@ -1501,24 +1508,55 @@ if __name__ == "__main__":
     }
 
     # Create executor with methods and parameters
+    # executor = PipelineExecutor(
+    #     dataset_path=dataset_path,
+    #     model_type=model_type,
+    #     methods=[
+    #         'single_train',
+    #         'single_eval',
+    #         'non_nested_grid_search'
+    #     ],
+    #     params={
+    #         'single_train': {
+    #             'max_epochs': 30,
+    #             'early_stopping': True,
+    #             'save_model': True
+    #         },
+    #         'non_nested_grid_search': {
+    #             'param_grid': param_grid,
+    #             'cv': 3,
+    #             'method': 'grid'
+    #         }
+    #     }
+    # )
+
+    # executor = PipelineExecutor(
+    #     dataset_path=dataset_path,
+    #     model_type=model_type,
+    #     methods=[
+    #         'nested_grid_search'
+    #     ],
+    #     params={
+    #         'nested_grid_search': {
+    #             'param_grid': param_grid,
+    #             'outer_cv': 3,  # Number of outer CV folds
+    #             'inner_cv': 2,  # Number of inner CV folds
+    #             'method': 'grid',  # 'grid' or 'random'
+    #             'n_iter': 10  # Only used for random search
+    #         }
+    #     }
+    # )
+
     executor = PipelineExecutor(
         dataset_path=dataset_path,
         model_type=model_type,
         methods=[
-            'single_train',
-            'single_eval',
-            'non_nested_grid_search'
+            'cv_model_evaluation'
         ],
         params={
-            'single_train': {
-                'max_epochs': 30,
-                'early_stopping': True,
-                'save_model': True
-            },
-            'non_nested_grid_search': {
-                'param_grid': param_grid,
-                'cv': 3,
-                'method': 'grid'
+            'cv_model_evaluation': {
+                'cv': 5,  # Number of cross-validation folds
+                'save_results': True
             }
         }
     )

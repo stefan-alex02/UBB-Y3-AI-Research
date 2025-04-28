@@ -1,0 +1,327 @@
+2025-04-28 03:03:33 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 03:03:33 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 03:03:33 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 03:03:33 [INFO] ℹ️   Model Type: cnn
+2025-04-28 03:03:33 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 03:03:33 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 03:03:33 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 03:03:33 [ERROR] ❗ Failed to load dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 307, in __init__
+    self._load_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 369, in _load_dataset
+    self._load_flat_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 442, in _load_flat_dataset
+    self.val_dataset = Subset(full_dataset_obj, val_indices) if val_indices else None
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+2025-04-28 03:03:33 [ERROR] ❗ Pipeline initialization or execution failed: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2379, in <module>
+    executor = PipelineExecutor(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2163, in __init__
+    self.pipeline = ClassificationPipeline(
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1082, in __init__
+    self.dataset_handler = ImageDatasetHandler(
+                           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 307, in __init__
+    self._load_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 369, in _load_dataset
+    self._load_flat_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 442, in _load_flat_dataset
+    self.val_dataset = Subset(full_dataset_obj, val_indices) if val_indices else None
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+2025-04-28 03:07:03 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 03:07:03 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 03:07:03 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 03:07:03 [INFO] ℹ️   Model Type: cnn
+2025-04-28 03:07:03 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 03:07:03 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 03:07:03 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 03:07:03 [ERROR] ❗ Failed to load dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 322, in __init__
+    self._load_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 384, in _load_dataset
+    self._load_flat_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 457, in _load_flat_dataset
+    self.val_dataset = Subset(full_dataset_obj, val_indices) if val_indices else None
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+2025-04-28 03:07:03 [ERROR] ❗ Pipeline initialization or execution failed: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2394, in <module>
+    executor = PipelineExecutor(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2178, in __init__
+    self.pipeline = ClassificationPipeline(
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1097, in __init__
+    self.dataset_handler = ImageDatasetHandler(
+                           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 322, in __init__
+    self._load_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 384, in _load_dataset
+    self._load_flat_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 457, in _load_flat_dataset
+    self.val_dataset = Subset(full_dataset_obj, val_indices) if val_indices else None
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+2025-04-28 03:07:38 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 03:07:38 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 03:07:38 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 03:07:38 [INFO] ℹ️   Model Type: cnn
+2025-04-28 03:07:38 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 03:07:38 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 03:07:38 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 03:07:38 [ERROR] ❗ Failed to load dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 307, in __init__
+    self._load_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 369, in _load_dataset
+    self._load_flat_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 442, in _load_flat_dataset
+    self.val_dataset = Subset(full_dataset_obj, val_indices) if val_indices else None
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+2025-04-28 03:07:38 [ERROR] ❗ Pipeline initialization or execution failed: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2379, in <module>
+    executor = PipelineExecutor(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2163, in __init__
+    self.pipeline = ClassificationPipeline(
+                    ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1082, in __init__
+    self.dataset_handler = ImageDatasetHandler(
+                           ^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 307, in __init__
+    self._load_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 369, in _load_dataset
+    self._load_flat_dataset()
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 442, in _load_flat_dataset
+    self.val_dataset = Subset(full_dataset_obj, val_indices) if val_indices else None
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: The truth value of an array with more than one element is ambiguous. Use a.any() or a.all()
+2025-04-28 03:14:49 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 03:14:49 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 03:14:49 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 03:14:49 [INFO] ℹ️   Model Type: cnn
+2025-04-28 03:14:49 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 03:14:49 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 03:14:49 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 03:14:49 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 03:14:49 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 03:14:49 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 03:14:49 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 03:14:49 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 03:14:49 [INFO] ℹ️ Executor configured to run methods: single_train, single_eval
+2025-04-28 03:14:49 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 03:14:49 [INFO] ℹ️ --- Running Method 1/2: single_train ---
+2025-04-28 03:14:49 [INFO] ℹ️ Starting single training run...
+2025-04-28 03:14:49 [INFO] ℹ️ Training on 277 samples, validating on 70 samples.
+2025-04-28 03:14:49 [INFO] ℹ️ Overriding model adapter parameters for this run: {'max_epochs': 5}
+2025-04-28 03:14:49 [INFO] ℹ️ Starting training for SimpleCNN...
+2025-04-28 03:14:49 [ERROR] ❗ !!! Method 'single_train' failed at step 1: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2259, in run
+    result = pipeline_method(**params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1881, in single_train
+    self.model_adapter.fit(train_dataset, y=None, **fit_params)
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1016, in fit
+    super().fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1023, in train_step_single
+    y_pred = self.infer(Xi, **fit_params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1551, in infer
+    return self.module_(x, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+TypeError: SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-28 03:14:49 [ERROR] ❗ !!! Pipeline execution stopped due to error.
+2025-04-28 03:14:49 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 03:14:49 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 03:14:49 [ERROR] ❗ Method single_train_0: FAILED - SimpleCNN.forward() got an unexpected keyword argument 'X_val'
+2025-04-28 03:16:36 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 03:16:36 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 03:16:36 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 03:16:36 [INFO] ℹ️   Model Type: cnn
+2025-04-28 03:16:36 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 03:16:36 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 03:16:36 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 03:16:36 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 03:16:36 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 03:16:36 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 03:16:36 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 03:16:36 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 03:16:36 [INFO] ℹ️ Executor configured to run methods: single_train, single_eval
+2025-04-28 03:16:36 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 03:16:36 [INFO] ℹ️ --- Running Method 1/2: single_train ---
+2025-04-28 03:16:36 [INFO] ℹ️ Starting single training run...
+2025-04-28 03:16:36 [INFO] ℹ️ Training on 277 samples, validating on 70 samples.
+2025-04-28 03:16:36 [INFO] ℹ️ Overriding model adapter parameters for this run: {'max_epochs': 5}
+2025-04-28 03:16:36 [INFO] ℹ️ Starting training for SimpleCNN...
+2025-04-28 03:16:37 [ERROR] ❗ !!! Method 'single_train' failed at step 1: Input type (torch.FloatTensor) and weight type (torch.cuda.FloatTensor) should be the same or input should be a MKLDNN tensor and weight is a dense tensor
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2274, in run
+    result = pipeline_method(**params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1896, in single_train
+    self.model_adapter.fit(train_dataset, y=None, **fit_params)
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1016, in fit
+    super().fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1220, in fit_loop
+    self.run_single_epoch(iterator_train, training=True, prefix="train",
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1256, in run_single_epoch
+    step = step_fn(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1135, in train_step
+    self._step_optimizer(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1090, in _step_optimizer
+    optimizer.step(step_fn)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 487, in wrapper
+    out = func(*args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\optimizer.py", line 91, in _use_grad
+    ret = func(self, *args, **kwargs)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\optim\adamw.py", line 197, in step
+    loss = closure()
+           ^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1124, in step_fn
+    step = self.train_step_single(batch, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1023, in train_step_single
+    y_pred = self.infer(Xi, **fit_params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1033, in infer
+    return self.module_(x, **module_forward_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 734, in forward
+    x = self.features(x)
+        ^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\container.py", line 250, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1736, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\module.py", line 1747, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\conv.py", line 554, in forward
+    return self._conv_forward(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\torch\nn\modules\conv.py", line 549, in _conv_forward
+    return F.conv2d(
+           ^^^^^^^^^
+RuntimeError: Input type (torch.FloatTensor) and weight type (torch.cuda.FloatTensor) should be the same or input should be a MKLDNN tensor and weight is a dense tensor
+2025-04-28 03:16:37 [ERROR] ❗ !!! Pipeline execution stopped due to error.
+2025-04-28 03:16:37 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 03:16:37 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 03:16:37 [ERROR] ❗ Method single_train_0: FAILED - Input type (torch.FloatTensor) and weight type (torch.cuda.FloatTensor) should be the same or input should be a MKLDNN tensor and weight is a dense tensor
+2025-04-28 03:18:49 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 03:18:49 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 03:18:49 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 03:18:49 [INFO] ℹ️   Model Type: cnn
+2025-04-28 03:18:49 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 03:18:49 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 03:18:49 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 03:18:49 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 03:18:49 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 03:18:49 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 03:18:49 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 03:18:49 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 03:18:49 [INFO] ℹ️ Executor configured to run methods: single_train, single_eval
+2025-04-28 03:18:49 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 03:18:49 [INFO] ℹ️ --- Running Method 1/2: single_train ---
+2025-04-28 03:18:49 [INFO] ℹ️ Starting single training run...
+2025-04-28 03:18:49 [INFO] ℹ️ Training on 277 samples, validating on 70 samples.
+2025-04-28 03:18:49 [INFO] ℹ️ Overriding model adapter parameters for this run: {'max_epochs': 5}
+2025-04-28 03:18:49 [INFO] ℹ️ Starting training for SimpleCNN...
+2025-04-28 03:18:51 [ERROR] ❗ !!! Method 'single_train' failed at step 1: "Key 'valid_loss' was not found in history."
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2278, in run
+    result = pipeline_method(**params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1900, in single_train
+    self.model_adapter.fit(train_dataset, y=None, **fit_params)
+  File "C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1016, in fit
+    super().fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1226, in fit_loop
+    self.notify("on_epoch_end", **on_epoch_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 416, in notify
+    getattr(cb, method_name)(self, **cb_kwargs)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\callbacks\training.py", line 429, in on_epoch_end
+    current_score = net.history[-1, self.monitor]
+                    ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\history.py", line 291, in __getitem__
+    raise KeyError(keyerror_msg.format(key))
+KeyError: "Key 'valid_loss' was not found in history."
+2025-04-28 03:18:51 [ERROR] ❗ !!! Pipeline execution stopped due to error.
+2025-04-28 03:18:51 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 03:18:51 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 03:18:51 [ERROR] ❗ Method single_train_0: FAILED - "Key 'valid_loss' was not found in history."
