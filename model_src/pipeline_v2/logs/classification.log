@@ -8714,3 +8714,586 @@ ValueError: X and y have inconsistent lengths.
 2025-04-28 07:02:35 [INFO] ℹ️ --- Final Execution Results ---
 2025-04-28 07:02:35 [INFO] ℹ️ Method single_train_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
 2025-04-28 07:02:35 [INFO] ℹ️ Method single_eval_1: Completed. (Accuracy/MeanAccuracy: 0.6207, BestScore: nan)
+2025-04-28 14:07:51 [DEBUG] 🔍 Chosen sequence: [('single_train', {'max_epochs': 5, 'save_model': True}), ('single_eval', {'save_results': True})]
+2025-04-28 14:07:51 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 14:07:51 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 14:07:51 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 14:07:51 [INFO] ℹ️   Model Type: cnn
+2025-04-28 14:07:51 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 14:07:51 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 14:07:51 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 14:07:51 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 14:07:51 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 14:07:51 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 14:07:51 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 14:07:51 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 14:07:51 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 14:07:51 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 14:07:51 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 14:07:51 [DEBUG] 🔍 Method validation successful.
+2025-04-28 14:07:51 [INFO] ℹ️ Executor configured to run methods: single_train, single_eval
+2025-04-28 14:07:51 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 14:07:51 [INFO] ℹ️ --- Running Method 1/2: single_train ---
+2025-04-28 14:07:51 [DEBUG] 🔍 Parameters for single_train: {'max_epochs': 5, 'save_model': True}
+2025-04-28 14:07:51 [INFO] ℹ️ Starting single training run...
+2025-04-28 14:07:51 [INFO] ℹ️ Combining train (277) and validation (70) sets for skorch internal split (total: 347 samples).
+2025-04-28 14:07:51 [INFO] ℹ️ Overriding model adapter parameters for this run: {'max_epochs': 5}
+2025-04-28 14:07:51 [DEBUG] 🔍 Extracted combined targets (shape=(347,)) for skorch fit.
+2025-04-28 14:07:51 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:08:12 [INFO] ℹ️ Training finished. Best validation performance at Epoch 5 (valid_loss=1.2666)
+2025-04-28 14:08:12 [INFO] ℹ️ Model state_dict saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cnn_epoch5_val_valid-loss1.2666_20250428_140812.pt
+2025-04-28 14:08:12 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_train_batch_size=16_early_stopping_patience=5_lr=0.001_max_epochs=5_20250428_140812.json
+2025-04-28 14:08:12 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-28 14:08:12 [INFO] ℹ️ --- Method single_train completed successfully ---
+2025-04-28 14:08:12 [INFO] ℹ️ --- Running Method 2/2: single_eval ---
+2025-04-28 14:08:12 [DEBUG] 🔍 Parameters for single_eval: {'save_results': True}
+2025-04-28 14:08:12 [INFO] ℹ️ Starting model evaluation on the test set...
+2025-04-28 14:08:12 [INFO] ℹ️ Evaluating on 87 test samples.
+2025-04-28 14:08:12 [DEBUG] 🔍 Generating predictions on the test set...
+2025-04-28 14:08:13 [DEBUG] 🔍 Generating probabilities on the test set...
+2025-04-28 14:08:14 [DEBUG] 🔍 Predictions and probabilities generated.
+2025-04-28 14:08:14 [DEBUG] 🔍 Extracting true labels from the test set...
+2025-04-28 14:09:35 [DEBUG] 🔍 True labels extracted.
+2025-04-28 14:09:35 [DEBUG] 🔍 Computing evaluation metrics...
+2025-04-28 14:09:35 [DEBUG] 🔍 Computed Metrics: Acc=0.5517, Macro F1=0.5087, Macro ROC AUC=0.8724, Macro PR AUC=0.5878
+2025-04-28 14:09:35 [INFO] ℹ️ Evaluation metrics computed.
+2025-04-28 14:09:35 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_eval_20250428_140935.json
+2025-04-28 14:09:35 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-28 14:09:35 [INFO] ℹ️ Evaluation Summary:
+2025-04-28 14:09:35 [INFO] ℹ️   Accuracy: 0.5517
+2025-04-28 14:09:35 [INFO] ℹ️   Macro Precision: 0.6451
+2025-04-28 14:09:35 [INFO] ℹ️   Macro Recall: 0.5549
+2025-04-28 14:09:35 [INFO] ℹ️   Macro Specificity: 0.9252
+2025-04-28 14:09:35 [INFO] ℹ️   Macro F1-Score: 0.5087
+2025-04-28 14:09:35 [INFO] ℹ️   Macro ROC AUC: 0.8724
+2025-04-28 14:09:35 [INFO] ℹ️   Macro PR AUC: 0.5878
+2025-04-28 14:09:35 [INFO] ℹ️ --- Method single_eval completed successfully ---
+2025-04-28 14:09:35 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 14:09:35 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 14:09:35 [INFO] ℹ️ Method single_train_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-04-28 14:09:35 [INFO] ℹ️ Method single_eval_1: Completed. (Accuracy/MeanAccuracy: 0.5517, BestScore: nan)
+2025-04-28 14:09:55 [DEBUG] 🔍 Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-04-28 14:09:55 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 14:09:55 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 14:09:55 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 14:09:55 [INFO] ℹ️   Model Type: cnn
+2025-04-28 14:09:55 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 14:09:55 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 14:09:55 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 14:09:55 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 14:09:55 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 14:09:55 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 14:09:55 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 14:09:55 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 14:09:55 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 14:09:55 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 14:09:55 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 14:09:55 [DEBUG] 🔍 Method validation successful.
+2025-04-28 14:09:55 [INFO] ℹ️ Executor configured to run methods: non_nested_grid_search
+2025-04-28 14:09:55 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 14:09:55 [INFO] ℹ️ --- Running Method 1/1: non_nested_grid_search ---
+2025-04-28 14:09:55 [DEBUG] 🔍 Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-04-28 14:09:55 [INFO] ℹ️ Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-04-28 14:09:55 [INFO] ℹ️ Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-04-28 14:09:55 [INFO] ℹ️ Scoring Metric: accuracy
+2025-04-28 14:09:55 [INFO] ℹ️ Fitting GridSearchCV on the training dataset...
+2025-04-28 14:09:55 [DEBUG] 🔍 Extracted y_train with shape (277,) for CV splitter.
+2025-04-28 14:09:55 [INFO] ℹ️ Fitting GridSearchCV on the training dataset...
+2025-04-28 14:09:55 [DEBUG] 🔍 Extracted y_train with shape (277,) for CV splitter.
+2025-04-28 14:09:57 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:09:58 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:00 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:01 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:03 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:04 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:06 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:07 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:08 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:10 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:11 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:13 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:10:13 [ERROR] ❗ !!! Method 'non_nested_grid_search' failed at step 1: 
+All the 12 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+12 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1206, in fit_loop
+    dataset_train, dataset_valid = self.get_split_datasets(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1791, in get_split_datasets
+    dataset = self.get_dataset(X, y)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 163, in __init__
+    raise ValueError("X and y have inconsistent lengths.")
+ValueError: X and y have inconsistent lengths.
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2513, in run
+    result = pipeline_method(**params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1631, in non_nested_grid_search
+    search.fit(train_dataset, y=y_train)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\base.py", line 1389, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_search.py", line 1024, in fit
+    self._run_search(evaluate_candidates)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_search.py", line 1571, in _run_search
+    evaluate_candidates(ParameterGrid(self.param_grid))
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_search.py", line 1001, in evaluate_candidates
+    _warn_or_raise_about_fit_failures(out, self.error_score)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 517, in _warn_or_raise_about_fit_failures
+    raise ValueError(all_fits_failed_message)
+ValueError: 
+All the 12 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+12 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1206, in fit_loop
+    dataset_train, dataset_valid = self.get_split_datasets(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1791, in get_split_datasets
+    dataset = self.get_dataset(X, y)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 163, in __init__
+    raise ValueError("X and y have inconsistent lengths.")
+ValueError: X and y have inconsistent lengths.
+
+2025-04-28 14:10:13 [ERROR] ❗ !!! Pipeline execution stopped due to error.
+2025-04-28 14:10:13 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 14:10:13 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 14:10:13 [ERROR] ❗ Method non_nested_grid_search_0: FAILED - 
+All the 12 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+12 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1206, in fit_loop
+    dataset_train, dataset_valid = self.get_split_datasets(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1791, in get_split_datasets
+    dataset = self.get_dataset(X, y)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 163, in __init__
+    raise ValueError("X and y have inconsistent lengths.")
+ValueError: X and y have inconsistent lengths.
+
+2025-04-28 14:16:29 [DEBUG] 🔍 Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-04-28 14:16:29 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 14:16:29 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 14:16:29 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 14:16:29 [INFO] ℹ️   Model Type: cnn
+2025-04-28 14:16:29 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 14:16:29 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 14:16:29 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 14:16:29 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 14:16:29 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 14:16:29 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 14:16:29 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 14:16:29 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 14:16:29 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 14:16:29 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 14:16:29 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 14:16:29 [DEBUG] 🔍 Method validation successful.
+2025-04-28 14:16:29 [INFO] ℹ️ Executor configured to run methods: non_nested_grid_search
+2025-04-28 14:16:29 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 14:16:29 [INFO] ℹ️ --- Running Method 1/1: non_nested_grid_search ---
+2025-04-28 14:16:29 [DEBUG] 🔍 Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-04-28 14:16:29 [INFO] ℹ️ Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-04-28 14:16:29 [INFO] ℹ️ Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-04-28 14:16:29 [INFO] ℹ️ Scoring Metric: accuracy
+2025-04-28 14:16:29 [INFO] ℹ️ Fitting GridSearchCV on the training dataset...
+2025-04-28 14:16:29 [DEBUG] 🔍 Extracted y_train with shape (277,) for CV splitter.
+2025-04-28 14:16:29 [INFO] ℹ️ Fitting GridSearchCV on the training dataset...
+2025-04-28 14:16:29 [DEBUG] 🔍 Extracted y_train with shape (277,) for CV splitter.
+2025-04-28 14:16:30 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:32 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:33 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:35 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:36 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:37 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:39 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:40 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:42 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:43 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:45 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:46 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:16:46 [ERROR] ❗ !!! Method 'non_nested_grid_search' failed at step 1: 
+All the 12 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+12 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1206, in fit_loop
+    dataset_train, dataset_valid = self.get_split_datasets(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1791, in get_split_datasets
+    dataset = self.get_dataset(X, y)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 163, in __init__
+    raise ValueError("X and y have inconsistent lengths.")
+ValueError: X and y have inconsistent lengths.
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2513, in run
+    result = pipeline_method(**params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1631, in non_nested_grid_search
+    search.fit(train_dataset, y=y_train)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\base.py", line 1389, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_search.py", line 1024, in fit
+    self._run_search(evaluate_candidates)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_search.py", line 1571, in _run_search
+    evaluate_candidates(ParameterGrid(self.param_grid))
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_search.py", line 1001, in evaluate_candidates
+    _warn_or_raise_about_fit_failures(out, self.error_score)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 517, in _warn_or_raise_about_fit_failures
+    raise ValueError(all_fits_failed_message)
+ValueError: 
+All the 12 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+12 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1206, in fit_loop
+    dataset_train, dataset_valid = self.get_split_datasets(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1791, in get_split_datasets
+    dataset = self.get_dataset(X, y)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 163, in __init__
+    raise ValueError("X and y have inconsistent lengths.")
+ValueError: X and y have inconsistent lengths.
+
+2025-04-28 14:16:46 [ERROR] ❗ !!! Pipeline execution stopped due to error.
+2025-04-28 14:16:46 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 14:16:46 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 14:16:46 [ERROR] ❗ Method non_nested_grid_search_0: FAILED - 
+All the 12 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+12 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1206, in fit_loop
+    dataset_train, dataset_valid = self.get_split_datasets(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1791, in get_split_datasets
+    dataset = self.get_dataset(X, y)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 163, in __init__
+    raise ValueError("X and y have inconsistent lengths.")
+ValueError: X and y have inconsistent lengths.
+
+2025-04-28 14:17:29 [DEBUG] 🔍 Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-04-28 14:17:29 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 14:17:29 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 14:17:29 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 14:17:29 [INFO] ℹ️   Model Type: cnn
+2025-04-28 14:17:29 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 14:17:29 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 14:17:29 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 14:17:29 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 14:17:29 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 14:17:29 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 14:17:29 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 14:17:29 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 14:17:29 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 14:17:29 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 14:17:29 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 14:17:29 [DEBUG] 🔍 Method validation successful.
+2025-04-28 14:17:29 [INFO] ℹ️ Executor configured to run methods: non_nested_grid_search
+2025-04-28 14:17:29 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 14:17:29 [INFO] ℹ️ --- Running Method 1/1: non_nested_grid_search ---
+2025-04-28 14:17:29 [DEBUG] 🔍 Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-04-28 14:17:29 [INFO] ℹ️ Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-04-28 14:17:29 [INFO] ℹ️ Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-04-28 14:17:29 [INFO] ℹ️ Scoring Metric: accuracy
+2025-04-28 14:17:29 [INFO] ℹ️ Fitting GridSearchCV on the training dataset...
+2025-04-28 14:17:29 [DEBUG] 🔍 Extracted y_train with shape (277,) for CV splitter.
+2025-04-28 14:17:29 [INFO] ℹ️ Fitting GridSearchCV on the training dataset...
+2025-04-28 14:17:29 [DEBUG] 🔍 Extracted y_train with shape (277,) for CV splitter.
+2025-04-28 14:17:30 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:32 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:33 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:35 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:36 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:37 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:39 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:40 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:41 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:43 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:44 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:45 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:17:45 [ERROR] ❗ !!! Method 'non_nested_grid_search' failed at step 1: 
+All the 12 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+12 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1206, in fit_loop
+    dataset_train, dataset_valid = self.get_split_datasets(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1791, in get_split_datasets
+    dataset = self.get_dataset(X, y)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 163, in __init__
+    raise ValueError("X and y have inconsistent lengths.")
+ValueError: X and y have inconsistent lengths.
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2513, in run
+    result = pipeline_method(**params)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 1631, in non_nested_grid_search
+    search.fit(train_dataset, y=y_train)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\base.py", line 1389, in wrapper
+    return fit_method(estimator, *args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_search.py", line 1024, in fit
+    self._run_search(evaluate_candidates)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_search.py", line 1571, in _run_search
+    evaluate_candidates(ParameterGrid(self.param_grid))
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_search.py", line 1001, in evaluate_candidates
+    _warn_or_raise_about_fit_failures(out, self.error_score)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 517, in _warn_or_raise_about_fit_failures
+    raise ValueError(all_fits_failed_message)
+ValueError: 
+All the 12 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+12 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1206, in fit_loop
+    dataset_train, dataset_valid = self.get_split_datasets(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1791, in get_split_datasets
+    dataset = self.get_dataset(X, y)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 163, in __init__
+    raise ValueError("X and y have inconsistent lengths.")
+ValueError: X and y have inconsistent lengths.
+
+2025-04-28 14:17:45 [ERROR] ❗ !!! Pipeline execution stopped due to error.
+2025-04-28 14:17:45 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 14:17:45 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 14:17:45 [ERROR] ❗ Method non_nested_grid_search_0: FAILED - 
+All the 12 fits failed.
+It is very likely that your model is misconfigured.
+You can try to debug the error by setting error_score='raise'.
+
+Below are more details about the failures:
+--------------------------------------------------------------------------------
+12 fits failed with the following error:
+Traceback (most recent call last):
+  File "C:\Users\Stefan\.venv\Lib\site-packages\sklearn\model_selection\_validation.py", line 866, in _fit_and_score
+    estimator.fit(X_train, y_train, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\classifier.py", line 165, in fit
+    return super(NeuralNetClassifier, self).fit(X, y, **fit_params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1349, in fit
+    self.partial_fit(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1308, in partial_fit
+    self.fit_loop(X, y, **fit_params)
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1206, in fit_loop
+    dataset_train, dataset_valid = self.get_split_datasets(
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1791, in get_split_datasets
+    dataset = self.get_dataset(X, y)
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\net.py", line 1746, in get_dataset
+    return dataset(X, y, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\.venv\Lib\site-packages\skorch\dataset.py", line 163, in __init__
+    raise ValueError("X and y have inconsistent lengths.")
+ValueError: X and y have inconsistent lengths.
+
+2025-04-28 14:25:31 [DEBUG] 🔍 Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-04-28 14:25:31 [INFO] ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-04-28 14:25:31 [INFO] ℹ️ Initializing Classification Pipeline:
+2025-04-28 14:25:31 [INFO] ℹ️   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat
+2025-04-28 14:25:31 [INFO] ℹ️   Model Type: cnn
+2025-04-28 14:25:31 [DEBUG] 🔍 Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-04-28 14:25:31 [INFO] ℹ️ Detected dataset structure: flat
+2025-04-28 14:25:31 [INFO] ℹ️ Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\..\data\mini-GCD-flat...
+2025-04-28 14:25:31 [INFO] ℹ️ Full dataset loaded: 434 samples.
+2025-04-28 14:25:31 [DEBUG] 🔍 Initial split: 347 train+val, 87 test indices.
+2025-04-28 14:25:31 [DEBUG] 🔍 Train/Val split: 277 train, 70 validation indices.
+2025-04-28 14:25:31 [INFO] ℹ️ FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-04-28 14:25:31 [INFO] ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 14:25:31 [INFO] ℹ️   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-04-28 14:25:31 [INFO] ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-04-28 14:25:31 [INFO] ℹ️ Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-04-28 14:25:31 [DEBUG] 🔍 Method validation successful.
+2025-04-28 14:25:31 [INFO] ℹ️ Executor configured to run methods: non_nested_grid_search
+2025-04-28 14:25:31 [INFO] ℹ️ Starting execution of pipeline methods...
+2025-04-28 14:25:31 [INFO] ℹ️ --- Running Method 1/1: non_nested_grid_search ---
+2025-04-28 14:25:31 [DEBUG] 🔍 Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-04-28 14:25:31 [INFO] ℹ️ Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-04-28 14:25:31 [INFO] ℹ️ Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-04-28 14:25:31 [INFO] ℹ️ Scoring Metric: accuracy
+2025-04-28 14:25:31 [INFO] ℹ️ Loading training data into memory for GridSearchCV...
+2025-04-28 14:25:31 [INFO] ℹ️ Loading dataset of type <class '__main__.TransformedSubset'> (length 277) into NumPy arrays...
+2025-04-28 14:25:31 [DEBUG] 🔍 Loading batch 1/9
+2025-04-28 14:25:31 [DEBUG] 🔍 Loading batch 2/9
+2025-04-28 14:25:31 [DEBUG] 🔍 Loading batch 3/9
+2025-04-28 14:25:31 [DEBUG] 🔍 Loading batch 4/9
+2025-04-28 14:25:32 [DEBUG] 🔍 Loading batch 5/9
+2025-04-28 14:25:32 [DEBUG] 🔍 Loading batch 6/9
+2025-04-28 14:25:32 [DEBUG] 🔍 Loading batch 7/9
+2025-04-28 14:25:32 [DEBUG] 🔍 Loading batch 8/9
+2025-04-28 14:25:32 [DEBUG] 🔍 Loading batch 9/9
+2025-04-28 14:25:32 [INFO] ℹ️ Finished loading. X shape: (277, 3, 64, 64), y shape: (277,)
+2025-04-28 14:25:32 [INFO] ℹ️ Fitting GridSearchCV on the training dataset...
+2025-04-28 14:25:32 [INFO] ℹ️ Fitting GridSearchCV on the training dataset...
+2025-04-28 14:25:32 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:34 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:36 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:37 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:39 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:40 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:41 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:43 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:44 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:46 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:47 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:48 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:50 [DEBUG] 🔍 SimpleCNN initialized with 7 output classes.
+2025-04-28 14:25:52 [INFO] ℹ️ Search completed.
+2025-04-28 14:25:52 [INFO] ℹ️ Evaluating best model (params: {'lr': 0.0005, 'optimizer__weight_decay': 0.001}) on the test set...
+2025-04-28 14:25:52 [INFO] ℹ️ Loading test data into memory for evaluation...
+2025-04-28 14:25:52 [INFO] ℹ️ Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 87) into NumPy arrays...
+2025-04-28 14:25:52 [DEBUG] 🔍 Loading batch 1/3
+2025-04-28 14:25:52 [DEBUG] 🔍 Loading batch 2/3
+2025-04-28 14:25:52 [DEBUG] 🔍 Loading batch 3/3
+2025-04-28 14:25:52 [INFO] ℹ️ Finished loading. X shape: (87, 3, 64, 64), y shape: (87,)
+2025-04-28 14:25:52 [DEBUG] 🔍 Computed Metrics: Acc=0.5747, Macro F1=0.5414, Macro ROC AUC=0.8765, Macro PR AUC=0.6359
+2025-04-28 14:25:52 [INFO] ℹ️ Test Set Evaluation: Accuracy=0.5747, Macro F1=0.5414
+2025-04-28 14:25:52 [INFO] ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\non_nested_grid_search_cv=3_method=grid_scoring=accuracy_20250428_142552.json
+2025-04-28 14:25:52 [INFO] ℹ️ Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-04-28 14:25:52 [INFO] ℹ️ Non-nested grid search finished. Best CV score (accuracy): 0.4550
+2025-04-28 14:25:52 [INFO] ℹ️ Best parameters found: {'lr': 0.0005, 'optimizer__weight_decay': 0.001}
+2025-04-28 14:25:52 [INFO] ℹ️ --- Method non_nested_grid_search completed successfully ---
+2025-04-28 14:25:52 [INFO] ℹ️ Pipeline execution finished.
+2025-04-28 14:25:52 [INFO] ℹ️ --- Final Execution Results ---
+2025-04-28 14:25:52 [INFO] ℹ️ Method non_nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.5747, BestScore: 0.4550)

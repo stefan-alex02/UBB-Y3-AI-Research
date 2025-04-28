@@ -1260,7 +1260,7 @@ class ClassificationPipeline:
             patience=patience, # Passed to SkorchModelAdapter for EarlyStopping default
             # Other SkorchModelAdapter defaults (optimizer, criterion, etc.) are used
             # Add verbose=1 if you want to see epoch progress during CV fits
-            verbose=1
+            verbose=3
         )
         logger.info(f"  Model Adapter: Initialized with {model_class.__name__}")
 
@@ -1528,6 +1528,28 @@ class ClassificationPipeline:
                  logger.error(f"Failed to extract targets by iteration: {e}")
                  raise TypeError(f"Unsupported dataset type for target extraction: {type(dataset)}")
 
+    def _load_dataset_to_numpy(self, dataset: Dataset) -> Tuple[np.ndarray, np.ndarray]:
+        """Loads features and labels from a PyTorch Dataset into NumPy arrays."""
+        logger.info(f"Loading dataset of type {type(dataset)} (length {len(dataset)}) into NumPy arrays...")
+        # Use DataLoader for efficient batch loading
+        loader = DataLoader(dataset, batch_size=self.model_adapter.batch_size * 2,  # Maybe larger batch for loading
+                            shuffle=False, num_workers=0)  # Use num_workers=0 for stability
+
+        all_features = []
+        all_labels = []
+        i = 0
+        total = len(loader)
+        for features, labels in loader:
+            i += 1
+            logger.debug(f"Loading batch {i}/{total}")
+            all_features.append(features.cpu().numpy())  # Move to CPU before numpy
+            all_labels.append(labels.cpu().numpy())
+
+        X_np = np.concatenate(all_features, axis=0)
+        y_np = np.concatenate(all_labels, axis=0)
+        logger.info(f"Finished loading. X shape: {X_np.shape}, y shape: {y_np.shape}")
+        return X_np, y_np
+
     def non_nested_grid_search(self,
                                param_grid: Dict[str, List],
                                cv: int = 5,
@@ -1577,21 +1599,24 @@ class ClassificationPipeline:
         if train_dataset is None or test_dataset is None:
             raise RuntimeError("Required train or test dataset is missing.")
 
+        logger.info("Loading training data into memory for GridSearchCV...")
+        try:
+            X_np_train, y_np_train = self._load_dataset_to_numpy(train_dataset)
+        except Exception as e:
+            logger.error(f"Failed to load training data to NumPy: {e}", exc_info=True)
+            raise RuntimeError("Could not load training data to NumPy for CV.") from e
+
         # --- Setup Search ---
         # Clone the base estimator to avoid modifying the pipeline's main adapter
         estimator = clone(self.model_adapter)
-        # Do NOT set train_split=None on the clone, we want the ValidSplit from init
-        # estimator.set_params(train_split=None) # REMOVE or COMMENT OUT
-
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
-
         SearchClass = GridSearchCV if method_lower == 'grid' else RandomizedSearchCV
         search_kwargs = {
             'estimator': estimator,
             'cv': cv_splitter,
             'scoring': scoring,
             'n_jobs': 1, # Often best for GPU-based training
-            'verbose': 2, # Show progress
+            'verbose': 3, # Show progress
             'return_train_score': True,
             'refit': True # Refit the best estimator on the whole training data
         }
@@ -1608,28 +1633,10 @@ class ClassificationPipeline:
         # Skorch/sklearn handle dataset input directly
         logger.info(f"Fitting {SearchClass.__name__} on the training dataset...")
 
-        # Extract y_train explicitly for the splitter
-        try:
-            y_train = self._get_targets_from_dataset(train_dataset)
-            logger.debug(f"Extracted y_train with shape {y_train.shape} for CV splitter.")
-        except Exception as e:
-            logger.error(f"Failed to extract targets from training dataset: {e}", exc_info=True)
-            raise RuntimeError("Could not extract targets for CV splitting.") from e
-
         # Wrap the PyTorch Dataset in SliceDataset before passing to sklearn fit
         # SkorchDataset might also work, but SliceDataset is often recommended for compatibility.
         logger.info(f"Fitting {SearchClass.__name__} on the training dataset...")
-        try:
-            # Extract y_train for sklearn's StratifiedKFold splitter
-            y_train = self._get_targets_from_dataset(train_dataset)
-            logger.debug(f"Extracted y_train with shape {y_train.shape} for CV splitter.")
-        except Exception as e:
-             logger.error(f"Failed to wrap training dataset in SliceDataset: {e}", exc_info=True)
-             raise RuntimeError("Could not wrap training data for CV.") from e
-
-        # Pass wrapped X and original y to fit
-        search.fit(train_dataset, y=y_train)
-
+        search.fit(X_np_train, y=y_np_train)
         logger.info(f"Search completed.")
 
         # --- Collect Results ---
@@ -1644,24 +1651,19 @@ class ClassificationPipeline:
         # --- Evaluate Best Model on Test Set ---
         logger.info(f"Evaluating best model (params: {search.best_params_}) on the test set...")
         best_estimator = search.best_estimator_
-        # Important: Ensure the refit best_estimator doesn't use internal split during predict
-        # best_estimator.set_params(train_split=None)
 
-        # Get predictions and probabilities from the test set
-        y_pred_test = best_estimator.predict(test_dataset)
+        logger.info("Loading test data into memory for evaluation...")
         try:
-            y_score_test = best_estimator.predict_proba(test_dataset)
-        except AttributeError:
-             logger.warning("Estimator does not support predict_proba, AUC metrics will be unavailable.")
-             y_score_test = None
+            X_np_test, y_true_test = self._load_dataset_to_numpy(test_dataset)
+        except Exception as e:
+            logger.error(f"Failed to load test data to NumPy: {e}", exc_info=True)
+            raise RuntimeError("Could not load test data to NumPy for evaluation.") from e
 
-        # Extract true labels from the test dataset
-        # Skorch datasets usually don't store y directly, need to iterate or access underlying dataset
-        y_true_test_list = []
-        test_loader = DataLoader(test_dataset, batch_size=self.model_adapter.batch_size, shuffle=False)
-        for _, y_batch in test_loader:
-             y_true_test_list.append(y_batch.numpy())
-        y_true_test = np.concatenate(y_true_test_list)
+        y_pred_test = best_estimator.predict(X_np_test)
+        try:
+            y_score_test = best_estimator.predict_proba(X_np_test)
+        except AttributeError:
+             y_score_test = None
 
 
         test_metrics = self._compute_metrics(y_true_test, y_pred_test, y_score_test)
@@ -2625,7 +2627,7 @@ if __name__ == "__main__":
 
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_sequence_1 # Select the sequence to run
+    chosen_sequence = methods_sequence_2 # Select the sequence to run
     # chosen_sequence = methods_sequence_4 # Example: Run CV evaluation if dataset is FLAT
 
     logger.debug(f"Chosen sequence: {chosen_sequence}")
