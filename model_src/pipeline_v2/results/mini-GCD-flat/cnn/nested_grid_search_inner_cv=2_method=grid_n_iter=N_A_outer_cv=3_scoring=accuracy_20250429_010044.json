@@ -1,0 +1,51 @@
+{
+    "method": "nested_grid_search",
+    "params": {
+        "outer_cv": 3,
+        "inner_cv": 2,
+        "n_iter": "N/A",
+        "method": "grid",
+        "scoring": "accuracy"
+    },
+    "outer_cv_scores": {
+        "test_accuracy": [
+            0.6344827586206897,
+            0.6896551724137931,
+            0.5902777777777778
+        ],
+        "test_precision_macro": [
+            0.6460427625841161,
+            0.7215991725843943,
+            0.5752944743993337
+        ],
+        "test_recall_macro": [
+            0.6353741496598639,
+            0.6904761904761905,
+            0.5911564625850341
+        ],
+        "test_f1_macro": [
+            0.6281977200938403,
+            0.663497271281576,
+            0.5649313405892353
+        ]
+    },
+    "mean_test_accuracy": 0.6381385696040868,
+    "best_params_per_fold": [
+        {
+            "lr": 0.0005,
+            "optimizer__weight_decay": 0.001
+        },
+        {
+            "lr": 0.0005,
+            "optimizer__weight_decay": 0.01
+        },
+        {
+            "lr": 0.001,
+            "optimizer__weight_decay": 0.01
+        }
+    ],
+    "accuracy": 0.6381385696040868,
+    "macro_avg": {
+        "precision": NaN
+    }
+}

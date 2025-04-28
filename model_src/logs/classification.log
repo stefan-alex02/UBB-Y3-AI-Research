@@ -376,3 +376,11 @@
 2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: cv_model_evaluation
 2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Running method: cv_model_evaluation
 2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Performing CV model evaluation with 5-fold cross-validation
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: cv_model_evaluation
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Running method: cv_model_evaluation
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Performing CV model evaluation with 5-fold cross-validation

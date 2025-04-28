@@ -2,6 +2,8 @@
 
 import os
 import logging
+import re
+
 import emoji
 import json
 import torch
@@ -53,82 +55,146 @@ DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 NUM_WORKERS = 0 # Set to 0 for stability, especially on Windows
 # NUM_WORKERS = os.cpu_count() // 2 if os.cpu_count() else 4 # Heuristic for num_workers
 
+import logging
+import emoji
+import sys
+import os
+from pathlib import Path
+from typing import Optional, Union
+import time
+
+# --- ANSI Color Codes ---
+class LogColors:
+    RESET = "\033[0m"
+    RED = "\033[31m"
+    GREEN = "\033[32m"
+    YELLOW = "\033[33m"
+    BLUE = "\033[34m"
+    MAGENTA = "\033[35m"
+    CYAN = "\033[36m"
+    WHITE = "\033[37m"
+    BOLD = "\033[1m"
+    DIM = "\033[2m"
 
 # --- Configure Logging ---
-class CustomFormatter(logging.Formatter):
-    """Custom formatter to include emojis, consistent formatting, and level names."""
+class EnhancedFormatter(logging.Formatter):
+    """
+    Custom formatter to include timestamp first, emojis, colors (optional),
+    level names, and source location (funcName:lineno).
+    """
 
-    # Define formats for different levels
-    log_formats = {
-        logging.DEBUG:   "%(asctime)s [%(levelname)s] " + emoji.emojize(":magnifying_glass_tilted_left:") + " %(message)s",
-        logging.INFO:    "%(asctime)s [%(levelname)s] " + emoji.emojize(":information:") + " %(message)s",
-        logging.WARNING: "%(asctime)s [%(levelname)s] " + emoji.emojize(":warning:") + " %(message)s",
-        logging.ERROR:   "%(asctime)s [%(levelname)s] " + emoji.emojize(":red_exclamation_mark:") + " %(message)s",
-        logging.CRITICAL:"%(asctime)s [%(levelname)s] " + emoji.emojize(":skull:") + " %(message)s",
+    # --- MODIFY THESE FORMAT STRINGS ---
+    # Use %(funcName)s instead of %(name)s
+    # Adjust padding for funcName (e.g., -25s) and lineno (e.g., -4d)
+    level_formats = {
+        logging.DEBUG:   f"%(asctime)s | {LogColors.CYAN}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':magnifying_glass_tilted_left:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+        logging.INFO:    f"%(asctime)s | {LogColors.GREEN}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':information:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+        logging.WARNING: f"%(asctime)s | {LogColors.YELLOW}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':warning:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+        logging.ERROR:   f"%(asctime)s | {LogColors.RED}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':red_exclamation_mark:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+        logging.CRITICAL:f"%(asctime)s | {LogColors.BOLD}{LogColors.RED}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':skull:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
     }
+    level_formats_no_color = {
+        logging.DEBUG:    "%(asctime)s | %(levelname)-8s | 🐛 | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+        logging.INFO:     "%(asctime)s | %(levelname)-8s | ℹ️ | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+        logging.WARNING:  "%(asctime)s | %(levelname)-8s | ⚠️ | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+        logging.ERROR:    "%(asctime)s | %(levelname)-8s | ❌ | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+        logging.CRITICAL: "%(asctime)s | %(levelname)-8s | 💥 | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+    }
+    default_format = f"%(asctime)s | %(levelname)-8s | ? | [%(funcName)-25s:%(lineno)-4d] | %(message)s"
+    # --- END MODIFICATION ---
+
     date_format = '%Y-%m-%d %H:%M:%S'
 
+    def __init__(self, use_colors=True):
+        super().__init__(fmt="%(levelname)s: %(message)s", datefmt=self.date_format)
+        self.use_colors = use_colors
+
     def format(self, record: logging.LogRecord) -> str:
-        """
-        Formats the log record according to the level.
+        formats = self.level_formats if self.use_colors else self.level_formats_no_color
+        log_fmt = formats.get(record.levelno, self.default_format)
 
-        Args:
-            record (logging.LogRecord): The log record to format.
+        # Add funcName if missing (it usually isn't, but just in case)
+        if not hasattr(record, 'funcName'): record.funcName = '?'
+        if not hasattr(record, 'lineno'): record.lineno = 0
 
-        Returns:
-            str: The formatted log message.
-        """
-        log_fmt = self.log_formats.get(record.levelno, self.log_formats[logging.INFO])
         formatter = logging.Formatter(log_fmt, datefmt=self.date_format)
         return formatter.format(record)
 
 
-def setup_logger(name: str, log_file: Optional[Union[str, Path]] = None, level: int = logging.INFO) -> logging.Logger:
-    """
-    Sets up a logger with custom formatting for console and optional file output.
+def get_log_header(use_colors: bool = True) -> str:
+    """Generates the log header string."""
+    # --- MODIFY HEADER SPACING ---
+    # Adjust width for Location column to match format string
+    # [%(funcName)-25s:%(lineno)-4d] -> 1 + 25 + 1 + 4 + 1 = 32
+    location_width = 32
+    header_title = f"{'Timestamp':<21} | {'Level':<8} | {'Emoji':<2} | {'Location':<{location_width}} | {'Message'}"
+    separator = f"{'-'*21}-+-{'-'*8}-+-{'-'*2}-+-{'-'*location_width}-+-{'-'*50}"
+    # --- END MODIFICATION ---
+    if use_colors:
+        separator = f"{LogColors.DIM}{separator}{LogColors.RESET}"
+    return f"{header_title}\n{separator}"
 
-    Args:
-        name (str): The name for the logger.
-        log_file (Optional[Union[str, Path]]): Path to the log file. If None, only console logging is enabled.
-        level (int): The logging level (e.g., logging.INFO, logging.DEBUG).
 
-    Returns:
-        logging.Logger: The configured logger instance.
+def write_log_header_if_needed(log_path: Path):
+    """Writes a header to the log file only if it's new or empty."""
+    # ... (Function body remains the same) ...
+    try:
+        is_new_or_empty = not log_path.is_file() or log_path.stat().st_size == 0
+        if is_new_or_empty:
+            header = get_log_header(use_colors=False)
+            with open(log_path, 'a', encoding='utf-8') as f:
+                f.write(header + "\n")
+            return True
+    except Exception as e:
+        print(f"Error writing log header to {log_path}: {e}", file=sys.stderr)
+    return False
+
+
+def setup_logger(name: str, log_file: Optional[Union[str, Path]] = None, level: int = logging.INFO, use_colors: bool = True) -> logging.Logger:
     """
+    Sets up a logger with enhanced formatting for console and optional file output.
+    """
+    # ... (Function body remains the same) ...
     logger = logging.getLogger(name)
     logger.setLevel(level)
-    logger.propagate = False # Prevent duplicate messages if root logger is configured
+    logger.propagate = False
 
-    # Remove existing handlers to avoid duplication if called multiple times
     if logger.hasHandlers():
         logger.handlers.clear()
 
-    # Console handler
-    console_handler = logging.StreamHandler()
-    console_handler.setFormatter(CustomFormatter())
+    console_formatter = EnhancedFormatter(use_colors=use_colors)
+    console_handler = logging.StreamHandler(sys.stdout)
+    console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 
-    # File handler if log_file is specified
     if log_file:
         log_path = Path(log_file)
-        log_path.parent.mkdir(parents=True, exist_ok=True) # Ensure log directory exists
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        write_log_header_if_needed(log_path)
         try:
-            # Use 'a' mode to append if file exists
+            file_formatter = EnhancedFormatter(use_colors=False)
             file_handler = logging.FileHandler(log_path, mode='a', encoding='utf-8')
-            file_handler.setFormatter(CustomFormatter())
+            file_handler.setFormatter(file_formatter)
             logger.addHandler(file_handler)
         except Exception as e:
             logger.error(f"Failed to create file handler for {log_path}: {e}")
 
-
     return logger
 
-# Create logger instance
-# Ensure logs directory exists relative to the script's parent if needed
+# --- Example of how to create the logger instance AND PRINT CONSOLE HEADER ---
+# (Keep this part outside the functions, where you originally had it)
 script_dir = Path(__file__).parent
 log_dir = script_dir / 'logs'
 log_dir.mkdir(exist_ok=True)
-logger = setup_logger('image_classification', log_dir / 'classification.log', level=logging.DEBUG)
+# Create the main logger for your application
+logger_name = 'ImgClassPipe' # Or use __name__
+log_file_path = log_dir / 'classification.log'
+logger = setup_logger(logger_name, log_file_path, level=logging.DEBUG, use_colors=True)
+#
+# # --- Print Header to Console ---
+print(get_log_header(use_colors=True)) # Print header directly to console
+logger.info(f"Logger '{logger_name}' initialized. Log file: {log_file_path}")
+# # --- End Console Header Print ---
 
 
 # --- Dataset Handling ---
@@ -1090,26 +1156,31 @@ class SkorchModelAdapter(NeuralNetClassifier):
     def get_split_datasets(self, X, y=None, **fit_params):
         """
         Override to handle explicit validation data passed via fit_params
-        when train_split is None.
+        OR use the instance's train_split attribute otherwise.
+        Handles data type issues from sklearn CV slicing.
         """
-        dataset_train = self.get_dataset(X, y)  # Process the training data input
+        dataset_train = self.get_dataset(X, y) # Our override handles X, y types
 
+        dataset_valid = None
         if 'X_val' in fit_params:
-            # If X_val is explicitly provided in fit_params, use it as the validation set
+            # Scenario 1: Explicit validation data provided
             logger.debug("[DEBUG] Adapter.get_split_datasets: Found X_val in fit_params. Processing it.")
-            # Process X_val using get_dataset to ensure it's a skorch-compatible Dataset object
-            dataset_valid = self.get_dataset(fit_params['X_val'], fit_params.get('y_val'))  # get_dataset handles y type
-            return dataset_train, dataset_valid
+            dataset_valid = self.get_dataset(fit_params['X_val'], fit_params.get('y_val'))
+            # --- REMOVE WARNING ---
+            # if self.train_split is not None:
+            #     logger.warning("get_split_datasets: X_val was provided, but self.train_split is not None. Check configuration.")
+            # --- END REMOVAL ---
+        elif self.train_split:
+            # Scenario 2: No X_val, use the instance's train_split
+            logger.debug("[DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.")
+            # Pass original y for stratification by ValidSplit
+            dataset_train, dataset_valid = self.train_split(dataset_train, y=y)
         else:
-            # If X_val is not provided, check self.train_split (which should be None here)
-            if not self.train_split:
-                logger.debug("[DEBUG] Adapter.get_split_datasets: No X_val and self.train_split is None.")
-                return dataset_train, None
-            else:
-                # Fallback if train_split was somehow set (shouldn't happen for cv_model_evaluation)
-                logger.warning(
-                    "[DEBUG] Adapter.get_split_datasets: No X_val, using self.train_split (unexpected for explicit val).")
-                return self.train_split(dataset_train, y, **fit_params)  # y might be needed by splitter
+            # Scenario 3: No X_val and no train_split configured
+             logger.debug("[DEBUG] Adapter.get_split_datasets: No X_val and self.train_split is None. No validation split.")
+             # dataset_valid remains None
+
+        return dataset_train, dataset_valid
 
 # --- Classification Pipeline ---
 
@@ -1206,7 +1277,8 @@ class ClassificationPipeline:
         logger.info(f"Pipeline initialized successfully for {self.model_type} model and "
                     f"{self.dataset_handler.structure.value} dataset structure.")
 
-    def _get_model_class(self, model_type_str: str) -> Type[nn.Module]:
+    @staticmethod
+    def _get_model_class(model_type_str: str) -> Type[nn.Module]:
         """Gets the PyTorch model class based on the model type string."""
         model_mapping = {
             'cnn': SimpleCNN,
@@ -1341,9 +1413,19 @@ class ClassificationPipeline:
         params = params or {}
         # Create results filename
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-        # Filter out complex objects from params string (like grids)
-        simple_params = {k: v for k, v in params.items() if isinstance(v, (str, int, float, bool, type(None)))}
-        params_str = '_'.join([f"{k}={v}" for k, v in sorted(simple_params.items()) if k != 'self'])
+
+        # Sanitize parameter values before creating the filename string
+        def sanitize_value(v):
+            if isinstance(v, (str, int, float, bool, type(None))):
+                # Replace invalid filename characters (e.g., / \ : * ? " < > |) with underscores
+                # Also handle the specific 'N/A' case by replacing '/'
+                s_val = str(v).replace('/', '_')  # Replace slashes first
+                s_val = re.sub(r'[\\:*?"<>|]', '_', s_val)  # Replace other invalid chars
+                return s_val
+            return 'complex_param'  # Placeholder for non-simple types
+
+        simple_params = {k: sanitize_value(v) for k, v in params.items() if k != 'self'}
+        params_str = '_'.join([f"{k}={v}" for k, v in sorted(simple_params.items())])
 
         filename_base = f"{method_name}_{params_str}_{timestamp}" if params_str else f"{method_name}_{timestamp}"
         json_filepath = self.results_dir / f"{filename_base}.json"
