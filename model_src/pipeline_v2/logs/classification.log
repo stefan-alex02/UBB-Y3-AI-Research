@@ -17955,3 +17955,360 @@ INFO     ℹ️ [image_classification:2448] Method nested_grid_search_0: Complet
 2025-04-29 01:16:18 | INFO     | ℹ️ | [run                      :2370] | Pipeline execution finished.
 2025-04-29 01:16:18 | INFO     | ℹ️ | [<module>                 :2448] | --- Final Execution Results ---
 2025-04-29 01:16:18 | INFO     | ℹ️ | [<module>                 :2455] | Method nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.6312, BestScore: nan)
+2025-05-01 16:32:45 | INFO     | ℹ️ | [<module>                 :196 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [<module>                 :2430] | Chosen sequence: [('single_train', {'max_epochs': 5, 'save_model': True}), ('single_eval', {'save_results': True})]
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :2258] | Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD'...
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :1238] | Initializing Classification Pipeline:
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :1239] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :1240] |   Model Type: cnn
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [_detect_structure        :446 ] | Found 'train' and 'test' directories with matching class subdirectories. Assuming FIXED structure.
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :395 ] | Detected dataset structure: fixed
+2025-05-01 16:32:45 | INFO     | ℹ️ | [_load_fixed_dataset      :554 ] | Loading FIXED dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\train (train) and C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\test (test)...
+2025-05-01 16:32:45 | INFO     | ℹ️ | [_load_fixed_dataset      :565 ] | Train+Validation dataset loaded: 350 samples.
+2025-05-01 16:32:45 | INFO     | ℹ️ | [_load_fixed_dataset      :566 ] | Test dataset loaded: 84 samples.
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [_load_fixed_dataset      :580 ] | Train/Val split: 280 train, 70 validation indices.
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [__init__                 :238 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-01 16:32:45 | INFO     | ℹ️ | [_load_fixed_dataset      :598 ] | FIXED Dataset loaded: 280 train, 70 validation, 84 test samples.
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :413 ] | Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :1255] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :1271] |   Model Adapter: Initialized with SimpleCNN
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :1277] | Pipeline initialized successfully for cnn model and fixed dataset structure.
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [_validate_methods        :2333] | Method validation successful.
+2025-05-01 16:32:45 | INFO     | ℹ️ | [__init__                 :2282] | Executor configured to run methods: single_train, single_eval
+2025-05-01 16:32:45 | INFO     | ℹ️ | [run                      :2345] | Starting execution of pipeline methods...
+2025-05-01 16:32:45 | INFO     | ℹ️ | [run                      :2349] | --- Running Method 1/2: single_train ---
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [run                      :2350] | Parameters for single_train: {'max_epochs': 5, 'save_model': True}
+2025-05-01 16:32:45 | INFO     | ℹ️ | [single_train             :1966] | Starting single training run...
+2025-05-01 16:32:45 | INFO     | ℹ️ | [single_train             :1977] | Combining train (280) and validation (70) sets.
+2025-05-01 16:32:45 | INFO     | ℹ️ | [single_train             :1999] | Overriding adapter parameters for this run: {'max_epochs': 5}
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [single_train             :2006] | Extracted combined targets (shape=(350,)) for skorch fit.
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [__init__                 :795 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [get_dataset              :1088] | [DEBUG] Adapter.get_dataset: X is Dataset and y is not None. Ignoring y.
+2025-05-01 16:32:45 | DEBUG    | 🐛 | [get_split_datasets       :1175] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 16:32:58 | INFO     | ℹ️ | [single_train             :2033] | Training finished. Best validation performance at Epoch 5 (valid_loss=0.7804)
+2025-05-01 16:32:58 | INFO     | ℹ️ | [single_train             :2085] | Model state_dict saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn\cnn_epoch5_val_valid-loss0.7804_20250501_163258.pt
+2025-05-01 16:32:58 | INFO     | ℹ️ | [single_train             :2093] | Main pipeline model adapter updated with the model from single_train.
+2025-05-01 16:32:58 | INFO     | ℹ️ | [_save_results            :1461] | Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn\single_train_batch_size=16_early_stopping_patience=5_lr=0.001_max_epochs=5_20250501_163258.json
+2025-05-01 16:32:58 | INFO     | ℹ️ | [_save_results            :1486] | Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn\summary_results.csv
+2025-05-01 16:32:58 | INFO     | ℹ️ | [run                      :2361] | --- Method single_train completed successfully ---
+2025-05-01 16:32:58 | INFO     | ℹ️ | [run                      :2349] | --- Running Method 2/2: single_eval ---
+2025-05-01 16:32:58 | DEBUG    | 🐛 | [run                      :2350] | Parameters for single_eval: {'save_results': True}
+2025-05-01 16:32:58 | INFO     | ℹ️ | [single_eval              :2107] | Starting model evaluation on the test set...
+2025-05-01 16:32:58 | INFO     | ℹ️ | [single_eval              :2117] | Loading test data into memory for evaluation...
+2025-05-01 16:32:58 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1552] | Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 84) into NumPy arrays...
+2025-05-01 16:32:59 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1563] | Loading batch 1/3
+2025-05-01 16:32:59 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1563] | Loading batch 2/3
+2025-05-01 16:32:59 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1563] | Loading batch 3/3
+2025-05-01 16:32:59 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1569] | Finished loading. X shape: (84, 3, 64, 64), y shape: (84,)
+2025-05-01 16:32:59 | INFO     | ℹ️ | [single_eval              :2122] | Evaluating on 84 test samples.
+2025-05-01 16:32:59 | DEBUG    | 🐛 | [get_dataset              :1096] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 16:32:59 | DEBUG    | 🐛 | [get_dataset              :1096] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 16:32:59 | DEBUG    | 🐛 | [_compute_metrics         :1392] | Computed Metrics: Acc=0.3571, Macro F1=0.2547, Macro ROC AUC=0.6144, Macro PR AUC=0.2666
+2025-05-01 16:32:59 | INFO     | ℹ️ | [_save_results            :1461] | Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn\single_eval_20250501_163259.json
+2025-05-01 16:32:59 | INFO     | ℹ️ | [_save_results            :1486] | Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn\summary_results.csv
+2025-05-01 16:32:59 | INFO     | ℹ️ | [single_eval              :2138] | Evaluation Summary:
+2025-05-01 16:32:59 | INFO     | ℹ️ | [single_eval              :2139] |   Accuracy: 0.3571
+2025-05-01 16:32:59 | INFO     | ℹ️ | [run                      :2361] | --- Method single_eval completed successfully ---
+2025-05-01 16:32:59 | INFO     | ℹ️ | [run                      :2371] | Pipeline execution finished.
+2025-05-01 16:32:59 | INFO     | ℹ️ | [<module>                 :2449] | --- Final Execution Results ---
+2025-05-01 16:32:59 | INFO     | ℹ️ | [<module>                 :2456] | Method single_train_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-05-01 16:32:59 | INFO     | ℹ️ | [<module>                 :2456] | Method single_eval_1: Completed. (Accuracy/MeanAccuracy: 0.3571, BestScore: nan)
+2025-05-01 17:42:29 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-01 17:42:29 | DEBUG    | 🐛 | [<module>                 :2418] | Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD'...
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-01 17:42:29 | DEBUG    | 🐛 | [_detect_structure        :434 ] | Found 'train' and 'test' directories with matching class subdirectories. Assuming FIXED structure.
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: fixed
+2025-05-01 17:42:29 | INFO     | ℹ️ | [_load_fixed_dataset      :542 ] | Loading FIXED dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\train (train) and C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\test (test)...
+2025-05-01 17:42:29 | INFO     | ℹ️ | [_load_fixed_dataset      :553 ] | Train+Validation dataset loaded: 350 samples.
+2025-05-01 17:42:29 | INFO     | ℹ️ | [_load_fixed_dataset      :554 ] | Test dataset loaded: 84 samples.
+2025-05-01 17:42:29 | DEBUG    | 🐛 | [_load_fixed_dataset      :568 ] | Train/Val split: 280 train, 70 validation indices.
+2025-05-01 17:42:29 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-01 17:42:29 | INFO     | ℹ️ | [_load_fixed_dataset      :586 ] | FIXED Dataset loaded: 280 train, 70 validation, 84 test samples.
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :401 ] | Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and fixed dataset structure.
+2025-05-01 17:42:29 | DEBUG    | 🐛 | [_validate_methods        :2321] | Method validation successful.
+2025-05-01 17:42:29 | INFO     | ℹ️ | [__init__                 :2270] | Executor configured to run methods: non_nested_grid_search
+2025-05-01 17:42:29 | INFO     | ℹ️ | [run                      :2333] | Starting execution of pipeline methods...
+2025-05-01 17:42:29 | INFO     | ℹ️ | [run                      :2337] | --- Running Method 1/1: non_nested_grid_search ---
+2025-05-01 17:42:29 | DEBUG    | 🐛 | [run                      :2338] | Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-05-01 17:42:29 | INFO     | ℹ️ | [non_nested_grid_search   :1573] | Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-05-01 17:42:29 | INFO     | ℹ️ | [non_nested_grid_search   :1574] | Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-05-01 17:42:29 | INFO     | ℹ️ | [non_nested_grid_search   :1575] | Scoring Metric: accuracy
+2025-05-01 17:42:29 | INFO     | ℹ️ | [non_nested_grid_search   :1586] | Loading training data into memory for GridSearchCV...
+2025-05-01 17:42:29 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class '__main__.TransformedSubset'> (length 280) into NumPy arrays...
+2025-05-01 17:42:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/9
+2025-05-01 17:42:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/9
+2025-05-01 17:42:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/9
+2025-05-01 17:42:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 4/9
+2025-05-01 17:42:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 5/9
+2025-05-01 17:42:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 6/9
+2025-05-01 17:42:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 7/9
+2025-05-01 17:42:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 8/9
+2025-05-01 17:42:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 9/9
+2025-05-01 17:42:31 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (280, 3, 64, 64), y shape: (280,)
+2025-05-01 17:42:31 | INFO     | ℹ️ | [non_nested_grid_search   :1614] | Fitting GridSearchCV with NumPy arrays...
+2025-05-01 17:42:31 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:31 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:31 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:31 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:35 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:35 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:35 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:35 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:35 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:35 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:36 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:36 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:36 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:36 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:36 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:36 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:38 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:38 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:38 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:38 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:38 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:38 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:40 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:40 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:40 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:40 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:40 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:40 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:41 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:41 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:41 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:41 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:41 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:41 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:43 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:43 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:43 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:43 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:43 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:43 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:45 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:45 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:45 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:45 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:45 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:45 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:46 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:46 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:46 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:46 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:46 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:46 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:48 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:48 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:48 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:48 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:48 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:48 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:50 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:50 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:50 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:51 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:51 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:51 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:51 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:51 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:51 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:53 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:42:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:53 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:42:53 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:42:55 | INFO     | ℹ️ | [non_nested_grid_search   :1616] | Search completed.
+2025-05-01 17:42:55 | INFO     | ℹ️ | [non_nested_grid_search   :1628] | Evaluating best model (params: {'lr': 0.0005, 'optimizer__weight_decay': 0.001}) on the test set...
+2025-05-01 17:42:55 | INFO     | ℹ️ | [non_nested_grid_search   :1631] | Loading test data into memory for evaluation...
+2025-05-01 17:42:55 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 84) into NumPy arrays...
+2025-05-01 17:42:55 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/3
+2025-05-01 17:42:55 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/3
+2025-05-01 17:42:55 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/3
+2025-05-01 17:42:55 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (84, 3, 64, 64), y shape: (84,)
+2025-05-01 17:42:55 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:55 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:42:55 | DEBUG    | 🐛 | [_compute_metrics         :1380] | Computed Metrics: Acc=0.3214, Macro F1=0.2627, Macro ROC AUC=0.6381, Macro PR AUC=0.2948
+2025-05-01 17:42:55 | INFO     | ℹ️ | [non_nested_grid_search   :1645] | Test Set Evaluation: Accuracy=0.3214, Macro F1=0.2627
+2025-05-01 17:42:55 | INFO     | ℹ️ | [_save_results            :1449] | Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn\non_nested_grid_search_cv=3_method=grid_n_iter=N_A_scoring=accuracy_20250501_174255.json
+2025-05-01 17:42:55 | INFO     | ℹ️ | [_save_results            :1474] | Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn\summary_results.csv
+2025-05-01 17:42:55 | INFO     | ℹ️ | [non_nested_grid_search   :1655] | Non-nested grid search finished. Best CV score (accuracy): 0.7748
+2025-05-01 17:42:55 | INFO     | ℹ️ | [non_nested_grid_search   :1656] | Best parameters found: {'lr': 0.0005, 'optimizer__weight_decay': 0.001}
+2025-05-01 17:42:55 | INFO     | ℹ️ | [run                      :2349] | --- Method non_nested_grid_search completed successfully ---
+2025-05-01 17:42:55 | INFO     | ℹ️ | [run                      :2359] | Pipeline execution finished.
+2025-05-01 17:42:55 | INFO     | ℹ️ | [<module>                 :2437] | --- Final Execution Results ---
+2025-05-01 17:42:55 | INFO     | ℹ️ | [<module>                 :2444] | Method non_nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.3214, BestScore: 0.7748)
+2025-05-01 17:43:46 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [<module>                 :2418] | Chosen sequence: [('nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'outer_cv': 3, 'inner_cv': 2, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD'...
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [_detect_structure        :434 ] | Found 'train' and 'test' directories with matching class subdirectories. Assuming FIXED structure.
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: fixed
+2025-05-01 17:43:46 | INFO     | ℹ️ | [_load_fixed_dataset      :542 ] | Loading FIXED dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\train (train) and C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\test (test)...
+2025-05-01 17:43:46 | INFO     | ℹ️ | [_load_fixed_dataset      :553 ] | Train+Validation dataset loaded: 350 samples.
+2025-05-01 17:43:46 | INFO     | ℹ️ | [_load_fixed_dataset      :554 ] | Test dataset loaded: 84 samples.
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [_load_fixed_dataset      :568 ] | Train/Val split: 280 train, 70 validation indices.
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-01 17:43:46 | INFO     | ℹ️ | [_load_fixed_dataset      :586 ] | FIXED Dataset loaded: 280 train, 70 validation, 84 test samples.
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :401 ] | Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and fixed dataset structure.
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [_validate_methods        :2321] | Method validation successful.
+2025-05-01 17:43:46 | INFO     | ℹ️ | [__init__                 :2270] | Executor configured to run methods: nested_grid_search
+2025-05-01 17:43:46 | INFO     | ℹ️ | [run                      :2333] | Starting execution of pipeline methods...
+2025-05-01 17:43:46 | INFO     | ℹ️ | [run                      :2337] | --- Running Method 1/1: nested_grid_search ---
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [run                      :2338] | Parameters for nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'outer_cv': 3, 'inner_cv': 2, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-05-01 17:43:46 | INFO     | ℹ️ | [nested_grid_search       :1674] | Performing nested 'grid' search.
+2025-05-01 17:43:46 | INFO     | ℹ️ | [nested_grid_search       :1675] |   Outer CV folds: 3, Inner CV folds: 2
+2025-05-01 17:43:46 | INFO     | ℹ️ | [nested_grid_search       :1676] |   Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-05-01 17:43:46 | INFO     | ℹ️ | [nested_grid_search       :1677] |   Scoring Metric: accuracy
+2025-05-01 17:43:46 | WARNING  | ⚠️ | [nested_grid_search       :1712] | Adapting nested CV for FIXED dataset structure (using NumPy):
+2025-05-01 17:43:46 | WARNING  | ⚠️ | [nested_grid_search       :1713] |   Inner search (tuning) runs on 'train+validation' sets.
+2025-05-01 17:43:46 | WARNING  | ⚠️ | [nested_grid_search       :1714] |   Final evaluation uses the single best model on the fixed 'test' set.
+2025-05-01 17:43:46 | INFO     | ℹ️ | [nested_grid_search       :1726] | Loading combined train+val data into memory for tuning...
+2025-05-01 17:43:46 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class 'torch.utils.data.dataset.ConcatDataset'> (length 350) into NumPy arrays...
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/11
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/11
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/11
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 4/11
+2025-05-01 17:43:46 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 5/11
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 6/11
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 7/11
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 8/11
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 9/11
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 10/11
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 11/11
+2025-05-01 17:43:47 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (350, 3, 64, 64), y shape: (350,)
+2025-05-01 17:43:47 | INFO     | ℹ️ | [nested_grid_search       :1728] | Loading fixed test data into memory for final evaluation...
+2025-05-01 17:43:47 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class 'torchvision.datasets.folder.ImageFolder'> (length 84) into NumPy arrays...
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/3
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/3
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/3
+2025-05-01 17:43:47 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (84, 3, 64, 64), y shape: (84,)
+2025-05-01 17:43:47 | INFO     | ℹ️ | [nested_grid_search       :1768] | Running adapted nested CV for FIXED structure with NumPy data...
+2025-05-01 17:43:47 | INFO     | ℹ️ | [nested_grid_search       :1770] |   Step 1: Tuning hyperparameters using inner CV on train+validation data...
+2025-05-01 17:43:47 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:43:48 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:48 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:43:48 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:43:49 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:50 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:43:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:50 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:43:50 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:43:51 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:51 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:43:51 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:51 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:43:51 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:43:52 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:53 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:43:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:53 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:43:53 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:43:54 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:54 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:43:54 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:54 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:43:54 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:43:55 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:56 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:43:56 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:56 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:43:56 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:43:57 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:57 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:43:57 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:57 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:43:57 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:43:58 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:59 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:43:59 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:43:59 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:43:59 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:44:00 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:44:00 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-01 17:44:00 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:44:00 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-01 17:44:00 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-01 17:44:02 | INFO     | ℹ️ | [nested_grid_search       :1772] |   Hyperparameter tuning finished. Best params: {'lr': 0.0005, 'optimizer__weight_decay': 0.001}
+2025-05-01 17:44:02 | INFO     | ℹ️ | [nested_grid_search       :1777] |   Step 2: Evaluating the best model on the fixed test set...
+2025-05-01 17:44:02 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:44:02 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-01 17:44:02 | DEBUG    | 🐛 | [_compute_metrics         :1380] | Computed Metrics: Acc=0.3214, Macro F1=0.2375, Macro ROC AUC=0.6176, Macro PR AUC=0.2454
+2025-05-01 17:44:02 | INFO     | ℹ️ | [nested_grid_search       :1786] |   Fixed Test Set Eval: Accuracy=0.3214
+2025-05-01 17:44:02 | INFO     | ℹ️ | [_save_results            :1449] | Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn\nested_grid_search_inner_cv=2_method=grid_n_iter=N_A_outer_cv=3_scoring=accuracy_20250501_174402.json
+2025-05-01 17:44:02 | INFO     | ℹ️ | [_save_results            :1474] | Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn\summary_results.csv
+2025-05-01 17:44:02 | INFO     | ℹ️ | [run                      :2349] | --- Method nested_grid_search completed successfully ---
+2025-05-01 17:44:02 | INFO     | ℹ️ | [run                      :2359] | Pipeline execution finished.
+2025-05-01 17:44:02 | INFO     | ℹ️ | [<module>                 :2437] | --- Final Execution Results ---
+2025-05-01 17:44:02 | INFO     | ℹ️ | [<module>                 :2444] | Method nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.3214, BestScore: nan)
+2025-05-01 17:44:42 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-01 17:44:42 | DEBUG    | 🐛 | [<module>                 :2418] | Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-05-01 17:44:42 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD'...
+2025-05-01 17:44:42 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-01 17:44:42 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD
+2025-05-01 17:44:42 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-01 17:44:42 | DEBUG    | 🐛 | [_detect_structure        :434 ] | Found 'train' and 'test' directories with matching class subdirectories. Assuming FIXED structure.
+2025-05-01 17:44:42 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: fixed
+2025-05-01 17:44:42 | INFO     | ℹ️ | [_load_fixed_dataset      :542 ] | Loading FIXED dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\train (train) and C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\test (test)...
+2025-05-01 17:44:42 | INFO     | ℹ️ | [_load_fixed_dataset      :553 ] | Train+Validation dataset loaded: 350 samples.
+2025-05-01 17:44:42 | INFO     | ℹ️ | [_load_fixed_dataset      :554 ] | Test dataset loaded: 84 samples.
+2025-05-01 17:44:42 | DEBUG    | 🐛 | [_load_fixed_dataset      :568 ] | Train/Val split: 280 train, 70 validation indices.
+2025-05-01 17:44:42 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-01 17:44:42 | INFO     | ℹ️ | [_load_fixed_dataset      :586 ] | FIXED Dataset loaded: 280 train, 70 validation, 84 test samples.
+2025-05-01 17:44:42 | INFO     | ℹ️ | [__init__                 :401 ] | Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-01 17:44:42 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn
+2025-05-01 17:44:42 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-01 17:44:42 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and fixed dataset structure.
+2025-05-01 17:44:42 | ERROR    | ❌ | [<module>                 :2448] | Pipeline initialization or execution failed: Method 'cv_model_evaluation' at index 0 is incompatible with FIXED dataset structure.
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2422, in <module>
+    executor = PipelineExecutor(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2267, in __init__
+    self._validate_methods()
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2304, in _validate_methods
+    raise ValueError(f"Method '{method_name}' at index {i} is incompatible with FIXED dataset structure.")
+ValueError: Method 'cv_model_evaluation' at index 0 is incompatible with FIXED dataset structure.
+2025-05-01 17:48:21 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-01 17:48:21 | DEBUG    | 🐛 | [<module>                 :2418] | Chosen sequence: [('cv_model_evaluation', {'cv': 5, 'save_results': True})]
+2025-05-01 17:48:21 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD'...
+2025-05-01 17:48:21 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-01 17:48:21 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD
+2025-05-01 17:48:21 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-01 17:48:21 | DEBUG    | 🐛 | [_detect_structure        :434 ] | Found 'train' and 'test' directories with matching class subdirectories. Assuming FIXED structure.
+2025-05-01 17:48:21 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: fixed
+2025-05-01 17:48:21 | INFO     | ℹ️ | [_load_fixed_dataset      :542 ] | Loading FIXED dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\train (train) and C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD\test (test)...
+2025-05-01 17:48:21 | INFO     | ℹ️ | [_load_fixed_dataset      :553 ] | Train+Validation dataset loaded: 350 samples.
+2025-05-01 17:48:21 | INFO     | ℹ️ | [_load_fixed_dataset      :554 ] | Test dataset loaded: 84 samples.
+2025-05-01 17:48:21 | DEBUG    | 🐛 | [_load_fixed_dataset      :568 ] | Train/Val split: 280 train, 70 validation indices.
+2025-05-01 17:48:21 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-01 17:48:21 | INFO     | ℹ️ | [_load_fixed_dataset      :586 ] | FIXED Dataset loaded: 280 train, 70 validation, 84 test samples.
+2025-05-01 17:48:21 | INFO     | ℹ️ | [__init__                 :401 ] | Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-01 17:48:21 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD\cnn
+2025-05-01 17:48:21 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-01 17:48:21 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and fixed dataset structure.
+2025-05-01 17:48:21 | ERROR    | ❌ | [<module>                 :2448] | Pipeline initialization or execution failed: Method 'cv_model_evaluation' at index 0 is incompatible with FIXED dataset structure.
+Traceback (most recent call last):
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2422, in <module>
+    executor = PipelineExecutor(
+               ^^^^^^^^^^^^^^^^^
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2267, in __init__
+    self._validate_methods()
+  File "C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\code_v5.py", line 2304, in _validate_methods
+    raise ValueError(f"Method '{method_name}' at index {i} is incompatible with FIXED dataset structure.")
+ValueError: Method 'cv_model_evaluation' at index 0 is incompatible with FIXED dataset structure.

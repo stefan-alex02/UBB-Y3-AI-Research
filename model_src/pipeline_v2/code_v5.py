@@ -1,44 +1,35 @@
-# START OF FILE code_v5_revised.py
-
-import os
-import logging
-import re
-
-import emoji
 import json
-import torch
-import numpy as np
-import pandas as pd
+import re
 # import matplotlib.pyplot as plt # Matplotlib potentially used for plotting results later, keep import
 from datetime import datetime
-from typing import Dict, List, Tuple, Union, Optional, Callable, Any, Type
 from enum import Enum
-from pathlib import Path
+from typing import Dict, List, Tuple, Callable, Any, Type
 
+import numpy as np
+import pandas as pd
+import skorch
+import torch
 import torch.nn as nn
-from skorch.helper import SliceDataset # Keep SliceDataset import
-# import torch.nn.functional as F # F not used directly, can be removed if desired
-from torch.utils.data import Dataset, DataLoader, random_split, Subset, ConcatDataset
-from torchvision import transforms, datasets, models
-# from torchvision.transforms import v2 # v2 not explicitly used, stick to v1 for now
-
+# from sklearn.preprocessing import label_binarize # Not directly needed, handled by metric functions
+from sklearn.base import clone
+from sklearn.metrics import (
+    accuracy_score, precision_score, recall_score, f1_score,
+    roc_auc_score, precision_recall_curve, auc
+)
 from sklearn.model_selection import (
     GridSearchCV, RandomizedSearchCV, StratifiedKFold,
     cross_validate, train_test_split
     # cross_val_score, cross_val_predict # Not used, cross_validate is preferred
 )
-from sklearn.metrics import (
-    accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, precision_recall_curve, auc,
-    confusion_matrix, make_scorer
-)
-# from sklearn.preprocessing import label_binarize # Not directly needed, handled by metric functions
-from sklearn.base import BaseEstimator, ClassifierMixin, clone
-
-import skorch
 from skorch import NeuralNetClassifier
-from skorch.callbacks import EarlyStopping, LRScheduler, Checkpoint, Callback # Import base Callback
-from skorch.dataset import Dataset as SkorchDataset # To distinguish from torch.utils.data.Dataset
+from skorch.callbacks import EarlyStopping, LRScheduler, Checkpoint, Callback  # Import base Callback
+from skorch.dataset import Dataset as SkorchDataset  # To distinguish from torch.utils.data.Dataset
+from skorch.helper import SliceDataset  # Keep SliceDataset import
+# import torch.nn.functional as F # F not used directly, can be removed if desired
+from torch.utils.data import Dataset, DataLoader, Subset, ConcatDataset
+from torchvision import transforms, datasets, models
+
+# from torchvision.transforms import v2 # v2 not explicitly used, stick to v1 for now
 
 # --- Global Configurations ---
 # TODO: check if reproducibility is guaranteed with this setup (it doesn't seem to be)
@@ -58,10 +49,9 @@ NUM_WORKERS = 0 # Set to 0 for stability, especially on Windows
 import logging
 import emoji
 import sys
-import os
 from pathlib import Path
 from typing import Optional, Union
-import time
+
 
 # --- ANSI Color Codes ---
 class LogColors:
@@ -83,7 +73,6 @@ class EnhancedFormatter(logging.Formatter):
     level names, and source location (funcName:lineno).
     """
 
-    # --- MODIFY THESE FORMAT STRINGS ---
     # Use %(funcName)s instead of %(name)s
     # Adjust padding for funcName (e.g., -25s) and lineno (e.g., -4d)
     level_formats = {
@@ -101,7 +90,6 @@ class EnhancedFormatter(logging.Formatter):
         logging.CRITICAL: "%(asctime)s | %(levelname)-8s | 💥 | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
     }
     default_format = f"%(asctime)s | %(levelname)-8s | ? | [%(funcName)-25s:%(lineno)-4d] | %(message)s"
-    # --- END MODIFICATION ---
 
     date_format = '%Y-%m-%d %H:%M:%S'
 
@@ -1303,7 +1291,7 @@ class ClassificationPipeline:
         if y_score is not None and not isinstance(y_score, np.ndarray): y_score = np.array(y_score)
 
 
-        metrics = {'accuracy': accuracy_score(y_true, y_pred)}
+        metrics: Dict[str, Any] = {'accuracy': accuracy_score(y_true, y_pred)}
         # Use the actual class labels present in the true data for iteration
         present_class_labels = np.unique(y_true)
         # But use the handler's full list for consistent reporting structure
@@ -2384,7 +2372,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG) # Set level to DEBUG for detailed logs
 
     # --- Configuration ---
-    dataset_path = script_dir / "../data/mini-GCD-flat" # Adjust path as needed
+    dataset_path = script_dir / "../data/mini-GCD" # Adjust path as needed
 
     if not Path(dataset_path).exists():
          logger.error(f"Dataset path not found: {dataset_path}")
@@ -2425,7 +2413,7 @@ if __name__ == "__main__":
     ]
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_sequence_3 # Select the sequence to run
+    chosen_sequence = methods_sequence_4 # Select the sequence to run
 
     logger.debug(f"Chosen sequence: {chosen_sequence}")
 
@@ -2460,5 +2448,3 @@ if __name__ == "__main__":
          logger.error(f"Pipeline initialization or execution failed: {e}", exc_info=True)
     except Exception as e: # Catch any other unexpected errors
          logger.critical(f"An unexpected error occurred: {e}", exc_info=True)
-
-# END OF FILE code_v5_revised.py
