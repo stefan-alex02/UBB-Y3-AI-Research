@@ -2372,7 +2372,7 @@ if __name__ == "__main__":
     logger.setLevel(logging.DEBUG) # Set level to DEBUG for detailed logs
 
     # --- Configuration ---
-    dataset_path = script_dir / "../data/mini-GCD" # Adjust path as needed
+    dataset_path = script_dir / "../data/mini-GCD-flat" # Adjust path as needed
 
     if not Path(dataset_path).exists():
          logger.error(f"Dataset path not found: {dataset_path}")
@@ -2413,7 +2413,7 @@ if __name__ == "__main__":
     ]
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_sequence_4 # Select the sequence to run
+    chosen_sequence = methods_sequence_2 # Select the sequence to run
 
     logger.debug(f"Chosen sequence: {chosen_sequence}")
 
