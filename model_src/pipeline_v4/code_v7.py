@@ -1,5 +1,5 @@
 # --- START OF FILE code_v7.py ---
-
+import hashlib
 import json
 import re
 # import matplotlib.pyplot as plt # Keep for potential future use
@@ -599,6 +599,7 @@ class SkorchModelAdapter(NeuralNetClassifier):
     train or validation transforms based on the model's training state.
     Includes train_acc logging.
     """
+
     def __init__(
         self,
         *args, # Pass positional args to parent
@@ -620,8 +621,8 @@ class SkorchModelAdapter(NeuralNetClassifier):
     ):
         if train_transform is None or valid_transform is None:
              raise ValueError("Both train_transform and valid_transform must be provided to SkorchModelAdapter")
-        self.custom_train_transform = train_transform # Use distinct names
-        self.custom_valid_transform = valid_transform
+        self.train_transform = train_transform # Use distinct names
+        self.valid_transform = valid_transform
 
         # --- Process Callbacks ---
         final_callbacks_arg = None
@@ -652,6 +653,14 @@ class SkorchModelAdapter(NeuralNetClassifier):
         kwargs.pop('monitor', None)
         kwargs.pop('lr_scheduler_policy', None)
         kwargs.pop('lr_scheduler_patience', None)
+        # --- End Process Callbacks ---
+
+        # --- FIX: Add Collate Functions to kwargs IF NOT ALREADY PRESENT ---
+        # This ensures they are part of the standard skorch parameter handling
+        # and correctly managed by get_params and clone.
+        kwargs.setdefault('iterator_train__collate_fn', PathImageDataset.collate_fn)
+        kwargs.setdefault('iterator_valid__collate_fn', PathImageDataset.collate_fn)
+        # --- END FIX ---
 
         # Initialize the parent class
         super().__init__(
@@ -666,29 +675,20 @@ class SkorchModelAdapter(NeuralNetClassifier):
             callbacks=final_callbacks_arg, # Pass the processed list/None
             train_split=train_split, # Pass the provided train_split value
             iterator_train__shuffle=iterator_train__shuffle,
-            # Pass our custom collate fn for both train and valid iterators
-            iterator_train__collate_fn=PathImageDataset.collate_fn,
-            iterator_valid__collate_fn=PathImageDataset.collate_fn,
             verbose=verbose,
-            **kwargs # Pass *cleaned* kwargs
+            **kwargs  # Pass kwargs, which now includes the collate functions
         )
 
     # Override get_dataset to inject the correct transform based on training state
     def get_dataset(self, X, y=None):
         """ Creates PathImageDataset with train/valid transform based on module state."""
-        # X is expected to be paths, y is expected to be labels
         if not self.initialized_ or not hasattr(self, 'module_'):
-             # Before first fit or during scoring outside fit loop (should be eval)
-             current_transform = self.custom_valid_transform
-             # logger.debug("[Adapter.get_dataset] Module not initialized, using valid_transform.")
+            current_transform = self.valid_transform
         else:
-             is_training = getattr(self.module_, 'training', False) # Default to False if attr missing
-             current_transform = self.custom_train_transform if is_training else self.custom_valid_transform
-             # logger.debug(f"[Adapter.get_dataset] Module training={is_training}. Using {'train' if is_training else 'valid'} transform.")
+            is_training = getattr(self.module_, 'training', False)
+            current_transform = self.train_transform if is_training else self.valid_transform
 
-        # Ensure X is a list of paths (convert if NumPy array)
         if isinstance(X, np.ndarray): X = X.tolist()
-        # Ensure y is a list of labels or None (convert if NumPy array)
         if isinstance(y, np.ndarray): y = y.tolist()
 
         return PathImageDataset(X, y, transform=current_transform)
@@ -698,24 +698,20 @@ class SkorchModelAdapter(NeuralNetClassifier):
         """Override train_step_single to ensure yi is LongTensor and log train_acc."""
         self.module_.train()
         Xi, yi = batch
-        yi = yi.to(dtype=torch.long) # Ensure target type
+        yi = yi.to(dtype=torch.long)  # Ensure target type
         y_pred = self.infer(Xi, **fit_params)
         loss = self.get_loss(y_pred, yi, X=Xi, training=True)
         loss.backward()
 
-        # Calculate training accuracy for the batch
         try:
             y_true_batch = yi.cpu().numpy()
             y_pred_batch = y_pred.argmax(dim=1).cpu().numpy()
-            # Handle case where batch might be empty after collate filtering
             batch_acc = accuracy_score(y_true_batch, y_pred_batch) if len(y_true_batch) > 0 else 0.0
         except Exception as e:
-             logger.warning(f"Could not calculate train batch accuracy: {e}")
-             batch_acc = 0.0 # Default value on error
+            logger.warning(f"Could not calculate train batch accuracy: {e}")
+            batch_acc = 0.0
 
-        # Skorch expects 'loss' and optionally 'y_pred'
-        # Other metrics like 'train_acc' are automatically aggregated if returned
-        return {'loss': loss, 'train_acc': batch_acc, 'y_pred': y_pred} # Return y_pred if needed by callbacks
+        return {'loss': loss, 'train_acc': batch_acc, 'y_pred': y_pred}
 
     # Override validation_step to ensure target type (good practice)
     def validation_step(self, batch, **fit_params):
@@ -726,7 +722,7 @@ class SkorchModelAdapter(NeuralNetClassifier):
         with torch.no_grad():
             y_pred = self.infer(Xi, **fit_params)
             loss = self.get_loss(y_pred, yi, X=Xi, training=False)
-        return {'loss': loss, 'y_pred': y_pred} # y_pred needed for valid_acc etc.
+        return {'loss': loss, 'y_pred': y_pred}
 
     # predict/predict_proba should automatically use eval mode and thus valid_transform
     # due to skorch's internal state management. No override needed unless specific logic required.
@@ -811,7 +807,7 @@ class ClassificationPipeline:
             'train_transform': self.dataset_handler.get_train_transform(),
             'valid_transform': self.dataset_handler.get_eval_transform(),
             'classes': np.arange(self.dataset_handler.num_classes), # Required by skorch for scoring if y is not passed
-            'verbose': 1,
+            'verbose': 3,
             'optimizer__weight_decay': optimizer__weight_decay,
              # train_split is None by default in adapter, suitable for external CV
             **module_params # Add default module params
@@ -907,57 +903,100 @@ class ClassificationPipeline:
         return metrics
 
     def _save_results(self, results_data: Dict[str, Any], method_name: str, params: Optional[Dict[str, Any]] = None) -> None:
-        # (Keep logic from code_v6, sanitization and saving are fine)
         params = params or {}
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-        def sanitize_value(v):
-             if isinstance(v, (str, int, float, bool, type(None))):
-                 s_val = str(v).replace('/', '_').replace('\\', '_')
-                 s_val = re.sub(r'[<>:"|?*]', '_', s_val) # More restricted set
-                 return s_val[:50] # Limit length
-             return 'complex_param'
+        # --- Define Keys for Filename Parameters ---
+        # Select only simple, key hyperparameters relevant for filenames
+        filename_param_keys = [
+            'lr', 'batch_size', 'max_epochs', 'patience', # Common Skorch params
+            'optimizer__weight_decay', # Example optimizer param
+            'module__dropout_rate', # Example module param
+            # CV specific params (if applicable)
+            'cv', 'outer_cv', 'inner_cv', 'n_iter'
+        ]
 
-        simple_params = {k: sanitize_value(v) for k, v in params.items() if k not in ['self', 'X', 'y', 'param_grid']} # Avoid large/complex params in filename
-        params_str = '_'.join([f"{k}={v}" for k, v in sorted(simple_params.items())])
+        # --- Filter and Sanitize Filename Parameters ---
+        filename_params = {}
+        for key in filename_param_keys:
+            if key in params:
+                value = params[key]
+                # Check if value is a simple type suitable for filename
+                if isinstance(value, (str, int, float, bool, type(None))):
+                     # Sanitize the value
+                     s_val = str(value).replace('/', '_').replace('\\', '_')
+                     s_val = re.sub(r'[<>:"|?*]', '_', s_val) # More restricted set
+                     filename_params[key] = s_val[:30] # Limit length per value too
+                # else: skip complex types for filename
+
+        params_str = '_'.join([f"{k}={v}" for k, v in sorted(filename_params.items())])
 
         filename_base = f"{method_name}_{params_str}_{timestamp}" if params_str else f"{method_name}_{timestamp}"
         json_filepath = self.results_dir / f"{filename_base}.json"
+        # Ensure filename isn't exceeding limits (simple check)
+        max_len = 240 # Leave some room for directory path
+        if len(json_filepath.name) > max_len:
+             logger.warning(f"Generated filename exceeds {max_len} chars, truncating: {json_filepath.name}")
+             # Truncate the params part intelligently if possible, or just hash it
+             hash_part = hashlib.md5(params_str.encode()).hexdigest()[:8]
+             filename_base = f"{method_name}_params_{hash_part}_{timestamp}"
+             json_filepath = self.results_dir / f"{filename_base}.json"
+             logger.warning(f"Using truncated filename: {json_filepath.name}")
+
+
         csv_filepath = self.results_dir.parent / f"{self.dataset_handler.root_path.name}_summary_results.csv" # Summary in parent dir
 
         # --- Save detailed JSON ---
         try:
             def json_serializer(obj):
-                if isinstance(obj, (np.integer, np.int64)): return int(obj)
-                elif isinstance(obj, (np.floating, np.float32, np.float64)): return float(obj) if not np.isnan(obj) else None
-                elif isinstance(obj, np.ndarray): return obj.tolist()
-                elif isinstance(obj, Path): return str(obj)
-                elif isinstance(obj, datetime): return obj.isoformat()
-                elif isinstance(obj, (slice, type, Callable)): return None # Don't serialize certain types
-                try: return json.JSONEncoder.default(None, obj)
-                except TypeError: return str(obj) # Fallback
+                 # (Keep existing serializer logic)
+                 if isinstance(obj, (np.integer, np.int64)): return int(obj)
+                 elif isinstance(obj, (np.floating, np.float32, np.float64)): return float(obj) if not np.isnan(obj) else None
+                 elif isinstance(obj, np.ndarray): return obj.tolist()
+                 elif isinstance(obj, Path): return str(obj)
+                 elif isinstance(obj, datetime): return obj.isoformat()
+                 elif isinstance(obj, (slice, type, Callable)): return None
+                 # --- ADDED: Handle specific non-serializable skorch/torch items in config ---
+                 elif isinstance(obj, (torch.optim.Optimizer, nn.Module, EarlyStopping, LRScheduler, ValidSplit)):
+                      return str(type(obj).__name__) # Just store the type name
+                 # --- END ADDED ---
+                 try: return json.JSONEncoder.default(None, obj)
+                 except TypeError: return str(obj)
 
-            # Clean up non-serializable parts before saving
+
+            # Clean results *before* saving
             clean_results = results_data.copy()
+            # Save the *original* full params dict inside the JSON (after serialization)
+            clean_results['full_params_used'] = params
+
+            # Clean cv_results if present
             if 'cv_results' in clean_results and isinstance(clean_results['cv_results'], dict):
-                 # Remove complex/large items often found in cv_results
                  clean_results['cv_results'].pop('params', None)
                  clean_results['cv_results'].pop('estimator', None)
-                 # Convert arrays
                  for key, value in clean_results['cv_results'].items():
                      if isinstance(value, np.ndarray):
                           clean_results['cv_results'][key] = value.tolist()
-            if 'fold_histories' in clean_results: del clean_results['fold_histories'] # Histories can be large
+            if 'fold_histories' in clean_results: del clean_results['fold_histories']
 
             with open(json_filepath, 'w', encoding='utf-8') as f:
                 json.dump(clean_results, f, indent=4, default=json_serializer)
             logger.info(f"Detailed results saved to: {json_filepath}")
+        except OSError as oe: # Catch specific OS errors like filename too long
+             logger.error(f"OS Error saving detailed results to JSON {json_filepath}: {oe}", exc_info=True)
+             # Maybe try saving with a simpler filename as fallback?
+             try:
+                  fallback_path = self.results_dir / f"{method_name}_fallback_{timestamp}.json"
+                  with open(fallback_path, 'w', encoding='utf-8') as f:
+                      json.dump(clean_results, f, indent=4, default=json_serializer)
+                  logger.warning(f"Saved results to fallback file: {fallback_path}")
+             except Exception as fallback_e:
+                  logger.error(f"Fallback JSON save also failed: {fallback_e}")
         except Exception as e:
             logger.error(f"Failed to save detailed results to JSON {json_filepath}: {e}", exc_info=True)
 
         # --- Prepare and save summary CSV ---
         try:
-            # Extract primary metrics, handling nested dicts
+            # (Keep existing summary logic)
             macro_avg = results_data.get('macro_avg', {})
             test_eval = results_data.get('test_set_evaluation', results_data.get('fixed_test_set_evaluation', {}))
 
@@ -973,9 +1012,8 @@ class ClassificationPipeline:
                 'macro_roc_auc': macro_avg.get('roc_auc', results_data.get('mean_test_roc_auc_macro', test_eval.get('macro_avg', {}).get('roc_auc', np.nan))),
                 'macro_pr_auc': macro_avg.get('pr_auc', results_data.get('mean_test_pr_auc_macro', test_eval.get('macro_avg', {}).get('pr_auc', np.nan))),
                 'best_cv_score': results_data.get('best_score', results_data.get('best_tuning_score', np.nan)),
-                **simple_params # Add simple run params to summary
+                **filename_params # Add simple FILENAME params to summary
             }
-            # Convert NaNs to None for CSV clarity
             summary = {k: (None if isinstance(v, float) and np.isnan(v) else v) for k, v in summary.items()}
 
             df_summary = pd.DataFrame([summary])
@@ -991,15 +1029,15 @@ class ClassificationPipeline:
     def non_nested_grid_search(self,
                                param_grid: Dict[str, List],
                                cv: int = 5,
-                               n_iter: Optional[int] = None, # For RandomizedSearch
-                               method: str = 'grid', # 'grid' or 'random'
-                               scoring: str = 'accuracy', # Sklearn scorer string or callable
+                               n_iter: Optional[int] = None,  # For RandomizedSearch
+                               method: str = 'grid',  # 'grid' or 'random'
+                               scoring: str = 'accuracy',  # Sklearn scorer string or callable
                                save_results: bool = True) -> Dict[str, Any]:
         """
         Performs non-nested hyperparameter search (Grid/RandomizedSearchCV)
-        using the train+validation data. Uses internal validation split via Skorch Adapter
-        for early stopping during search. Evaluates best model on test data.
-        Works by passing paths directly.
+        using the train+validation data. Refits the best model on the train+val
+        data and updates the pipeline's main adapter. Does NOT evaluate on the
+        test set itself. Works by passing paths directly.
         """
         method_lower = method.lower()
         search_type = "GridSearchCV" if method_lower == 'grid' else "RandomizedSearchCV"
@@ -1011,23 +1049,19 @@ class ClassificationPipeline:
         if method_lower not in ['grid', 'random']: raise ValueError(f"Unsupported search method: {method}.")
 
         # --- Get Data (Paths/Labels) ---
+        # Only need trainval data for fitting the search
         X_trainval, y_trainval = self.dataset_handler.get_train_val_paths_labels()
-        X_test, y_test = self.dataset_handler.get_test_paths_labels()
         if not X_trainval: raise RuntimeError("Train+validation data is empty.")
 
         # --- Setup Skorch Estimator for Search ---
-        # Clone the base adapter config, ensure internal validation split is enabled for EarlyStopping
         adapter_config = self.model_adapter_config.copy()
-        # Use ValidSplit for internal validation during each GridSearch fit
-        # This split happens *within* the data provided by the outer CV splitter of GridSearchCV
-        adapter_config['train_split'] = ValidSplit(cv=0.15, stratified=True, random_state=RANDOM_SEED) # Adjust fraction as needed
-        # Maybe reduce verbosity for inner fits
-        adapter_config['verbose'] = 0
-        # Ensure callbacks are appropriate (e.g., EarlyStopping monitoring valid_loss)
+        adapter_config['train_split'] = ValidSplit(cv=0.15, stratified=True,
+                                                   random_state=RANDOM_SEED)  # Internal validation
+        adapter_config['verbose'] = 3  # Less verbose fits during search
         adapter_config['callbacks'] = [
-             ('early_stopping', EarlyStopping(monitor='valid_loss', patience=adapter_config.get('patience', 10), load_best=True)),
-             # LR scheduler might also be useful here
-              ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
+            ('early_stopping',
+             EarlyStopping(monitor='valid_loss', patience=adapter_config.get('patience', 10), load_best=True)),
+            ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
         ]
         estimator = SkorchModelAdapter(**adapter_config)
 
@@ -1035,16 +1069,12 @@ class ClassificationPipeline:
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
         SearchClass = GridSearchCV if method_lower == 'grid' else RandomizedSearchCV
         search_kwargs = {
-            'estimator': estimator,
-            'cv': cv_splitter,
-            'scoring': scoring,
-            'n_jobs': 1, # Use 1 for stability with GPU/image loading, increase carefully
-            'verbose': 2, # Verbosity for the search process itself
-            'refit': True, # Refit best estimator on the whole trainval set
-            'return_train_score': True,
-            'error_score': 'raise' # Raise errors during fitting
+            'estimator': estimator, 'cv': cv_splitter, 'scoring': scoring,
+            'n_jobs': 1, 'verbose': 3, 'refit': True,  # Keep refit=True
+            'return_train_score': True, 'error_score': 'raise'
         }
-        if method_lower == 'grid': search_kwargs['param_grid'] = param_grid
+        if method_lower == 'grid':
+            search_kwargs['param_grid'] = param_grid
         else:
             search_kwargs['param_distributions'] = param_grid
             search_kwargs['n_iter'] = n_iter
@@ -1052,49 +1082,49 @@ class ClassificationPipeline:
         search = SearchClass(**search_kwargs)
 
         # --- Run Search ---
-        logger.info(f"Fitting {SearchClass.__name__}...")
-        search.fit(X_trainval, y=np.array(y_trainval)) # Pass paths, sklearn needs y as array for stratification
+        logger.info(f"Fitting {SearchClass.__name__} on train+validation data...")
+        search.fit(X_trainval, y=np.array(y_trainval))  # Fit on trainval only
         logger.info(f"Search completed.")
 
-        # --- Collect Results ---
+        # --- Collect Results (Search Results Only) ---
         results = {
             'method': f"non_nested_{method_lower}_search",
-            'params': {'cv': cv, 'n_iter': n_iter if method_lower=='random' else 'N/A', 'method': method_lower, 'scoring': scoring},
+            'params': {'cv': cv, 'n_iter': n_iter if method_lower == 'random' else 'N/A', 'method': method_lower,
+                       'scoring': scoring},
             'best_params': search.best_params_,
-            'best_score': search.best_score_,
-            'cv_results': search.cv_results_, # Can be large, cleaned during saving
+            'best_score': search.best_score_,  # This is the CV score on trainval
+            'cv_results': search.cv_results_,
+            # --- Test set evaluation REMOVED from this method ---
+            'test_set_evaluation': {'message': 'Test set evaluation not performed in this method.'},
+            'accuracy': np.nan,  # Indicate no test accuracy from this step
+            'macro_avg': {}  # Indicate no test metrics from this step
         }
 
-        # --- Evaluate Best Model on Test Set ---
-        if X_test and y_test:
-             logger.info(f"Evaluating best model (refit on trainval) on the test set...")
-             best_estimator = search.best_estimator_ # Already refit on X_trainval
-             try:
-                 # Predict returns class labels, Predict_proba returns probabilities
-                 y_pred_test = best_estimator.predict(X_test)
-                 y_score_test = best_estimator.predict_proba(X_test)
-                 test_metrics = self._compute_metrics(np.array(y_test), y_pred_test, y_score_test)
-                 results['test_set_evaluation'] = test_metrics
-                 results['accuracy'] = test_metrics.get('accuracy', np.nan) # For summary
-                 results['macro_avg'] = test_metrics.get('macro_avg', {}) # For summary
-                 logger.info(f"Test Set Evaluation: Accuracy={test_metrics.get('accuracy', -1):.4f}, "
-                             f"Macro F1={test_metrics.get('macro_avg', {}).get('f1', -1):.4f}")
-             except Exception as e:
-                  logger.error(f"Error during test set evaluation: {e}", exc_info=True)
-                  results['test_set_evaluation'] = {'error': str(e)}
-                  results['accuracy'] = np.nan
-                  results['macro_avg'] = {}
+        # --- Update the pipeline's main adapter with the refitted best model ---
+        if hasattr(search, 'best_estimator_'):
+            logger.info("Updating main pipeline adapter with the best model found and refit by GridSearchCV.")
+            self.model_adapter = search.best_estimator_
+            if not self.model_adapter.initialized_:
+                logger.warning("Refit best estimator seems not initialized, attempting initialize.")
+                try:
+                    self.model_adapter.initialize()
+                except Exception as init_err:
+                    logger.error(f"Failed to initialize refit estimator: {init_err}", exc_info=True)
         else:
-             logger.info("No test set available or it was empty, skipping final evaluation.")
-             results['test_set_evaluation'] = {'message': 'No test set evaluated.'}
-             results['accuracy'] = np.nan # No test accuracy
-             results['macro_avg'] = {}
+            logger.warning("GridSearchCV did not produce a 'best_estimator_'. Pipeline adapter not updated.")
 
+        # --- Save Results (Search results + Best Params) ---
         if save_results:
-            self._save_results(results, f"non_nested_{method_lower}_search", params=results['params'])
+            # Prepare params for saving (include best params found)
+            save_params = results['params'].copy()
+            save_params.update({f"best_{k}": v for k, v in results.get('best_params', {}).items()})
+            # Pass only simple params relevant to the *search itself* for filename/summary
+            filename_params = {k: v for k, v in save_params.items() if k in ['cv', 'n_iter', 'method', 'scoring']}
+            self._save_results(results, f"non_nested_{method_lower}_search", params=filename_params)
 
         logger.info(f"Non-nested {method_lower} search finished. Best CV score ({scoring}): {search.best_score_:.4f}")
         logger.info(f"Best parameters found: {search.best_params_}")
+        logger.info(f"Pipeline adapter has been updated with the best model refit on train+validation data.")
         return results
 
 
@@ -1121,8 +1151,8 @@ class ClassificationPipeline:
         # --- Check Compatibility ---
         if self.dataset_handler.structure == DatasetStructure.FIXED and not self.force_flat_for_fixed_cv:
              # Provide a specific path for FIXED datasets without the flag
-             logger.warning("Running adapted nested CV for FIXED structure (tune on train+val, evaluate on fixed test).")
-             return self._nested_cv_fixed_adapted(param_grid, inner_cv, n_iter, method, scoring, save_results)
+             raise ValueError(f"nested_grid_search requires a FLAT dataset structure "
+                              f"or a FIXED structure with force_flat_for_fixed_cv=True.")
 
         # --- Standard Nested CV (FLAT or FIXED with force_flat_for_fixed_cv=True) ---
         logger.info("Proceeding with standard nested CV using the full dataset.")
@@ -1138,7 +1168,7 @@ class ClassificationPipeline:
         adapter_config = self.model_adapter_config.copy()
         # Use ValidSplit for internal validation during each inner GridSearch fit
         adapter_config['train_split'] = ValidSplit(cv=0.15, stratified=True, random_state=RANDOM_SEED) # Adjust fraction
-        adapter_config['verbose'] = 0 # Less verbose inner loops
+        adapter_config['verbose'] = 3 # More verbose inner loops
         adapter_config['callbacks'] = [
              ('early_stopping', EarlyStopping(monitor='valid_loss', patience=adapter_config.get('patience', 10)//2+1, load_best=True)), # Shorter patience?
              ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=3)) # Shorter patience?
@@ -1149,7 +1179,7 @@ class ClassificationPipeline:
         InnerSearchClass = GridSearchCV if method_lower == 'grid' else RandomizedSearchCV
         inner_search_kwargs = {
             'estimator': base_estimator, 'cv': inner_cv_splitter, 'scoring': scoring,
-            'n_jobs': 1, 'verbose': 0, 'refit': True, 'error_score': 'raise'
+            'n_jobs': 1, 'verbose': 3, 'refit': True, 'error_score': 'raise'
         }
         if method_lower == 'grid': inner_search_kwargs['param_grid'] = param_grid
         else:
@@ -1175,7 +1205,7 @@ class ClassificationPipeline:
              cv_results = cross_validate(
                  inner_search, X_full, y_full_np, cv=outer_cv_splitter, scoring=scoring_dict,
                  return_estimator=False, # Don't return estimators by default (memory)
-                 n_jobs=1, verbose=2, error_score='raise'
+                 n_jobs=1, verbose=3, error_score='raise'
              )
              logger.info("Nested cross-validation finished.")
 
@@ -1210,79 +1240,6 @@ class ClassificationPipeline:
                 'params': {'outer_cv': outer_cv, 'inner_cv': inner_cv, 'n_iter': n_iter if method_lower=='random' else 'N/A', 'method': method_lower, 'scoring': scoring},
                 'error': str(e)
              }
-
-
-    def _nested_cv_fixed_adapted(self, param_grid, inner_cv, n_iter, method, scoring, save_results):
-        """Internal helper for the adapted nested CV workflow on FIXED datasets."""
-        method_lower = method.lower()
-        search_type = "GridSearchCV" if method_lower == 'grid' else "RandomizedSearchCV"
-        logger.info(f"Running adapted nested CV for FIXED structure (tune on train+val, eval on fixed test)...")
-
-        # --- Get Data ---
-        X_trainval, y_trainval = self.dataset_handler.get_train_val_paths_labels()
-        X_test, y_test = self.dataset_handler.get_test_paths_labels()
-        if not X_trainval or not X_test:
-            raise RuntimeError("Train+validation or test data is empty for FIXED structure.")
-        y_trainval_np = np.array(y_trainval)
-        y_test_np = np.array(y_test)
-
-        # --- Setup Inner Search ---
-        adapter_config = self.model_adapter_config.copy()
-        adapter_config['train_split'] = ValidSplit(cv=0.15, stratified=True, random_state=RANDOM_SEED) # Inner validation
-        adapter_config['verbose'] = 0 # Less verbose inner fit
-        adapter_config['callbacks'] = [ # Callbacks for inner fit
-             ('early_stopping', EarlyStopping(monitor='valid_loss', patience=adapter_config.get('patience', 10), load_best=True)),
-             ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
-        ]
-        base_estimator = SkorchModelAdapter(**adapter_config)
-
-        inner_cv_splitter = StratifiedKFold(n_splits=inner_cv, shuffle=True, random_state=RANDOM_SEED)
-        InnerSearchClass = GridSearchCV if method_lower == 'grid' else RandomizedSearchCV
-        inner_search_kwargs = {
-            'estimator': base_estimator, 'cv': inner_cv_splitter, 'scoring': scoring,
-            'n_jobs': 1, 'verbose': 1, 'refit': True, 'error_score': 'raise' # Refit on train+val
-        }
-        if method_lower == 'grid': inner_search_kwargs['param_grid'] = param_grid
-        else:
-            inner_search_kwargs['param_distributions'] = param_grid
-            inner_search_kwargs['n_iter'] = n_iter
-            inner_search_kwargs['random_state'] = RANDOM_SEED
-        inner_search = InnerSearchClass(**inner_search_kwargs)
-
-        results = {
-             'method': f"nested_{method_lower}_search_fixed_adapted",
-             'params': {'inner_cv': inner_cv, 'n_iter': n_iter if method_lower=='random' else 'N/A', 'method': method_lower, 'scoring': scoring},
-        }
-
-        try:
-             # --- Step 1: Tune hyperparameters on train+validation data ---
-             logger.info(f"Starting hyperparameter tuning ({search_type}) on train+validation data...")
-             inner_search.fit(X_trainval, y_trainval_np)
-             logger.info(f"Tuning finished. Best params: {inner_search.best_params_}, Best score: {inner_search.best_score_:.4f}")
-             results['best_params'] = inner_search.best_params_
-             results['best_tuning_score'] = inner_search.best_score_
-             results['inner_cv_results'] = inner_search.cv_results_ # Can be large
-
-             # --- Step 2: Evaluate the best refit model on the fixed test set ---
-             logger.info(f"Evaluating the best model (refit on trainval) on the fixed test set...")
-             best_estimator = inner_search.best_estimator_
-             y_pred_test = best_estimator.predict(X_test)
-             y_score_test = best_estimator.predict_proba(X_test)
-             test_metrics = self._compute_metrics(y_test_np, y_pred_test, y_score_test)
-             results['fixed_test_set_evaluation'] = test_metrics
-             results['accuracy'] = test_metrics.get('accuracy', np.nan)
-             results['macro_avg'] = test_metrics.get('macro_avg', {})
-             logger.info(f"Fixed Test Set Evaluation: Accuracy={results['accuracy']:.4f}, Macro F1={results['macro_avg'].get('f1', np.nan):.4f}")
-
-        except Exception as e:
-             logger.error(f"Adapted nested CV (FIXED) failed: {e}", exc_info=True)
-             results['error'] = str(e)
-
-        if save_results:
-             self._save_results(results, results['method'], params=results['params'])
-
-        return results
-
 
     def cv_model_evaluation(self, cv: int = 5, params: Optional[Dict] = None, save_results: bool = True) -> Dict[str, Any]:
         """
@@ -1346,7 +1303,7 @@ class ClassificationPipeline:
             fold_adapter_config = eval_params.copy()
             # Enable internal validation split for monitoring (e.g., EarlyStopping)
             fold_adapter_config['train_split'] = ValidSplit(cv=0.15, stratified=True, random_state=RANDOM_SEED + fold_idx)
-            fold_adapter_config['verbose'] = 1 # Show progress per fold
+            fold_adapter_config['verbose'] = 3 # Show progress per fold
             fold_adapter_config['callbacks'] = [ # Ensure callbacks are set for this fold
                 ('early_stopping', EarlyStopping(monitor='valid_loss', patience=eval_params.get('patience', 10), load_best=True)),
                 ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
@@ -1497,7 +1454,7 @@ class ClassificationPipeline:
                  ('early_stopping', EarlyStopping(monitor='valid_loss', patience=adapter_config.get('patience', 10), load_best=True)),
                  ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
              ]
-        adapter_config['verbose'] = 1 # Show epoch progress
+        adapter_config['verbose'] = 3 # Show epoch progress
 
         adapter_for_train = SkorchModelAdapter(**adapter_config)
 
@@ -1510,32 +1467,42 @@ class ClassificationPipeline:
         results = {'method': 'single_train', 'params': adapter_config} # Store effective config
         best_epoch_info = {}
         valid_loss_key = 'valid_loss' # Metric monitored by callbacks
-        validation_was_run = train_split_config is not None and history and valid_loss_key in history[-1, :].keys()
-
+        validation_was_run = train_split_config is not None and history and valid_loss_key in history[-1]  # Access last epoch dict directly
         if validation_was_run:
-             try:
-                 # Use skorch history method to find best epoch based on the monitored metric
-                 # This accounts for load_best=True in EarlyStopping
-                 best_idx = history.get_best_epoch(monitor=f'{valid_loss_key}_best') # Assumes lower is better if loss
-                 # If monitor isn't loss, adjust check
-                 # best_idx = np.nanargmin(history[:, valid_loss_key]) # Manual way if load_best=False
+            try:
+                # Find the index of the epoch with the best validation score
+                scores = [epoch.get(valid_loss_key, np.inf if valid_loss_key.endswith('_loss') else -np.inf) for epoch
+                          in history]
+                if valid_loss_key.endswith('_loss'):  # Lower is better for loss
+                    best_idx = np.argmin(scores)
+                else:  # Higher is better for accuracy etc.
+                    best_idx = np.argmax(scores)
 
-                 best_epoch_hist = history[best_idx] # Skorch history slicing works like this
-                 actual_best_epoch_num = best_epoch_hist.get('epoch') # Get actual epoch number
+                # Convert best_idx to standard Python int before using it to index history
+                best_idx_int = int(best_idx)
 
-                 best_epoch_info = {
-                     'best_epoch': actual_best_epoch_num,
-                     'best_valid_metric_value': float(best_epoch_hist.get(valid_loss_key, np.nan)),
-                     'valid_metric_name': valid_loss_key,
-                     'train_loss_at_best': float(best_epoch_hist.get('train_loss', np.nan)),
-                     'train_acc_at_best': float(best_epoch_hist.get('train_acc', np.nan)), # Add train acc
-                     'valid_acc_at_best': float(best_epoch_hist.get('valid_acc', np.nan)), # Add valid acc
-                 }
-                 logger.info(f"Training finished. Best validation performance at Epoch {best_epoch_info['best_epoch']} "
-                             f"({valid_loss_key}={best_epoch_info['best_valid_metric_value']:.4f})")
-             except Exception as e:
-                  logger.error(f"Error processing history for best epoch: {e}", exc_info=True)
-                  validation_was_run = False # Fallback to last epoch
+                # Handle case where history might be empty or scores invalid
+                if best_idx_int < len(history):
+                    best_epoch_hist = history[best_idx_int]  # Use python int index
+                    actual_best_epoch_num = best_epoch_hist.get('epoch')  # Get actual epoch number
+
+                    best_epoch_info = {
+                        'best_epoch': actual_best_epoch_num,
+                        'best_valid_metric_value': float(best_epoch_hist.get(valid_loss_key, np.nan)),
+                        'valid_metric_name': valid_loss_key,
+                        'train_loss_at_best': float(best_epoch_hist.get('train_loss', np.nan)),
+                        'train_acc_at_best': float(best_epoch_hist.get('train_acc', np.nan)),
+                        'valid_acc_at_best': float(best_epoch_hist.get('valid_acc', np.nan)),
+                    }
+                    logger.info(
+                        f"Training finished. Best validation performance found at Epoch {best_epoch_info['best_epoch']} "
+                        f"({valid_loss_key}={best_epoch_info['best_valid_metric_value']:.4f})")
+                else:
+                    logger.error("Could not determine best epoch index from history scores.")
+                    validation_was_run = False  # Fallback to last epoch logic
+            except Exception as e:
+                logger.error(f"Error processing history for best epoch: {e}", exc_info=True)
+                validation_was_run = False  # Fallback to last epoch
 
         if not validation_was_run: # No validation or error processing history
              if history:
@@ -1736,23 +1703,28 @@ class PipelineExecutor:
                 method_duration = time.time() - start_time_method
                 logger.info(f"--- Method {method_name} completed successfully in {method_duration:.2f}s ---")
 
-            except ValueError as ve: # Catch specific config errors
-                logger.error(f"!!! Configuration error in '{method_name}': {ve}", exc_info=False) # Log less verbosely for config error
-                logger.error(f"!!! Check method compatibility with dataset structure (FIXED requires force_flat_for_fixed_cv=True for some methods) or parameters.")
+            except ValueError as ve:  # Catch specific config errors
+                # Change exc_info to True here to log the stack trace for ValueError
+                logger.error(f"!!! Configuration error in '{method_name}': {ve}", exc_info=True)
+                logger.error(
+                    f"!!! Check method compatibility with dataset structure (FIXED requires force_flat_for_fixed_cv=True for some methods) or parameters.")
                 self.all_results[run_id] = {"error": str(ve)}
-                break # Stop execution on config errors
+                break  # Stop execution on config errors
             except FileNotFoundError as fnf:
-                 logger.error(f"!!! File not found during '{method_name}': {fnf}", exc_info=True)
-                 self.all_results[run_id] = {"error": str(fnf)}
-                 break
-            except RuntimeError as rte: # Catch runtime errors (e.g., CUDA, data loading)
+                # This already logs the stack trace
+                logger.error(f"!!! File not found during '{method_name}': {fnf}", exc_info=True)
+                self.all_results[run_id] = {"error": str(fnf)}
+                break
+            except RuntimeError as rte:  # Catch runtime errors (e.g., CUDA, data loading)
+                # This already logs the stack trace
                 logger.error(f"!!! Runtime error during '{method_name}': {rte}", exc_info=True)
                 self.all_results[run_id] = {"error": str(rte)}
                 break
-            except Exception as e: # Catch any other unexpected errors
+            except Exception as e:  # Catch any other unexpected errors
+                # This already logs the stack trace
                 logger.critical(f"!!! An unexpected critical error occurred during '{method_name}': {e}", exc_info=True)
                 self.all_results[run_id] = {"error": str(e), "traceback": logging.traceback.format_exc()}
-                break # Stop on critical errors
+                break  # Stop on critical errors
 
         total_duration = time.time() - start_time_total
         logger.info(f"Pipeline execution finished in {total_duration:.2f}s.")
@@ -1765,8 +1737,8 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    # dataset_path = script_dir / "../data/mini-GCD-flat" # FLAT example
-    dataset_path = script_dir / "../data/Swimcat-extend" # FIXED example
+    dataset_path = script_dir / "../data/mini-GCD-flat" # FLAT example
+    # dataset_path = script_dir / "../data/Swimcat-extend" # FIXED example
     # dataset_path = Path("PATH_TO_YOUR_DATASET") # Use your actual path
 
     if not Path(dataset_path).exists():
@@ -1784,7 +1756,7 @@ if __name__ == "__main__":
 
     # --- Define Hyperparameter Grid / Fixed Params ---
     param_grid_search = {
-        'lr': [0.001, 0.0005],
+        'lr': [0.001],
         'optimizer__weight_decay': [0.01, 0.005],
         # 'module__dropout_rate': [0.3, 0.5] # Example if model has dropout_rate
     }

@@ -1,0 +1,73 @@
+{
+    "method": "cv_model_evaluation",
+    "params": {
+        "module": null,
+        "module__num_classes": 7,
+        "criterion": null,
+        "optimizer": null,
+        "lr": 0.001,
+        "max_epochs": 10,
+        "batch_size": 16,
+        "device": "cuda",
+        "callbacks": "default",
+        "patience": 3,
+        "train_transform": null,
+        "valid_transform": null,
+        "classes": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        ],
+        "verbose": 3,
+        "optimizer__weight_decay": 0.01
+    },
+    "cv_scores": {
+        "accuracy": [
+            0.6482758620689655,
+            0.696551724137931,
+            0.5277777777777778
+        ],
+        "f1_macro": [
+            0.6378805422878371,
+            0.69506873531601,
+            0.5128725718614716
+        ]
+    },
+    "mean_test_accuracy": 0.6242017879948913,
+    "std_test_accuracy": 0.08692428903584988,
+    "mean_test_f1_macro": 0.615273949821773,
+    "std_test_f1_macro": 0.0931780768828336,
+    "accuracy": 0.6242017879948913,
+    "macro_avg": {
+        "f1": 0.615273949821773
+    },
+    "full_params_used": {
+        "module": null,
+        "module__num_classes": 7,
+        "criterion": null,
+        "optimizer": null,
+        "lr": 0.001,
+        "max_epochs": 10,
+        "batch_size": 16,
+        "device": "cuda",
+        "callbacks": "default",
+        "patience": 3,
+        "train_transform": null,
+        "valid_transform": null,
+        "classes": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        ],
+        "verbose": 3,
+        "optimizer__weight_decay": 0.01
+    }
+}
