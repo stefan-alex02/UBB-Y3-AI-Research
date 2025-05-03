@@ -1,0 +1,30 @@
+Timestamp             | Level    | Emoji | Location                         | Message
+----------------------+----------+----+----------------------------------+---------------------------------------------------
+2025-05-03 14:49:11 | INFO     | ℹ️ | [<module>                 :150 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v4\logs\classification.log
+2025-05-03 14:49:11 | INFO     | ℹ️ | [<module>                 :1839] | Executing sequence: ['single_train', 'single_eval']
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :1683] | Initializing Pipeline Executor for model 'cnn' on dataset 'Swimcat-extend'...
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :767 ] | Initializing Classification Pipeline:
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :768 ] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\Swimcat-extend
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :769 ] |   Model Type: cnn
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :770 ] |   Force Flat for Fixed CV: False
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :287 ] | Detected dataset structure: flat
+2025-05-03 14:49:11 | INFO     | ℹ️ | [_load_paths_and_labels   :383 ] | Scanning FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\Swimcat-extend...
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :311 ] | Found 6 classes: A-Clear Sky, B-Patterned Clouds, C-Thin White Clouds, D-Thick White Clouds, E-Thick Dark Clouds, F-Veil Clouds
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :314 ] | Dataset sizes: 1680 train+val, 420 test.
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :788 ] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend_cnn_20250503_144911
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :821 ] |   Model Adapter: Initialized with SimpleCNN
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :826 ] | Pipeline initialized successfully.
+2025-05-03 14:49:11 | DEBUG    | 🐛 | [_validate_methods        :1717] | Basic method validation successful.
+2025-05-03 14:49:11 | INFO     | ℹ️ | [__init__                 :1698] | Executor configured to run methods: single_train, single_eval
+2025-05-03 14:49:11 | INFO     | ℹ️ | [run                      :1722] | Starting execution of pipeline methods...
+2025-05-03 14:49:11 | INFO     | ℹ️ | [run                      :1727] | --- Running Method 1/2: single_train ---
+2025-05-03 14:49:11 | DEBUG    | 🐛 | [run                      :1728] | Parameters: {'max_epochs': 5, 'save_model': True, 'save_results': True, 'val_split_ratio': 0.2}
+2025-05-03 14:49:11 | INFO     | ℹ️ | [single_train             :1428] | Starting single training run...
+2025-05-03 14:49:11 | INFO     | ℹ️ | [single_train             :1476] | Using split: 1344 train / 336 validation samples.
+2025-05-03 14:49:11 | INFO     | ℹ️ | [single_train             :1504] | Fitting model...
+2025-05-03 14:49:11 | DEBUG    | 🐛 | [__init__                 :522 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 14:49:11 | ERROR    | ❌ | [run                      :1739] | !!! Configuration error in 'single_train': __init__() got unexpected argument(s) patience. Either you made a typo, or you added new arguments in a subclass; if that is the case, the subclass should deal with the new arguments explicitly.
+2025-05-03 14:49:11 | ERROR    | ❌ | [run                      :1740] | !!! Check method compatibility with dataset structure (FIXED requires force_flat_for_fixed_cv=True for some methods) or parameters.
+2025-05-03 14:49:11 | INFO     | ℹ️ | [run                      :1757] | Pipeline execution finished in 0.14s.
+2025-05-03 14:49:11 | INFO     | ℹ️ | [<module>                 :1861] | --- Final Execution Results Summary ---
+2025-05-03 14:49:11 | ERROR    | ❌ | [<module>                 :1864] | Method single_train_0: FAILED - __init__() got unexpected argument(s) patience. Either you made a typo, or you added new arguments in a subclass; if that is the case, the subclass should deal with the new arguments explicitly.

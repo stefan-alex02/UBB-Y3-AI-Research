@@ -2991,3 +2991,962 @@ KeyError: 'valid_loss'
 2025-05-02 18:21:51 | INFO     | ℹ️ | [run                      :2359] | Pipeline execution finished.
 2025-05-02 18:21:51 | INFO     | ℹ️ | [<module>                 :2437] | --- Final Execution Results ---
 2025-05-02 18:21:51 | INFO     | ℹ️ | [<module>                 :2444] | Method non_nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.5287, BestScore: 0.7365)
+2025-05-03 00:50:37 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [<module>                 :2418] | Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [_detect_structure        :443 ] | Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: flat
+2025-05-03 00:50:37 | INFO     | ℹ️ | [_load_flat_dataset       :476 ] | Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-05-03 00:50:37 | INFO     | ℹ️ | [_load_flat_dataset       :486 ] | Full dataset loaded: 434 samples.
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [_load_flat_dataset       :501 ] | Initial split: 347 train+val, 87 test indices.
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [_load_flat_dataset       :515 ] | Train/Val split: 277 train, 70 validation indices.
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-03 00:50:37 | INFO     | ℹ️ | [_load_flat_dataset       :534 ] | FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :401 ] | Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [_validate_methods        :2321] | Method validation successful.
+2025-05-03 00:50:37 | INFO     | ℹ️ | [__init__                 :2270] | Executor configured to run methods: non_nested_grid_search
+2025-05-03 00:50:37 | INFO     | ℹ️ | [run                      :2333] | Starting execution of pipeline methods...
+2025-05-03 00:50:37 | INFO     | ℹ️ | [run                      :2337] | --- Running Method 1/1: non_nested_grid_search ---
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [run                      :2338] | Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-05-03 00:50:37 | INFO     | ℹ️ | [non_nested_grid_search   :1573] | Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-05-03 00:50:37 | INFO     | ℹ️ | [non_nested_grid_search   :1574] | Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-05-03 00:50:37 | INFO     | ℹ️ | [non_nested_grid_search   :1575] | Scoring Metric: accuracy
+2025-05-03 00:50:37 | INFO     | ℹ️ | [non_nested_grid_search   :1586] | Loading training data into memory for GridSearchCV...
+2025-05-03 00:50:37 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class '__main__.TransformedSubset'> (length 277) into NumPy arrays...
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/9
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/9
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/9
+2025-05-03 00:50:37 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 4/9
+2025-05-03 00:50:38 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 5/9
+2025-05-03 00:50:38 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 6/9
+2025-05-03 00:50:38 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 7/9
+2025-05-03 00:50:38 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 8/9
+2025-05-03 00:50:38 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 9/9
+2025-05-03 00:50:38 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (277, 3, 64, 64), y shape: (277,)
+2025-05-03 00:50:38 | INFO     | ℹ️ | [non_nested_grid_search   :1614] | Fitting GridSearchCV with NumPy arrays...
+2025-05-03 00:50:38 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:38 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:38 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:38 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:40 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:40 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:41 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:41 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:41 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:41 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:42 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:42 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:42 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:44 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:44 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:44 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:44 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:44 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:44 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:45 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:45 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:45 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:45 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:45 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:45 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:47 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:47 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:47 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:47 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:47 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:47 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:48 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:48 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:48 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:48 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:48 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:48 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:50 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:50 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:50 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:51 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:51 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:51 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:51 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:51 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:51 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:53 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:53 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:53 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:54 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:54 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:54 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:54 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:54 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:54 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:56 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:56 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:56 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:56 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:56 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:56 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:50:58 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:58 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:58 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:50:58 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:50:58 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:50:58 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:51:00 | INFO     | ℹ️ | [non_nested_grid_search   :1616] | Search completed.
+2025-05-03 00:51:00 | INFO     | ℹ️ | [non_nested_grid_search   :1628] | Evaluating best model (params: {'lr': 0.0005, 'optimizer__weight_decay': 0.01}) on the test set...
+2025-05-03 00:51:00 | INFO     | ℹ️ | [non_nested_grid_search   :1631] | Loading test data into memory for evaluation...
+2025-05-03 00:51:00 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 87) into NumPy arrays...
+2025-05-03 00:51:00 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/3
+2025-05-03 00:51:00 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/3
+2025-05-03 00:51:00 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/3
+2025-05-03 00:51:00 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (87, 3, 64, 64), y shape: (87,)
+2025-05-03 00:51:00 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:51:00 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:51:00 | DEBUG    | 🐛 | [_compute_metrics         :1380] | Computed Metrics: Acc=0.4828, Macro F1=0.4105, Macro ROC AUC=0.7916, Macro PR AUC=0.5224
+2025-05-03 00:51:00 | INFO     | ℹ️ | [non_nested_grid_search   :1645] | Test Set Evaluation: Accuracy=0.4828, Macro F1=0.4105
+2025-05-03 00:51:00 | INFO     | ℹ️ | [_save_results            :1449] | Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\non_nested_grid_search_cv=3_method=grid_n_iter=N_A_scoring=accuracy_20250503_005100.json
+2025-05-03 00:51:00 | INFO     | ℹ️ | [_save_results            :1474] | Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-05-03 00:51:00 | INFO     | ℹ️ | [non_nested_grid_search   :1655] | Non-nested grid search finished. Best CV score (accuracy): 0.7329
+2025-05-03 00:51:00 | INFO     | ℹ️ | [non_nested_grid_search   :1656] | Best parameters found: {'lr': 0.0005, 'optimizer__weight_decay': 0.01}
+2025-05-03 00:51:00 | INFO     | ℹ️ | [run                      :2349] | --- Method non_nested_grid_search completed successfully ---
+2025-05-03 00:51:00 | INFO     | ℹ️ | [run                      :2359] | Pipeline execution finished.
+2025-05-03 00:51:00 | INFO     | ℹ️ | [<module>                 :2437] | --- Final Execution Results ---
+2025-05-03 00:51:00 | INFO     | ℹ️ | [<module>                 :2444] | Method non_nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.4828, BestScore: 0.7329)
+2025-05-03 00:53:09 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [<module>                 :2418] | Chosen sequence: [('single_train', {'max_epochs': 5, 'save_model': True}), ('single_eval', {'save_results': True})]
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [_detect_structure        :443 ] | Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: flat
+2025-05-03 00:53:09 | INFO     | ℹ️ | [_load_flat_dataset       :476 ] | Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-05-03 00:53:09 | INFO     | ℹ️ | [_load_flat_dataset       :486 ] | Full dataset loaded: 434 samples.
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [_load_flat_dataset       :501 ] | Initial split: 347 train+val, 87 test indices.
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [_load_flat_dataset       :515 ] | Train/Val split: 277 train, 70 validation indices.
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-03 00:53:09 | INFO     | ℹ️ | [_load_flat_dataset       :534 ] | FLAT Dataset splits: 277 train, 70 validation, 87 test samples.
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :401 ] | Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [_validate_methods        :2321] | Method validation successful.
+2025-05-03 00:53:09 | INFO     | ℹ️ | [__init__                 :2270] | Executor configured to run methods: single_train, single_eval
+2025-05-03 00:53:09 | INFO     | ℹ️ | [run                      :2333] | Starting execution of pipeline methods...
+2025-05-03 00:53:09 | INFO     | ℹ️ | [run                      :2337] | --- Running Method 1/2: single_train ---
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [run                      :2338] | Parameters for single_train: {'max_epochs': 5, 'save_model': True}
+2025-05-03 00:53:09 | INFO     | ℹ️ | [single_train             :1954] | Starting single training run...
+2025-05-03 00:53:09 | INFO     | ℹ️ | [single_train             :1965] | Combining train (277) and validation (70) sets.
+2025-05-03 00:53:09 | INFO     | ℹ️ | [single_train             :1987] | Overriding adapter parameters for this run: {'max_epochs': 5}
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [single_train             :1994] | Extracted combined targets (shape=(347,)) for skorch fit.
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [get_dataset              :1076] | [DEBUG] Adapter.get_dataset: X is Dataset and y is not None. Ignoring y.
+2025-05-03 00:53:09 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:53:18 | INFO     | ℹ️ | [single_train             :2021] | Training finished. Best validation performance at Epoch 5 (valid_loss=0.7570)
+2025-05-03 00:53:18 | INFO     | ℹ️ | [single_train             :2073] | Model state_dict saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\cnn_epoch5_val_valid-loss0.7570_20250503_005318.pt
+2025-05-03 00:53:18 | INFO     | ℹ️ | [single_train             :2081] | Main pipeline model adapter updated with the model from single_train.
+2025-05-03 00:53:18 | INFO     | ℹ️ | [_save_results            :1449] | Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_train_batch_size=16_early_stopping_patience=5_lr=0.001_max_epochs=5_20250503_005318.json
+2025-05-03 00:53:18 | INFO     | ℹ️ | [_save_results            :1474] | Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-05-03 00:53:18 | INFO     | ℹ️ | [run                      :2349] | --- Method single_train completed successfully ---
+2025-05-03 00:53:18 | INFO     | ℹ️ | [run                      :2337] | --- Running Method 2/2: single_eval ---
+2025-05-03 00:53:18 | DEBUG    | 🐛 | [run                      :2338] | Parameters for single_eval: {'save_results': True}
+2025-05-03 00:53:18 | INFO     | ℹ️ | [single_eval              :2095] | Starting model evaluation on the test set...
+2025-05-03 00:53:18 | INFO     | ℹ️ | [single_eval              :2105] | Loading test data into memory for evaluation...
+2025-05-03 00:53:18 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 87) into NumPy arrays...
+2025-05-03 00:53:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/3
+2025-05-03 00:53:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/3
+2025-05-03 00:53:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/3
+2025-05-03 00:53:18 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (87, 3, 64, 64), y shape: (87,)
+2025-05-03 00:53:18 | INFO     | ℹ️ | [single_eval              :2110] | Evaluating on 87 test samples.
+2025-05-03 00:53:18 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:53:18 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:53:19 | DEBUG    | 🐛 | [_compute_metrics         :1380] | Computed Metrics: Acc=0.4943, Macro F1=0.4164, Macro ROC AUC=0.8999, Macro PR AUC=0.6058
+2025-05-03 00:53:19 | INFO     | ℹ️ | [_save_results            :1449] | Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\single_eval_20250503_005319.json
+2025-05-03 00:53:19 | INFO     | ℹ️ | [_save_results            :1474] | Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\mini-GCD-flat\cnn\summary_results.csv
+2025-05-03 00:53:19 | INFO     | ℹ️ | [single_eval              :2126] | Evaluation Summary:
+2025-05-03 00:53:19 | INFO     | ℹ️ | [single_eval              :2127] |   Accuracy: 0.4943
+2025-05-03 00:53:19 | INFO     | ℹ️ | [run                      :2349] | --- Method single_eval completed successfully ---
+2025-05-03 00:53:19 | INFO     | ℹ️ | [run                      :2359] | Pipeline execution finished.
+2025-05-03 00:53:19 | INFO     | ℹ️ | [<module>                 :2437] | --- Final Execution Results ---
+2025-05-03 00:53:19 | INFO     | ℹ️ | [<module>                 :2444] | Method single_train_0: Completed. (Accuracy/MeanAccuracy: nan, BestScore: nan)
+2025-05-03 00:53:19 | INFO     | ℹ️ | [<module>                 :2444] | Method single_eval_1: Completed. (Accuracy/MeanAccuracy: 0.4943, BestScore: nan)
+2025-05-03 00:58:10 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [<module>                 :2419] | Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'Swimcat-extend'...
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\Swimcat-extend
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [_detect_structure        :443 ] | Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: flat
+2025-05-03 00:58:10 | INFO     | ℹ️ | [_load_flat_dataset       :476 ] | Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\Swimcat-extend...
+2025-05-03 00:58:10 | INFO     | ℹ️ | [_load_flat_dataset       :486 ] | Full dataset loaded: 2100 samples.
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [_load_flat_dataset       :501 ] | Initial split: 1680 train+val, 420 test indices.
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [_load_flat_dataset       :515 ] | Train/Val split: 1344 train, 336 validation indices.
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-03 00:58:10 | INFO     | ℹ️ | [_load_flat_dataset       :534 ] | FLAT Dataset splits: 1344 train, 336 validation, 420 test samples.
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :401 ] | Found 6 classes: A-Clear Sky, B-Patterned Clouds, C-Thin White Clouds, D-Thick White Clouds, E-Thick Dark Clouds, F-Veil Clouds
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\Swimcat-extend\cnn
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [_validate_methods        :2321] | Method validation successful.
+2025-05-03 00:58:10 | INFO     | ℹ️ | [__init__                 :2270] | Executor configured to run methods: non_nested_grid_search
+2025-05-03 00:58:10 | INFO     | ℹ️ | [run                      :2333] | Starting execution of pipeline methods...
+2025-05-03 00:58:10 | INFO     | ℹ️ | [run                      :2337] | --- Running Method 1/1: non_nested_grid_search ---
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [run                      :2338] | Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-05-03 00:58:10 | INFO     | ℹ️ | [non_nested_grid_search   :1573] | Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-05-03 00:58:10 | INFO     | ℹ️ | [non_nested_grid_search   :1574] | Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-05-03 00:58:10 | INFO     | ℹ️ | [non_nested_grid_search   :1575] | Scoring Metric: accuracy
+2025-05-03 00:58:10 | INFO     | ℹ️ | [non_nested_grid_search   :1586] | Loading training data into memory for GridSearchCV...
+2025-05-03 00:58:10 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class '__main__.TransformedSubset'> (length 1344) into NumPy arrays...
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/42
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/42
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/42
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 4/42
+2025-05-03 00:58:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 5/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 6/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 7/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 8/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 9/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 10/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 11/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 12/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 13/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 14/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 15/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 16/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 17/42
+2025-05-03 00:58:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 18/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 19/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 20/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 21/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 22/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 23/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 24/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 25/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 26/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 27/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 28/42
+2025-05-03 00:58:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 29/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 30/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 31/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 32/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 33/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 34/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 35/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 36/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 37/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 38/42
+2025-05-03 00:58:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 39/42
+2025-05-03 00:58:14 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 40/42
+2025-05-03 00:58:14 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 41/42
+2025-05-03 00:58:14 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 42/42
+2025-05-03 00:58:14 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (1344, 3, 64, 64), y shape: (1344,)
+2025-05-03 00:58:14 | INFO     | ℹ️ | [non_nested_grid_search   :1614] | Fitting GridSearchCV with NumPy arrays...
+2025-05-03 00:58:14 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:14 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:14 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:14 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:19 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:19 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:19 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:19 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:19 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:19 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:21 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:21 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:22 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:22 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:22 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:22 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:30 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-03 00:58:30 | DEBUG    | 🐛 | [<module>                 :2419] | Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'Swimcat-extend'...
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\Swimcat-extend
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-03 00:58:30 | DEBUG    | 🐛 | [_detect_structure        :443 ] | Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: flat
+2025-05-03 00:58:30 | INFO     | ℹ️ | [_load_flat_dataset       :476 ] | Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\Swimcat-extend...
+2025-05-03 00:58:30 | INFO     | ℹ️ | [_load_flat_dataset       :486 ] | Full dataset loaded: 2100 samples.
+2025-05-03 00:58:30 | DEBUG    | 🐛 | [_load_flat_dataset       :501 ] | Initial split: 1680 train+val, 420 test indices.
+2025-05-03 00:58:30 | DEBUG    | 🐛 | [_load_flat_dataset       :515 ] | Train/Val split: 1344 train, 336 validation indices.
+2025-05-03 00:58:30 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-03 00:58:30 | INFO     | ℹ️ | [_load_flat_dataset       :534 ] | FLAT Dataset splits: 1344 train, 336 validation, 420 test samples.
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :401 ] | Found 6 classes: A-Clear Sky, B-Patterned Clouds, C-Thin White Clouds, D-Thick White Clouds, E-Thick Dark Clouds, F-Veil Clouds
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\Swimcat-extend\cnn
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-05-03 00:58:30 | DEBUG    | 🐛 | [_validate_methods        :2321] | Method validation successful.
+2025-05-03 00:58:30 | INFO     | ℹ️ | [__init__                 :2270] | Executor configured to run methods: non_nested_grid_search
+2025-05-03 00:58:30 | INFO     | ℹ️ | [run                      :2333] | Starting execution of pipeline methods...
+2025-05-03 00:58:30 | INFO     | ℹ️ | [run                      :2337] | --- Running Method 1/1: non_nested_grid_search ---
+2025-05-03 00:58:30 | DEBUG    | 🐛 | [run                      :2338] | Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-05-03 00:58:30 | INFO     | ℹ️ | [non_nested_grid_search   :1573] | Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-05-03 00:58:30 | INFO     | ℹ️ | [non_nested_grid_search   :1574] | Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-05-03 00:58:30 | INFO     | ℹ️ | [non_nested_grid_search   :1575] | Scoring Metric: accuracy
+2025-05-03 00:58:30 | INFO     | ℹ️ | [non_nested_grid_search   :1586] | Loading training data into memory for GridSearchCV...
+2025-05-03 00:58:30 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class '__main__.TransformedSubset'> (length 1344) into NumPy arrays...
+2025-05-03 00:58:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 4/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 5/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 6/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 7/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 8/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 9/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 10/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 11/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 12/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 13/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 14/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 15/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 16/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 17/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 18/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 19/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 20/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 21/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 22/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 23/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 24/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 25/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 26/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 27/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 28/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 29/42
+2025-05-03 00:58:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 30/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 31/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 32/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 33/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 34/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 35/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 36/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 37/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 38/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 39/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 40/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 41/42
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 42/42
+2025-05-03 00:58:32 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (1344, 3, 64, 64), y shape: (1344,)
+2025-05-03 00:58:32 | INFO     | ℹ️ | [non_nested_grid_search   :1614] | Fitting GridSearchCV with NumPy arrays...
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:32 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:36 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:36 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:36 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:36 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:36 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:36 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:39 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:39 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:39 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:39 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:39 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:39 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:43 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:43 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:43 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:43 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:43 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:43 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:46 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:46 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:46 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:46 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:46 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:46 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:50 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:50 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:50 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:53 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:53 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:53 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:58:57 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:57 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:57 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:58:57 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:58:57 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:58:57 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:59:00 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:00 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:00 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:59:00 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:00 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:59:00 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:59:04 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:04 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:04 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:59:04 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:04 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:59:04 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:59:07 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:07 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:08 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:59:08 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:08 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:59:08 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:59:11 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:11 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:11 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:59:11 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:11 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:59:11 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:59:14 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:14 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:14 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 00:59:14 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:14 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 00:59:14 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 00:59:19 | INFO     | ℹ️ | [non_nested_grid_search   :1616] | Search completed.
+2025-05-03 00:59:19 | INFO     | ℹ️ | [non_nested_grid_search   :1628] | Evaluating best model (params: {'lr': 0.001, 'optimizer__weight_decay': 0.01}) on the test set...
+2025-05-03 00:59:19 | INFO     | ℹ️ | [non_nested_grid_search   :1631] | Loading test data into memory for evaluation...
+2025-05-03 00:59:19 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 420) into NumPy arrays...
+2025-05-03 00:59:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/14
+2025-05-03 00:59:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/14
+2025-05-03 00:59:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/14
+2025-05-03 00:59:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 4/14
+2025-05-03 00:59:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 5/14
+2025-05-03 00:59:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 6/14
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 7/14
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 8/14
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 9/14
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 10/14
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 11/14
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 12/14
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 13/14
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 14/14
+2025-05-03 00:59:20 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (420, 3, 64, 64), y shape: (420,)
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 00:59:20 | DEBUG    | 🐛 | [_compute_metrics         :1380] | Computed Metrics: Acc=0.6333, Macro F1=0.5180, Macro ROC AUC=0.9411, Macro PR AUC=0.7961
+2025-05-03 00:59:20 | INFO     | ℹ️ | [non_nested_grid_search   :1645] | Test Set Evaluation: Accuracy=0.6333, Macro F1=0.5180
+2025-05-03 00:59:20 | INFO     | ℹ️ | [_save_results            :1449] | Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\Swimcat-extend\cnn\non_nested_grid_search_cv=3_method=grid_n_iter=N_A_scoring=accuracy_20250503_005920.json
+2025-05-03 00:59:20 | INFO     | ℹ️ | [_save_results            :1474] | Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\Swimcat-extend\cnn\summary_results.csv
+2025-05-03 00:59:20 | INFO     | ℹ️ | [non_nested_grid_search   :1655] | Non-nested grid search finished. Best CV score (accuracy): 0.9308
+2025-05-03 00:59:20 | INFO     | ℹ️ | [non_nested_grid_search   :1656] | Best parameters found: {'lr': 0.001, 'optimizer__weight_decay': 0.01}
+2025-05-03 00:59:20 | INFO     | ℹ️ | [run                      :2349] | --- Method non_nested_grid_search completed successfully ---
+2025-05-03 00:59:20 | INFO     | ℹ️ | [run                      :2359] | Pipeline execution finished.
+2025-05-03 00:59:20 | INFO     | ℹ️ | [<module>                 :2438] | --- Final Execution Results ---
+2025-05-03 00:59:20 | INFO     | ℹ️ | [<module>                 :2445] | Method non_nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.6333, BestScore: 0.9308)
+2025-05-03 01:05:02 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [<module>                 :2419] | Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'GCD'...
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\GCD
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [_detect_structure        :434 ] | Found 'train' and 'test' directories with matching class subdirectories. Assuming FIXED structure.
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: fixed
+2025-05-03 01:05:02 | INFO     | ℹ️ | [_load_fixed_dataset      :542 ] | Loading FIXED dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\GCD\train (train) and C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\GCD\test (test)...
+2025-05-03 01:05:02 | INFO     | ℹ️ | [_load_fixed_dataset      :553 ] | Train+Validation dataset loaded: 10000 samples.
+2025-05-03 01:05:02 | INFO     | ℹ️ | [_load_fixed_dataset      :554 ] | Test dataset loaded: 9000 samples.
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [_load_fixed_dataset      :568 ] | Train/Val split: 8000 train, 2000 validation indices.
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-03 01:05:02 | INFO     | ℹ️ | [_load_fixed_dataset      :586 ] | FIXED Dataset loaded: 8000 train, 2000 validation, 9000 test samples.
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :401 ] | Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\GCD\cnn
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and fixed dataset structure.
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [_validate_methods        :2321] | Method validation successful.
+2025-05-03 01:05:02 | INFO     | ℹ️ | [__init__                 :2270] | Executor configured to run methods: non_nested_grid_search
+2025-05-03 01:05:02 | INFO     | ℹ️ | [run                      :2333] | Starting execution of pipeline methods...
+2025-05-03 01:05:02 | INFO     | ℹ️ | [run                      :2337] | --- Running Method 1/1: non_nested_grid_search ---
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [run                      :2338] | Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-05-03 01:05:02 | INFO     | ℹ️ | [non_nested_grid_search   :1573] | Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-05-03 01:05:02 | INFO     | ℹ️ | [non_nested_grid_search   :1574] | Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-05-03 01:05:02 | INFO     | ℹ️ | [non_nested_grid_search   :1575] | Scoring Metric: accuracy
+2025-05-03 01:05:02 | INFO     | ℹ️ | [non_nested_grid_search   :1586] | Loading training data into memory for GridSearchCV...
+2025-05-03 01:05:02 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class '__main__.TransformedSubset'> (length 8000) into NumPy arrays...
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/250
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/250
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/250
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 4/250
+2025-05-03 01:05:02 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 5/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 6/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 7/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 8/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 9/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 10/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 11/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 12/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 13/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 14/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 15/250
+2025-05-03 01:05:03 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 16/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 17/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 18/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 19/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 20/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 21/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 22/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 23/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 24/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 25/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 26/250
+2025-05-03 01:05:04 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 27/250
+2025-05-03 01:05:05 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 28/250
+2025-05-03 01:05:05 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 29/250
+2025-05-03 01:05:05 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 30/250
+2025-05-03 01:05:05 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 31/250
+2025-05-03 01:05:05 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 32/250
+2025-05-03 01:05:05 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 33/250
+2025-05-03 01:05:05 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 34/250
+2025-05-03 01:05:05 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 35/250
+2025-05-03 01:05:05 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 36/250
+2025-05-03 01:05:06 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 37/250
+2025-05-03 01:05:06 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 38/250
+2025-05-03 01:05:06 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 39/250
+2025-05-03 01:05:06 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 40/250
+2025-05-03 01:05:06 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 41/250
+2025-05-03 01:05:06 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 42/250
+2025-05-03 01:05:06 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 43/250
+2025-05-03 01:05:06 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 44/250
+2025-05-03 01:05:06 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 45/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 46/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 47/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 48/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 49/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 50/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 51/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 52/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 53/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 54/250
+2025-05-03 01:05:07 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 55/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 56/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 57/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 58/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 59/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 60/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 61/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 62/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 63/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 64/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 65/250
+2025-05-03 01:05:08 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 66/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 67/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 68/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 69/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 70/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 71/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 72/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 73/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 74/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 75/250
+2025-05-03 01:05:09 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 76/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 77/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 78/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 79/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 80/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 81/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 82/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 83/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 84/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 85/250
+2025-05-03 01:05:10 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 86/250
+2025-05-03 01:05:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 87/250
+2025-05-03 01:05:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 88/250
+2025-05-03 01:05:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 89/250
+2025-05-03 01:05:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 90/250
+2025-05-03 01:05:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 91/250
+2025-05-03 01:05:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 92/250
+2025-05-03 01:05:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 93/250
+2025-05-03 01:05:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 94/250
+2025-05-03 01:05:11 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 95/250
+2025-05-03 01:05:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 96/250
+2025-05-03 01:05:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 97/250
+2025-05-03 01:05:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 98/250
+2025-05-03 01:05:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 99/250
+2025-05-03 01:05:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 100/250
+2025-05-03 01:05:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 101/250
+2025-05-03 01:05:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 102/250
+2025-05-03 01:05:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 103/250
+2025-05-03 01:05:12 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 104/250
+2025-05-03 01:05:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 105/250
+2025-05-03 01:05:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 106/250
+2025-05-03 01:05:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 107/250
+2025-05-03 01:05:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 108/250
+2025-05-03 01:05:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 109/250
+2025-05-03 01:05:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 110/250
+2025-05-03 01:05:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 111/250
+2025-05-03 01:05:13 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 112/250
+2025-05-03 01:05:14 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 113/250
+2025-05-03 01:05:14 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 114/250
+2025-05-03 01:05:14 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 115/250
+2025-05-03 01:05:15 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 116/250
+2025-05-03 01:05:15 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 117/250
+2025-05-03 01:05:15 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 118/250
+2025-05-03 01:05:15 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 119/250
+2025-05-03 01:05:15 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 120/250
+2025-05-03 01:05:16 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 121/250
+2025-05-03 01:05:16 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 122/250
+2025-05-03 01:05:16 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 123/250
+2025-05-03 01:05:16 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 124/250
+2025-05-03 01:05:16 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 125/250
+2025-05-03 01:05:16 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 126/250
+2025-05-03 01:05:16 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 127/250
+2025-05-03 01:05:16 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 128/250
+2025-05-03 01:05:17 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 129/250
+2025-05-03 01:05:17 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 130/250
+2025-05-03 01:05:17 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 131/250
+2025-05-03 01:05:17 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 132/250
+2025-05-03 01:05:17 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 133/250
+2025-05-03 01:05:17 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 134/250
+2025-05-03 01:05:17 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 135/250
+2025-05-03 01:05:17 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 136/250
+2025-05-03 01:05:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 137/250
+2025-05-03 01:05:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 138/250
+2025-05-03 01:05:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 139/250
+2025-05-03 01:05:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 140/250
+2025-05-03 01:05:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 141/250
+2025-05-03 01:05:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 142/250
+2025-05-03 01:05:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 143/250
+2025-05-03 01:05:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 144/250
+2025-05-03 01:05:18 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 145/250
+2025-05-03 01:05:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 146/250
+2025-05-03 01:05:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 147/250
+2025-05-03 01:05:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 148/250
+2025-05-03 01:05:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 149/250
+2025-05-03 01:05:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 150/250
+2025-05-03 01:05:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 151/250
+2025-05-03 01:05:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 152/250
+2025-05-03 01:05:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 153/250
+2025-05-03 01:05:19 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 154/250
+2025-05-03 01:05:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 155/250
+2025-05-03 01:05:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 156/250
+2025-05-03 01:05:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 157/250
+2025-05-03 01:05:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 158/250
+2025-05-03 01:05:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 159/250
+2025-05-03 01:05:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 160/250
+2025-05-03 01:05:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 161/250
+2025-05-03 01:05:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 162/250
+2025-05-03 01:05:20 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 163/250
+2025-05-03 01:05:21 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 164/250
+2025-05-03 01:05:21 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 165/250
+2025-05-03 01:05:21 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 166/250
+2025-05-03 01:05:21 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 167/250
+2025-05-03 01:05:21 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 168/250
+2025-05-03 01:05:21 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 169/250
+2025-05-03 01:05:21 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 170/250
+2025-05-03 01:05:21 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 171/250
+2025-05-03 01:05:21 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 172/250
+2025-05-03 01:05:22 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 173/250
+2025-05-03 01:05:22 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 174/250
+2025-05-03 01:05:22 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 175/250
+2025-05-03 01:05:22 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 176/250
+2025-05-03 01:05:22 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 177/250
+2025-05-03 01:05:22 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 178/250
+2025-05-03 01:05:22 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 179/250
+2025-05-03 01:05:22 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 180/250
+2025-05-03 01:05:22 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 181/250
+2025-05-03 01:05:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 182/250
+2025-05-03 01:05:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 183/250
+2025-05-03 01:05:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 184/250
+2025-05-03 01:05:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 185/250
+2025-05-03 01:05:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 186/250
+2025-05-03 01:05:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 187/250
+2025-05-03 01:05:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 188/250
+2025-05-03 01:05:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 189/250
+2025-05-03 01:05:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 190/250
+2025-05-03 01:05:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 191/250
+2025-05-03 01:05:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 192/250
+2025-05-03 01:05:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 193/250
+2025-05-03 01:05:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 194/250
+2025-05-03 01:05:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 195/250
+2025-05-03 01:05:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 196/250
+2025-05-03 01:05:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 197/250
+2025-05-03 01:05:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 198/250
+2025-05-03 01:05:25 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 199/250
+2025-05-03 01:05:25 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 200/250
+2025-05-03 01:05:25 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 201/250
+2025-05-03 01:05:25 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 202/250
+2025-05-03 01:05:25 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 203/250
+2025-05-03 01:05:25 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 204/250
+2025-05-03 01:05:25 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 205/250
+2025-05-03 01:05:25 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 206/250
+2025-05-03 01:05:26 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 207/250
+2025-05-03 01:05:26 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 208/250
+2025-05-03 01:05:26 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 209/250
+2025-05-03 01:05:26 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 210/250
+2025-05-03 01:05:26 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 211/250
+2025-05-03 01:05:26 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 212/250
+2025-05-03 01:05:26 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 213/250
+2025-05-03 01:05:26 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 214/250
+2025-05-03 01:05:26 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 215/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 216/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 217/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 218/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 219/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 220/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 221/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 222/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 223/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 224/250
+2025-05-03 01:05:27 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 225/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 226/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 227/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 228/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 229/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 230/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 231/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 232/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 233/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 234/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 235/250
+2025-05-03 01:05:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 236/250
+2025-05-03 01:05:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 237/250
+2025-05-03 01:05:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 238/250
+2025-05-03 01:05:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 239/250
+2025-05-03 01:05:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 240/250
+2025-05-03 01:05:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 241/250
+2025-05-03 01:05:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 242/250
+2025-05-03 01:05:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 243/250
+2025-05-03 01:05:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 244/250
+2025-05-03 01:05:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 245/250
+2025-05-03 01:05:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 246/250
+2025-05-03 01:05:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 247/250
+2025-05-03 01:05:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 248/250
+2025-05-03 01:05:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 249/250
+2025-05-03 01:05:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 250/250
+2025-05-03 01:05:30 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (8000, 3, 64, 64), y shape: (8000,)
+2025-05-03 01:05:30 | INFO     | ℹ️ | [non_nested_grid_search   :1614] | Fitting GridSearchCV with NumPy arrays...
+2025-05-03 01:05:31 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 01:05:31 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:05:31 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:05:31 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:05:54 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:05:54 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:05:55 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 01:05:55 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:05:55 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:05:55 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:06:17 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:06:18 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:06:18 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 01:06:18 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:06:18 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:06:18 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:06:40 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:06:41 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:06:42 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 01:06:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:06:42 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:06:42 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:07:05 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:07:05 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:07:06 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 01:07:06 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:07:06 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:07:06 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:07:29 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:07:31 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:07:32 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 01:07:32 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:07:32 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:07:32 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:07:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:07:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:07:42 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 7 output classes.
+2025-05-03 01:07:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:07:42 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:07:42 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:10:28 | INFO     | ℹ️ | [<module>                 :184 ] | Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\logs\classification.log
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [<module>                 :2419] | Chosen sequence: [('non_nested_grid_search', {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True})]
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :2246] | Initializing Pipeline Executor for model 'cnn' on dataset 'Swimcat-extend'...
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :1226] | Initializing Classification Pipeline:
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :1227] |   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\Swimcat-extend
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :1228] |   Model Type: cnn
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [_detect_structure        :443 ] | Did not find standard 'train'/'test' structure. Assuming FLAT structure.
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :383 ] | Detected dataset structure: flat
+2025-05-03 01:10:28 | INFO     | ℹ️ | [_load_flat_dataset       :476 ] | Loading FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\Swimcat-extend...
+2025-05-03 01:10:28 | INFO     | ℹ️ | [_load_flat_dataset       :486 ] | Full dataset loaded: 2100 samples.
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [_load_flat_dataset       :501 ] | Initial split: 1680 train+val, 420 test indices.
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [_load_flat_dataset       :515 ] | Train/Val split: 1344 train, 336 validation indices.
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [__init__                 :226 ] | TransformedSubset base dataset is a Subset, accessing underlying dataset attributes.
+2025-05-03 01:10:28 | INFO     | ℹ️ | [_load_flat_dataset       :534 ] | FLAT Dataset splits: 1344 train, 336 validation, 420 test samples.
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :401 ] | Found 6 classes: A-Clear Sky, B-Patterned Clouds, C-Thin White Clouds, D-Thick White Clouds, E-Thick Dark Clouds, F-Veil Clouds
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :1243] |   Results will be saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\Swimcat-extend\cnn
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :1259] |   Model Adapter: Initialized with SimpleCNN
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :1265] | Pipeline initialized successfully for cnn model and flat dataset structure.
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [_validate_methods        :2321] | Method validation successful.
+2025-05-03 01:10:28 | INFO     | ℹ️ | [__init__                 :2270] | Executor configured to run methods: non_nested_grid_search
+2025-05-03 01:10:28 | INFO     | ℹ️ | [run                      :2333] | Starting execution of pipeline methods...
+2025-05-03 01:10:28 | INFO     | ℹ️ | [run                      :2337] | --- Running Method 1/1: non_nested_grid_search ---
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [run                      :2338] | Parameters for non_nested_grid_search: {'param_grid': {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_results': True}
+2025-05-03 01:10:28 | INFO     | ℹ️ | [non_nested_grid_search   :1573] | Performing non-nested 'grid' search with 3-fold CV on training data.
+2025-05-03 01:10:28 | INFO     | ℹ️ | [non_nested_grid_search   :1574] | Parameter Grid: {'lr': [0.001, 0.0005], 'optimizer__weight_decay': [0.01, 0.001]}
+2025-05-03 01:10:28 | INFO     | ℹ️ | [non_nested_grid_search   :1575] | Scoring Metric: accuracy
+2025-05-03 01:10:28 | INFO     | ℹ️ | [non_nested_grid_search   :1586] | Loading training data into memory for GridSearchCV...
+2025-05-03 01:10:28 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class '__main__.TransformedSubset'> (length 1344) into NumPy arrays...
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/42
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/42
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/42
+2025-05-03 01:10:28 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 4/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 5/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 6/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 7/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 8/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 9/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 10/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 11/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 12/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 13/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 14/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 15/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 16/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 17/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 18/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 19/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 20/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 21/42
+2025-05-03 01:10:29 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 22/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 23/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 24/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 25/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 26/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 27/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 28/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 29/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 30/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 31/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 32/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 33/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 34/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 35/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 36/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 37/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 38/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 39/42
+2025-05-03 01:10:30 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 40/42
+2025-05-03 01:10:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 41/42
+2025-05-03 01:10:31 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 42/42
+2025-05-03 01:10:31 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (1344, 3, 64, 64), y shape: (1344,)
+2025-05-03 01:10:31 | INFO     | ℹ️ | [non_nested_grid_search   :1614] | Fitting GridSearchCV with NumPy arrays...
+2025-05-03 01:10:31 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:10:31 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:31 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:10:31 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:10:35 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:35 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:35 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:10:35 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:35 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:10:35 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:10:38 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:38 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:38 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:10:38 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:38 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:10:38 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:10:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:42 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:10:42 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:42 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:10:42 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:10:45 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:45 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:46 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:10:46 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:46 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:10:46 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:10:49 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:49 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:50 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:10:50 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:50 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:10:50 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:10:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:53 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:10:53 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:53 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:10:53 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:10:56 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:56 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:57 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:10:57 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:10:57 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:10:57 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:11:01 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:01 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:01 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:11:01 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:01 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:11:01 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:11:05 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:05 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:05 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:11:05 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:05 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:11:05 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:11:09 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:09 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:09 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:11:09 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:09 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:11:09 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:11:12 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:12 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:12 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:11:13 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:13 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:11:13 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:11:18 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:18 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:18 | DEBUG    | 🐛 | [__init__                 :783 ] | SimpleCNN initialized with 6 output classes.
+2025-05-03 01:11:18 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:18 | DEBUG    | 🐛 | [get_dataset              :1091] | [DEBUG] Adapter.get_dataset: Converting y to LongTensor.
+2025-05-03 01:11:18 | DEBUG    | 🐛 | [get_split_datasets       :1163] | [DEBUG] Adapter.get_split_datasets: No X_val provided, using self.train_split.
+2025-05-03 01:11:23 | INFO     | ℹ️ | [non_nested_grid_search   :1616] | Search completed.
+2025-05-03 01:11:23 | INFO     | ℹ️ | [non_nested_grid_search   :1628] | Evaluating best model (params: {'lr': 0.0005, 'optimizer__weight_decay': 0.01}) on the test set...
+2025-05-03 01:11:23 | INFO     | ℹ️ | [non_nested_grid_search   :1631] | Loading test data into memory for evaluation...
+2025-05-03 01:11:23 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1540] | Loading dataset of type <class 'torch.utils.data.dataset.Subset'> (length 420) into NumPy arrays...
+2025-05-03 01:11:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 1/14
+2025-05-03 01:11:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 2/14
+2025-05-03 01:11:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 3/14
+2025-05-03 01:11:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 4/14
+2025-05-03 01:11:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 5/14
+2025-05-03 01:11:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 6/14
+2025-05-03 01:11:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 7/14
+2025-05-03 01:11:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 8/14
+2025-05-03 01:11:23 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 9/14
+2025-05-03 01:11:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 10/14
+2025-05-03 01:11:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 11/14
+2025-05-03 01:11:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 12/14
+2025-05-03 01:11:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 13/14
+2025-05-03 01:11:24 | DEBUG    | 🐛 | [_load_dataset_to_numpy   :1551] | Loading batch 14/14
+2025-05-03 01:11:24 | INFO     | ℹ️ | [_load_dataset_to_numpy   :1557] | Finished loading. X shape: (420, 3, 64, 64), y shape: (420,)
+2025-05-03 01:11:24 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:24 | DEBUG    | 🐛 | [get_dataset              :1084] | [DEBUG] Adapter.get_dataset: X type <class 'numpy.ndarray'>. Using default super().get_dataset(X, y).
+2025-05-03 01:11:24 | DEBUG    | 🐛 | [_compute_metrics         :1380] | Computed Metrics: Acc=0.6286, Macro F1=0.5202, Macro ROC AUC=0.9423, Macro PR AUC=0.8080
+2025-05-03 01:11:24 | INFO     | ℹ️ | [non_nested_grid_search   :1645] | Test Set Evaluation: Accuracy=0.6286, Macro F1=0.5202
+2025-05-03 01:11:24 | INFO     | ℹ️ | [_save_results            :1449] | Detailed results saved to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\Swimcat-extend\cnn\non_nested_grid_search_cv=3_method=grid_n_iter=N_A_scoring=accuracy_20250503_011124.json
+2025-05-03 01:11:24 | INFO     | ℹ️ | [_save_results            :1474] | Summary results updated in: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\pipeline_v2\results\Swimcat-extend\cnn\summary_results.csv
+2025-05-03 01:11:24 | INFO     | ℹ️ | [non_nested_grid_search   :1655] | Non-nested grid search finished. Best CV score (accuracy): 0.9353
+2025-05-03 01:11:24 | INFO     | ℹ️ | [non_nested_grid_search   :1656] | Best parameters found: {'lr': 0.0005, 'optimizer__weight_decay': 0.01}
+2025-05-03 01:11:24 | INFO     | ℹ️ | [run                      :2349] | --- Method non_nested_grid_search completed successfully ---
+2025-05-03 01:11:24 | INFO     | ℹ️ | [run                      :2359] | Pipeline execution finished.
+2025-05-03 01:11:24 | INFO     | ℹ️ | [<module>                 :2438] | --- Final Execution Results ---
+2025-05-03 01:11:24 | INFO     | ℹ️ | [<module>                 :2445] | Method non_nested_grid_search_0: Completed. (Accuracy/MeanAccuracy: 0.6286, BestScore: 0.9353)

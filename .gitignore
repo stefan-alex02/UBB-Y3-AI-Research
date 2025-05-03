@@ -2,3 +2,4 @@ DiffusionClassifier_initial/mini-GCD.zip
 model_src/GCD.zip
 *.pth
 model_src/data/GCD.zip
+/model_src/data/GCD/
