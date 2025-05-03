@@ -30,6 +30,7 @@ from skorch import NeuralNetClassifier
 from skorch.callbacks import EarlyStopping, LRScheduler, Checkpoint, Callback
 from skorch.dataset import Dataset as SkorchDataset, ValidSplit
 from skorch.helper import SliceDataset # Keep? Maybe not needed if always using PathImageDataset
+from skorch.utils import to_numpy
 # import torch.nn.functional as F # Not used
 from torch.utils.data import Dataset, DataLoader, Subset # Subset might still be useful conceptually, PathImageDataset is key
 from torchvision import transforms, datasets, models
@@ -591,147 +592,237 @@ class DiffusionClassifier(nn.Module):
         return logits
 
 
-# --- Skorch Model Adapter (Refactored) ---
+def _get_default_callbacks(patience: int = 10,
+                           monitor: str = 'valid_loss',
+                           lr_policy: str = 'ReduceLROnPlateau',
+                           lr_patience: int = 5) -> List[Tuple[str, Callback]]:
+    """Generates the default list of skorch callbacks."""
+    is_loss = monitor.endswith('_loss')
+    # Use unique names to avoid potential conflicts if user provides callbacks with same default names
+    return [
+        ('default_early_stopping', EarlyStopping(
+            monitor=monitor, patience=patience, load_best=True, lower_is_better=is_loss)),
+        ('default_lr_scheduler', LRScheduler(
+            policy=lr_policy, monitor=monitor, mode='min' if is_loss else 'max', patience=lr_patience, factor=0.1))
+    ]
+
+# --- Skorch Model Adapter (Final Version) ---
 
 class SkorchModelAdapter(NeuralNetClassifier):
     """
-    Skorch adapter that uses PathImageDataset and dynamically applies
-    train or validation transforms based on the model's training state.
+    Skorch adapter using PathImageDataset.
+    Uses overridden get_split_datasets and get_iterator to ensure
+    correct train/eval transforms are applied during fit and predict/eval.
     Includes train_acc logging.
     """
 
     def __init__(
-        self,
-        *args, # Pass positional args to parent
-        module: Optional[Type[nn.Module]] = None, # Keep module for clarity, though passed in *args too
-        criterion: Type[nn.Module] = nn.CrossEntropyLoss,
-        optimizer: Type[torch.optim.Optimizer] = torch.optim.AdamW,
-        lr: float = 0.001,
-        max_epochs: int = 20,
-        batch_size: int = 32,
-        device: str = DEVICE,
-        callbacks: Optional[Union[List[Tuple[str, Callback]], str]] = 'default',
-        train_transform: Optional[Callable] = None, # Required transform
-        valid_transform: Optional[Callable] = None, # Required transform
-        # Default train_split to None, assuming external CV or manual split often
-        train_split: Optional[Callable] = None,
-        iterator_train__shuffle: bool = True, # Default shuffle train iterator
-        verbose: int = 1,
-        **kwargs # Pass remaining keyword args to parent
+            self,
+            *args,
+            module: Optional[Type[nn.Module]] = None,
+            criterion: Type[nn.Module] = nn.CrossEntropyLoss,
+            optimizer: Type[torch.optim.Optimizer] = torch.optim.AdamW,
+            lr: float = 0.001,
+            max_epochs: int = 20,
+            batch_size: int = 32,
+            device: str = DEVICE,
+            # 'callbacks' now expects None or a list directly from the caller
+            callbacks: Optional[List[Tuple[str, Callback]]] = None,
+            train_transform: Optional[Callable] = None,
+            valid_transform: Optional[Callable] = None,
+            train_split: Optional[Callable] = None,
+            iterator_train__shuffle: bool = True,
+            verbose: int = 1,
+            **kwargs
     ):
         if train_transform is None or valid_transform is None:
-             raise ValueError("Both train_transform and valid_transform must be provided to SkorchModelAdapter")
-        self.train_transform = train_transform # Use distinct names
+            raise ValueError("Both train_transform and valid_transform must be provided")
+
+        # Store transforms directly
+        self.train_transform = train_transform
         self.valid_transform = valid_transform
 
-        # --- Process Callbacks ---
-        final_callbacks_arg = None
-        # Store callback config params temporarily from kwargs or use defaults
-        # These are ONLY used if callbacks='default'
-        cb_patience = kwargs.get('patience', 10)
-        cb_monitor = kwargs.get('monitor', 'valid_loss')
-        cb_lr_policy = kwargs.get('lr_scheduler_policy', 'ReduceLROnPlateau')
-        cb_lr_patience = kwargs.get('lr_scheduler_patience', 5)
+        # Callback config args (patience etc.) should have been handled by the caller
+        # We no longer process 'default' here.
 
-        if callbacks == 'default':
-            final_callbacks_arg = [
-                ('early_stopping', EarlyStopping(monitor=cb_monitor, patience=cb_patience, load_best=True,
-                                                 lower_is_better=cb_monitor.endswith('_loss'))),
-                ('lr_scheduler', LRScheduler(policy=cb_lr_policy, monitor=cb_monitor,
-                                             mode='min' if cb_monitor.endswith('_loss') else 'max',
-                                             patience=cb_lr_patience, factor=0.1))
-            ]
-            # Note: Checkpoint callback removed for simplicity, can be added back if needed
-        elif isinstance(callbacks, list):
-            final_callbacks_arg = callbacks
-        # If callbacks is None or 'disable', final_callbacks_arg remains None
-
-        # --- IMPORTANT: Always remove callback config params from kwargs ---
-        # These params were only used above to configure the 'default' case
-        # and should NOT be passed to the parent NeuralNetClassifier constructor.
-        kwargs.pop('patience', None)
-        kwargs.pop('monitor', None)
-        kwargs.pop('lr_scheduler_policy', None)
-        kwargs.pop('lr_scheduler_patience', None)
-        # --- End Process Callbacks ---
-
-        # --- FIX: Add Collate Functions to kwargs IF NOT ALREADY PRESENT ---
-        # This ensures they are part of the standard skorch parameter handling
-        # and correctly managed by get_params and clone.
+        # Add Collate Functions to kwargs if not provided by caller
         kwargs.setdefault('iterator_train__collate_fn', PathImageDataset.collate_fn)
         kwargs.setdefault('iterator_valid__collate_fn', PathImageDataset.collate_fn)
-        # --- END FIX ---
 
-        # Initialize the parent class
+        # Initialize the parent class, passing callbacks list/None directly
         super().__init__(
-            *args,
-            module=module,
-            criterion=criterion,
-            optimizer=optimizer,
-            lr=lr,
-            max_epochs=max_epochs,
-            batch_size=batch_size,
-            device=device,
-            callbacks=final_callbacks_arg, # Pass the processed list/None
-            train_split=train_split, # Pass the provided train_split value
-            iterator_train__shuffle=iterator_train__shuffle,
-            verbose=verbose,
-            **kwargs  # Pass kwargs, which now includes the collate functions
+            *args, module=module, criterion=criterion, optimizer=optimizer, lr=lr,
+            max_epochs=max_epochs, batch_size=batch_size, device=device,
+            callbacks=callbacks,  # Pass the provided list/None
+            train_split=train_split, iterator_train__shuffle=iterator_train__shuffle,
+            verbose=verbose, **kwargs
         )
 
-    # Override get_dataset to inject the correct transform based on training state
-    def get_dataset(self, X, y=None):
-        """ Creates PathImageDataset with train/valid transform based on module state."""
-        if not self.initialized_ or not hasattr(self, 'module_'):
-            current_transform = self.valid_transform
-        else:
-            is_training = getattr(self.module_, 'training', False)
-            current_transform = self.train_transform if is_training else self.valid_transform
-
+    # --- Override get_split_datasets ---
+    def get_split_datasets(self, X, y=None, **fit_params):
+        """
+        Creates the initial PathImageDataset and then uses self.train_split
+        to split it into train/valid subsets (usually SliceDatasets).
+        Crucially, it then replaces the underlying dataset within these
+        slices with correctly transformed PathImageDatasets.
+        """
+        # 1. Create the initial BASE dataset (Paths + Labels) - NO TRANSFORM YET
+        # This dataset is just a container for paths/labels needed by train_split
+        # We use SkorchDataset as it's the default skorch expects internally
         if isinstance(X, np.ndarray): X = X.tolist()
         if isinstance(y, np.ndarray): y = y.tolist()
+        # Ensure X contains paths and y contains labels
+        base_dataset = SkorchDataset(X, y)
 
-        return PathImageDataset(X, y, transform=current_transform)
+        # 2. Check if a train_split strategy is defined
+        if self.train_split and len(base_dataset) > 0:
+            try:
+                # Apply the split strategy (e.g., ValidSplit)
+                # This typically returns two SliceDataset instances wrapping base_dataset
+                ds_train_sliced, ds_valid_sliced = self.train_split(base_dataset, y, **fit_params)
 
-    # Override train_step_single to add train_acc calculation
+                # --- Crucial Step: Re-create datasets with correct transforms ---
+                # Extract original paths/labels using the indices from the slices
+                # Need the original X (paths) and y (labels) arrays here
+                X_paths_np = np.asarray(X)
+                y_labels_np = np.asarray(y)
+
+                # Check if the returned object has 'indices' (like torch Subset)
+                # or 'indices_' (like skorch SliceDataset - less likely now)
+                if hasattr(ds_train_sliced, 'indices'):
+                    train_indices = ds_train_sliced.indices
+                elif hasattr(ds_train_sliced, 'indices_'):
+                    train_indices = ds_train_sliced.indices_
+                else:
+                    # This case shouldn't happen if train_split worked, but handle defensively
+                    logger.error(
+                        f"Could not determine indices from training dataset split result of type {type(ds_train_sliced)}.")
+                    raise TypeError("Could not extract indices from training split result.")
+                # Ensure it's a numpy array for indexing
+                train_indices = np.asarray(train_indices)
+
+                final_ds_train = PathImageDataset(
+                    paths=X_paths_np[train_indices].tolist(),
+                    labels=y_labels_np[train_indices].tolist(),
+                    transform=self.train_transform  # <<< APPLY TRAIN TRANSFORM
+                )
+
+                # Create the *final* validation dataset with VALID transforms (if split exists)
+                final_ds_valid = None
+                if ds_valid_sliced is not None and len(ds_valid_sliced) > 0:
+                    if hasattr(ds_valid_sliced, 'indices'):
+                        valid_indices = ds_valid_sliced.indices
+                    elif hasattr(ds_valid_sliced, 'indices_'):
+                        valid_indices = ds_valid_sliced.indices_
+                    else:
+                        logger.error(
+                            f"Could not determine indices from validation dataset split result of type {type(ds_valid_sliced)}.")
+                        raise TypeError("Could not extract indices from validation split result.")
+                    valid_indices = np.asarray(valid_indices)
+
+                    final_ds_valid = PathImageDataset(
+                        paths=X_paths_np[valid_indices].tolist(),
+                        labels=y_labels_np[valid_indices].tolist(),
+                        transform=self.valid_transform  # <<< APPLY VALID TRANSFORM
+                    )
+                    logger.debug(f"Split created: {len(final_ds_train)} train, {len(final_ds_valid)} validation.")
+                else:
+                    logger.debug(f"Split created: {len(final_ds_train)} train, 0 validation.")
+
+                return final_ds_train, final_ds_valid
+
+            except Exception as e:
+                logger.error(f"Error applying train_split in get_split_datasets: {e}", exc_info=True)
+                logger.warning("Falling back to using all data for training.")
+                # Fallback: create a single PathImageDataset with train transform
+                ds_train = PathImageDataset(X, y, transform=self.train_transform)
+                return ds_train, None
+        else:
+            # No train_split defined, use all data for training
+            logger.debug(f"No train_split defined. Using all {len(X)} samples for training.")
+            ds_train = PathImageDataset(X, y, transform=self.train_transform)
+            return ds_train, None
+
+    # --- Override get_iterator ---
+    # In SkorchModelAdapter class
+
+    def get_iterator(self, dataset, training=False):
+        """
+        Override to ensure PathImageDataset with correct transform is used,
+        and DataLoader is configured correctly with batch_size and collate_fn.
+        """
+        # Ensure 'dataset' is PathImageDataset
+        if not isinstance(dataset, PathImageDataset):
+            if hasattr(dataset, 'X') and hasattr(dataset, 'y'):
+                X_paths = dataset.X;
+                y_labels = dataset.y
+                if isinstance(X_paths, np.ndarray): X_paths = X_paths.tolist()
+                if isinstance(y_labels, np.ndarray): y_labels = y_labels.tolist()
+                transform = self.train_transform if training else self.valid_transform
+                logger.debug(
+                    f"get_iterator creating PathImageDataset for {'training' if training else 'evaluation/prediction'}.")
+                dataset = PathImageDataset(X_paths, y_labels, transform=transform)
+            else:
+                logger.warning(f"get_iterator received unexpected dataset type {type(dataset)}, fallback to super.")
+                return super().get_iterator(dataset, training=training)
+
+        # --- Refined DataLoader Configuration ---
+        collate_fn = getattr(dataset, 'collate_fn', None)
+        if collate_fn is None:
+            logger.warning("PathImageDataset instance missing collate_fn attribute.")
+            # Optionally fall back to default collate, but might fail on None items
+            collate_fn = torch.utils.data.dataloader.default_collate
+
+        # Get relevant iterator parameters directly from self
+        # Use skorch's convention for parameter naming
+        shuffle = self.iterator_train__shuffle if training else False  # Only shuffle train iterator
+        batch_size = self.batch_size  # Use the main batch_size parameter
+
+        # Get other potential DataLoader args like num_workers, pin_memory if set via kwargs
+        loader_kwargs = {}
+        if hasattr(self, 'iterator__num_workers'):
+            loader_kwargs['num_workers'] = self.iterator__num_workers
+        if hasattr(self, 'iterator__pin_memory'):
+            loader_kwargs['pin_memory'] = self.iterator__pin_memory
+        # Add any other relevant DataLoader args you might configure via skorch kwargs
+
+        logger.debug(
+            f"Creating DataLoader: batch_size={batch_size}, shuffle={shuffle}, collate_fn={'Assigned' if collate_fn else 'None'}, other_kwargs={loader_kwargs}")
+
+        return DataLoader(
+            dataset,
+            batch_size=batch_size,  # Pass explicitly
+            shuffle=shuffle,
+            collate_fn=collate_fn,
+            **loader_kwargs
+        )
+
+    # --- train_step_single / validation_step handle batches from PathImageDataset ---
     def train_step_single(self, batch, **fit_params):
-        """Override train_step_single to ensure yi is LongTensor and log train_acc."""
         self.module_.train()
-        Xi, yi = batch
-        yi = yi.to(dtype=torch.long)  # Ensure target type
+        Xi, yi = batch # Already transformed tensors from PathImageDataset
+        yi = yi.to(dtype=torch.long)
         y_pred = self.infer(Xi, **fit_params)
         loss = self.get_loss(y_pred, yi, X=Xi, training=True)
         loss.backward()
-
         try:
-            y_true_batch = yi.cpu().numpy()
-            y_pred_batch = y_pred.argmax(dim=1).cpu().numpy()
+            y_true_batch = yi.cpu().numpy(); y_pred_batch = y_pred.argmax(dim=1).cpu().numpy()
             batch_acc = accuracy_score(y_true_batch, y_pred_batch) if len(y_true_batch) > 0 else 0.0
-        except Exception as e:
-            logger.warning(f"Could not calculate train batch accuracy: {e}")
-            batch_acc = 0.0
-
+        except Exception as e: logger.warning(f"Acc calc failed: {e}"); batch_acc = 0.0
+        # Return train_acc so skorch logs it
         return {'loss': loss, 'train_acc': batch_acc, 'y_pred': y_pred}
 
-    # Override validation_step to ensure target type (good practice)
     def validation_step(self, batch, **fit_params):
-        """Override validation_step to ensure yi is LongTensor before loss."""
         self.module_.eval()
-        Xi, yi = batch
+        Xi, yi = batch # Already transformed tensors from PathImageDataset
         yi = yi.to(dtype=torch.long)
         with torch.no_grad():
             y_pred = self.infer(Xi, **fit_params)
             loss = self.get_loss(y_pred, yi, X=Xi, training=False)
+        # Return y_pred so skorch can calculate valid_acc etc.
         return {'loss': loss, 'y_pred': y_pred}
 
-    # predict/predict_proba should automatically use eval mode and thus valid_transform
-    # due to skorch's internal state management. No override needed unless specific logic required.
-
-    # get_split_datasets: This is called internally if train_split is not None
-    # It should work correctly with PathImageDataset as long as train_split yields indices.
-    # Our override in v6 handled X_val. If we pass X_val to fit with train_split=None,
-    # skorch's default get_split_datasets should handle it by calling self.get_dataset on X_val.
-    # Let's rely on skorch's default for now, as we primarily use train_split=None or ValidSplit.
+# --- REMOVE SetTransformMode callback class ---
 
 # --- Classification Pipeline ---
 
@@ -788,10 +879,21 @@ class ClassificationPipeline:
         model_class = self._get_model_class(self.model_type)
 
         # --- Prepare Skorch Adapter configuration ---
-        # Collect tunable module params provided at init
+        # Store the INTENDED callback setting and config params
         module_params = {}
         if module__dropout_rate is not None: module_params['module__dropout_rate'] = module__dropout_rate
-        # Add more module__* params here if needed as defaults
+
+        # --- Determine initial callbacks list ---
+        intended_callbacks_setting = 'default'  # Or could be passed as argument
+        initial_callbacks_list = None
+        if intended_callbacks_setting == 'default':
+            initial_callbacks_list = _get_default_callbacks(
+                patience=patience, monitor='valid_loss',  # Use init args for defaults
+                lr_policy='ReduceLROnPlateau', lr_patience=5
+            )
+        elif isinstance(intended_callbacks_setting, list):
+            initial_callbacks_list = intended_callbacks_setting
+        # --- End Determine ---
 
         self.model_adapter_config = {
             'module': model_class,
@@ -802,16 +904,30 @@ class ClassificationPipeline:
             'max_epochs': max_epochs,
             'batch_size': batch_size,
             'device': DEVICE,
-            'callbacks': 'default', # Use default ['early_stopping', 'lr_scheduler']
-            'patience': patience, # Configure default early stopping
+            # --- Store the ACTUAL list/None ---
+            'callbacks': initial_callbacks_list,
+            # --- Store config params separately IF NEEDED for modification later ---
+            'patience_cfg': patience,  # Use different keys to avoid clashes if needed
+            'monitor_cfg': 'valid_loss',
+            'lr_policy_cfg': 'ReduceLROnPlateau',
+            'lr_patience_cfg': 5,
+            # --- End Store Config ---
             'train_transform': self.dataset_handler.get_train_transform(),
             'valid_transform': self.dataset_handler.get_eval_transform(),
-            'classes': np.arange(self.dataset_handler.num_classes), # Required by skorch for scoring if y is not passed
-            'verbose': 3,
+            'classes': np.arange(self.dataset_handler.num_classes),
+            'verbose': 3,  # Set default verbose level here
             'optimizer__weight_decay': optimizer__weight_decay,
-             # train_split is None by default in adapter, suitable for external CV
-            **module_params # Add default module params
+            **module_params
         }
+
+        # --- Instantiate the INITIAL adapter ---
+        # The config now already contains the correct callback list/None
+        init_config_for_adapter = self.model_adapter_config.copy()
+        # Remove config params not needed by SkorchModelAdapter init directly
+        init_config_for_adapter.pop('patience_cfg', None)
+        init_config_for_adapter.pop('monitor_cfg', None)
+        init_config_for_adapter.pop('lr_policy_cfg', None)
+        init_config_for_adapter.pop('lr_patience_cfg', None)
 
         # Initialize the adapter instance (can be cloned later)
         self.model_adapter = SkorchModelAdapter(**self.model_adapter_config)
@@ -1052,17 +1168,23 @@ class ClassificationPipeline:
         # Only need trainval data for fitting the search
         X_trainval, y_trainval = self.dataset_handler.get_train_val_paths_labels()
         if not X_trainval: raise RuntimeError("Train+validation data is empty.")
+        logger.info(f"Using {len(X_trainval)} samples for Train+Validation in GridSearchCV.")
 
         # --- Setup Skorch Estimator for Search ---
         adapter_config = self.model_adapter_config.copy()
-        adapter_config['train_split'] = ValidSplit(cv=0.15, stratified=True,
-                                                   random_state=RANDOM_SEED)  # Internal validation
+        internal_val_fraction = 0.15  # Define fraction
+        adapter_config['train_split'] = ValidSplit(cv=internal_val_fraction, stratified=True,
+                                                   random_state=RANDOM_SEED)  # Use internal validation split
+        logger.info(
+            f"Skorch internal validation split configured: {internal_val_fraction * 100:.1f}% of each CV fold's training data.")
         adapter_config['verbose'] = 3  # Less verbose fits during search
-        adapter_config['callbacks'] = [
-            ('early_stopping',
-             EarlyStopping(monitor='valid_loss', patience=adapter_config.get('patience', 10), load_best=True)),
-            ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
-        ]
+
+        # Remove config keys not needed by SkorchModelAdapter init
+        adapter_config.pop('patience_cfg', None)
+        adapter_config.pop('monitor_cfg', None)
+        adapter_config.pop('lr_policy_cfg', None)
+        adapter_config.pop('lr_patience_cfg', None)
+
         estimator = SkorchModelAdapter(**adapter_config)
 
         # --- Setup Search ---
@@ -1159,6 +1281,7 @@ class ClassificationPipeline:
         try:
             X_full, y_full = self.dataset_handler.get_full_paths_labels_for_cv()
             if not X_full: raise RuntimeError("Full dataset for CV is empty.")
+            logger.info(f"Using {len(X_full)} samples for outer cross-validation.")
             y_full_np = np.array(y_full) # Needed for stratification
         except Exception as e:
             logger.error(f"Failed to get full dataset paths/labels for nested CV: {e}", exc_info=True)
@@ -1167,12 +1290,18 @@ class ClassificationPipeline:
         # --- Setup Inner Search Object ---
         adapter_config = self.model_adapter_config.copy()
         # Use ValidSplit for internal validation during each inner GridSearch fit
-        adapter_config['train_split'] = ValidSplit(cv=0.15, stratified=True, random_state=RANDOM_SEED) # Adjust fraction
+        internal_val_fraction = 0.15  # Define fraction
+        adapter_config['train_split'] = ValidSplit(cv=internal_val_fraction, stratified=True, random_state=RANDOM_SEED)
+        logger.info(
+            f"Inner loop Skorch validation split configured: {internal_val_fraction * 100:.1f}% of inner CV fold's training data.")
         adapter_config['verbose'] = 3 # More verbose inner loops
-        adapter_config['callbacks'] = [
-             ('early_stopping', EarlyStopping(monitor='valid_loss', patience=adapter_config.get('patience', 10)//2+1, load_best=True)), # Shorter patience?
-             ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=3)) # Shorter patience?
-        ]
+
+        # Remove config keys not needed by SkorchModelAdapter init
+        adapter_config.pop('patience_cfg', None)
+        adapter_config.pop('monitor_cfg', None)
+        adapter_config.pop('lr_policy_cfg', None)
+        adapter_config.pop('lr_patience_cfg', None)
+
         base_estimator = SkorchModelAdapter(**adapter_config)
 
         inner_cv_splitter = StratifiedKFold(n_splits=inner_cv, shuffle=True, random_state=RANDOM_SEED)
@@ -1302,12 +1431,26 @@ class ClassificationPipeline:
             # --- Setup Estimator for this Fold ---
             fold_adapter_config = eval_params.copy()
             # Enable internal validation split for monitoring (e.g., EarlyStopping)
-            fold_adapter_config['train_split'] = ValidSplit(cv=0.15, stratified=True, random_state=RANDOM_SEED + fold_idx)
+            internal_val_fraction = 0.15  # Define the fraction used
+            fold_adapter_config['train_split'] = ValidSplit(cv=internal_val_fraction, stratified=True, random_state=RANDOM_SEED)
             fold_adapter_config['verbose'] = 3 # Show progress per fold
             fold_adapter_config['callbacks'] = [ # Ensure callbacks are set for this fold
                 ('early_stopping', EarlyStopping(monitor='valid_loss', patience=eval_params.get('patience', 10), load_best=True)),
                 ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
              ]
+
+            n_outer_train = len(X_outer_train)
+            n_inner_val = int(n_outer_train * internal_val_fraction)
+            n_inner_train = n_outer_train - n_inner_val
+            logger.debug(
+                f"Fold {fold_idx + 1}: Internal split for monitoring: ~{n_inner_train} train / ~{n_inner_val} valid.")
+
+            # Remove config keys not needed by SkorchModelAdapter init
+            fold_adapter_config.pop('patience_cfg', None)
+            fold_adapter_config.pop('monitor_cfg', None)
+            fold_adapter_config.pop('lr_policy_cfg', None)
+            fold_adapter_config.pop('lr_patience_cfg', None)
+
             estimator_fold = SkorchModelAdapter(**fold_adapter_config)
 
             # --- Fit on Outer Train (Skorch uses internal split for validation) ---
@@ -1395,9 +1538,9 @@ class ClassificationPipeline:
         if current_val_split_ratio <= 0 or current_val_split_ratio >= 1.0:
             logger.warning("Validation split ratio is <= 0 or >= 1. Training on full trainval set without validation.")
             X_train, y_train = X_trainval, y_trainval_np
-            X_val, y_val = [], np.array([]) # Empty validation set
+            X_val, y_val = [], np.array([])
             X_fit, y_fit = X_train, y_train
-            train_split_config = None # No internal validation split needed
+            train_split_config = None
             n_train, n_val = len(y_train), 0
         elif len(np.unique(y_trainval_np)) < 2:
              logger.warning("Only one class present in trainval data. Cannot stratify split. Training without validation.")
@@ -1455,6 +1598,11 @@ class ClassificationPipeline:
                  ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
              ]
         adapter_config['verbose'] = 3 # Show epoch progress
+
+        adapter_config.pop('patience_cfg', None)
+        adapter_config.pop('monitor_cfg', None)
+        adapter_config.pop('lr_policy_cfg', None)
+        adapter_config.pop('lr_patience_cfg', None)
 
         adapter_for_train = SkorchModelAdapter(**adapter_config)
 
@@ -1807,7 +1955,7 @@ if __name__ == "__main__":
 
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_seq_1 # <--- SELECT SEQUENCE TO RUN
+    chosen_sequence = methods_seq_2 # <--- SELECT SEQUENCE TO RUN
 
     logger.info(f"Executing sequence: {[m[0] for m in chosen_sequence]}")
 
@@ -1850,6 +1998,3 @@ if __name__ == "__main__":
          logger.error(f"Pipeline initialization or execution failed: {e}", exc_info=True)
     except Exception as e:
          logger.critical(f"An unexpected error occurred: {e}", exc_info=True)
-
-
-# --- END OF FILE code_v7.py ---
