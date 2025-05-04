@@ -661,90 +661,77 @@ class SkorchModelAdapter(NeuralNetClassifier):
     # --- Override get_split_datasets ---
     def get_split_datasets(self, X, y=None, **fit_params):
         """
-        Creates the initial PathImageDataset and then uses self.train_split
-        to split it into train/valid subsets (usually SliceDatasets).
-        Crucially, it then replaces the underlying dataset within these
-        slices with correctly transformed PathImageDatasets.
+        Splits paths/labels using self.train_split based on indices and y,
+        then creates separate PathImageDatasets with appropriate train/valid transforms.
         """
-        # 1. Create the initial BASE dataset (Paths + Labels) - NO TRANSFORM YET
-        # This dataset is just a container for paths/labels needed by train_split
-        # We use SkorchDataset as it's the default skorch expects internally
-        if isinstance(X, np.ndarray): X = X.tolist()
-        if isinstance(y, np.ndarray): y = y.tolist()
-        # Ensure X contains paths and y contains labels
-        base_dataset = SkorchDataset(X, y)
+        # Ensure y is available and numpy array
+        if y is None: raise ValueError("y must be provided to fit when using train_split.")
+        y_arr = to_numpy(y)
 
-        # 2. Check if a train_split strategy is defined
-        if self.train_split and len(base_dataset) > 0:
+        # Ensure X is paths and get length
+        if not isinstance(X, (list, tuple, np.ndarray)): raise TypeError(f"X must be sequence, got {type(X)}")
+        if isinstance(X, np.ndarray) and X.ndim > 1: raise ValueError("X must be 1D sequence of paths")
+        X_len = len(X)
+        if X_len == 0: logger.warning("Input X is empty."); return None, None
+        X_paths_np = np.asarray(X)  # Keep original paths safe
+
+        # 1. Check if a train_split strategy is defined
+        if self.train_split:
             try:
-                # Apply the split strategy (e.g., ValidSplit)
-                # This typically returns two SliceDataset instances wrapping base_dataset
-                ds_train_sliced, ds_valid_sliced = self.train_split(base_dataset, y, **fit_params)
+                # --- MODIFICATION ---
+                # Pass indices array (representing X) and the actual y array to the splitter
+                # ValidSplit(cv=float, stratified=True) uses train_test_split which works with indices.
+                # ValidSplit(cv=KFold, stratified=?) KFold split works on indices.
+                indices = np.arange(X_len)
+                ds_train_split, ds_valid_split = self.train_split(indices, y=y_arr, **fit_params)
+                # --- END MODIFICATION ---
 
-                # --- Crucial Step: Re-create datasets with correct transforms ---
-                # Extract original paths/labels using the indices from the slices
-                # Need the original X (paths) and y (labels) arrays here
-                X_paths_np = np.asarray(X)
-                y_labels_np = np.asarray(y)
-
-                # Check if the returned object has 'indices' (like torch Subset)
-                # or 'indices_' (like skorch SliceDataset - less likely now)
-                if hasattr(ds_train_sliced, 'indices'):
-                    train_indices = ds_train_sliced.indices
-                elif hasattr(ds_train_sliced, 'indices_'):
-                    train_indices = ds_train_sliced.indices_
+                # Extract indices from the returned split datasets
+                if hasattr(ds_train_split, 'indices'):
+                    train_indices = ds_train_split.indices
                 else:
-                    # This case shouldn't happen if train_split worked, but handle defensively
-                    logger.error(
-                        f"Could not determine indices from training dataset split result of type {type(ds_train_sliced)}.")
-                    raise TypeError("Could not extract indices from training split result.")
-                # Ensure it's a numpy array for indexing
+                    raise TypeError(f"Could not extract indices from train split result type {type(ds_train_split)}")
                 train_indices = np.asarray(train_indices)
 
-                final_ds_train = PathImageDataset(
+                valid_indices = None
+                if ds_valid_split is not None and len(ds_valid_split) > 0:
+                    if hasattr(ds_valid_split, 'indices'):
+                        valid_indices = ds_valid_split.indices
+                        valid_indices = np.asarray(valid_indices)
+                    else:
+                        raise TypeError(
+                            f"Could not extract indices from valid split result type {type(ds_valid_split)}")
+
+                # Create datasets using indices on original paths/labels AND correct transforms
+                ds_train = PathImageDataset(
                     paths=X_paths_np[train_indices].tolist(),
-                    labels=y_labels_np[train_indices].tolist(),
-                    transform=self.train_transform  # <<< APPLY TRAIN TRANSFORM
+                    labels=y_arr[train_indices].tolist(),
+                    transform=self.train_transform
                 )
 
-                # Create the *final* validation dataset with VALID transforms (if split exists)
-                final_ds_valid = None
-                if ds_valid_sliced is not None and len(ds_valid_sliced) > 0:
-                    if hasattr(ds_valid_sliced, 'indices'):
-                        valid_indices = ds_valid_sliced.indices
-                    elif hasattr(ds_valid_sliced, 'indices_'):
-                        valid_indices = ds_valid_sliced.indices_
-                    else:
-                        logger.error(
-                            f"Could not determine indices from validation dataset split result of type {type(ds_valid_sliced)}.")
-                        raise TypeError("Could not extract indices from validation split result.")
-                    valid_indices = np.asarray(valid_indices)
-
-                    final_ds_valid = PathImageDataset(
+                ds_valid = None
+                if len(valid_indices) > 0:
+                    ds_valid = PathImageDataset(
                         paths=X_paths_np[valid_indices].tolist(),
-                        labels=y_labels_np[valid_indices].tolist(),
-                        transform=self.valid_transform  # <<< APPLY VALID TRANSFORM
+                        labels=y_arr[valid_indices].tolist(),
+                        transform=self.valid_transform
                     )
-                    logger.debug(f"Split created: {len(final_ds_train)} train, {len(final_ds_valid)} validation.")
+                    logger.debug(f"Split created: {len(ds_train)} train, {len(ds_valid)} validation.")
                 else:
-                    logger.debug(f"Split created: {len(final_ds_train)} train, 0 validation.")
+                    logger.debug(f"Split created: {len(ds_train)} train, 0 validation.")
 
-                return final_ds_train, final_ds_valid
+                return ds_train, ds_valid
 
             except Exception as e:
                 logger.error(f"Error applying train_split in get_split_datasets: {e}", exc_info=True)
                 logger.warning("Falling back to using all data for training.")
-                # Fallback: create a single PathImageDataset with train transform
-                ds_train = PathImageDataset(X, y, transform=self.train_transform)
+                ds_train = PathImageDataset(X_paths_np.tolist(), y_arr.tolist(), transform=self.train_transform)
                 return ds_train, None
         else:
-            # No train_split defined, use all data for training
-            logger.debug(f"No train_split defined. Using all {len(X)} samples for training.")
-            ds_train = PathImageDataset(X, y, transform=self.train_transform)
+            # No train_split defined
+            logger.debug(f"No train_split defined. Using all {X_len} samples for training.")
+            ds_train = PathImageDataset(X_paths_np.tolist(), y_arr.tolist(), transform=self.train_transform)
             return ds_train, None
-
-    # --- Override get_iterator ---
-    # In SkorchModelAdapter class
 
     def get_iterator(self, dataset, training=False):
         """
@@ -806,10 +793,15 @@ class SkorchModelAdapter(NeuralNetClassifier):
         loss = self.get_loss(y_pred, yi, X=Xi, training=True)
         loss.backward()
         try:
-            y_true_batch = yi.cpu().numpy(); y_pred_batch = y_pred.argmax(dim=1).cpu().numpy()
+            y_true_batch = yi.cpu().numpy()
+            y_pred_batch = y_pred.argmax(dim=1).cpu().numpy()
+            # Handle case where batch might be empty after collate filtering
             batch_acc = accuracy_score(y_true_batch, y_pred_batch) if len(y_true_batch) > 0 else 0.0
-        except Exception as e: logger.warning(f"Acc calc failed: {e}"); batch_acc = 0.0
-        # Return train_acc so skorch logs it
+        except Exception as e:
+            logger.warning(f"Acc calc failed: {e}")
+            batch_acc = 0.0 # Default value on error
+
+        # --- Return train_acc so skorch logs it ---
         return {'loss': loss, 'train_acc': batch_acc, 'y_pred': y_pred}
 
     def validation_step(self, batch, **fit_params):
@@ -1955,7 +1947,7 @@ if __name__ == "__main__":
 
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_seq_2 # <--- SELECT SEQUENCE TO RUN
+    chosen_sequence = methods_seq_1 # <--- SELECT SEQUENCE TO RUN
 
     logger.info(f"Executing sequence: {[m[0] for m in chosen_sequence]}")
 
