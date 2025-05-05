@@ -19,7 +19,8 @@ import torch.optim as optim
 from sklearn.base import clone
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
-    roc_auc_score, precision_recall_curve, auc, make_scorer
+    roc_auc_score, precision_recall_curve, auc, make_scorer,
+    roc_curve
 )
 from sklearn.model_selection import (
     GridSearchCV, RandomizedSearchCV, StratifiedKFold,
@@ -175,38 +176,55 @@ def write_log_header_if_needed(log_path: Path):
         print(f"Error writing log header to {log_path}: {e}", file=sys.stderr)
     return False
 
-def setup_logger(name: str, log_file: Optional[Union[str, Path]] = None, level: int = logging.INFO, use_colors: bool = True) -> logging.Logger:
+def setup_logger(name: str,
+                 log_dir: Union[str, Path], # <<< Accept directory instead of full path
+                 log_filename: str = 'classification.log', # <<< Default filename
+                 level: int = logging.INFO,
+                 use_colors: bool = True) -> logging.Logger:
+    """Sets up the logger to log to console and a file within the specified directory."""
     logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.propagate = False
-    if logger.hasHandlers(): logger.handlers.clear()
+    # Prevent duplicate handlers if logger already exists (e.g., in interactive sessions)
+    if logger.hasHandlers():
+        logger.handlers.clear()
+        # logger.info("Cleared existing logger handlers.") # Optional debug log
 
+    logger.setLevel(level)
+    logger.propagate = False # Prevent propagation to root logger
+
+    # Console Handler (always add)
     console_formatter = EnhancedFormatter(use_colors=use_colors)
     console_handler = logging.StreamHandler(sys.stdout)
     console_handler.setFormatter(console_formatter)
     logger.addHandler(console_handler)
 
-    if log_file:
-        log_path = Path(log_file)
+    # File Handler (if directory provided)
+    if log_dir:
+        log_path = Path(log_dir) / log_filename
+        # Ensure directory exists
         log_path.parent.mkdir(parents=True, exist_ok=True)
-        write_log_header_if_needed(log_path)
+        # Check and write header if needed
+        is_new_file = write_log_header_if_needed(log_path)
         try:
             file_formatter = EnhancedFormatter(use_colors=False)
+            # Use 'a' mode to append to the log file
             file_handler = logging.FileHandler(log_path, mode='a', encoding='utf-8')
             file_handler.setFormatter(file_formatter)
             logger.addHandler(file_handler)
-        except Exception as e: logger.error(f"Failed to create file handler for {log_path}: {e}")
+            # Log initialization message only if it's a new file or handlers were just added
+            if is_new_file or not logger.handlers: # Simple check if handlers were just added
+                 logger.info(f"Logger '{name}' initialized. Log file: {log_path}")
+
+        except Exception as e:
+             # Use logger AFTER console handler is added
+             logger.error(f"Failed to create file handler for {log_path}: {e}")
+    else:
+        logger.warning("No log directory provided. Logging to console only.")
+
     return logger
 
 # --- Setup Logger Instance ---
-script_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd() # Handle interactive use
-log_dir = script_dir / 'logs'
-log_dir.mkdir(exist_ok=True)
-logger_name = 'ImgClassPipe'
-log_file_path = log_dir / 'classification.log'
-logger = setup_logger(logger_name, log_file_path, level=logging.DEBUG, use_colors=True)
-print(get_log_header(use_colors=True)) # Print header directly to console
-logger.info(f"Logger '{logger_name}' initialized. Log file: {log_file_path}")
+# This logger will be configured by PipelineExecutor
+logger: logging.Logger = logging.getLogger('ImgClassPipe_Default')
 
 # --- Dataset Handling ---
 
@@ -872,17 +890,18 @@ class ClassificationPipeline:
     Manages image classification: data loading (paths), model selection,
     training, tuning, evaluation. Uses SkorchModelAdapter with dynamic transforms.
     """
+
     def __init__(self,
                  dataset_path: Union[str, Path],
                  model_type: str = 'cnn',
                  model_load_path: Optional[Union[str, Path]] = None,
                  img_size: Tuple[int, int] = (224, 224),
                  results_dir: Union[str, Path] = 'results',
+                 save_detailed_results: bool = False,  # <<< ADDED FLAG
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2,
                  data_augmentation: bool = True,
-                 force_flat_for_fixed_cv: bool = False, # New flag
-                 # Skorch adapter params
+                 force_flat_for_fixed_cv: bool = False,
                  lr: float = 0.001,
                  max_epochs: int = 20,
                  batch_size: int = 32,
@@ -893,10 +912,12 @@ class ClassificationPipeline:
         self.dataset_path = Path(dataset_path).resolve()
         self.model_type = model_type.lower()
         self.force_flat_for_fixed_cv = force_flat_for_fixed_cv
+        self.save_detailed_results = save_detailed_results # <<< STORE FLAG
         logger.info(f"Initializing Classification Pipeline:")
         logger.info(f"  Dataset Path: {self.dataset_path}")
         logger.info(f"  Model Type: {self.model_type}")
         logger.info(f"  Force Flat for Fixed CV: {self.force_flat_for_fixed_cv}")
+        logger.info(f"  Save Detailed Results: {self.save_detailed_results}")
 
         # Initialize dataset handler (gets paths, labels, transforms)
         self.dataset_handler = ImageDatasetHandler(
@@ -908,21 +929,20 @@ class ClassificationPipeline:
             force_flat_for_fixed_cv=self.force_flat_for_fixed_cv
         )
 
-        # Results directory
+        # --- Results directory: [base]/[dataset]/[model]/[timestamp_seed]/ ---
         base_results_dir = Path(results_dir).resolve()
         dataset_name = self.dataset_path.name
-        timestamp_init = datetime.now().strftime('%Y%m%d_%H%M%S') # Add timestamp to avoid conflicts
-        self.results_dir = base_results_dir / f"{dataset_name}_{self.model_type}_{timestamp_init}"
-        self.results_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"  Results will be saved to: {self.results_dir}")
+        timestamp_init = datetime.now().strftime('%Y%m%d_%H%M%S')
+        # Include seed in the main experiment directory name
+        self.experiment_dir = base_results_dir / dataset_name / self.model_type / f"{timestamp_init}_seed{RANDOM_SEED}"
+        self.experiment_dir.mkdir(parents=True, exist_ok=True)
+        logger.info(f"  Base experiment results dir: {self.experiment_dir}")
+        # --- End Results directory ---
 
         # Select model class
         model_class = self._get_model_class(self.model_type)
 
         # --- Prepare Skorch Adapter configuration ---
-        # Store the INTENDED callback setting and config params
-        module_params = {}
-        if module__dropout_rate is not None: module_params['module__dropout_rate'] = module__dropout_rate
 
         # --- Determine initial callbacks list ---
         intended_callbacks_setting = 'default'  # Or could be passed as argument
@@ -936,6 +956,10 @@ class ClassificationPipeline:
             initial_callbacks_list = intended_callbacks_setting
         # --- End Determine ---
 
+        # Store the INTENDED callback setting and config params
+        module_params = {}
+        if module__dropout_rate is not None: module_params['module__dropout_rate'] = module__dropout_rate
+
         self.model_adapter_config = {
             'module': model_class,
             'module__num_classes': self.dataset_handler.num_classes,
@@ -945,10 +969,8 @@ class ClassificationPipeline:
             'max_epochs': max_epochs,
             'batch_size': batch_size,
             'device': DEVICE,
-            # --- Store the ACTUAL list/None ---
-            'callbacks': initial_callbacks_list,
-            # --- Store config params separately IF NEEDED for modification later ---
-            'patience_cfg': patience,  # Use different keys to avoid clashes if needed
+            'callbacks': initial_callbacks_list,  # Store processed list/None
+            'patience_cfg': patience,
             'monitor_cfg': 'valid_loss',
             'lr_policy_cfg': 'ReduceLROnPlateau',
             'lr_patience_cfg': 5,
@@ -987,189 +1009,299 @@ class ClassificationPipeline:
             raise ValueError(f"Unsupported model type: '{model_type_str}'. Choose from {list(model_mapping.keys())}.")
         return model_class
 
-    def _compute_metrics(self, y_true: np.ndarray, y_pred: np.ndarray, y_score: Optional[np.ndarray] = None) -> Dict[str, Any]:
-        # (Keep logic from code_v6, it works on numpy arrays)
+    # In ClassificationPipeline class:
+    def _compute_metrics(self, y_true: np.ndarray, y_pred: np.ndarray,
+                         y_score: Optional[np.ndarray] = None,
+                         detailed: bool = False) -> Dict[str, Any]:  # <<< ADDED detailed FLAG
         if not isinstance(y_true, np.ndarray): y_true = np.array(y_true)
         if not isinstance(y_pred, np.ndarray): y_pred = np.array(y_pred)
         if y_score is not None and not isinstance(y_score, np.ndarray): y_score = np.array(y_score)
 
-        metrics: Dict[str, Any] = {'accuracy': accuracy_score(y_true, y_pred)}
-        present_class_labels = np.unique(y_true)
-        all_class_names = self.dataset_handler.classes
-        if not all_class_names:
-             logger.warning("Dataset handler classes list empty. Cannot compute per-class/macro metrics.")
-             metrics['macro_avg'] = {'precision': np.nan, 'recall': np.nan, 'specificity': np.nan, 'f1': np.nan, 'roc_auc': np.nan, 'pr_auc': np.nan}
-             return metrics
+        metrics: Dict[str, Any] = {}  # Start empty
+        class_metrics: Dict[str, Dict[str, float]] = {}  # Store per-class metrics here
+        macro_metrics: Dict[str, float] = {}  # Store macro averages here
+        detailed_data: Dict[str, Any] = {}  # Store detailed data here
 
+        all_class_names = self.dataset_handler.classes
         num_classes_total = self.dataset_handler.num_classes
+        if not all_class_names:
+            logger.warning("Cannot compute metrics: class names not available.")
+            return {'error': 'Class names missing'}
+
+        # --- Overall Accuracy ---
+        metrics['overall_accuracy'] = accuracy_score(y_true, y_pred)
+
+        # --- Per-Class Metrics ---
+        present_class_labels = np.unique(np.concatenate((y_true, y_pred)))  # Consider labels in both true and pred
         all_precisions, all_recalls, all_specificities, all_f1s = [], [], [], []
         all_roc_aucs, all_pr_aucs = [], []
-        can_compute_auc = y_score is not None and len(y_score.shape) == 2 and y_score.shape[1] == num_classes_total and len(y_score) == len(y_true)
+        # For detailed results
+        all_roc_curves = {}  # Store {class_name: {'fpr': list, 'tpr': list, 'thresholds': list}}
+        all_pr_curves = {}  # Store {class_name: {'precision': list, 'recall': list, 'thresholds': list}}
 
+        can_compute_auc = y_score is not None and len(y_score.shape) == 2 and y_score.shape[
+            1] == num_classes_total and len(y_score) == len(y_true)
         if y_score is not None and not can_compute_auc:
-             logger.warning(f"y_score shape {y_score.shape if y_score is not None else 'None'} incompatible with y_true len {len(y_true)} and num_classes {num_classes_total}. Cannot compute AUCs.")
+            logger.warning(f"y_score shape incompatible. Cannot compute AUCs.")
 
         for i, class_name in enumerate(all_class_names):
             class_label = self.dataset_handler.class_to_idx.get(class_name, i)
-            if class_label not in present_class_labels:
-                 # Append NaN for missing classes in this subset
-                 all_precisions.append(np.nan); all_recalls.append(np.nan); all_specificities.append(np.nan); all_f1s.append(np.nan); all_roc_aucs.append(np.nan); all_pr_aucs.append(np.nan)
-                 continue
+            # Check if class actually present in y_true for some metrics
+            is_present = class_label in np.unique(y_true)
+            # Check if class present in y_true OR y_pred for basic metrics
+            is_present_or_predicted = class_label in present_class_labels
+
+            if not is_present_or_predicted:
+                # Class completely absent, record NaNs for basic metrics
+                class_metrics[class_name] = {'precision': np.nan, 'recall': np.nan, 'specificity': np.nan,
+                                             'f1': np.nan, 'roc_auc': np.nan, 'pr_auc': np.nan}
+                all_precisions.append(np.nan);
+                all_recalls.append(np.nan);
+                all_specificities.append(np.nan);
+                all_f1s.append(np.nan);
+                all_roc_aucs.append(np.nan);
+                all_pr_aucs.append(np.nan)
+                if detailed:  # Add empty curve data if detailed
+                    all_roc_curves[class_name] = {'fpr': [], 'tpr': [], 'thresholds': []}
+                    all_pr_curves[class_name] = {'precision': [], 'recall': [], 'thresholds': []}
+                continue
 
             true_is_class = (y_true == class_label)
             pred_is_class = (y_pred == class_label)
 
             precision = precision_score(true_is_class, pred_is_class, zero_division=0)
-            recall = recall_score(true_is_class, pred_is_class, zero_division=0) # Sensitivity
+            recall = recall_score(true_is_class, pred_is_class, zero_division=0)  # Sensitivity
             f1 = f1_score(true_is_class, pred_is_class, zero_division=0)
             # Specificity = TN / (TN + FP) = Recall of negative class
             specificity = recall_score(~true_is_class, ~pred_is_class, zero_division=0)
 
-            all_precisions.append(precision); all_recalls.append(recall); all_specificities.append(specificity); all_f1s.append(f1)
-
             roc_auc, pr_auc = np.nan, np.nan
-            if can_compute_auc:
-                try:
-                    score_for_class = y_score[:, class_label]
-                    if len(np.unique(true_is_class)) > 1: # AUC requires both classes present
-                        try: roc_auc = roc_auc_score(true_is_class, score_for_class)
-                        except Exception as e: logger.warning(f"ROC AUC Error (Class {class_name}): {e}")
+            roc_curve_data = {'fpr': [], 'tpr': [], 'thresholds': []}
+            pr_curve_data = {'precision': [], 'recall': [], 'thresholds': []}
+
+            if can_compute_auc and is_present:  # Need true class present for meaningful AUC/curves
+                score_for_class = y_score[:, class_label]
+                if len(np.unique(true_is_class)) > 1:  # AUC/curves require both +ve/-ve samples
+                    try:
+                        roc_auc = roc_auc_score(true_is_class, score_for_class)
+                    except ValueError:
+                        pass  # Ignore if only one class present after all
+                    except Exception as e:
+                        logger.warning(f"ROC AUC Error (Class {class_name}): {e}")
+
+                    try:
+                        prec, rec, pr_thresh = precision_recall_curve(true_is_class, score_for_class)
+                        order = np.argsort(rec)  # Sort by recall for AUC calc
+                        pr_auc = auc(rec[order], prec[order])
+                        if detailed:
+                            pr_curve_data['precision'] = prec.tolist()
+                            pr_curve_data['recall'] = rec.tolist()
+                            # Thresholds might be one less
+                            pr_curve_data['thresholds'] = pr_thresh.tolist() if pr_thresh is not None else []
+                    except ValueError:
+                        pass
+                    except Exception as e:
+                        logger.warning(f"PR AUC Error (Class {class_name}): {e}")
+
+                    if detailed:
                         try:
-                            prec, rec, _ = precision_recall_curve(true_is_class, score_for_class)
-                            # Ensure recall is sorted for AUC calculation
-                            order = np.argsort(rec)
-                            pr_auc = auc(rec[order], prec[order])
-                        except Exception as e: logger.warning(f"PR AUC Error (Class {class_name}): {e}")
-                    # else: logger.debug(f"Skipping AUC for class {class_name}: only one class present.") # Too verbose
-                except IndexError:
-                    logger.warning(f"IndexError getting y_score column {class_label}. Skipping AUCs for class {class_name}.")
-                except Exception as e_outer:
-                     logger.warning(f"Error calculating AUCs for class {class_name}: {e_outer}")
+                            fpr, tpr, roc_thresh = roc_curve(true_is_class, score_for_class)
+                            roc_curve_data['fpr'] = fpr.tolist()
+                            roc_curve_data['tpr'] = tpr.tolist()
+                            roc_curve_data['thresholds'] = roc_thresh.tolist()
+                        except ValueError:
+                            pass
+                        except Exception as e:
+                            logger.warning(f"ROC Curve Error (Class {class_name}): {e}")
 
-
-            all_roc_aucs.append(roc_auc)
+            # Store per-class results
+            class_metrics[class_name] = {
+                'precision': precision, 'recall': recall, 'specificity': specificity, 'f1': f1,
+                'roc_auc': roc_auc, 'pr_auc': pr_auc
+            }
+            # Append for macro calculation
+            all_precisions.append(precision);
+            all_recalls.append(recall);
+            all_specificities.append(specificity);
+            all_f1s.append(f1)
+            all_roc_aucs.append(roc_auc);
             all_pr_aucs.append(pr_auc)
+            # Store detailed curve data if requested
+            if detailed:
+                all_roc_curves[class_name] = roc_curve_data
+                all_pr_curves[class_name] = pr_curve_data
 
-        metrics['macro_avg'] = {
-            'precision': float(np.nanmean(all_precisions)), 'recall': float(np.nanmean(all_recalls)),
-            'specificity': float(np.nanmean(all_specificities)), 'f1': float(np.nanmean(all_f1s)),
-            'roc_auc': float(np.nanmean(all_roc_aucs)) if can_compute_auc else np.nan,
-            'pr_auc': float(np.nanmean(all_pr_aucs)) if can_compute_auc else np.nan
-        }
-        logger.debug(f"Computed Metrics: Acc={metrics['accuracy']:.4f}, Macro F1={metrics['macro_avg']['f1']:.4f}")
+        # --- Macro Averages ---
+        macro_metrics['precision'] = float(np.nanmean(all_precisions))
+        macro_metrics['recall'] = float(np.nanmean(all_recalls))
+        macro_metrics['specificity'] = float(np.nanmean(all_specificities))
+        macro_metrics['f1'] = float(np.nanmean(all_f1s))
+        macro_metrics['roc_auc'] = float(np.nanmean(all_roc_aucs)) if can_compute_auc else np.nan
+        macro_metrics['pr_auc'] = float(np.nanmean(all_pr_aucs)) if can_compute_auc else np.nan
+
+        metrics['per_class'] = class_metrics
+        metrics['macro_avg'] = macro_metrics
+
+        # --- Add Detailed Data if Requested ---
+        if detailed:
+            detailed_data['y_true'] = y_true.tolist()  # Convert to list for JSON
+            detailed_data['y_pred'] = y_pred.tolist()
+            if y_score is not None:
+                detailed_data['y_score'] = y_score.tolist()
+            detailed_data['roc_curve_points'] = all_roc_curves
+            detailed_data['pr_curve_points'] = all_pr_curves
+            metrics['detailed_data'] = detailed_data
+
+        logger.debug(
+            f"Computed Metrics: Acc={metrics['overall_accuracy']:.4f}, Macro F1={metrics['macro_avg']['f1']:.4f}")
         return metrics
 
-    def _save_results(self, results_data: Dict[str, Any], method_name: str, params: Optional[Dict[str, Any]] = None) -> None:
-        params = params or {}
+    def _save_results(self,
+                      results_data: Dict[str, Any],
+                      method_name: str,
+                      run_id: str,  # Unique ID for this specific method run (e.g., "single_train_0")
+                      method_params: Optional[Dict[str, Any]] = None
+                      ) -> None:
+        """
+        Saves results to JSON (potentially cleaned based on self.save_detailed_results)
+        in a method-specific subdirectory and updates a summary CSV in the main
+        experiment directory.
+
+        Args:
+            results_data: The dictionary containing results from the method.
+            method_name: The name of the pipeline method (e.g., "single_train").
+            run_id: A unique identifier for this specific run (e.g., "single_train_0"),
+                    used for the subdirectory name.
+            method_params: Dictionary of key parameters used for this method run,
+                           primarily for the summary CSV.
+        """
+        method_params = method_params or {}
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
 
-        # --- Define Keys for Filename Parameters ---
-        # Select only simple, key hyperparameters relevant for filenames
-        filename_param_keys = [
-            'lr', 'batch_size', 'max_epochs', 'patience', # Common Skorch params
-            'optimizer__weight_decay', # Example optimizer param
-            'module__dropout_rate', # Example module param
-            # CV specific params (if applicable)
-            'cv', 'outer_cv', 'inner_cv', 'n_iter'
+        # --- Create Method-Specific Subdirectory ---
+        # Structure: [base]/[dataset]/[model]/[timestamp_seed]/[run_id]/
+        method_dir = self.experiment_dir / run_id  # self.experiment_dir is set in __init__
+        method_dir.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Saving results for {run_id} to: {method_dir}")
+
+        # --- Define keys to remove if not detailed ---
+        keys_to_remove_if_not_detailed = [
+            'training_history',  # Can be large (single_train)
+            'cv_results',  # Raw sklearn CV results dict (grid searches)
+            'detailed_data',  # Raw preds/scores/curves (single_eval, cv_eval fold)
+            'fold_detailed_results',  # List of detailed fold metrics (cv_eval)
+            'full_params_used',  # Full config dict used (can be large/complex)
+            'inner_cv_results',  # Raw inner CV results (nested_fixed_adapted - if re-enabled)
+            # Add others here if needed
         ]
+        # Store original cv_results before potential cleaning
+        cv_results_full = results_data.get('cv_results')
 
-        # --- Filter and Sanitize Filename Parameters ---
-        filename_params = {}
-        for key in filename_param_keys:
-            if key in params:
-                value = params[key]
-                # Check if value is a simple type suitable for filename
-                if isinstance(value, (str, int, float, bool, type(None))):
-                     # Sanitize the value
-                     s_val = str(value).replace('/', '_').replace('\\', '_')
-                     s_val = re.sub(r'[<>:"|?*]', '_', s_val) # More restricted set
-                     filename_params[key] = s_val[:30] # Limit length per value too
-                # else: skip complex types for filename
+        # --- Prepare data to save based on detail flag ---
+        if not self.save_detailed_results:
+            logger.debug(f"Cleaning results for run '{run_id}' (save_detailed_results=False).")
+            results_to_save = {}
+            for key, value in results_data.items():
+                if key not in keys_to_remove_if_not_detailed:
+                    results_to_save[key] = value
+            # Special handling for cv_results: keep only mean/std scores if available
+            if cv_results_full and isinstance(cv_results_full, dict):
+                summary_cv = {}
+                for k, v_list in cv_results_full.items():
+                    # Check if key indicates a score list and is numeric-like after conversion
+                    if k.startswith(
+                            ('mean_test_', 'std_test_', 'mean_train_', 'std_train_', 'rank_test_')) and isinstance(
+                            v_list, (list, np.ndarray)) and len(v_list) > 0:
+                        try:
+                            # Attempt to convert first element to float to check type
+                            _ = float(v_list[0])
+                            summary_cv[k] = v_list  # Keep the whole list/array for summary
+                        except (ValueError, TypeError):
+                            pass  # Skip non-numeric lists
+                if summary_cv:
+                    results_to_save['cv_results_summary'] = summary_cv
+            logger.debug(f"Cleaned results keys: {list(results_to_save.keys())}")
+        else:
+            logger.debug(f"Saving full detailed results for run '{run_id}'.")
+            results_to_save = results_data.copy()  # Save everything
 
-        params_str = '_'.join([f"{k}={v}" for k, v in sorted(filename_params.items())])
+        # Add method parameters used to the saved dict for context
+        results_to_save['method_params_used'] = method_params
 
-        filename_base = f"{method_name}_{params_str}_{timestamp}" if params_str else f"{method_name}_{timestamp}"
-        json_filepath = self.results_dir / f"{filename_base}.json"
-        # Ensure filename isn't exceeding limits (simple check)
-        max_len = 240 # Leave some room for directory path
-        if len(json_filepath.name) > max_len:
-             logger.warning(f"Generated filename exceeds {max_len} chars, truncating: {json_filepath.name}")
-             # Truncate the params part intelligently if possible, or just hash it
-             hash_part = hashlib.md5(params_str.encode()).hexdigest()[:8]
-             filename_base = f"{method_name}_params_{hash_part}_{timestamp}"
-             json_filepath = self.results_dir / f"{filename_base}.json"
-             logger.warning(f"Using truncated filename: {json_filepath.name}")
+        # --- Save results JSON ---
+        json_filename = f"{method_name}_results_{timestamp}.json"
+        json_filepath = method_dir / json_filename
 
-
-        csv_filepath = self.results_dir.parent / f"{self.dataset_handler.root_path.name}_summary_results.csv" # Summary in parent dir
-
-        # --- Save detailed JSON ---
         try:
             def json_serializer(obj):
-                 # (Keep existing serializer logic)
-                 if isinstance(obj, (np.integer, np.int64)): return int(obj)
-                 elif isinstance(obj, (np.floating, np.float32, np.float64)): return float(obj) if not np.isnan(obj) else None
-                 elif isinstance(obj, np.ndarray): return obj.tolist()
-                 elif isinstance(obj, Path): return str(obj)
-                 elif isinstance(obj, datetime): return obj.isoformat()
-                 elif isinstance(obj, (slice, type, Callable)): return None
-                 # --- ADDED: Handle specific non-serializable skorch/torch items in config ---
-                 elif isinstance(obj, (torch.optim.Optimizer, nn.Module, EarlyStopping, LRScheduler, ValidSplit)):
-                      return str(type(obj).__name__) # Just store the type name
-                 # --- END ADDED ---
-                 try: return json.JSONEncoder.default(None, obj)
-                 except TypeError: return str(obj)
-
-
-            # Clean results *before* saving
-            clean_results = results_data.copy()
-            # Save the *original* full params dict inside the JSON (after serialization)
-            clean_results['full_params_used'] = params
-
-            # Clean cv_results if present
-            if 'cv_results' in clean_results and isinstance(clean_results['cv_results'], dict):
-                 clean_results['cv_results'].pop('params', None)
-                 clean_results['cv_results'].pop('estimator', None)
-                 for key, value in clean_results['cv_results'].items():
-                     if isinstance(value, np.ndarray):
-                          clean_results['cv_results'][key] = value.tolist()
-            if 'fold_histories' in clean_results: del clean_results['fold_histories']
+                if isinstance(obj, (np.integer, np.int64)):
+                    return int(obj)
+                elif isinstance(obj, (np.floating, np.float32, np.float64)):
+                    return float(obj) if not np.isnan(obj) else None
+                elif isinstance(obj, np.ndarray):
+                    return obj.tolist()
+                elif isinstance(obj, Path):
+                    return str(obj)
+                elif isinstance(obj, datetime):
+                    return obj.isoformat()
+                elif isinstance(obj, (slice, type, Callable)):
+                    return None  # Don't serialize certain types
+                elif isinstance(obj, (torch.optim.Optimizer, nn.Module, EarlyStopping, LRScheduler, ValidSplit)):
+                    return str(type(obj).__name__)
+                try:
+                    return json.JSONEncoder.default(None, obj)
+                except TypeError:
+                    return str(obj)  # Fallback
 
             with open(json_filepath, 'w', encoding='utf-8') as f:
-                json.dump(clean_results, f, indent=4, default=json_serializer)
-            logger.info(f"Detailed results saved to: {json_filepath}")
-        except OSError as oe: # Catch specific OS errors like filename too long
-             logger.error(f"OS Error saving detailed results to JSON {json_filepath}: {oe}", exc_info=True)
-             # Maybe try saving with a simpler filename as fallback?
-             try:
-                  fallback_path = self.results_dir / f"{method_name}_fallback_{timestamp}.json"
-                  with open(fallback_path, 'w', encoding='utf-8') as f:
-                      json.dump(clean_results, f, indent=4, default=json_serializer)
-                  logger.warning(f"Saved results to fallback file: {fallback_path}")
-             except Exception as fallback_e:
-                  logger.error(f"Fallback JSON save also failed: {fallback_e}")
+                json.dump(results_to_save, f, indent=4, default=json_serializer)
+            logger.info(f"Results JSON saved to: {json_filepath}")
+        except OSError as oe:
+            logger.error(f"OS Error saving results JSON {json_filepath}: {oe}", exc_info=True)
+            try:  # Attempt fallback
+                fallback_path = method_dir / f"{method_name}_fallback_{timestamp}.json"
+                with open(fallback_path, 'w', encoding='utf-8') as f:
+                    json.dump(results_to_save, f, indent=4, default=json_serializer)
+                logger.warning(f"Saved results to fallback file: {fallback_path}")
+            except Exception as fallback_e:
+                logger.error(f"Fallback JSON save also failed: {fallback_e}")
         except Exception as e:
-            logger.error(f"Failed to save detailed results to JSON {json_filepath}: {e}", exc_info=True)
+            logger.error(f"Failed to save results JSON {json_filepath}: {e}", exc_info=True)
 
         # --- Prepare and save summary CSV ---
+        # Save summary CSV in the main experiment directory (one level up)
+        csv_filepath = self.experiment_dir / f"summary_results_seed{RANDOM_SEED}.csv"
         try:
-            # (Keep existing summary logic)
+            # Extract primary metrics from the original results_data for summary
             macro_avg = results_data.get('macro_avg', {})
-            test_eval = results_data.get('test_set_evaluation', results_data.get('fixed_test_set_evaluation', {}))
+            # Use overall_accuracy if present (from single_eval/cv_eval), else mean test score
+            overall_acc = results_data.get('overall_accuracy', results_data.get('mean_test_accuracy', np.nan))
+
+            # --- Filter method_params for summary ---
+            # Include only simple types and potentially key config like 'cv'
+            summary_params = {}
+            allowed_types = (str, int, float, bool)
+            key_cv_params = ['cv', 'outer_cv', 'inner_cv', 'n_iter', 'internal_val_split_ratio']
+            if method_params:
+                for k, v in method_params.items():
+                    if isinstance(v, allowed_types) or k in key_cv_params:
+                        summary_params[k] = v
+            # Add best params specifically if available (from grid search)
+            if 'best_params' in results_data and isinstance(results_data['best_params'], dict):
+                for k, v in results_data['best_params'].items():
+                    if isinstance(v, allowed_types):
+                        summary_params[f'best_{k}'] = v
 
             summary = {
-                'method': method_name,
+                'method_run_id': run_id,
                 'timestamp': timestamp,
-                'model_type': self.model_type,
-                'dataset_name': self.dataset_handler.root_path.name,
-                'dataset_structure': self.dataset_handler.structure.value,
-                'forced_flat': self.force_flat_for_fixed_cv if self.dataset_handler.structure == DatasetStructure.FIXED else 'N/A',
-                'accuracy': results_data.get('accuracy', results_data.get('mean_test_accuracy', test_eval.get('accuracy', np.nan))),
-                'macro_f1': macro_avg.get('f1', results_data.get('mean_test_f1_macro', test_eval.get('macro_avg', {}).get('f1', np.nan))),
-                'macro_roc_auc': macro_avg.get('roc_auc', results_data.get('mean_test_roc_auc_macro', test_eval.get('macro_avg', {}).get('roc_auc', np.nan))),
-                'macro_pr_auc': macro_avg.get('pr_auc', results_data.get('mean_test_pr_auc_macro', test_eval.get('macro_avg', {}).get('pr_auc', np.nan))),
-                'best_cv_score': results_data.get('best_score', results_data.get('best_tuning_score', np.nan)),
-                **filename_params # Add simple FILENAME params to summary
+                'accuracy': overall_acc,
+                'macro_f1': macro_avg.get('f1', results_data.get('mean_test_f1_macro', np.nan)),
+                'macro_roc_auc': macro_avg.get('roc_auc', results_data.get('mean_test_roc_auc_macro', np.nan)),
+                'macro_pr_auc': macro_avg.get('pr_auc', results_data.get('mean_test_pr_auc_macro', np.nan)),
+                'best_cv_score': results_data.get('best_score', np.nan),
+                'best_epoch': results_data.get('best_epoch', np.nan),
+                **summary_params  # Add filtered/key parameters
             }
             summary = {k: (None if isinstance(v, float) and np.isnan(v) else v) for k, v in summary.items()}
 
@@ -1285,12 +1417,16 @@ class ClassificationPipeline:
 
         # --- Save Results (Search results + Best Params) ---
         if save_results:
-            # Prepare params for saving (include best params found)
-            save_params = results['params'].copy()
-            save_params.update({f"best_{k}": v for k, v in results.get('best_params', {}).items()})
-            # Pass only simple params relevant to the *search itself* for filename/summary
-            filename_params = {k: v for k, v in save_params.items() if k in ['cv', 'n_iter', 'method', 'scoring']}
-            self._save_results(results, f"non_nested_{method_lower}_search", params=filename_params)
+             # Prepare params for saving (include best params found)
+             save_params = results['params'].copy()
+             save_params.update({f"best_{k}": v for k, v in results.get('best_params', {}).items()})
+             # Pass only simple params relevant to the *search itself* for filename/summary
+             filename_params = {k: v for k, v in save_params.items() if k in ['cv', 'n_iter', 'method', 'scoring']}
+             run_id_for_save = f"{method_lower}_{datetime.now().strftime('%H%M%S')}" # Generate ID
+             # --- FIX: Use method_params= ---
+             self._save_results(results, f"non_nested_{method_lower}_search",
+                                run_id=run_id_for_save,
+                                method_params=filename_params) # Use correct keyword
 
         logger.info(f"Non-nested {method_lower} search finished. Best CV score ({scoring}): {search.best_score_:.4f}")
         logger.info(f"Best parameters found: {search.best_params_}")
@@ -1411,7 +1547,13 @@ class ClassificationPipeline:
              results['macro_avg'] = {'f1': results['mean_test_f1_macro']}
 
              if save_results:
-                 self._save_results(results, f"nested_{method_lower}_search", params=results['params'])
+                 # Clean params for saving filename/summary
+                 # Pass the results['params'] which contains outer_cv, inner_cv etc.
+                 run_id_for_save = f"{method_lower}_{datetime.now().strftime('%H%M%S')}"  # Generate ID
+                 # --- FIX: Use method_params= ---
+                 self._save_results(results, f"nested_{method_lower}_search",
+                                    run_id=run_id_for_save,
+                                    method_params=results['params'])  # Use correct keyword
 
              logger.info(f"Nested CV Results (avg over {outer_cv} outer folds):")
              logger.info(f"  Mean Test Accuracy: {results['mean_test_accuracy']:.4f} +/- {results['std_test_accuracy']:.4f}")
@@ -1427,7 +1569,8 @@ class ClassificationPipeline:
                 'error': str(e)
              }
 
-    def cv_model_evaluation(self, cv: int = 5,
+    def cv_model_evaluation(self,
+                            cv: int = 5,
                             internal_val_split_ratio: Optional[float] = None,
                             params: Optional[Dict] = None,
                             save_results: bool = True) -> Dict[str, Any]:
@@ -1483,6 +1626,7 @@ class ClassificationPipeline:
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
         fold_results = []
         fold_histories = [] # Store history from each fold
+        fold_detailed_results = []  # <<< LIST FOR DETAILED FOLD RESULTS
 
         # --- Manual Outer CV Loop ---
         for fold_idx, (outer_train_indices, outer_test_indices) in enumerate(cv_splitter.split(X_full, y_full_np)):
@@ -1538,15 +1682,20 @@ class ClassificationPipeline:
             # --- Evaluate on Outer Test Set ---
             logger.info(f"Evaluating model on outer test set for fold {fold_idx + 1}...")
             try:
-                 # Use score method for accuracy
-                 fold_acc = estimator_fold.score(X_test, y=y_test)
-                 # Predict for other metrics
                  y_pred_test = estimator_fold.predict(X_test)
-                 fold_f1 = f1_score(y_test, y_pred_test, average='macro', zero_division=0)
-                 # y_score_test = estimator_fold.predict_proba(X_test) # For AUC if needed
-
-                 fold_results.append({'accuracy': fold_acc, 'f1_macro': fold_f1})
-                 logger.info(f"Fold {fold_idx + 1} Test Scores: Acc={fold_acc:.4f}, F1={fold_f1:.4f}")
+                 y_score_test = estimator_fold.predict_proba(X_test)
+                 # --- Compute detailed metrics per fold ---
+                 fold_metrics = self._compute_metrics(y_test, y_pred_test, y_score_test,
+                                                      detailed=self.save_detailed_results) # <<< PASS FLAG
+                 fold_results.append({ # Append summary stats for aggregation
+                     'accuracy': fold_metrics.get('overall_accuracy', np.nan),
+                     'f1_macro': fold_metrics.get('macro_avg', {}).get('f1', np.nan)
+                 })
+                 if self.save_detailed_results: # Store full metrics dict if detailed
+                      fold_detailed_results.append(fold_metrics)
+                 # --- End Compute ---
+                 logger.info(f"Fold {fold_idx + 1} Test Scores: Acc={fold_metrics.get('overall_accuracy', np.nan):.4f}, "
+                             f"F1={fold_metrics.get('macro_avg', {}).get('f1', np.nan):.4f}")
             except Exception as score_err:
                  logger.error(f"Scoring failed for fold {fold_idx + 1}: {score_err}", exc_info=True)
                  fold_results.append({'accuracy': np.nan, 'f1_macro': np.nan})
@@ -1559,23 +1708,33 @@ class ClassificationPipeline:
         df_results = pd.DataFrame(fold_results)
         results = {
              'method': 'cv_model_evaluation',
-             'params': eval_params, # Save the actual parameters used
-             'cv_scores': df_results.to_dict(orient='list'),
+             'params': eval_params, # Store effective params used
+             'cv_scores_summary': df_results.to_dict(orient='list'), # Summary scores
              'mean_test_accuracy': float(df_results['accuracy'].mean()),
              'std_test_accuracy': float(df_results['accuracy'].std()),
              'mean_test_f1_macro': float(df_results['f1_macro'].mean()),
              'std_test_f1_macro': float(df_results['f1_macro'].std()),
+            'fold_detailed_results': fold_detailed_results,  # Add detailed list
              # 'fold_histories': fold_histories # Optional: Can be very large
         }
         results['accuracy'] = results['mean_test_accuracy'] # For summary
         results['macro_avg'] = {'f1': results['mean_test_f1_macro']} # For summary
 
         if save_results:
-            self._save_results(results, "cv_model_evaluation", params=eval_params)
+            # Pass detailed flag and run_id
+            simple_params = {k: v for k, v in eval_params.items() if isinstance(v, (str, int, float, bool))}
+            simple_params['cv'] = cv  # Add CV folds number
+            simple_params['internal_val_split_ratio'] = val_frac_to_use  # Add frac used
+            run_id_for_save = f"cv_model_evaluation_{datetime.now().strftime('%H%M%S')}"  # Generate ID
+            # --- FIX: Use method_params= ---
+            self._save_results(results, "cv_model_evaluation",
+                               run_id=run_id_for_save,
+                               method_params=simple_params)  # Use correct keyword
 
         logger.info(f"CV Evaluation Summary (Avg over {len(fold_results)} folds):")
         logger.info(f"  Accuracy: {results['mean_test_accuracy']:.4f} +/- {results['std_test_accuracy']:.4f}")
         logger.info(f"  Macro F1: {results['mean_test_f1_macro']:.4f} +/- {results['std_test_f1_macro']:.4f}")
+
         return results
 
 
@@ -1757,9 +1916,17 @@ class ClassificationPipeline:
         results['accuracy'] = results.get('valid_acc_at_best', np.nan) # Use valid acc if available
         results['macro_avg'] = {}
 
-        if save_results:
-            self._save_results(results, "single_train", params=adapter_config)
+        # Add effective adapter config to results
+        results['full_params_used'] = adapter_config  # Store the config used
 
+        if save_results:
+            # Prepare simple params for summary/filename base
+            simple_params = {k: v for k, v in adapter_config.items() if isinstance(v, (str, int, float, bool))}
+            run_id_for_save = f"single_train_{datetime.now().strftime('%H%M%S')}"  # Generate ID here
+            self._save_results(results, "single_train",
+                               run_id=run_id_for_save,
+                               method_params=simple_params  # Use correct keyword
+                               )
         return results
 
 
@@ -1786,18 +1953,17 @@ class ClassificationPipeline:
              logger.error(f"Prediction failed during single_eval: {e}", exc_info=True)
              raise RuntimeError("Failed to get predictions from model adapter.") from e
 
-        # --- Compute Metrics ---
-        metrics = self._compute_metrics(y_test_np, y_pred_test, y_score_test)
+        # --- Compute Metrics (pass detailed flag) ---
+        metrics = self._compute_metrics(y_test_np, y_pred_test, y_score_test,
+                                     detailed=self.save_detailed_results)  # <<< PASS FLAG
         results = {'method': 'single_eval', 'params': {}, **metrics}
 
         if save_results:
-             self._save_results(results, "single_eval") # Use metrics dict directly
-
-        logger.info(f"Evaluation Summary:")
-        logger.info(f"  Accuracy: {metrics.get('accuracy', np.nan):.4f}")
-        logger.info(f"  Macro F1: {metrics.get('macro_avg', {}).get('f1', np.nan):.4f}")
-        logger.info(f"  Macro ROC AUC: {metrics.get('macro_avg', {}).get('roc_auc', np.nan):.4f}")
-        logger.info(f"  Macro PR AUC: {metrics.get('macro_avg', {}).get('pr_auc', np.nan):.4f}")
+            run_id_for_save = f"single_eval_{datetime.now().strftime('%H%M%S')}"
+            self._save_results(results, "single_eval",
+                               method_params=results['params'],
+                               run_id=run_id_for_save
+                               )
 
         return results
 
@@ -1843,13 +2009,14 @@ class PipelineExecutor:
                  model_type: str = 'cnn',
                  model_load_path: Optional[Union[str, Path]] = None,
                  results_dir: Union[str, Path] = 'results',
+                 save_detailed_results: bool = False, # <<< ADDED here
                  methods: List[Tuple[str, Dict[str, Any]]]= None,
                  # Pipeline config params passed down
                  img_size: Tuple[int, int] = (224, 224),
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2,
                  data_augmentation: bool = True,
-                 force_flat_for_fixed_cv: bool = False, # New flag
+                 force_flat_for_fixed_cv: bool = False,
                  lr: float = 0.001,
                  max_epochs: int = 20,
                  batch_size: int = 32,
@@ -1857,20 +2024,44 @@ class PipelineExecutor:
                  optimizer__weight_decay: float = 0.01,
                  module__dropout_rate: Optional[float] = None
                  ):
-        logger.info(f"Initializing Pipeline Executor for model '{model_type}' on dataset '{Path(dataset_path).name}'...")
+        global logger # <<< Access the global logger instance
 
+        # --- Initialize Pipeline FIRST to get experiment_dir ---
         self.pipeline = ClassificationPipeline(
             dataset_path=dataset_path, model_type=model_type, model_load_path=model_load_path,
-            results_dir=results_dir, img_size=img_size, val_split_ratio=val_split_ratio,
+            results_dir=results_dir,
+            save_detailed_results=save_detailed_results, # <<< Pass flag
+            img_size=img_size, val_split_ratio=val_split_ratio,
             test_split_ratio_if_flat=test_split_ratio_if_flat, data_augmentation=data_augmentation,
             force_flat_for_fixed_cv=force_flat_for_fixed_cv, lr=lr, max_epochs=max_epochs,
             batch_size=batch_size, patience=patience,
             optimizer__weight_decay=optimizer__weight_decay, module__dropout_rate=module__dropout_rate
         )
+        # --- End Pipeline Init ---
+
+        # --- Configure Logger AFTER pipeline init ---
+        logger_name = 'ImgClassPipe'
+        experiment_log_dir = self.pipeline.experiment_dir # Get dir from pipeline
+        logger = setup_logger( # Reconfigure the global logger
+             name=logger_name,
+             log_dir=experiment_log_dir,
+             log_filename=f"experiment_{Path(experiment_log_dir).name}.log", # Unique log filename per experiment
+             level=logging.DEBUG,
+             use_colors=True
+         )
+        print(get_log_header(use_colors=True)) # Print header after setup
+        logger.info(f"--- Starting Experiment Run ---")
+        logger.info(f"Pipeline Executor initialized for model '{model_type}' on dataset '{Path(dataset_path).name}'")
+        logger.info(f"Results base directory: {self.pipeline.experiment_dir}")
+        # --- End Logger Config ---
 
         self.methods_to_run = methods if methods is not None else []
         self.all_results: Dict[str, Any] = {}
-        self._validate_methods() # Basic validation
+        try: # Validate methods after logger is fully set up
+             self._validate_methods()
+        except ValueError as e:
+             logger.error(f"Method validation failed: {e}")
+             raise # Re-raise after logging
         method_names = [m[0] for m in self.methods_to_run]
         logger.info(f"Executor configured to run methods: {', '.join(method_names)}")
 
@@ -1909,8 +2100,8 @@ class PipelineExecutor:
         start_time_total = time.time()
 
         for i, (method_name, params) in enumerate(self.methods_to_run):
-            run_id = f"{method_name}_{i}"
-            logger.info(f"--- Running Method {i+1}/{len(self.methods_to_run)}: {method_name} ---")
+            run_id = f"{method_name}_{i}"  # <<< USE THIS AS THE UNIQUE ID
+            logger.info(f"--- Running Method {i + 1}/{len(self.methods_to_run)}: {method_name} ({run_id}) ---")
 
             # --- Parameter Injection Logic ---
             current_params = params.copy()  # Work with a copy
@@ -1958,11 +2149,19 @@ class PipelineExecutor:
 
             try:
                 pipeline_method = getattr(self.pipeline, method_name)
-                # Pass the potentially modified parameters
-                result = pipeline_method(**current_params)
+                # --- Pass run_id to save_results via the method if necessary ---
+                # This requires modifying the signature of _save_results and how it's called
+                # OR modifying methods to accept run_id if they call save_results internally
+                # Let's modify _save_results to accept run_id instead.
+                result = pipeline_method(**current_params)  # Call method
+                # If the method didn't call _save_results itself (e.g., load_model)
+                # we might want to save something here, but usually results are generated
+                # by the methods that do computations.
+
+                # Ensure the result is stored correctly
                 self.all_results[run_id] = result
                 method_duration = time.time() - start_time_method
-                logger.info(f"--- Method {method_name} completed successfully in {method_duration:.2f}s ---")
+                logger.info(f"--- Method {method_name} ({run_id}) completed successfully in {method_duration:.2f}s ---")
 
             except ValueError as ve:  # Catch specific config errors
                 # Change exc_info to True here to log the stack trace for ValueError
@@ -2071,6 +2270,18 @@ if __name__ == "__main__":
         chosen_param_grid = param_grid_vit
     elif model_type == 'diffusion':
         chosen_param_grid = param_grid_diffusion
+    else:
+        logger.error(f"Model type '{model_type}' not recognized. Supported: 'cnn', 'vit', 'diffusion'.")
+        exit()
+
+    # Temporarily set param grid
+    chosen_param_grid = {
+        # Skorch parameters
+        'lr': [0.001],
+
+        # Module (SimpleCNN) parameters
+        'module__dropout_rate': [0.3, 0.6],  # Tune dropout in the classifier head
+    }
 
     fixed_params_for_eval = {
         'lr': 0.001,
@@ -2138,7 +2349,7 @@ if __name__ == "__main__":
 
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_seq_1 # <--- SELECT SEQUENCE TO RUN
+    chosen_sequence = methods_seq_2 # <--- SELECT SEQUENCE TO RUN
 
     logger.info(f"Executing sequence: {[m[0] for m in chosen_sequence]}")
 
