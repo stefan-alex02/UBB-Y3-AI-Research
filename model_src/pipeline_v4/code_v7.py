@@ -27,7 +27,7 @@ from sklearn.model_selection import (
     # cross_val_score, cross_val_predict # Not used
 )
 from skorch import NeuralNetClassifier
-from skorch.callbacks import EarlyStopping, LRScheduler, Checkpoint, Callback
+from skorch.callbacks import EarlyStopping, LRScheduler, Checkpoint, Callback, EpochScoring
 from skorch.dataset import Dataset as SkorchDataset, ValidSplit
 from skorch.helper import SliceDataset # Keep? Maybe not needed if always using PathImageDataset
 from skorch.utils import to_numpy
@@ -69,40 +69,98 @@ class LogColors:
     DIM = "\033[2m"
 
 # --- Configure Logging ---
+# In EnhancedFormatter class:
+
 class EnhancedFormatter(logging.Formatter):
-    level_formats = {
-        logging.DEBUG:   f"%(asctime)s | {LogColors.CYAN}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':magnifying_glass_tilted_left:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
-        logging.INFO:    f"%(asctime)s | {LogColors.GREEN}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':information:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
-        logging.WARNING: f"%(asctime)s | {LogColors.YELLOW}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':warning:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
-        logging.ERROR:   f"%(asctime)s | {LogColors.RED}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':red_exclamation_mark:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
-        logging.CRITICAL:f"%(asctime)s | {LogColors.BOLD}{LogColors.RED}%(levelname)-8s{LogColors.RESET} | {emoji.emojize(':skull:')} | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+    debug_emoji = '🐞'
+    info_emoji = 'ℹ️'
+    warning_emoji = '⚠️'
+    error_emoji = '❌'
+    critical_emoji = '💀'
+    default_emoji = '?'
+
+    # Define widths for alignment
+    filename_padding = 10
+    funcname_padding = 18
+    lineno_padding = 4
+    # Calculate total width for Location column: Brackets + file + : + func + : + line
+    total_location_width = 2 + filename_padding + 1 + funcname_padding + 1 + lineno_padding # = 43
+
+    level_to_color = {
+        logging.DEBUG: LogColors.CYAN, logging.INFO: LogColors.GREEN,
+        logging.WARNING: LogColors.YELLOW, logging.ERROR: LogColors.RED,
+        logging.CRITICAL: LogColors.BOLD + LogColors.RED,
     }
-    level_formats_no_color = {
-        logging.DEBUG:    "%(asctime)s | %(levelname)-8s | 🐛 | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
-        logging.INFO:     "%(asctime)s | %(levelname)-8s | ℹ️ | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
-        logging.WARNING:  "%(asctime)s | %(levelname)-8s | ⚠️ | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
-        logging.ERROR:    "%(asctime)s | %(levelname)-8s | ❌ | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
-        logging.CRITICAL: "%(asctime)s | %(levelname)-8s | 💥 | [%(funcName)-25s:%(lineno)-4d] | %(message)s",
+    level_to_emoji = {
+        logging.DEBUG: debug_emoji, logging.INFO: info_emoji,
+        logging.WARNING: warning_emoji, logging.ERROR: error_emoji,
+        logging.CRITICAL: critical_emoji,
     }
-    default_format = f"%(asctime)s | %(levelname)-8s | ? | [%(funcName)-25s:%(lineno)-4d] | %(message)s"
+
     date_format = '%Y-%m-%d %H:%M:%S'
 
     def __init__(self, use_colors=True):
-        super().__init__(fmt="%(levelname)s: %(message)s", datefmt=self.date_format)
+        # Basic init, we override format() completely
+        super().__init__(fmt=None, datefmt=self.date_format)
         self.use_colors = use_colors
 
     def format(self, record: logging.LogRecord) -> str:
-        formats = self.level_formats if self.use_colors else self.level_formats_no_color
-        log_fmt = formats.get(record.levelno, self.default_format)
-        if not hasattr(record, 'funcName'): record.funcName = '?'
-        if not hasattr(record, 'lineno'): record.lineno = 0
-        formatter = logging.Formatter(log_fmt, datefmt=self.date_format)
-        return formatter.format(record)
+        # --- Start Manual Formatting ---
+        try:
+            # 1. Timestamp
+            timestamp = self.formatTime(record, self.date_format)
 
+            # 2. Level Name and Color
+            level_name = record.levelname
+            level_color = self.level_to_color.get(record.levelno, '') if self.use_colors else ''
+            reset_color = LogColors.RESET if self.use_colors and level_color else ''
+            formatted_level = f"{level_color}{level_name:<8}{reset_color}" # Pad to 8 chars
+
+            # 3. Location String
+            filename = getattr(record, 'filename', '?')
+            funcname = getattr(record, 'funcName', '?')
+            lineno = getattr(record, 'lineno', 0)
+
+            # Truncate filename (without extension)
+            if '.' in filename: filename = filename.rsplit('.', 1)[0]
+            max_file_len = self.filename_padding
+            truncated_filename = (filename[:max_file_len-3] + '...') if len(filename) > max_file_len else filename
+
+            # Truncate funcName
+            max_func_len = self.funcname_padding
+            truncated_funcname = (funcname[:max_func_len-3] + '...') if len(funcname) > max_func_len else funcname
+
+            # Format location with padding
+            location_str = (
+                f"[{truncated_filename:<{self.filename_padding}}:"
+                f"{truncated_funcname:<{self.funcname_padding}}:"
+                f"{lineno:>{self.lineno_padding}}]"
+            )
+            # Pad the entire location block
+            formatted_location = f"{location_str:<{self.total_location_width}}"
+
+            # 4. Emoji Prefix + Message
+            emoji_prefix = self.level_to_emoji.get(record.levelno, self.default_emoji)
+            message = record.getMessage() # Get the formatted message
+            formatted_message = f"{emoji_prefix} {message}" # Add space after emoji
+
+            # 5. Combine parts
+            log_entry = f"{timestamp} | {formatted_level} | {formatted_location} | {formatted_message}"
+            return log_entry
+
+        except Exception as e:
+            # Fallback formatting on any error during manual formatting
+            record.msg = f"!!! LOG FORMATTING ERROR: {e}. Original message: {record.getMessage()}"
+            # Use a basic formatter as ultimate fallback
+            bf = logging.Formatter("%(asctime)s %(levelname)s %(name)s: %(message)s", datefmt=self.date_format)
+            return bf.format(record)
+
+# Update get_log_header to match new padding calculation
 def get_log_header(use_colors: bool = True) -> str:
-    location_width = 32
-    header_title = f"{'Timestamp':<21} | {'Level':<8} | {'Emoji':<2} | {'Location':<{location_width}} | {'Message'}"
-    separator = f"{'-'*21}-+-{'-'*8}-+-{'-'*2}-+-{'-'*location_width}-+-{'-'*50}"
+    location_width = EnhancedFormatter.total_location_width # Use width from class
+    # Remove Emoji column header
+    header_title = f"{'Timestamp':<19} | {'Level':<8} | {'Location':<{location_width}} | {'Message'}"
+    separator = f"{'-'*19}-+-{'-'*8}-+-{'-'*location_width}-+-{'-'*50}" # Removed emoji separator part
     if use_colors: separator = f"{LogColors.DIM}{separator}{LogColors.RESET}"
     return f"{header_title}\n{separator}"
 
@@ -312,7 +370,7 @@ class ImageDatasetHandler:
         logger.info(f"Found {self.num_classes} classes: {', '.join(self.classes)}")
 
         # Log dataset sizes
-        logger.info(f"Dataset sizes: {len(self._train_val_paths)} train+val, {len(self._test_paths)} test.")
+        logger.info(f"Dataset sizes: {len(self._train_val_paths)} train+val, {len(self._test_paths)} test. Total: {len(self._all_paths)}")
         if self.structure == DatasetStructure.FIXED and self.force_flat_for_fixed_cv:
             logger.info(f"Total combined size (for forced CV): {len(self._all_paths)}")
 
@@ -359,7 +417,8 @@ class ImageDatasetHandler:
             transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
         ])
 
-    def _scan_dir_for_paths_labels(self, target_dir: Path) -> Tuple[List[Path], List[int], List[str], Dict[str, int]]:
+    @staticmethod
+    def _scan_dir_for_paths_labels(target_dir: Path) -> Tuple[List[Path], List[int], List[str], Dict[str, int]]:
         """Scans a directory (like ImageFolder) for image paths and labels."""
         paths = []
         labels = []
@@ -603,7 +662,9 @@ def _get_default_callbacks(patience: int = 10,
         ('default_early_stopping', EarlyStopping(
             monitor=monitor, patience=patience, load_best=True, lower_is_better=is_loss)),
         ('default_lr_scheduler', LRScheduler(
-            policy=lr_policy, monitor=monitor, mode='min' if is_loss else 'max', patience=lr_patience, factor=0.1))
+            policy=lr_policy, monitor=monitor, mode='min' if is_loss else 'max', patience=lr_patience, factor=0.1)),
+        ('default_train_acc', EpochScoring(
+            'accuracy', lower_is_better=False, on_train=True, name='train_acc'))
     ]
 
 # --- Skorch Model Adapter (Final Version) ---
@@ -774,7 +835,7 @@ class SkorchModelAdapter(NeuralNetClassifier):
         # Add any other relevant DataLoader args you might configure via skorch kwargs
 
         logger.debug(
-            f"Creating DataLoader: batch_size={batch_size}, shuffle={shuffle}, collate_fn={'Assigned' if collate_fn else 'None'}, other_kwargs={loader_kwargs}")
+            f"Creating DataLoader: size={len(dataset)}, batch_size={batch_size}, shuffle={shuffle}, collate_fn={'Assigned' if collate_fn else 'None'}, other_kwargs={loader_kwargs}")
 
         return DataLoader(
             dataset,
@@ -787,22 +848,12 @@ class SkorchModelAdapter(NeuralNetClassifier):
     # --- train_step_single / validation_step handle batches from PathImageDataset ---
     def train_step_single(self, batch, **fit_params):
         self.module_.train()
-        Xi, yi = batch # Already transformed tensors from PathImageDataset
+        Xi, yi = batch  # Already transformed tensors
         yi = yi.to(dtype=torch.long)
         y_pred = self.infer(Xi, **fit_params)
         loss = self.get_loss(y_pred, yi, X=Xi, training=True)
         loss.backward()
-        try:
-            y_true_batch = yi.cpu().numpy()
-            y_pred_batch = y_pred.argmax(dim=1).cpu().numpy()
-            # Handle case where batch might be empty after collate filtering
-            batch_acc = accuracy_score(y_true_batch, y_pred_batch) if len(y_true_batch) > 0 else 0.0
-        except Exception as e:
-            logger.warning(f"Acc calc failed: {e}")
-            batch_acc = 0.0 # Default value on error
-
-        # --- Return train_acc so skorch logs it ---
-        return {'loss': loss, 'train_acc': batch_acc, 'y_pred': y_pred}
+        return {'loss': loss, 'y_pred': y_pred}  # y_pred might be needed by scoring callback implicitly
 
     def validation_step(self, batch, **fit_params):
         self.module_.eval()
@@ -813,8 +864,6 @@ class SkorchModelAdapter(NeuralNetClassifier):
             loss = self.get_loss(y_pred, yi, X=Xi, training=False)
         # Return y_pred so skorch can calculate valid_acc etc.
         return {'loss': loss, 'y_pred': y_pred}
-
-# --- REMOVE SetTransformMode callback class ---
 
 # --- Classification Pipeline ---
 
@@ -1426,10 +1475,6 @@ class ClassificationPipeline:
             internal_val_fraction = 0.15  # Define the fraction used
             fold_adapter_config['train_split'] = ValidSplit(cv=internal_val_fraction, stratified=True, random_state=RANDOM_SEED)
             fold_adapter_config['verbose'] = 3 # Show progress per fold
-            fold_adapter_config['callbacks'] = [ # Ensure callbacks are set for this fold
-                ('early_stopping', EarlyStopping(monitor='valid_loss', patience=eval_params.get('patience', 10), load_best=True)),
-                ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
-             ]
 
             n_outer_train = len(X_outer_train)
             n_inner_val = int(n_outer_train * internal_val_fraction)
@@ -1582,13 +1627,7 @@ class ClassificationPipeline:
         if train_split_config is None:
              # No validation: monitor train_loss? Or remove callbacks? Remove EarlyStopping/LRScheduler.
              logger.warning("No validation set, removing EarlyStopping and LRScheduler callbacks.")
-             adapter_config['callbacks'] = [] # Or filter existing list
-        else:
-             # Ensure callbacks monitor validation metrics
-             adapter_config['callbacks'] = [
-                 ('early_stopping', EarlyStopping(monitor='valid_loss', patience=adapter_config.get('patience', 10), load_best=True)),
-                 ('lr_scheduler', LRScheduler(policy='ReduceLROnPlateau', monitor='valid_loss', patience=5))
-             ]
+
         adapter_config['verbose'] = 3 # Show epoch progress
 
         adapter_config.pop('patience_cfg', None)
@@ -1824,6 +1863,15 @@ class PipelineExecutor:
             # Compatibility checks are now mostly done *inside* the methods themselves.
         logger.debug("Basic method validation successful.")
 
+    # Add helper method to get previous results
+    def _get_previous_result(self, step_index: int) -> Optional[Dict[str, Any]]:
+        """Gets the results dict from a previous step if available."""
+        if step_index < 0 or step_index >= len(self.methods_to_run):
+            return None
+        prev_method_name, _ = self.methods_to_run[step_index]
+        run_id = f"{prev_method_name}_{step_index}"
+        return self.all_results.get(run_id)
+
     def run(self) -> Dict[str, Any]:
         """ Executes the configured sequence of pipeline methods. """
         self.all_results = {}
@@ -1833,12 +1881,55 @@ class PipelineExecutor:
         for i, (method_name, params) in enumerate(self.methods_to_run):
             run_id = f"{method_name}_{i}"
             logger.info(f"--- Running Method {i+1}/{len(self.methods_to_run)}: {method_name} ---")
-            logger.debug(f"Parameters: {params}")
+
+            # --- Parameter Injection Logic ---
+            current_params = params.copy()  # Work with a copy
+            use_best_params_key = 'use_best_params_from_step'
+            if use_best_params_key in current_params:
+                prev_step_index = current_params.pop(use_best_params_key)
+                if not isinstance(prev_step_index, int) or prev_step_index >= i:
+                    logger.error(f"Invalid previous step index '{prev_step_index}' for '{method_name}'.")
+                    self.all_results[run_id] = {"error": f"Invalid '{use_best_params_key}' value."}
+                    break
+                logger.info(
+                    f"Injecting 'best_params' from step {prev_step_index} ({self.methods_to_run[prev_step_index][0]}) into params for '{method_name}'.")
+                prev_result = self._get_previous_result(prev_step_index)
+
+                if prev_result and isinstance(prev_result, dict) and 'best_params' in prev_result and isinstance(
+                        prev_result['best_params'], dict):
+                    best_params = prev_result['best_params']
+                    logger.info(f"  Injecting best params: {best_params}")
+
+                    # --- MODIFIED MERGING ---
+                    # Ensure 'params' dict exists in current_params for methods like cv_model_evaluation
+                    if 'params' not in current_params:
+                        current_params['params'] = {}  # Create if missing
+
+                    if isinstance(current_params['params'], dict):
+                        # Create final nested params: Start with best_params, then overwrite
+                        # with any specific 'params' the user provided for this step.
+                        final_nested_params = best_params.copy()
+                        final_nested_params.update(current_params['params'])  # Apply user overrides
+                        current_params['params'] = final_nested_params
+                    else:
+                        logger.error(f"'params' key in config for step {i} is not a dict. Cannot inject best_params.")
+                        self.all_results[run_id] = {"error": "'params' key is not a dictionary."}
+                        break
+                    # --- END MODIFIED MERGING ---
+
+                else:
+                    logger.error(f"Could not find 'best_params' dictionary in results of step {prev_step_index}.")
+                    self.all_results[run_id] = {"error": f"Missing 'best_params' in step {prev_step_index} results."}
+                    break
+            # --- End Parameter Injection Logic ---
+
+            logger.debug(f"Running with effective parameters: {current_params}")
             start_time_method = time.time()
 
             try:
                 pipeline_method = getattr(self.pipeline, method_name)
-                result = pipeline_method(**params)
+                # Pass the potentially modified parameters
+                result = pipeline_method(**current_params)
                 self.all_results[run_id] = result
                 method_duration = time.time() - start_time_method
                 logger.info(f"--- Method {method_name} completed successfully in {method_duration:.2f}s ---")
@@ -1938,12 +2029,32 @@ if __name__ == "__main__":
              'save_results': True
         })
     ]
-    # Example 5: Load Pre-trained and Evaluate
-    # pretrained_model_path = "results/SOME_DATASET_cnn_TIMESTAMP/cnn_epochX_val....pt" # Replace with actual path
-    # methods_seq_5 = [
-    #     ('load_model', {'model_path': pretrained_model_path}),
-    #     ('single_eval', {'save_results': True}),
-    # ]
+
+    # Example 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
+    methods_seq_5 = [
+        ('non_nested_grid_search', {
+            'param_grid': param_grid_search,
+            'cv': 3,
+            'method': 'grid',
+            'scoring': 'accuracy',
+            'save_results': True
+        }),
+         ('cv_model_evaluation', {
+             'cv': 3,
+             # Special key indicates using best_params from previous step (index 0)
+             'use_best_params_from_step': 0,
+             # Optionally provide specific params for cv_eval to override defaults if needed
+             # 'params': {'max_epochs': 15}, # e.g., override max_epochs just for CV eval
+             'save_results': True
+        })
+    ]
+
+    # Example 6: Load Pre-trained and Evaluate
+    pretrained_model_path = "results/SOME_DATASET_cnn_TIMESTAMP/cnn_epochX_val....pt" # Replace with actual path
+    methods_seq_6 = [
+        ('load_model', {'model_path': pretrained_model_path}),
+        ('single_eval', {'save_results': True}),
+    ]
 
 
     # --- Choose Sequence and Execute ---
