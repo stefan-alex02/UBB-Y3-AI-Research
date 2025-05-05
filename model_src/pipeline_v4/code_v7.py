@@ -897,7 +897,7 @@ class ClassificationPipeline:
                  model_load_path: Optional[Union[str, Path]] = None,
                  img_size: Tuple[int, int] = (224, 224),
                  results_dir: Union[str, Path] = 'results',
-                 save_detailed_results: bool = False,  # <<< ADDED FLAG
+                 save_detailed_results: bool = False, # Flag for detailed results
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2,
                  data_augmentation: bool = True,
@@ -905,101 +905,76 @@ class ClassificationPipeline:
                  lr: float = 0.001,
                  max_epochs: int = 20,
                  batch_size: int = 32,
-                 patience: int = 10, # For default EarlyStopping
-                 optimizer__weight_decay: float = 0.01, # Example tunable param
-                 module__dropout_rate: Optional[float] = None # Example model param
+                 patience: int = 10,
+                 optimizer__weight_decay: float = 0.01,
+                 module__dropout_rate: Optional[float] = None
                  ):
         self.dataset_path = Path(dataset_path).resolve()
         self.model_type = model_type.lower()
         self.force_flat_for_fixed_cv = force_flat_for_fixed_cv
-        self.save_detailed_results = save_detailed_results # <<< STORE FLAG
+        self.save_detailed_results = save_detailed_results
+        # Logger is configured externally by the Executor now
         logger.info(f"Initializing Classification Pipeline:")
         logger.info(f"  Dataset Path: {self.dataset_path}")
         logger.info(f"  Model Type: {self.model_type}")
         logger.info(f"  Force Flat for Fixed CV: {self.force_flat_for_fixed_cv}")
         logger.info(f"  Save Detailed Results: {self.save_detailed_results}")
 
-        # Initialize dataset handler (gets paths, labels, transforms)
         self.dataset_handler = ImageDatasetHandler(
-            root_path=self.dataset_path,
-            img_size=img_size,
-            val_split_ratio=val_split_ratio,
-            test_split_ratio_if_flat=test_split_ratio_if_flat,
-            data_augmentation=data_augmentation,
-            force_flat_for_fixed_cv=self.force_flat_for_fixed_cv
+            root_path=self.dataset_path, img_size=img_size,
+            val_split_ratio=val_split_ratio, test_split_ratio_if_flat=test_split_ratio_if_flat,
+            data_augmentation=data_augmentation, force_flat_for_fixed_cv=self.force_flat_for_fixed_cv
         )
 
-        # --- Results directory: [base]/[dataset]/[model]/[timestamp_seed]/ ---
         base_results_dir = Path(results_dir).resolve()
         dataset_name = self.dataset_path.name
         timestamp_init = datetime.now().strftime('%Y%m%d_%H%M%S')
-        # Include seed in the main experiment directory name
         self.experiment_dir = base_results_dir / dataset_name / self.model_type / f"{timestamp_init}_seed{RANDOM_SEED}"
-        self.experiment_dir.mkdir(parents=True, exist_ok=True)
-        logger.info(f"  Base experiment results dir: {self.experiment_dir}")
-        # --- End Results directory ---
+        # Experiment dir created by Executor before logger setup
+        # logger.info(f"  Base experiment results dir: {self.experiment_dir}") # Logged by executor
 
-        # Select model class
         model_class = self._get_model_class(self.model_type)
 
-        # --- Prepare Skorch Adapter configuration ---
-
-        # --- Determine initial callbacks list ---
-        intended_callbacks_setting = 'default'  # Or could be passed as argument
+        intended_callbacks_setting = 'default'
         initial_callbacks_list = None
         if intended_callbacks_setting == 'default':
             initial_callbacks_list = _get_default_callbacks(
-                patience=patience, monitor='valid_loss',  # Use init args for defaults
+                patience=patience, monitor='valid_loss',
                 lr_policy='ReduceLROnPlateau', lr_patience=5
             )
         elif isinstance(intended_callbacks_setting, list):
             initial_callbacks_list = intended_callbacks_setting
-        # --- End Determine ---
 
-        # Store the INTENDED callback setting and config params
         module_params = {}
         if module__dropout_rate is not None: module_params['module__dropout_rate'] = module__dropout_rate
 
         self.model_adapter_config = {
-            'module': model_class,
-            'module__num_classes': self.dataset_handler.num_classes,
-            'criterion': nn.CrossEntropyLoss,
-            'optimizer': torch.optim.AdamW,
-            'lr': lr,
-            'max_epochs': max_epochs,
-            'batch_size': batch_size,
-            'device': DEVICE,
-            'callbacks': initial_callbacks_list,  # Store processed list/None
-            'patience_cfg': patience,
-            'monitor_cfg': 'valid_loss',
-            'lr_policy_cfg': 'ReduceLROnPlateau',
-            'lr_patience_cfg': 5,
-            # --- End Store Config ---
+            'module': model_class, 'module__num_classes': self.dataset_handler.num_classes,
+            'criterion': nn.CrossEntropyLoss, 'optimizer': torch.optim.AdamW,
+            'lr': lr, 'max_epochs': max_epochs, 'batch_size': batch_size, 'device': DEVICE,
+            'callbacks': initial_callbacks_list,
+            'patience_cfg': patience, 'monitor_cfg': 'valid_loss',
+            'lr_policy_cfg': 'ReduceLROnPlateau', 'lr_patience_cfg': 5,
             'train_transform': self.dataset_handler.get_train_transform(),
             'valid_transform': self.dataset_handler.get_eval_transform(),
             'classes': np.arange(self.dataset_handler.num_classes),
-            'verbose': 3,  # Set default verbose level here
+            'verbose': 1, # Default verbosity for adapter itself
             'optimizer__weight_decay': optimizer__weight_decay,
             **module_params
         }
 
-        # --- Instantiate the INITIAL adapter ---
-        # The config now already contains the correct callback list/None
         init_config_for_adapter = self.model_adapter_config.copy()
-        # Remove config params not needed by SkorchModelAdapter init directly
-        init_config_for_adapter.pop('patience_cfg', None)
-        init_config_for_adapter.pop('monitor_cfg', None)
-        init_config_for_adapter.pop('lr_policy_cfg', None)
-        init_config_for_adapter.pop('lr_patience_cfg', None)
+        init_config_for_adapter.pop('patience_cfg', None); init_config_for_adapter.pop('monitor_cfg', None)
+        init_config_for_adapter.pop('lr_policy_cfg', None); init_config_for_adapter.pop('lr_patience_cfg', None)
 
-        # Initialize the adapter instance (can be cloned later)
-        self.model_adapter = SkorchModelAdapter(**self.model_adapter_config)
+        # Important: Pass the base config to the adapter, not the processed one
+        # Skorch handles parameter setting via set_params
+        self.model_adapter = SkorchModelAdapter(**init_config_for_adapter)
         logger.info(f"  Model Adapter: Initialized with {model_class.__name__}")
 
         if model_load_path:
             self.load_model(model_load_path)
-
-        logger.info(f"Pipeline initialized successfully.")
+        # logger.info(f"Pipeline initialized successfully.") # Logged by executor
 
     @staticmethod
     def _get_model_class(model_type_str: str) -> Type[nn.Module]:
@@ -2349,7 +2324,7 @@ if __name__ == "__main__":
 
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_seq_2 # <--- SELECT SEQUENCE TO RUN
+    chosen_sequence = methods_seq_1 # <--- SELECT SEQUENCE TO RUN
 
     logger.info(f"Executing sequence: {[m[0] for m in chosen_sequence]}")
 
@@ -2369,6 +2344,7 @@ if __name__ == "__main__":
             lr=0.001,
             optimizer__weight_decay=0.01,
             # module__dropout_rate=0.5 # If applicable to model
+            save_detailed_results=True,  # Or False, depending on desired output level
         )
         final_results = executor.run()
 
