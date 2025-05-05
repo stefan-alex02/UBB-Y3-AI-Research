@@ -35,6 +35,7 @@ from skorch.utils import to_numpy
 # import torch.nn.functional as F # Not used
 from torch.utils.data import Dataset, DataLoader, Subset # Subset might still be useful conceptually, PathImageDataset is key
 from torchvision import transforms, datasets, models
+import scipy.stats as stats
 from PIL import Image # Needed for PathImageDataset
 
 import logging
@@ -1030,11 +1031,11 @@ class ClassificationPipeline:
                 # Class completely absent, record NaNs for basic metrics
                 class_metrics[class_name] = {'precision': np.nan, 'recall': np.nan, 'specificity': np.nan,
                                              'f1': np.nan, 'roc_auc': np.nan, 'pr_auc': np.nan}
-                all_precisions.append(np.nan);
-                all_recalls.append(np.nan);
-                all_specificities.append(np.nan);
-                all_f1s.append(np.nan);
-                all_roc_aucs.append(np.nan);
+                all_precisions.append(np.nan)
+                all_recalls.append(np.nan)
+                all_specificities.append(np.nan)
+                all_f1s.append(np.nan)
+                all_roc_aucs.append(np.nan)
                 all_pr_aucs.append(np.nan)
                 if detailed:  # Add empty curve data if detailed
                     all_roc_curves[class_name] = {'fpr': [], 'tpr': [], 'thresholds': []}
@@ -1095,11 +1096,11 @@ class ClassificationPipeline:
                 'roc_auc': roc_auc, 'pr_auc': pr_auc
             }
             # Append for macro calculation
-            all_precisions.append(precision);
-            all_recalls.append(recall);
-            all_specificities.append(specificity);
+            all_precisions.append(precision)
+            all_recalls.append(recall)
+            all_specificities.append(specificity)
             all_f1s.append(f1)
-            all_roc_aucs.append(roc_auc);
+            all_roc_aucs.append(roc_auc)
             all_pr_aucs.append(pr_auc)
             # Store detailed curve data if requested
             if detailed:
@@ -1134,46 +1135,26 @@ class ClassificationPipeline:
     def _save_results(self,
                       results_data: Dict[str, Any],
                       method_name: str,
-                      run_id: str,  # Unique ID for this specific method run (e.g., "single_train_0")
+                      run_id: str,
                       method_params: Optional[Dict[str, Any]] = None
                       ) -> None:
-        """
-        Saves results to JSON (potentially cleaned based on self.save_detailed_results)
-        in a method-specific subdirectory and updates a summary CSV in the main
-        experiment directory.
-
-        Args:
-            results_data: The dictionary containing results from the method.
-            method_name: The name of the pipeline method (e.g., "single_train").
-            run_id: A unique identifier for this specific run (e.g., "single_train_0"),
-                    used for the subdirectory name.
-            method_params: Dictionary of key parameters used for this method run,
-                           primarily for the summary CSV.
-        """
+        # ... (Setup: method_params, timestamp, method_dir creation) ...
         method_params = method_params or {}
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-
-        # --- Create Method-Specific Subdirectory ---
-        # Structure: [base]/[dataset]/[model]/[timestamp_seed]/[run_id]/
-        method_dir = self.experiment_dir / run_id  # self.experiment_dir is set in __init__
+        method_dir = self.experiment_dir / run_id
         method_dir.mkdir(parents=True, exist_ok=True)
         logger.debug(f"Saving results for {run_id} to: {method_dir}")
 
-        # --- Define keys to remove if not detailed ---
         keys_to_remove_if_not_detailed = [
-            'training_history',  # Can be large (single_train)
-            'cv_results',  # Raw sklearn CV results dict (grid searches)
-            'detailed_data',  # Raw preds/scores/curves (single_eval, cv_eval fold)
-            'fold_detailed_results',  # List of detailed fold metrics (cv_eval)
-            'full_params_used',  # Full config dict used (can be large/complex)
-            'inner_cv_results',  # Raw inner CV results (nested_fixed_adapted - if re-enabled)
-            # Add others here if needed
+            'training_history', 'cv_results', 'detailed_data',
+            'fold_detailed_results', 'full_params_used', 'inner_cv_results',
+            'method_params_used'  # <<< Also remove this redundant key
         ]
-        # Store original cv_results before potential cleaning
-        cv_results_full = results_data.get('cv_results')
+        cv_results_full = results_data.get('cv_results')  # For non-nested/nested CV
 
         # --- Prepare data to save based on detail flag ---
         if not self.save_detailed_results:
+            # ... (logic to create cleaned results_to_save remains the same) ...
             logger.debug(f"Cleaning results for run '{run_id}' (save_detailed_results=False).")
             results_to_save = {}
             for key, value in results_data.items():
@@ -1183,31 +1164,28 @@ class ClassificationPipeline:
             if cv_results_full and isinstance(cv_results_full, dict):
                 summary_cv = {}
                 for k, v_list in cv_results_full.items():
-                    # Check if key indicates a score list and is numeric-like after conversion
                     if k.startswith(
                             ('mean_test_', 'std_test_', 'mean_train_', 'std_train_', 'rank_test_')) and isinstance(
                             v_list, (list, np.ndarray)) and len(v_list) > 0:
                         try:
-                            # Attempt to convert first element to float to check type
-                            _ = float(v_list[0])
-                            summary_cv[k] = v_list  # Keep the whole list/array for summary
+                            _ = float(v_list[0]);
+                            summary_cv[k] = np.round(np.array(v_list), 5).tolist()
                         except (ValueError, TypeError):
-                            pass  # Skip non-numeric lists
-                if summary_cv:
-                    results_to_save['cv_results_summary'] = summary_cv
+                            pass
+                if summary_cv: results_to_save['cv_results_summary'] = summary_cv
             logger.debug(f"Cleaned results keys: {list(results_to_save.keys())}")
         else:
             logger.debug(f"Saving full detailed results for run '{run_id}'.")
-            results_to_save = results_data.copy()  # Save everything
-
-        # Add method parameters used to the saved dict for context
-        results_to_save['method_params_used'] = method_params
+            results_to_save = results_data.copy()
+            # Add method parameters used only when saving detailed results
+            results_to_save['method_params_used'] = method_params
 
         # --- Save results JSON ---
+        # ... (JSON saving logic remains the same, including serializer) ...
         json_filename = f"{method_name}_results_{timestamp}.json"
         json_filepath = method_dir / json_filename
-
         try:
+            # Define serializer locally or ensure it's accessible
             def json_serializer(obj):
                 if isinstance(obj, (np.integer, np.int64)):
                     return int(obj)
@@ -1220,62 +1198,72 @@ class ClassificationPipeline:
                 elif isinstance(obj, datetime):
                     return obj.isoformat()
                 elif isinstance(obj, (slice, type, Callable)):
-                    return None  # Don't serialize certain types
-                elif isinstance(obj, (torch.optim.Optimizer, nn.Module, EarlyStopping, LRScheduler, ValidSplit)):
+                    return None
+                elif isinstance(obj, (torch.optim.Optimizer, nn.Module, Callback)):
                     return str(type(obj).__name__)
+                elif isinstance(obj, ValidSplit):
+                    return f"ValidSplit(cv={obj.cv}, stratified={obj.stratified})"
                 try:
                     return json.JSONEncoder.default(None, obj)
                 except TypeError:
-                    return str(obj)  # Fallback
+                    return str(obj)
 
             with open(json_filepath, 'w', encoding='utf-8') as f:
                 json.dump(results_to_save, f, indent=4, default=json_serializer)
             logger.info(f"Results JSON saved to: {json_filepath}")
         except OSError as oe:
             logger.error(f"OS Error saving results JSON {json_filepath}: {oe}", exc_info=True)
-            try:  # Attempt fallback
-                fallback_path = method_dir / f"{method_name}_fallback_{timestamp}.json"
-                with open(fallback_path, 'w', encoding='utf-8') as f:
-                    json.dump(results_to_save, f, indent=4, default=json_serializer)
-                logger.warning(f"Saved results to fallback file: {fallback_path}")
-            except Exception as fallback_e:
-                logger.error(f"Fallback JSON save also failed: {fallback_e}")
         except Exception as e:
             logger.error(f"Failed to save results JSON {json_filepath}: {e}", exc_info=True)
 
         # --- Prepare and save summary CSV ---
-        # Save summary CSV in the main experiment directory (one level up)
         csv_filepath = self.experiment_dir / f"summary_results_seed{RANDOM_SEED}.csv"
         try:
-            # Extract primary metrics from the original results_data for summary
-            macro_avg = results_data.get('macro_avg', {})
-            # Use overall_accuracy if present (from single_eval/cv_eval), else mean test score
-            overall_acc = results_data.get('overall_accuracy', results_data.get('mean_test_accuracy', np.nan))
+            # Extract primary metrics from the original results_data
+            agg_metrics = results_data.get('aggregated_metrics', {})  # Use this for CV eval
+            macro_avg = results_data.get('macro_avg', {})  # Use this for others
+
+            # --- Determine primary accuracy and macro F1 for summary ---
+            overall_acc = np.nan
+            macro_f1 = np.nan
+            if agg_metrics:  # Use aggregated metrics if available (from cv_model_evaluation)
+                overall_acc = agg_metrics.get('accuracy', {}).get('mean', np.nan)
+                macro_f1 = agg_metrics.get('f1_macro', {}).get('mean', np.nan)
+            else:  # Use direct metrics (from single_eval or non_nested search)
+                overall_acc = results_data.get('overall_accuracy', np.nan)
+                macro_f1 = macro_avg.get('f1', np.nan)
 
             # --- Filter method_params for summary ---
-            # Include only simple types and potentially key config like 'cv'
             summary_params = {}
             allowed_types = (str, int, float, bool)
-            key_cv_params = ['cv', 'outer_cv', 'inner_cv', 'n_iter', 'internal_val_split_ratio']
+            # Extend key CV params to include confidence level
+            key_cv_params = ['cv', 'outer_cv', 'inner_cv', 'n_iter', 'internal_val_split_ratio', 'confidence_level']
             if method_params:
                 for k, v in method_params.items():
                     if isinstance(v, allowed_types) or k in key_cv_params:
                         summary_params[k] = v
-            # Add best params specifically if available (from grid search)
             if 'best_params' in results_data and isinstance(results_data['best_params'], dict):
                 for k, v in results_data['best_params'].items():
-                    if isinstance(v, allowed_types):
-                        summary_params[f'best_{k}'] = v
+                    if isinstance(v, allowed_types): summary_params[f'best_{k}'] = v
 
             summary = {
-                'method_run_id': run_id,
-                'timestamp': timestamp,
-                'accuracy': overall_acc,
-                'macro_f1': macro_avg.get('f1', results_data.get('mean_test_f1_macro', np.nan)),
-                'macro_roc_auc': macro_avg.get('roc_auc', results_data.get('mean_test_roc_auc_macro', np.nan)),
-                'macro_pr_auc': macro_avg.get('pr_auc', results_data.get('mean_test_pr_auc_macro', np.nan)),
-                'best_cv_score': results_data.get('best_score', np.nan),
-                'best_epoch': results_data.get('best_epoch', np.nan),
+                'method_run_id': run_id, 'timestamp': timestamp,
+                'accuracy': overall_acc, 'macro_f1': macro_f1,
+                # --- Add CI margin for accuracy and f1 if available ---
+                'accuracy_ci_margin': agg_metrics.get('accuracy', {}).get('margin_of_error', np.nan),
+                'f1_macro_ci_margin': agg_metrics.get('f1_macro', {}).get('margin_of_error', np.nan),
+                # --- Add other macro metrics (mean values) ---
+                'precision_macro': agg_metrics.get('precision_macro', {}).get('mean',
+                                                                              macro_avg.get('precision', np.nan)),
+                'recall_macro': agg_metrics.get('recall_macro', {}).get('mean', macro_avg.get('recall', np.nan)),
+                'specificity_macro': agg_metrics.get('specificity_macro', {}).get('mean',
+                                                                                  macro_avg.get('specificity',
+                                                                                                np.nan)),
+                'roc_auc_macro': agg_metrics.get('roc_auc_macro', {}).get('mean', macro_avg.get('roc_auc', np.nan)),
+                'pr_auc_macro': agg_metrics.get('pr_auc_macro', {}).get('mean', macro_avg.get('pr_auc', np.nan)),
+                # --- Other summary fields ---
+                'best_cv_score': results_data.get('best_score', np.nan),  # From non-nested grid search
+                'best_epoch': results_data.get('best_epoch', np.nan),  # From single_train
                 **summary_params  # Add filtered/key parameters
             }
             summary = {k: (None if isinstance(v, float) and np.isnan(v) else v) for k, v in summary.items()}
@@ -1548,38 +1536,40 @@ class ClassificationPipeline:
                             cv: int = 5,
                             internal_val_split_ratio: Optional[float] = None,
                             params: Optional[Dict] = None,
+                            confidence_level: float = 0.95,
                             save_results: bool = True) -> Dict[str, Any]:
         """
         Performs K-Fold CV for evaluation using fixed hyperparameters.
         Uses full dataset (respecting force_flat_for_fixed_cv). Skorch adapter's
         internal ValidSplit is used for monitoring within each fold's training.
+        Calculates confidence intervals for aggregated metrics.
         """
         logger.info(f"Performing {cv}-fold CV for evaluation with fixed parameters.")
+        if not 0 < confidence_level < 1:
+            raise ValueError("confidence_level must be between 0 and 1 (exclusive).")
 
         # --- Check Compatibility ---
         if self.dataset_handler.structure == DatasetStructure.FIXED and not self.force_flat_for_fixed_cv:
-            raise ValueError("cv_model_evaluation requires a FLAT dataset structure or a FIXED structure with force_flat_for_fixed_cv=True.")
+            raise ValueError(
+                "cv_model_evaluation requires a FLAT dataset structure or a FIXED structure with force_flat_for_fixed_cv=True.")
 
         # --- Get Full Data ---
         try:
             X_full, y_full = self.dataset_handler.get_full_paths_labels_for_cv()
             if not X_full: raise RuntimeError("Full dataset for CV is empty.")
-            y_full_np = np.array(y_full) # Needed for stratification
+            y_full_np = np.array(y_full)  # Needed for stratification
         except Exception as e:
             logger.error(f"Failed to get full dataset paths/labels for CV evaluation: {e}", exc_info=True)
             raise
 
         # --- Hyperparameters for this evaluation ---
-        # Use provided params or fall back to pipeline defaults
-        eval_params = self.model_adapter_config.copy() # Start with base config
-        if params: # Override with explicitly passed params for this run
-             logger.info(f"Using provided parameters for CV evaluation: {params}")
-             eval_params.update(params)
+        eval_params = self.model_adapter_config.copy()
+        if params:
+            logger.info(f"Using provided parameters for CV evaluation: {params}")
+            eval_params.update(params)
         else:
-             logger.info(f"Using pipeline default parameters for CV evaluation.")
-        # Extract non-skorch params if necessary
+            logger.info(f"Using pipeline default parameters for CV evaluation.")
         module_dropout_rate = eval_params.pop('module__dropout_rate', None)
-        # Ensure essential adapter params are present
         eval_params.setdefault('module', self._get_model_class(self.model_type))
         eval_params.setdefault('module__num_classes', self.dataset_handler.num_classes)
         if module_dropout_rate is not None: eval_params['module__dropout_rate'] = module_dropout_rate
@@ -1588,130 +1578,202 @@ class ClassificationPipeline:
         default_internal_val_fallback = 0.15
         val_frac_to_use = internal_val_split_ratio if internal_val_split_ratio is not None else self.dataset_handler.val_split_ratio
         if not 0.0 < val_frac_to_use < 1.0:
-             logger.warning(f"Provided internal validation split ratio ({val_frac_to_use:.3f}) is invalid. "
-                            f"Using default fallback: {default_internal_val_fallback:.3f} for fold fits.")
-             val_frac_to_use = default_internal_val_fallback
-        # --- End Determine & Validate ---
-
-        logger.info(f"Skorch internal validation split configured: {val_frac_to_use * 100:.1f}% of each CV fold's training data.")
-        # Note: We create the actual ValidSplit inside the loop with fold-specific seed
-
+            logger.warning(
+                f"Provided internal validation split ratio ({val_frac_to_use:.3f}) is invalid. Using default fallback: {default_internal_val_fallback:.3f} for fold fits.")
+            val_frac_to_use = default_internal_val_fallback
+        logger.info(
+            f"Skorch internal validation split configured: {val_frac_to_use * 100:.1f}% of each CV fold's training data.")
 
         # --- Setup CV Strategy ---
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
-        fold_results = []
-        fold_histories = [] # Store history from each fold
-        fold_detailed_results = []  # <<< LIST FOR DETAILED FOLD RESULTS
+        fold_results = []  # Store summary dicts like {'accuracy': 0.X, 'f1_macro': 0.Y, ...}
+        fold_histories = []
+        fold_detailed_results = []  # Store detailed metrics dicts if self.save_detailed_results
 
         # --- Manual Outer CV Loop ---
         for fold_idx, (outer_train_indices, outer_test_indices) in enumerate(cv_splitter.split(X_full, y_full_np)):
             logger.info(f"--- Starting CV Evaluation Fold {fold_idx + 1}/{cv} ---")
 
-            # --- Get Outer Fold Data (Paths/Labels) ---
             X_outer_train = [X_full[i] for i in outer_train_indices]
             y_outer_train = y_full_np[outer_train_indices]
-            X_test        = [X_full[i] for i in outer_test_indices]
-            y_test        = y_full_np[outer_test_indices]
+            X_test = [X_full[i] for i in outer_test_indices]
+            y_test = y_full_np[outer_test_indices]
             logger.debug(f"Outer split: {len(X_outer_train)} train samples, {len(X_test)} test samples.")
 
             if not X_outer_train or not X_test:
-                 logger.warning(f"Fold {fold_idx+1} resulted in empty train or test set. Skipping.")
-                 fold_results.append({'accuracy': np.nan, 'f1_macro': np.nan}) # Append NaNs
-                 continue
+                logger.warning(f"Fold {fold_idx + 1} resulted in empty train or test set. Skipping.")
+                # Append NaNs for all potential metrics if skipping
+                fold_results.append({k: np.nan for k in ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro',
+                                                         'specificity_macro', 'roc_auc_macro', 'pr_auc_macro']})
+                if self.save_detailed_results: fold_detailed_results.append(
+                    {'error': 'Skipped fold due to empty data.'})
+                continue
 
-            # --- Setup Estimator for this Fold ---
+            # Setup Estimator for this Fold
             fold_adapter_config = eval_params.copy()
-            # Enable internal validation split for monitoring (e.g., EarlyStopping)
-            fold_adapter_config['train_split'] = ValidSplit(cv=val_frac_to_use, stratified=True, random_state=RANDOM_SEED + fold_idx) # Fold specific seed
-            fold_adapter_config['verbose'] = 3 # Show progress per fold
+            fold_adapter_config['train_split'] = ValidSplit(cv=val_frac_to_use, stratified=True,
+                                                            random_state=RANDOM_SEED + fold_idx)
+            fold_adapter_config['verbose'] = 1  # Show epoch table per fold
 
             n_outer_train = len(X_outer_train)
-            n_inner_val = int(n_outer_train * val_frac_to_use) # Use the validated fraction
+            n_inner_val = int(n_outer_train * val_frac_to_use)
             n_inner_train = n_outer_train - n_inner_val
-            logger.debug(
-                f"Fold {fold_idx + 1}: Internal split for monitoring: ~{n_inner_train} train / ~{n_inner_val} valid.")
+            logger.debug(f"Fold {fold_idx + 1}: Internal split: ~{n_inner_train} train / ~{n_inner_val} valid.")
 
-            # Remove config keys not needed by SkorchModelAdapter init
-            fold_adapter_config.pop('patience_cfg', None)
+            fold_adapter_config.pop('patience_cfg', None);
             fold_adapter_config.pop('monitor_cfg', None)
-            fold_adapter_config.pop('lr_policy_cfg', None)
+            fold_adapter_config.pop('lr_policy_cfg', None);
             fold_adapter_config.pop('lr_patience_cfg', None)
 
             estimator_fold = SkorchModelAdapter(**fold_adapter_config)
 
-            # --- Fit on Outer Train (Skorch uses internal split for validation) ---
+            # Fit on Outer Train
             logger.info(f"Fitting model for fold {fold_idx + 1}...")
             try:
                 estimator_fold.fit(X_outer_train, y=y_outer_train)
-                # Check if history exists and has validation scores
                 if hasattr(estimator_fold, 'history_') and estimator_fold.history_:
-                     fold_histories.append(estimator_fold.history)
-                else: fold_histories.append(None) # Append None if no history
-
+                    fold_histories.append(estimator_fold.history)  # Store history if needed later
             except Exception as fit_err:
-                 logger.error(f"Fit failed for fold {fold_idx + 1}: {fit_err}", exc_info=True)
-                 fold_results.append({'accuracy': np.nan, 'f1_macro': np.nan})
-                 fold_histories.append(None)
-                 continue # Skip scoring for this fold
+                logger.error(f"Fit failed for fold {fold_idx + 1}: {fit_err}", exc_info=True)
+                fold_results.append({k: np.nan for k in ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro',
+                                                         'specificity_macro', 'roc_auc_macro', 'pr_auc_macro']})
+                if self.save_detailed_results: fold_detailed_results.append({'error': f'Fit failed: {fit_err}'})
+                continue
 
-            # --- Evaluate on Outer Test Set ---
+            # Evaluate on Outer Test Set
             logger.info(f"Evaluating model on outer test set for fold {fold_idx + 1}...")
             try:
-                 y_pred_test = estimator_fold.predict(X_test)
-                 y_score_test = estimator_fold.predict_proba(X_test)
-                 # --- Compute detailed metrics per fold ---
-                 fold_metrics = self._compute_metrics(y_test, y_pred_test, y_score_test,
-                                                      detailed=self.save_detailed_results) # <<< PASS FLAG
-                 fold_results.append({ # Append summary stats for aggregation
-                     'accuracy': fold_metrics.get('overall_accuracy', np.nan),
-                     'f1_macro': fold_metrics.get('macro_avg', {}).get('f1', np.nan)
-                 })
-                 if self.save_detailed_results: # Store full metrics dict if detailed
-                      fold_detailed_results.append(fold_metrics)
-                 # --- End Compute ---
-                 logger.info(f"Fold {fold_idx + 1} Test Scores: Acc={fold_metrics.get('overall_accuracy', np.nan):.4f}, "
-                             f"F1={fold_metrics.get('macro_avg', {}).get('f1', np.nan):.4f}")
+                y_pred_test = estimator_fold.predict(X_test)
+                y_score_test = estimator_fold.predict_proba(X_test)
+                fold_metrics = self._compute_metrics(y_test, y_pred_test, y_score_test,
+                                                     detailed=self.save_detailed_results)
+
+                fold_summary = {
+                    'accuracy': fold_metrics.get('overall_accuracy', np.nan),
+                    'f1_macro': fold_metrics.get('macro_avg', {}).get('f1', np.nan),
+                    'precision_macro': fold_metrics.get('macro_avg', {}).get('precision', np.nan),
+                    'recall_macro': fold_metrics.get('macro_avg', {}).get('recall', np.nan),
+                    'specificity_macro': fold_metrics.get('macro_avg', {}).get('specificity', np.nan),
+                    'roc_auc_macro': fold_metrics.get('macro_avg', {}).get('roc_auc', np.nan),
+                    'pr_auc_macro': fold_metrics.get('macro_avg', {}).get('pr_auc', np.nan),
+                }
+                fold_results.append(fold_summary)
+
+                if self.save_detailed_results:
+                    fold_detailed_results.append(fold_metrics)
+
+                logger.info(
+                    f"Fold {fold_idx + 1} Test Scores: Acc={fold_summary['accuracy']:.4f}, F1={fold_summary['f1_macro']:.4f}")
             except Exception as score_err:
-                 logger.error(f"Scoring failed for fold {fold_idx + 1}: {score_err}", exc_info=True)
-                 fold_results.append({'accuracy': np.nan, 'f1_macro': np.nan})
+                logger.error(f"Scoring failed for fold {fold_idx + 1}: {score_err}", exc_info=True)
+                fold_results.append({k: np.nan for k in ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro',
+                                                         'specificity_macro', 'roc_auc_macro', 'pr_auc_macro']})
+                if self.save_detailed_results: fold_detailed_results.append(
+                    {'error': f'Scoring failed: {score_err}'})
 
         # --- Aggregate Results ---
         if not fold_results:
-             logger.error("CV evaluation failed for all folds.")
-             return {'method': 'cv_model_evaluation', 'params': params or {}, 'error': 'All folds failed.'}
+            logger.error("CV evaluation failed: No results from any fold.")
+            # Return minimal error dict
+            return {'method': 'cv_model_evaluation', 'params': params or {},
+                    'error': 'All folds failed or were skipped.'}
 
         df_results = pd.DataFrame(fold_results)
+        # Base results structure
         results = {
-             'method': 'cv_model_evaluation',
-             'params': eval_params, # Store effective params used
-             'cv_scores_summary': df_results.to_dict(orient='list'), # Summary scores
-             'mean_test_accuracy': float(df_results['accuracy'].mean()),
-             'std_test_accuracy': float(df_results['accuracy'].std()),
-             'mean_test_f1_macro': float(df_results['f1_macro'].mean()),
-             'std_test_f1_macro': float(df_results['f1_macro'].std()),
-            'fold_detailed_results': fold_detailed_results,  # Add detailed list
-             # 'fold_histories': fold_histories # Optional: Can be very large
+            'method': 'cv_model_evaluation',
+            # Store effective params used for the folds
+            'params_used_for_folds': {k: v for k, v in eval_params.items() if not callable(v)},
+            # Cleaned eval_params
+            'n_folds_requested': cv,
+            'n_folds_processed': len(fold_results),
+            'confidence_level': confidence_level,  # Store CI level used
+            'cv_fold_scores': df_results.to_dict(orient='list'),  # Raw summary scores per fold
+            # Include detailed fold results only if flag is set
+            **({'fold_detailed_results': fold_detailed_results} if self.save_detailed_results else {}),
         }
-        results['accuracy'] = results['mean_test_accuracy'] # For summary
-        results['macro_avg'] = {'f1': results['mean_test_f1_macro']} # For summary
+
+        # Calculate aggregated stats only if enough folds completed
+        aggregated_metrics = {}
+        K = results['n_folds_processed']
+        if K > 1:
+            dof = K - 1
+            alpha = 1.0 - confidence_level
+            try:
+                t_crit = np.abs(stats.t.ppf(alpha / 2, dof))
+            except ImportError:
+                logger.warning(
+                    "Scipy not found. Cannot calculate t-critical value for confidence intervals. Reporting SEM instead.")
+                t_crit = None
+            except Exception as e:
+                logger.error(f"Error calculating t-critical value: {e}. Confidence intervals may be inaccurate.")
+                t_crit = None
+
+            metrics_to_aggregate = [k for k in df_results.columns if
+                                    k != 'error']  # Aggregate all collected numeric metrics
+            for metric_key in metrics_to_aggregate:
+                scores = df_results[metric_key].dropna()
+                count = len(scores)
+                if count >= 2:
+                    mean_score = np.mean(scores)
+                    std_dev = np.std(scores, ddof=1)
+                    sem = std_dev / np.sqrt(count)
+                    h = (t_crit * sem) if t_crit is not None and not np.isnan(sem) else np.nan
+                    aggregated_metrics[metric_key] = {
+                        'mean': float(mean_score), 'std_dev': float(std_dev), 'sem': float(sem),
+                        'margin_of_error': float(h) if not np.isnan(h) else None,  # Store as None if not calculable
+                        'ci_lower': float(mean_score - h) if not np.isnan(h) else None,
+                        'ci_upper': float(mean_score + h) if not np.isnan(h) else None
+                    }
+                elif count == 1:
+                    aggregated_metrics[metric_key] = {'mean': float(scores.iloc[0]), 'std_dev': 0.0}
+                else:
+                    aggregated_metrics[metric_key] = {'mean': np.nan, 'std_dev': np.nan}
+        elif K == 1:  # Only one fold processed
+            logger.warning("Only 1 fold processed. Reporting mean scores, cannot calculate std dev or CI.")
+            for metric_key in df_results.columns:
+                if metric_key != 'error':
+                    scores = df_results[metric_key].dropna()
+                    aggregated_metrics[metric_key] = {'mean': float(scores.iloc[0]) if len(scores) > 0 else np.nan}
+        else:  # K = 0
+            logger.error("No folds successfully processed. Cannot aggregate metrics.")
+            for metric_key in ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro', 'specificity_macro',
+                               'roc_auc_macro', 'pr_auc_macro']:
+                aggregated_metrics[metric_key] = {'mean': np.nan}
+
+        results['aggregated_metrics'] = aggregated_metrics
+
+        # --- Update top-level keys for summary CSV convenience ---
+        results['accuracy'] = aggregated_metrics.get('accuracy', {}).get('mean', np.nan)
+        results['macro_avg'] = {'f1': aggregated_metrics.get('f1_macro', {}).get('mean', np.nan)}
+        # --- End Update ---
 
         if save_results:
-            # Pass detailed flag and run_id
-            simple_params = {k: v for k, v in eval_params.items() if isinstance(v, (str, int, float, bool))}
-            simple_params['cv'] = cv  # Add CV folds number
-            simple_params['internal_val_split_ratio'] = val_frac_to_use  # Add frac used
-            run_id_for_save = f"cv_model_evaluation_{datetime.now().strftime('%H%M%S')}"  # Generate ID
-            # --- FIX: Use method_params= ---
+            # Prepare params for saving summary row
+            summary_params = {k: v for k, v in eval_params.items() if isinstance(v, (str, int, float, bool))}
+            summary_params['cv'] = cv
+            summary_params['internal_val_split_ratio'] = val_frac_to_use
+            summary_params['confidence_level'] = confidence_level
+            run_id_for_save = f"cv_model_evaluation_{datetime.now().strftime('%H%M%S_%f')}"
             self._save_results(results, "cv_model_evaluation",
                                run_id=run_id_for_save,
-                               method_params=simple_params)  # Use correct keyword
+                               method_params=summary_params)  # Pass params for summary
 
-        logger.info(f"CV Evaluation Summary (Avg over {len(fold_results)} folds):")
-        logger.info(f"  Accuracy: {results['mean_test_accuracy']:.4f} +/- {results['std_test_accuracy']:.4f}")
-        logger.info(f"  Macro F1: {results['mean_test_f1_macro']:.4f} +/- {results['std_test_f1_macro']:.4f}")
+        # --- Updated Logging ---
+        logger.info(f"CV Evaluation Summary (Avg over {K} folds, {confidence_level * 100:.0f}% CI):")
+        for metric_key, stats_dict in aggregated_metrics.items():
+            mean_val = stats_dict.get('mean', np.nan)
+            h_val = stats_dict.get('margin_of_error')  # Can be None or NaN
+            if not np.isnan(mean_val):
+                if h_val is not None and not np.isnan(h_val):
+                    logger.info(f"  {metric_key.replace('_', ' ').title():<20}: {mean_val:.4f} +/- {h_val:.4f}")
+                else:
+                    logger.info(f"  {metric_key.replace('_', ' ').title():<20}: {mean_val:.4f} (CI not calculated)")
+            else:
+                logger.info(f"  {metric_key.replace('_', ' ').title():<20}: NaN")
+        # --- End Updated Logging ---
 
         return results
-
 
     def single_train(self,
                      max_epochs: Optional[int] = None,
@@ -1720,14 +1782,17 @@ class ClassificationPipeline:
                      # Add other tunable params like weight_decay, dropout_rate here if needed
                      optimizer__weight_decay: Optional[float] = None,
                      module__dropout_rate: Optional[float] = None,
-                     val_split_ratio: Optional[float] = None, # Override handler's default split
+                     val_split_ratio: Optional[float] = None,  # Override handler's default split
                      save_model: bool = True,
                      save_results: bool = True) -> Dict[str, Any]:
         """
         Performs a single training run using a train/validation split.
         Manually creates the split and uses Skorch with PredefinedSplit.
+        Saves model and results in a unique subdirectory for this run.
         """
         logger.info("Starting single training run...")
+        # --- Generate unique run_id for this execution ---
+        run_id = f"single_train_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
 
         # --- Get Train+Validation Data ---
         X_trainval, y_trainval = self.dataset_handler.get_train_val_paths_labels()
@@ -1736,44 +1801,48 @@ class ClassificationPipeline:
 
         # --- Determine Validation Split ---
         current_val_split_ratio = val_split_ratio if val_split_ratio is not None else self.dataset_handler.val_split_ratio
-        if current_val_split_ratio <= 0 or current_val_split_ratio >= 1.0:
-            logger.warning("Validation split ratio is <= 0 or >= 1. Training on full trainval set without validation.")
-            X_train, y_train = X_trainval, y_trainval_np
-            X_val, y_val = [], np.array([])
-            X_fit, y_fit = X_train, y_train
-            train_split_config = None
-            n_train, n_val = len(y_train), 0
+        train_split_config = None
+        n_train, n_val = len(y_trainval_np), 0  # Default if no split
+
+        if not 0.0 < current_val_split_ratio < 1.0:
+            logger.warning(f"Validation split ratio ({current_val_split_ratio}) is invalid or zero. "
+                           f"Training on full {len(X_trainval)} trainval samples without validation set.")
+            X_fit, y_fit = X_trainval, y_trainval_np  # Use all data
         elif len(np.unique(y_trainval_np)) < 2:
-             logger.warning("Only one class present in trainval data. Cannot stratify split. Training without validation.")
-             X_train, y_train = X_trainval, y_trainval_np
-             X_val, y_val = [], np.array([])
-             X_fit, y_fit = X_train, y_train
-             train_split_config = None
-             n_train, n_val = len(y_train), 0
+            logger.warning(
+                f"Only one class present in trainval data. Cannot stratify split. Training on full {len(X_trainval)} samples without validation.")
+            X_fit, y_fit = X_trainval, y_trainval_np
         else:
+            # Perform the split
             try:
-                 train_indices, val_indices = train_test_split(
-                     np.arange(len(X_trainval)), test_size=current_val_split_ratio,
-                     stratify=y_trainval_np, random_state=RANDOM_SEED)
+                train_indices, val_indices = train_test_split(
+                    np.arange(len(X_trainval)), test_size=current_val_split_ratio,
+                    stratify=y_trainval_np, random_state=RANDOM_SEED)
             except ValueError as e:
-                 logger.warning(f"Stratified train/val split failed ({e}). Using non-stratified split.")
-                 train_indices, val_indices = train_test_split(
-                     np.arange(len(X_trainval)), test_size=current_val_split_ratio,
-                     random_state=RANDOM_SEED)
+                logger.warning(f"Stratified train/val split failed ({e}). Using non-stratified split.")
+                train_indices, val_indices = train_test_split(
+                    np.arange(len(X_trainval)), test_size=current_val_split_ratio,
+                    random_state=RANDOM_SEED)
 
-            X_train = [X_trainval[i] for i in train_indices]
-            y_train = y_trainval_np[train_indices]
-            X_val = [X_trainval[i] for i in val_indices]
-            y_val = y_trainval_np[val_indices]
-            n_train, n_val = len(y_train), len(y_val)
+            # Use indices to get actual paths/labels for constructing X_fit, y_fit later
+            X_train_paths_list = [X_trainval[i] for i in train_indices]
+            y_train_labels_np = y_trainval_np[train_indices]
+            X_val_paths_list = [X_trainval[i] for i in val_indices]
+            y_val_labels_np = y_trainval_np[val_indices]
+            n_train, n_val = len(y_train_labels_np), len(y_val_labels_np)
 
-            # Combine for skorch fit and create PredefinedSplit
-            X_fit = X_train + X_val # Combine lists of paths
-            y_fit = np.concatenate((y_train, y_val))
-            test_fold = np.full(len(X_fit), -1, dtype=int) # -1 indicates train
-            test_fold[n_train:] = 0 # 0 indicates validation fold
+            # Combine for skorch fit (paths and labels separately)
+            X_fit = X_train_paths_list + X_val_paths_list  # Combine lists of paths
+            y_fit = np.concatenate((y_train_labels_np, y_val_labels_np))
+
+            # Create PredefinedSplit using indices relative to the combined X_fit/y_fit
+            test_fold = np.full(len(X_fit), -1, dtype=int)  # -1 indicates train
+            test_fold[n_train:] = 0  # 0 indicates validation fold (indices from n_train onwards)
             ps = PredefinedSplit(test_fold=test_fold)
-            train_split_config = ValidSplit(cv=ps, stratified=False) # Wrap ps
+            # Skorch train_split requires a callable that yields train/test indices.
+            # ValidSplit handles wrapping the PredefinedSplit correctly.
+            train_split_config = ValidSplit(cv=ps,
+                                            stratified=False)  # stratified=False because ps defines the split
 
         logger.info(f"Using split: {n_train} train / {n_val} validation samples.")
 
@@ -1787,48 +1856,62 @@ class ClassificationPipeline:
         if module__dropout_rate is not None: adapter_config['module__dropout_rate'] = module__dropout_rate
         # Set the train split strategy (None or PredefinedSplit via ValidSplit)
         adapter_config['train_split'] = train_split_config
-        # Ensure callbacks use 'valid_loss' if validation split exists
+
+        # --- Handle Callbacks based on validation ---
+        # Start with the base callbacks list/None from the config
+        current_callbacks = adapter_config.get('callbacks', [])
+        if not isinstance(current_callbacks, list):  # Handle None case
+            current_callbacks = []
+
         if train_split_config is None:
-             # No validation: monitor train_loss? Or remove callbacks? Remove EarlyStopping/LRScheduler.
-             logger.warning("No validation set, removing EarlyStopping and LRScheduler callbacks.")
+            logger.warning(
+                "No validation set. Callbacks monitoring validation metrics (EarlyStopping, LRScheduler) may be removed or ineffective.")
+            # Filter out callbacks that depend on validation
+            adapter_config['callbacks'] = [
+                (name, cb) for name, cb in current_callbacks
+                if not isinstance(cb, (EarlyStopping, LRScheduler))  # Keep others
+            ]
+        else:
+            # Keep all callbacks from base config when validation exists
+            adapter_config['callbacks'] = current_callbacks
+        # --- End Callback Handling ---
 
-        adapter_config['verbose'] = 3 # Show epoch progress
+        adapter_config['verbose'] = 1  # Show epoch table with train_acc
 
-        adapter_config.pop('patience_cfg', None)
+        # Pop config keys not needed by SkorchModelAdapter init directly
+        adapter_config.pop('patience_cfg', None);
         adapter_config.pop('monitor_cfg', None)
-        adapter_config.pop('lr_policy_cfg', None)
+        adapter_config.pop('lr_policy_cfg', None);
         adapter_config.pop('lr_patience_cfg', None)
 
+        # Instantiate the adapter for this training run
         adapter_for_train = SkorchModelAdapter(**adapter_config)
 
         # --- Train Model ---
-        logger.info("Fitting model...")
-        adapter_for_train.fit(X_fit, y=y_fit) # Pass combined data
+        logger.info(f"Fitting model (run_id: {run_id})...")
+        adapter_for_train.fit(X_fit, y=y_fit)  # Pass combined data (paths, labels)
 
         # --- Collect Results ---
         history = adapter_for_train.history
-        results = {'method': 'single_train', 'params': adapter_config} # Store effective config
+        # Start results dict, store effective config used for this run
+        results = {'method': 'single_train',
+                   'run_id': run_id,
+                   'full_params_used': adapter_config.copy()}
+
         best_epoch_info = {}
-        valid_loss_key = 'valid_loss' # Metric monitored by callbacks
-        validation_was_run = train_split_config is not None and history and valid_loss_key in history[-1]  # Access last epoch dict directly
+        valid_loss_key = 'valid_loss'  # Default metric monitored
+        # Check if validation ran by checking train_split and history content
+        validation_was_run = train_split_config is not None and history and valid_loss_key in history[-1]
+
         if validation_was_run:
             try:
-                # Find the index of the epoch with the best validation score
-                scores = [epoch.get(valid_loss_key, np.inf if valid_loss_key.endswith('_loss') else -np.inf) for epoch
-                          in history]
-                if valid_loss_key.endswith('_loss'):  # Lower is better for loss
-                    best_idx = np.argmin(scores)
-                else:  # Higher is better for accuracy etc.
-                    best_idx = np.argmax(scores)
-
-                # Convert best_idx to standard Python int before using it to index history
+                scores = [epoch.get(valid_loss_key, np.inf) for epoch in history]
+                best_idx = np.argmin(scores)  # Find index of min validation loss
                 best_idx_int = int(best_idx)
 
-                # Handle case where history might be empty or scores invalid
                 if best_idx_int < len(history):
-                    best_epoch_hist = history[best_idx_int]  # Use python int index
-                    actual_best_epoch_num = best_epoch_hist.get('epoch')  # Get actual epoch number
-
+                    best_epoch_hist = history[best_idx_int]
+                    actual_best_epoch_num = best_epoch_hist.get('epoch')
                     best_epoch_info = {
                         'best_epoch': actual_best_epoch_num,
                         'best_valid_metric_value': float(best_epoch_hist.get(valid_loss_key, np.nan)),
@@ -1842,66 +1925,70 @@ class ClassificationPipeline:
                         f"({valid_loss_key}={best_epoch_info['best_valid_metric_value']:.4f})")
                 else:
                     logger.error("Could not determine best epoch index from history scores.")
-                    validation_was_run = False  # Fallback to last epoch logic
+                    validation_was_run = False  # Fallback
             except Exception as e:
                 logger.error(f"Error processing history for best epoch: {e}", exc_info=True)
-                validation_was_run = False  # Fallback to last epoch
+                validation_was_run = False  # Fallback
 
-        if not validation_was_run: # No validation or error processing history
-             if history:
-                  last_epoch_hist = history[-1]
-                  last_epoch_num = last_epoch_hist.get('epoch', len(history))
-             else: last_epoch_hist = {}; last_epoch_num = 0; logger.error("History empty after fit.")
+        if not validation_was_run:  # No validation or error processing history
+            last_epoch_hist = history[-1] if history else {}
+            last_epoch_num = last_epoch_hist.get('epoch', len(history) if history else 0)
+            if not history: logger.error("History empty after fit.")
 
-             best_epoch_info = {
-                 'best_epoch': last_epoch_num,
-                 'best_valid_metric_value': np.nan, 'valid_metric_name': valid_loss_key,
-                 'train_loss_at_best': float(last_epoch_hist.get('train_loss', np.nan)),
-                 'train_acc_at_best': float(last_epoch_hist.get('train_acc', np.nan)),
-                 'valid_acc_at_best': np.nan, # No valid acc
-             }
-             logger.warning(f"No validation performed or error finding best epoch. Reporting last epoch ({last_epoch_num}) stats.")
+            best_epoch_info = {
+                'best_epoch': last_epoch_num,
+                'best_valid_metric_value': np.nan, 'valid_metric_name': valid_loss_key,
+                'train_loss_at_best': float(last_epoch_hist.get('train_loss', np.nan)),
+                'train_acc_at_best': float(last_epoch_hist.get('train_acc', np.nan)),
+                'valid_acc_at_best': np.nan,
+            }
+            if train_split_config is not None:  # Log warning only if split was intended but failed
+                logger.warning(
+                    f"Error finding best epoch based on validation. Reporting last epoch ({last_epoch_num}) stats.")
 
         results.update(best_epoch_info)
-        results['training_history'] = history.to_list() if history else []
+        # Include full history only if detailed results are requested
+        if self.save_detailed_results:
+            results['training_history'] = history.to_list() if history else []
 
         # --- Save Model ---
-        model_path = None
+        model_path_str = None  # Initialize path string
         if save_model:
             try:
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
-                val_metric_val = results.get('best_valid_metric_value', np.nan)
-                val_metric_str = f"val_{valid_loss_key.replace('_','-')}{val_metric_val:.4f}" if not np.isnan(val_metric_val) else "no_val"
-                model_filename = f"{self.model_type}_epoch{results.get('best_epoch', 0)}_{val_metric_str}_{timestamp}.pt"
-                model_path = self.results_dir / model_filename
-                # Save using skorch helper or directly
-                # adapter_for_train.save_params(f_params=model_path)
-                torch.save(adapter_for_train.module_.state_dict(), model_path)
-                logger.info(f"Model state_dict saved to: {model_path}")
-                results['saved_model_path'] = str(model_path)
-            except Exception as e:
-                 logger.error(f"Failed to save model: {e}", exc_info=True)
-                 results['saved_model_path'] = None
+                method_run_dir = self.experiment_dir / run_id
+                method_run_dir.mkdir(parents=True, exist_ok=True)
 
-        # Update the main pipeline adapter with the trained one
-        self.model_adapter = adapter_for_train
+                val_metric_val = results.get('best_valid_metric_value', np.nan)
+                val_metric_str = f"val_{valid_loss_key.replace('_', '-')}{val_metric_val:.4f}" if not np.isnan(
+                    val_metric_val) else "no_val"
+                model_filename = f"{self.model_type}_epoch{results.get('best_epoch', 0)}_{val_metric_str}.pt"
+                model_path = method_run_dir / model_filename
+
+                torch.save(adapter_for_train.module_.state_dict(), model_path)
+                model_path_str = str(model_path)
+                logger.info(f"Model state_dict saved to: {model_path_str}")
+                results['saved_model_path'] = model_path_str
+            except Exception as e:
+                logger.error(f"Failed to save model: {e}", exc_info=True)
+                results['saved_model_path'] = None
+
+        # --- Update main adapter and save results ---
+        self.model_adapter = adapter_for_train  # Keep the trained adapter
         logger.info("Main pipeline model adapter updated with the model from single_train.")
 
-        # Add dummy metrics for saving compatibility if needed
-        results['accuracy'] = results.get('valid_acc_at_best', np.nan) # Use valid acc if available
-        results['macro_avg'] = {}
-
-        # Add effective adapter config to results
-        results['full_params_used'] = adapter_config  # Store the config used
+        # Add summary metrics for saving logic
+        results['accuracy'] = results.get('valid_acc_at_best', np.nan)  # Use valid acc if available for summary
+        results['macro_avg'] = {}  # No macro avg from training phase
 
         if save_results:
-            # Prepare simple params for summary/filename base
+            # Prepare simple params for summary report
             simple_params = {k: v for k, v in adapter_config.items() if isinstance(v, (str, int, float, bool))}
-            run_id_for_save = f"single_train_{datetime.now().strftime('%H%M%S')}"  # Generate ID here
+            simple_params['val_split_ratio_used'] = current_val_split_ratio if train_split_config else 0.0
+            # Pass run_id generated at the start
             self._save_results(results, "single_train",
-                               run_id=run_id_for_save,
-                               method_params=simple_params  # Use correct keyword
-                               )
+                               run_id=run_id,
+                               method_params=simple_params)
+
         return results
 
 
@@ -2324,7 +2411,7 @@ if __name__ == "__main__":
 
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_seq_1 # <--- SELECT SEQUENCE TO RUN
+    chosen_sequence = methods_seq_4 # <--- SELECT SEQUENCE TO RUN
 
     logger.info(f"Executing sequence: {[m[0] for m in chosen_sequence]}")
 
