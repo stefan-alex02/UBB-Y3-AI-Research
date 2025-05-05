@@ -1,0 +1,55 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-05-05 13:26:26 | INFO     | [code_v7   :<module>          : 209] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\logs\classification.log
+2025-05-05 13:26:26 | INFO     | [code_v7   :<module>          :2093] | ℹ️ Executing sequence: ['single_train', 'single_eval']
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          :1860] | ℹ️ Initializing Pipeline Executor for model 'cnn' on dataset 'mini-GCD-flat'...
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 896] | ℹ️ Initializing Classification Pipeline:
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 897] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 898] | ℹ️   Model Type: cnn
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 899] | ℹ️   Force Flat for Fixed CV: False
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 346] | ℹ️ Detected dataset structure: flat
+2025-05-05 13:26:26 | INFO     | [code_v7   :_load_paths_and...: 443] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 370] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 373] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 917] | ℹ️   Results will be saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\mini-GCD-flat_cnn_20250505_132626
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 975] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          : 980] | ℹ️ Pipeline initialized successfully.
+2025-05-05 13:26:26 | DEBUG    | [code_v7   :_validate_methods :1894] | 🐞 Basic method validation successful.
+2025-05-05 13:26:26 | INFO     | [code_v7   :__init__          :1875] | ℹ️ Executor configured to run methods: single_train, single_eval
+2025-05-05 13:26:26 | INFO     | [code_v7   :run               :1908] | ℹ️ Starting execution of pipeline methods...
+2025-05-05 13:26:26 | INFO     | [code_v7   :run               :1913] | ℹ️ --- Running Method 1/2: single_train ---
+2025-05-05 13:26:26 | DEBUG    | [code_v7   :run               :1956] | 🐞 Running with effective parameters: {'max_epochs': 5, 'save_model': True, 'save_results': True, 'val_split_ratio': 0.2}
+2025-05-05 13:26:26 | INFO     | [code_v7   :single_train      :1596] | ℹ️ Starting single training run...
+2025-05-05 13:26:26 | INFO     | [code_v7   :single_train      :1644] | ℹ️ Using split: 277 train / 70 validation samples.
+2025-05-05 13:26:26 | INFO     | [code_v7   :single_train      :1671] | ℹ️ Fitting model...
+2025-05-05 13:26:26 | DEBUG    | [code_v7   :__init__          : 582] | 🐞 SimpleCNN initialized with 7 output classes.
+2025-05-05 13:26:26 | DEBUG    | [code_v7   :get_split_datasets: 780] | 🐞 Split created: 277 train, 70 validation.
+2025-05-05 13:26:26 | DEBUG    | [code_v7   :get_iterator      : 837] | 🐞 Creating DataLoader: size=277, batch_size=16, shuffle=True, collate_fn=Assigned, other_kwargs={}
+2025-05-05 13:26:26 | DEBUG    | [code_v7   :get_iterator      : 837] | 🐞 Creating DataLoader: size=70, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_train      :1706] | ℹ️ Training finished. Best validation performance found at Epoch 5 (valid_loss=0.8725)
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_train      :1746] | ℹ️ Model state_dict saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\mini-GCD-flat_cnn_20250505_132626\cnn_epoch5_val_valid-loss0.8725_20250505_132636.pt
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_train      :1754] | ℹ️ Main pipeline model adapter updated with the model from single_train.
+2025-05-05 13:26:36 | INFO     | [code_v7   :_save_results     :1140] | ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\mini-GCD-flat_cnn_20250505_132626\single_train_batch_size=16_lr=0.001_max_epochs=5_optimizer__weight_decay=0.01_20250505_132636.json
+2025-05-05 13:26:36 | INFO     | [code_v7   :_save_results     :1179] | ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\mini-GCD-flat_summary_results.csv
+2025-05-05 13:26:36 | INFO     | [code_v7   :run               :1965] | ℹ️ --- Method single_train completed successfully in 9.35s ---
+2025-05-05 13:26:36 | INFO     | [code_v7   :run               :1913] | ℹ️ --- Running Method 2/2: single_eval ---
+2025-05-05 13:26:36 | DEBUG    | [code_v7   :run               :1956] | 🐞 Running with effective parameters: {'save_results': True}
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_eval       :1768] | ℹ️ Starting model evaluation on the test set...
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_eval       :1781] | ℹ️ Evaluating on 87 test samples...
+2025-05-05 13:26:36 | DEBUG    | [code_v7   :get_iterator      : 810] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-05 13:26:36 | DEBUG    | [code_v7   :get_iterator      : 837] | 🐞 Creating DataLoader: size=87, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-05 13:26:36 | DEBUG    | [code_v7   :get_iterator      : 810] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-05 13:26:36 | DEBUG    | [code_v7   :get_iterator      : 837] | 🐞 Creating DataLoader: size=87, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-05 13:26:36 | DEBUG    | [code_v7   :_compute_metrics  :1059] | 🐞 Computed Metrics: Acc=0.6092, Macro F1=0.5921
+2025-05-05 13:26:36 | INFO     | [code_v7   :_save_results     :1140] | ℹ️ Detailed results saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\mini-GCD-flat_cnn_20250505_132626\single_eval_20250505_132636.json
+2025-05-05 13:26:36 | INFO     | [code_v7   :_save_results     :1179] | ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\mini-GCD-flat_summary_results.csv
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_eval       :1796] | ℹ️ Evaluation Summary:
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_eval       :1797] | ℹ️   Accuracy: 0.6092
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_eval       :1798] | ℹ️   Macro F1: 0.5921
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_eval       :1799] | ℹ️   Macro ROC AUC: 0.8980
+2025-05-05 13:26:36 | INFO     | [code_v7   :single_eval       :1800] | ℹ️   Macro PR AUC: 0.6735
+2025-05-05 13:26:36 | INFO     | [code_v7   :run               :1965] | ℹ️ --- Method single_eval completed successfully in 0.60s ---
+2025-05-05 13:26:36 | INFO     | [code_v7   :run               :1991] | ℹ️ Pipeline execution finished in 9.94s.
+2025-05-05 13:26:36 | INFO     | [code_v7   :<module>          :2115] | ℹ️ --- Final Execution Results Summary ---
+2025-05-05 13:26:36 | INFO     | [code_v7   :<module>          :2124] | ℹ️ Method single_train_0: Completed. (Acc: 0.6714, F1: nan, BestScore: nan)
+2025-05-05 13:26:36 | INFO     | [code_v7   :<module>          :2124] | ℹ️ Method single_eval_1: Completed. (Acc: 0.6092, F1: 0.5921, BestScore: nan)

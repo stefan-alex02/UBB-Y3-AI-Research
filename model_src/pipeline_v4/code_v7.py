@@ -1186,6 +1186,7 @@ class ClassificationPipeline:
     def non_nested_grid_search(self,
                                param_grid: Dict[str, List],
                                cv: int = 5,
+                               internal_val_split_ratio: Optional[float] = None,
                                n_iter: Optional[int] = None,  # For RandomizedSearch
                                method: str = 'grid',  # 'grid' or 'random'
                                scoring: str = 'accuracy',  # Sklearn scorer string or callable
@@ -1211,14 +1212,20 @@ class ClassificationPipeline:
         if not X_trainval: raise RuntimeError("Train+validation data is empty.")
         logger.info(f"Using {len(X_trainval)} samples for Train+Validation in GridSearchCV.")
 
+        # --- Determine & Validate Internal Validation Split ---
+        default_internal_val_fallback = 0.15
+        val_frac_to_use = internal_val_split_ratio if internal_val_split_ratio is not None else self.dataset_handler.val_split_ratio
+        if not 0.0 < val_frac_to_use < 1.0:
+             logger.warning(f"Provided internal validation split ratio ({val_frac_to_use:.3f}) is invalid. Using default fallback: {default_internal_val_fallback:.3f}")
+             val_frac_to_use = default_internal_val_fallback
+        logger.info(f"Skorch internal validation split configured: {val_frac_to_use * 100:.1f}% of each CV fold's training data.")
+        train_split_config = ValidSplit(cv=val_frac_to_use, stratified=True, random_state=RANDOM_SEED)
+        # --- End Determine & Validate ---
+
         # --- Setup Skorch Estimator for Search ---
         adapter_config = self.model_adapter_config.copy()
-        internal_val_fraction = 0.15  # Define fraction
-        adapter_config['train_split'] = ValidSplit(cv=internal_val_fraction, stratified=True,
-                                                   random_state=RANDOM_SEED)  # Use internal validation split
-        logger.info(
-            f"Skorch internal validation split configured: {internal_val_fraction * 100:.1f}% of each CV fold's training data.")
-        adapter_config['verbose'] = 3  # Less verbose fits during search
+        adapter_config['train_split'] = train_split_config # Always set a valid split
+        adapter_config['verbose'] = 3 # Show epoch table
 
         # Remove config keys not needed by SkorchModelAdapter init
         adapter_config.pop('patience_cfg', None)
@@ -1295,6 +1302,7 @@ class ClassificationPipeline:
                            param_grid: Dict[str, List],
                            outer_cv: int = 5,
                            inner_cv: int = 3,
+                           internal_val_split_ratio: Optional[float] = None,
                            n_iter: Optional[int] = None, # For RandomizedSearch
                            method: str = 'grid', # 'grid' or 'random'
                            scoring: str = 'accuracy', # Sklearn scorer string or callable
@@ -1328,14 +1336,22 @@ class ClassificationPipeline:
             logger.error(f"Failed to get full dataset paths/labels for nested CV: {e}", exc_info=True)
             raise
 
+        # --- Determine & Validate Internal Validation Split ---
+        default_internal_val_fallback = 0.15
+        val_frac_to_use = internal_val_split_ratio if internal_val_split_ratio is not None else self.dataset_handler.val_split_ratio
+        if not 0.0 < val_frac_to_use < 1.0:
+             logger.warning(f"Provided internal validation split ratio ({val_frac_to_use:.3f}) is invalid. "
+                            f"Using default fallback: {default_internal_val_fallback:.3f} for inner loop fits.")
+             val_frac_to_use = default_internal_val_fallback
+        # --- End Determine & Validate ---
+
+        logger.info(f"Inner loop Skorch validation split configured: {val_frac_to_use * 100:.1f}% of inner CV fold's training data.")
+        train_split_config = ValidSplit(cv=val_frac_to_use, stratified=True, random_state=RANDOM_SEED)
+
         # --- Setup Inner Search Object ---
         adapter_config = self.model_adapter_config.copy()
-        # Use ValidSplit for internal validation during each inner GridSearch fit
-        internal_val_fraction = 0.15  # Define fraction
-        adapter_config['train_split'] = ValidSplit(cv=internal_val_fraction, stratified=True, random_state=RANDOM_SEED)
-        logger.info(
-            f"Inner loop Skorch validation split configured: {internal_val_fraction * 100:.1f}% of inner CV fold's training data.")
-        adapter_config['verbose'] = 3 # More verbose inner loops
+        adapter_config['train_split'] = train_split_config # Always set a valid split
+        adapter_config['verbose'] = 3
 
         # Remove config keys not needed by SkorchModelAdapter init
         adapter_config.pop('patience_cfg', None)
@@ -1411,7 +1427,10 @@ class ClassificationPipeline:
                 'error': str(e)
              }
 
-    def cv_model_evaluation(self, cv: int = 5, params: Optional[Dict] = None, save_results: bool = True) -> Dict[str, Any]:
+    def cv_model_evaluation(self, cv: int = 5,
+                            internal_val_split_ratio: Optional[float] = None,
+                            params: Optional[Dict] = None,
+                            save_results: bool = True) -> Dict[str, Any]:
         """
         Performs K-Fold CV for evaluation using fixed hyperparameters.
         Uses full dataset (respecting force_flat_for_fixed_cv). Skorch adapter's
@@ -1447,6 +1466,18 @@ class ClassificationPipeline:
         eval_params.setdefault('module__num_classes', self.dataset_handler.num_classes)
         if module_dropout_rate is not None: eval_params['module__dropout_rate'] = module_dropout_rate
 
+        # --- Determine & Validate Internal Validation Split ---
+        default_internal_val_fallback = 0.15
+        val_frac_to_use = internal_val_split_ratio if internal_val_split_ratio is not None else self.dataset_handler.val_split_ratio
+        if not 0.0 < val_frac_to_use < 1.0:
+             logger.warning(f"Provided internal validation split ratio ({val_frac_to_use:.3f}) is invalid. "
+                            f"Using default fallback: {default_internal_val_fallback:.3f} for fold fits.")
+             val_frac_to_use = default_internal_val_fallback
+        # --- End Determine & Validate ---
+
+        logger.info(f"Skorch internal validation split configured: {val_frac_to_use * 100:.1f}% of each CV fold's training data.")
+        # Note: We create the actual ValidSplit inside the loop with fold-specific seed
+
 
         # --- Setup CV Strategy ---
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
@@ -1472,12 +1503,11 @@ class ClassificationPipeline:
             # --- Setup Estimator for this Fold ---
             fold_adapter_config = eval_params.copy()
             # Enable internal validation split for monitoring (e.g., EarlyStopping)
-            internal_val_fraction = 0.15  # Define the fraction used
-            fold_adapter_config['train_split'] = ValidSplit(cv=internal_val_fraction, stratified=True, random_state=RANDOM_SEED)
+            fold_adapter_config['train_split'] = ValidSplit(cv=val_frac_to_use, stratified=True, random_state=RANDOM_SEED + fold_idx) # Fold specific seed
             fold_adapter_config['verbose'] = 3 # Show progress per fold
 
             n_outer_train = len(X_outer_train)
-            n_inner_val = int(n_outer_train * internal_val_fraction)
+            n_inner_val = int(n_outer_train * val_frac_to_use) # Use the validated fraction
             n_inner_train = n_outer_train - n_inner_val
             logger.debug(
                 f"Fold {fold_idx + 1}: Internal split for monitoring: ~{n_inner_train} train / ~{n_inner_val} valid.")
@@ -1985,12 +2015,62 @@ if __name__ == "__main__":
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
     force_flat = False
 
-    # --- Define Hyperparameter Grid / Fixed Params ---
-    param_grid_search = {
-        'lr': [0.001],
-        'optimizer__weight_decay': [0.01, 0.005],
-        # 'module__dropout_rate': [0.3, 0.5] # Example if model has dropout_rate
+    param_grid_cnn = {
+        # Skorch parameters
+        'lr': [0.005, 0.001, 0.0005],
+        'batch_size': [16, 32],  # Note: Changing batch size can affect memory and convergence
+
+        # Optimizer (AdamW) parameters
+        'optimizer__weight_decay': [0.01, 0.001, 0.0001],
+        # 'optimizer__betas': [(0.9, 0.999), (0.85, 0.99)], # Less common to tune
+
+        # Module (SimpleCNN) parameters
+        'module__dropout_rate': [0.3, 0.4, 0.5, 0.6],  # Tune dropout in the classifier head
+
+        # Maybe max_epochs if not using EarlyStopping effectively? Usually fixed or high w/ early stopping.
+        # 'max_epochs': [15, 25],
     }
+
+    param_grid_vit = {
+        # Skorch parameters (especially LR for fine-tuning)
+        'lr': [0.001, 0.0005, 0.0001, 0.00005],  # Often lower LRs for fine-tuning
+        'batch_size': [16, 32],  # Memory constraints often tighter with ViT
+
+        # Optimizer (AdamW) parameters
+        'optimizer__weight_decay': [0.01, 0.001, 0.0],  # Weight decay is important
+
+        # Module (SimpleViT) parameters
+        # Since we only replaced the head and froze most layers, there are fewer
+        # *direct* module hyperparameters to tune via __init__.
+        # If you added dropout to the new head, you could tune 'module__dropout_rate'.
+        # You *could* potentially tune which layers are frozen, but that's complex via grid search.
+
+        # Training duration / EarlyStopping focus
+        # 'max_epochs': [5, 10, 15], # If fine-tuning quickly
+    }
+
+    param_grid_diffusion = {
+        # Skorch parameters
+        'lr': [0.001, 0.0005, 0.0001],  # Fine-tuning learning rate
+        'batch_size': [16, 32, 64],  # ResNet might be less memory-intensive than ViT
+
+        # Optimizer (AdamW) parameters
+        'optimizer__weight_decay': [0.01, 0.001, 0.0001],
+
+        # Module (DiffusionClassifier) parameters
+        'module__dropout_rate': [0.3, 0.4, 0.5, 0.6],  # Tune dropout in the custom head
+
+        # Training duration
+        # 'max_epochs': [10, 20, 30],
+    }
+
+    # --- Define Hyperparameter Grid / Fixed Params ---
+    if model_type == 'cnn':
+        chosen_param_grid = param_grid_cnn
+    elif model_type == 'vit':
+        chosen_param_grid = param_grid_vit
+    elif model_type == 'diffusion':
+        chosen_param_grid = param_grid_diffusion
 
     fixed_params_for_eval = {
         'lr': 0.001,
@@ -2008,7 +2088,7 @@ if __name__ == "__main__":
     # Example 2: Non-Nested Grid Search + Eval best model
     methods_seq_2 = [
         ('non_nested_grid_search', {
-            'param_grid': param_grid_search, 'cv': 3, 'method': 'grid',
+            'param_grid': chosen_param_grid, 'cv': 3, 'method': 'grid',
             'scoring': 'accuracy', 'save_results': True
         }),
         # The best model is refit and stored in pipeline.model_adapter after search
@@ -2017,7 +2097,7 @@ if __name__ == "__main__":
     # Example 3: Nested Grid Search (Requires FLAT or FIXED with force_flat=True)
     methods_seq_3 = [
          ('nested_grid_search', {
-             'param_grid': param_grid_search, 'outer_cv': 3, 'inner_cv': 2,
+             'param_grid': chosen_param_grid, 'outer_cv': 3, 'inner_cv': 2,
              'method': 'grid', 'scoring': 'accuracy', 'save_results': True
          })
     ]
@@ -2033,7 +2113,7 @@ if __name__ == "__main__":
     # Example 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     methods_seq_5 = [
         ('non_nested_grid_search', {
-            'param_grid': param_grid_search,
+            'param_grid': chosen_param_grid,
             'cv': 3,
             'method': 'grid',
             'scoring': 'accuracy',
