@@ -693,7 +693,7 @@
 #                  val_split: float = 0.2,
 #                  data_augmentation: bool = True):
 #         """
-#         Initialize the pipeline.
+#         Initialize the pipeline_v1.
 #
 #         Args:
 #             dataset_path: Path to the dataset
@@ -1390,10 +1390,10 @@
 #
 # class PipelineExecutor:
 #     """
-#     Executor for running multiple pipeline methods in sequence.
+#     Executor for running multiple pipeline_v1 methods in sequence.
 #
 #     Attributes:
-#         pipeline (ClassificationPipeline): Classification pipeline
+#         pipeline_v1 (ClassificationPipeline): Classification pipeline_v1
 #         methods (List[str]): List of methods to run
 #         params (Dict[str, Dict]): Parameters for each method
 #     """
@@ -1406,7 +1406,7 @@
 #                  methods: List[str] = None,
 #                  params: Dict[str, Dict] = None):
 #         """
-#         Initialize the pipeline executor.
+#         Initialize the pipeline_v1 executor.
 #
 #         Args:
 #             dataset_path: Path to the dataset
@@ -1416,8 +1416,8 @@
 #             methods: List of methods to run
 #             params: Parameters for each method
 #         """
-#         # Initialize pipeline
-#         self.pipeline = ClassificationPipeline(
+#         # Initialize pipeline_v1
+#         self.pipeline_v1 = ClassificationPipeline(
 #             dataset_path=dataset_path,
 #             model_type=model_type,
 #             model_kwargs=model_kwargs,
@@ -1454,7 +1454,7 @@
 #                 raise ValueError(f"Invalid method: {method}")
 #
 #         # Check compatibility with dataset structure
-#         if self.pipeline.dataset_handler.structure == DatasetStructure.FIXED:
+#         if self.pipeline_v1.dataset_handler.structure == DatasetStructure.FIXED:
 #             if 'cv_model_evaluation' in self.methods:
 #                 raise ValueError("CV model evaluation is not compatible with FIXED dataset structure")
 #
@@ -1476,15 +1476,15 @@
 #
 #             # Run method
 #             if method == 'non_nested_grid_search':
-#                 results[method] = self.pipeline.non_nested_grid_search(**params)
+#                 results[method] = self.pipeline_v1.non_nested_grid_search(**params)
 #             elif method == 'nested_grid_search':
-#                 results[method] = self.pipeline.nested_grid_search(**params)
+#                 results[method] = self.pipeline_v1.nested_grid_search(**params)
 #             elif method == 'cv_model_evaluation':
-#                 results[method] = self.pipeline.cv_model_evaluation(**params)
+#                 results[method] = self.pipeline_v1.cv_model_evaluation(**params)
 #             elif method == 'single_train':
-#                 results[method] = self.pipeline.single_train(**params)
+#                 results[method] = self.pipeline_v1.single_train(**params)
 #             elif method == 'single_eval':
-#                 results[method] = self.pipeline.single_eval(**params)
+#                 results[method] = self.pipeline_v1.single_eval(**params)
 #
 #         return results
 #
@@ -1561,5 +1561,5 @@
 #         }
 #     )
 #
-#     # Run the pipeline
+#     # Run the pipeline_v1
 #     results = executor.run()

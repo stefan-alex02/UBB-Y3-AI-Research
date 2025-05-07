@@ -1439,7 +1439,7 @@ class ClassificationPipeline:
         """
         Performs non-nested hyperparameter search (Grid/RandomizedSearchCV)
         using the train+validation data. Refits the best model on the train+val
-        data and updates the pipeline's main adapter. Does NOT evaluate on the
+        data and updates the pipeline_v1's main adapter. Does NOT evaluate on the
         test set itself. Works by passing paths directly.
         """
         method_lower = method.lower()
@@ -1560,11 +1560,11 @@ class ClassificationPipeline:
              results['full_params_used'] = {}
 
 
-        # --- Update the pipeline's main adapter ---
+        # --- Update the pipeline_v1's main adapter ---
         best_estimator_refit = None # Initialize
         if hasattr(search, 'best_estimator_'):
             best_estimator_refit = search.best_estimator_
-            logger.info("Updating main pipeline adapter with the best model found and refit by GridSearchCV.")
+            logger.info("Updating main pipeline_v1 adapter with the best model found and refit by GridSearchCV.")
             self.model_adapter = best_estimator_refit
             if not self.model_adapter.initialized_:
                  logger.warning("Refit best estimator seems not initialized, attempting initialize.")
@@ -1798,7 +1798,7 @@ class ClassificationPipeline:
             internal_val_split_ratio: Fraction for internal validation split during fold training.
                                       Defaults to handler's val_split_ratio or 0.15 fallback.
             params: Dictionary of fixed hyperparameters to use for training each fold.
-                    If None, uses defaults from pipeline config. Can be merged with
+                    If None, uses defaults from pipeline_v1 config. Can be merged with
                     best_params from a previous step using executor logic.
             confidence_level: Confidence level for calculating CI (e.g., 0.95 for 95%).
             save_results: Whether to save JSON results and update summary CSV.
@@ -1849,7 +1849,7 @@ class ClassificationPipeline:
             logger.info(f"Using provided parameters for CV evaluation: {params}")
             eval_params.update(params)
         else:
-            logger.info(f"Using pipeline default parameters for CV evaluation.")
+            logger.info(f"Using pipeline_v1 default parameters for CV evaluation.")
         module_dropout_rate = eval_params.pop('module__dropout_rate', None)
         eval_params.setdefault('module', self._get_model_class(self.model_type))
         eval_params.setdefault('module__num_classes', self.dataset_handler.num_classes)
@@ -2264,7 +2264,7 @@ class ClassificationPipeline:
 
         # --- Update main adapter and save results ---
         self.model_adapter = adapter_for_train  # Keep the trained adapter
-        logger.info("Main pipeline model adapter updated with the model from single_train.")
+        logger.info("Main pipeline_v1 model adapter updated with the model from single_train.")
 
         # Add summary metrics for saving logic
         results['accuracy'] = results.get('valid_acc_at_best', np.nan)  # Use valid acc if available for summary
@@ -2321,7 +2321,7 @@ class ClassificationPipeline:
 
 
     def load_model(self, model_path: Union[str, Path]) -> None:
-        """ Loads a state_dict into the pipeline's model adapter. """
+        """ Loads a state_dict into the pipeline_v1's model adapter. """
         # (Keep logic from code_v6, it should work with the initialized adapter)
         model_path = Path(model_path)
         logger.info(f"Loading model state_dict from: {model_path}")
@@ -2353,7 +2353,7 @@ class ClassificationPipeline:
 
 class PipelineExecutor:
     """
-    Executes a sequence of classification pipeline methods.
+    Executes a sequence of classification pipeline_v1 methods.
     Handles parameter passing and compatibility checks.
     """
     def __init__(self,
@@ -2391,9 +2391,9 @@ class PipelineExecutor:
         )
         # --- End Pipeline Init ---
 
-        # --- Configure Logger AFTER pipeline init ---
+        # --- Configure Logger AFTER pipeline_v1 init ---
         logger_name = 'ImgClassPipe'
-        experiment_log_dir = self.pipeline.experiment_dir # Get dir from pipeline
+        experiment_log_dir = self.pipeline.experiment_dir # Get dir from pipeline_v1
         logger = setup_logger(
              name=logger_name_global, # Use the globally defined name
              log_dir=experiment_log_dir,
@@ -2445,9 +2445,9 @@ class PipelineExecutor:
         return self.all_results.get(run_id)
 
     def run(self) -> Dict[str, Any]:
-        """ Executes the configured sequence of pipeline methods. """
+        """ Executes the configured sequence of pipeline_v1 methods. """
         self.all_results = {}
-        logger.info("Starting execution of pipeline methods...")
+        logger.info("Starting execution of pipeline_v1 methods...")
         start_time_total = time.time()
 
         for i, (method_name, params) in enumerate(self.methods_to_run):
@@ -2674,7 +2674,7 @@ if __name__ == "__main__":
             'param_grid': chosen_param_grid, 'cv': 3, 'method': 'grid',
             'scoring': 'accuracy', 'save_best_model': True, 'save_results': True
         }),
-        # The best model is refit and stored in pipeline.model_adapter after search
+        # The best model is refit and stored in pipeline_v1.model_adapter after search
         ('single_eval', {'save_results': True}), # Evaluate the refit best model
     ]
     # Example 3: Nested Grid Search (Requires FLAT or FIXED with force_flat=True)
