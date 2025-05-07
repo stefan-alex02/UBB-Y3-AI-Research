@@ -1,22 +1,26 @@
 # --- START OF FILE code_v7.py ---
-import hashlib
+import io  # For capturing print output to a string
 import json
+import logging
+import random
 import re
+import sys  # To temporarily redirect stdout if needed for PrintLog
 # import matplotlib.pyplot as plt # Keep for potential future use
 import time
-import random
 from datetime import datetime
 from enum import Enum
+from numbers import Number
+from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Any, Type, Optional, Union
 
+import tabulate # Generate table with tabulate
 import numpy as np
 import pandas as pd
-import skorch
+import scipy.stats as stats
 import torch
 import torch.nn as nn
-import torch.optim as optim
+from PIL import Image  # Needed for PathImageDataset
 # from sklearn.preprocessing import label_binarize # Not needed
-from sklearn.base import clone
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     roc_auc_score, precision_recall_curve, auc, make_scorer,
@@ -28,21 +32,13 @@ from sklearn.model_selection import (
     # cross_val_score, cross_val_predict # Not used
 )
 from skorch import NeuralNetClassifier
-from skorch.callbacks import EarlyStopping, LRScheduler, Checkpoint, Callback, EpochScoring
-from skorch.dataset import Dataset as SkorchDataset, ValidSplit
-from skorch.helper import SliceDataset # Keep? Maybe not needed if always using PathImageDataset
+from skorch.callbacks import Callback, PrintLog  # Import PrintLog
+from skorch.callbacks import EarlyStopping, LRScheduler, EpochScoring
+from skorch.dataset import ValidSplit
 from skorch.utils import to_numpy
 # import torch.nn.functional as F # Not used
-from torch.utils.data import Dataset, DataLoader, Subset # Subset might still be useful conceptually, PathImageDataset is key
-from torchvision import transforms, datasets, models
-import scipy.stats as stats
-from PIL import Image # Needed for PathImageDataset
-
-import logging
-import emoji
-import sys
-from pathlib import Path
-from unittest.mock import MagicMock # For default patience value
+from torch.utils.data import Dataset, DataLoader  # Subset might still be useful conceptually, PathImageDataset is key
+from torchvision import transforms, models
 
 # --- Global Configurations ---
 RANDOM_SEED = 42
@@ -212,6 +208,7 @@ def setup_logger(name: str,
             file_handler.setFormatter(file_formatter)
             logger.addHandler(file_handler)
             # Log initialization message only if it's a new file or handlers were just added
+            print(get_log_header(use_colors=True)) # Print header after setup
             if is_new_file or not logger.handlers: # Simple check if handlers were just added
                  logger.info(f"Logger '{name}' initialized. Log file: {log_path}")
 
@@ -225,7 +222,155 @@ def setup_logger(name: str,
 
 # --- Setup Logger Instance ---
 # This logger will be configured by PipelineExecutor
-logger: logging.Logger = logging.getLogger('ImgClassPipe_Default')
+logger_name_global = 'ImgClassPipe' # Define the name once
+logger: logging.Logger = logging.getLogger(logger_name_global) # Get it by the final name
+
+# --- Add this new callback class ---
+# Ensure tabulate is imported
+try:
+    import tabulate
+except ImportError:
+    tabulate = None # Handled in initialize
+
+from numbers import Number
+from skorch.callbacks import Callback # Ensure Callback is imported
+
+class FileLogTable(Callback):
+    # Class attributes for configuration
+    _COLUMNS = ['epoch', 'train_acc', 'train_loss', 'valid_acc', 'valid_loss', 'cp', 'lr', 'dur']
+    _COLUMN_FORMATS = {
+        'epoch': '{}', 'train_acc': '{:.4f}', 'train_loss': '{:.4f}',
+        'valid_acc': '{:.4f}', 'valid_loss': '{:.4f}',
+        'cp': '{}', 'lr': '{:.4e}', 'dur': '{:.4f}',
+    }
+    _COLALIGN = ("right", "right", "right", "right", "right", "center", "right", "right")
+    _tabulate_warning_shown = False # Class attribute for one-time warning
+
+    # Emojis for improvements
+    # ASCII indicators for improvements
+    _IMPROVEMENT_LOSS_BETTER = '▼ ' # Loss went down
+    _IMPROVEMENT_ACC_BETTER = '▲ '  # Accuracy went up
+    _NO_IMPROVEMENT_SYMBOL = '  ' # Space if no improvement or not best
+
+    def __init__(self, logger_instance=None):
+        self.logger_instance = logger_instance or logger
+        # DO NOT initialize instance state like _headers_printed_this_fit here.
+        # It will be handled by initialize() or on_train_begin().
+
+    def initialize(self): # Called by Skorch for each instance before a fit
+        super().initialize()
+        # Initialize/reset instance-specific state FOR THIS FIT
+        self._headers_printed_this_fit: bool = False
+        self._current_fit_epoch_count: int = 0
+        self._best_train_loss: float = float('inf')
+        self._best_train_acc: float = float('-inf')
+        self._best_valid_loss: float = float('inf')
+        self._best_valid_acc: float = float('-inf')
+
+        # self.logger_instance.debug(f"FileLogTable Initialized/Reset for fit: {hex(id(self))}")
+
+        if tabulate is None and not FileLogTable._tabulate_warning_shown:
+             # Use the global logger for this warning
+             logging.getLogger(logger_name_global).warning(
+                 "Package 'tabulate' is not installed. FileLogTable will not print epoch summaries."
+             )
+             FileLogTable._tabulate_warning_shown = True
+        return self
+
+    # on_train_begin is also a good place for state reset per fit,
+    # initialize() is called when the net is initialized, on_train_begin when fit starts.
+    # For cloned callbacks in GridSearchCV, initialize() should be called for each clone.
+    # Let's rely on initialize() for resetting these per-fit states.
+
+    def on_epoch_end(self, net, **kwargs):
+        # self.logger_instance.debug(f"FileLogTable on_epoch_end: inst={hex(id(self))}, header_printed={getattr(self, '_headers_printed_this_fit', 'NotSet')}, epoch_count={getattr(self, '_current_fit_epoch_count', 'NotSet')}")
+        history = net.history
+        if not history or tabulate is None: return
+        last_epoch_data = history[-1]
+        if not last_epoch_data: return
+
+        # Ensure state attributes are initialized if initialize somehow wasn't called (defensive)
+        if not hasattr(self, '_current_fit_epoch_count'): self.initialize()
+
+        self._current_fit_epoch_count += 1
+
+        # --- Update bests for emoji logic ---
+        current_epoch_is_best = {}
+        current_train_loss = last_epoch_data.get('train_loss', float('inf'))
+        if current_train_loss < self._best_train_loss:
+            self._best_train_loss = current_train_loss; current_epoch_is_best['train_loss'] = True
+        else: current_epoch_is_best['train_loss'] = (current_train_loss == self._best_train_loss and current_train_loss != float('inf'))
+
+        current_train_acc = last_epoch_data.get('train_acc', float('-inf'))
+        if current_train_acc > self._best_train_acc:
+            self._best_train_acc = current_train_acc; current_epoch_is_best['train_acc'] = True
+        else: current_epoch_is_best['train_acc'] = (current_train_acc == self._best_train_acc and current_train_acc != float('-inf'))
+
+        current_valid_loss = last_epoch_data.get('valid_loss', float('inf'))
+        if current_valid_loss < self._best_valid_loss:
+            self._best_valid_loss = current_valid_loss; current_epoch_is_best['valid_loss'] = True
+        else: current_epoch_is_best['valid_loss'] = (current_valid_loss == self._best_valid_loss and current_valid_loss != float('inf'))
+
+        current_valid_acc = last_epoch_data.get('valid_acc', float('-inf'))
+        if current_valid_acc > self._best_valid_acc:
+            self._best_valid_acc = current_valid_acc; current_epoch_is_best['valid_acc'] = True
+        else: current_epoch_is_best['valid_acc'] = (current_valid_acc == self._best_valid_acc and current_valid_acc != float('-inf'))
+        # --- End update bests ---
+
+        row_values = []
+        for key in FileLogTable._COLUMNS: # Use class attribute
+            val_str = ""
+            value = last_epoch_data.get(key)
+            emoji_prefix = FileLogTable._NO_IMPROVEMENT_SYMBOL
+
+            if key == 'cp':
+                val_str = '+' if last_epoch_data.get('event_cp') is True else ('✓' if isinstance(last_epoch_data.get('event_cp'), str) else '')
+            elif key == 'lr':
+                lr_val = value
+                if lr_val is None and hasattr(net, 'optimizer_') and net.optimizer_ and net.optimizer_.param_groups:
+                    try: lr_val = net.optimizer_.param_groups[0]['lr']
+                    except: lr_val = float('nan')
+                val_str = FileLogTable._COLUMN_FORMATS['lr'].format(lr_val) if isinstance(lr_val, Number) else "N/A"
+            elif value is not None and isinstance(value, Number):
+                fmt = FileLogTable._COLUMN_FORMATS.get(key, '{}')
+                try:
+                    val_str = fmt.format(value)
+                except:
+                    val_str = str(value)
+
+                indicator = FileLogTable._NO_IMPROVEMENT_SYMBOL  # Default to space
+                if key == 'train_loss' and current_epoch_is_best.get('train_loss'):
+                    indicator = FileLogTable._IMPROVEMENT_LOSS_BETTER
+                elif key == 'train_acc' and current_epoch_is_best.get('train_acc'):
+                    indicator = FileLogTable._IMPROVEMENT_ACC_BETTER
+                elif key == 'valid_loss' and current_epoch_is_best.get('valid_loss'):
+                    indicator = FileLogTable._IMPROVEMENT_LOSS_BETTER
+                elif key == 'valid_acc' and current_epoch_is_best.get('valid_acc'):
+                    indicator = FileLogTable._IMPROVEMENT_ACC_BETTER
+
+                val_str = f"{indicator}{val_str}"
+            elif value is not None: val_str = str(value)
+            else: val_str = ""
+            row_values.append(val_str)
+
+        if not row_values: return
+
+        table_data = [row_values]
+        try:
+            if not self._headers_printed_this_fit:
+                table_str = tabulate.tabulate(table_data, headers=FileLogTable._COLUMNS, tablefmt="simple", colalign=FileLogTable._COLALIGN)
+                self._headers_printed_this_fit = True
+            else:
+                full_row_table_str = tabulate.tabulate(table_data, headers=FileLogTable._COLUMNS, tablefmt="simple", colalign=FileLogTable._COLALIGN)
+                table_str = full_row_table_str.splitlines()[-1]
+
+            for line in table_str.splitlines():
+                self.logger_instance.info(line)
+
+        except Exception as e:
+            self.logger_instance.error(f"FileLogTable: Error generating table for epoch {last_epoch_data.get('epoch', '?')}: {e}", exc_info=True)
+            raw_log = f"Epoch {last_epoch_data.get('epoch', '?')} Data (tabulate failed): " + ", ".join(f"{h}={v}" for h,v in zip(FileLogTable._COLUMNS, row_values))
+            self.logger_instance.info(raw_log)
 
 # --- Dataset Handling ---
 
@@ -676,15 +821,17 @@ def _get_default_callbacks(patience: int = 10,
                            lr_patience: int = 5) -> List[Tuple[str, Callback]]:
     """Generates the default list of skorch callbacks."""
     is_loss = monitor.endswith('_loss')
-    # Use unique names to avoid potential conflicts if user provides callbacks with same default names
-    return [
+    callbacks_list = [
         ('default_early_stopping', EarlyStopping(
             monitor=monitor, patience=patience, load_best=True, lower_is_better=is_loss)),
         ('default_lr_scheduler', LRScheduler(
             policy=lr_policy, monitor=monitor, mode='min' if is_loss else 'max', patience=lr_patience, factor=0.1)),
-        ('default_train_acc', EpochScoring(
-            'accuracy', lower_is_better=False, on_train=True, name='train_acc'))
+        ('default_train_acc_scorer', EpochScoring( # Renamed to avoid conflict
+            scoring='accuracy', lower_is_better=False, on_train=True, name='train_acc')),
+        ('file_log_table_cb', FileLogTable()) # <<< ENSURE THIS IS PRESENT
     ]
+    logger.debug(f"_get_default_callbacks generated: {[name for name, _ in callbacks_list]}")
+    return callbacks_list
 
 # --- Skorch Model Adapter (Final Version) ---
 
@@ -884,6 +1031,62 @@ class SkorchModelAdapter(NeuralNetClassifier):
         # Return y_pred so skorch can calculate valid_acc etc.
         return {'loss': loss, 'y_pred': y_pred}
 
+import sys
+import logging
+
+class LoggerTee:
+    def __init__(self, original_stream,
+                 logger_instance: logging.Logger,
+                 log_level: int = logging.INFO,
+                 prefix: str = "",
+                 write_to_original: bool = True): # <<< ADDED FLAG
+        self.original_stream = original_stream
+        self.logger = logger_instance
+        self.log_level = log_level
+        self.prefix = prefix
+        self.line_buffer = ""
+        self.write_to_original = write_to_original # <<< STORE FLAG
+
+    def write(self, text: str):
+        if self.write_to_original and self.original_stream: # <<< CHECK FLAG
+            try:
+                self.original_stream.write(text)
+                self.original_stream.flush()
+            except Exception as e:
+                print(f"LoggerTee: Error writing to original stream: {e}", file=sys.__stderr__)
+
+        self.line_buffer += text
+        while '\n' in self.line_buffer:
+            line, self.line_buffer = self.line_buffer.split('\n', 1)
+            if line.strip():
+                self.logger.log(self.log_level, f"{self.prefix}{line.strip()}")
+
+    def flush(self):
+        if self.write_to_original and self.original_stream: # <<< CHECK FLAG
+            try:
+                self.original_stream.flush()
+            except Exception as e:
+                print(f"LoggerTee: Error flushing original stream: {e}", file=sys.__stderr__)
+
+        if self.line_buffer.strip():
+            self.logger.log(self.log_level, f"{self.prefix}{self.line_buffer.strip()}")
+            self.line_buffer = ""
+
+    def isatty(self):
+        if self.original_stream:
+            return hasattr(self.original_stream, 'isatty') and self.original_stream.isatty()
+        return False
+
+    def __enter__(self):
+        self._original_stdout_backup = sys.stdout
+        sys.stdout = self
+        return self
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        self.flush()
+        sys.stdout = self._original_stdout_backup
+        self._original_stdout_backup = None
+
 # --- Classification Pipeline ---
 
 class ClassificationPipeline:
@@ -959,7 +1162,7 @@ class ClassificationPipeline:
             'train_transform': self.dataset_handler.get_train_transform(),
             'valid_transform': self.dataset_handler.get_eval_transform(),
             'classes': np.arange(self.dataset_handler.num_classes),
-            'verbose': 1, # Default verbosity for adapter itself
+            'verbose': 0, # Default verbosity for adapter itself
             'optimizer__weight_decay': optimizer__weight_decay,
             **module_params
         }
@@ -1154,7 +1357,6 @@ class ClassificationPipeline:
 
         # --- Prepare data to save based on detail flag ---
         if not self.save_detailed_results:
-            # ... (logic to create cleaned results_to_save remains the same) ...
             logger.debug(f"Cleaning results for run '{run_id}' (save_detailed_results=False).")
             results_to_save = {}
             for key, value in results_data.items():
@@ -1237,7 +1439,7 @@ class ClassificationPipeline:
             summary_params = {}
             allowed_types = (str, int, float, bool)
             # Extend key CV params to include confidence level
-            key_cv_params = ['cv', 'outer_cv', 'inner_cv', 'n_iter', 'internal_val_split_ratio', 'confidence_level']
+            key_cv_params = ['cv', 'outer_cv', 'inner_cv', 'n_iter', 'internal_val_split_ratio', 'confidence_level', 'evaluated_on']
             if method_params:
                 for k, v in method_params.items():
                     if isinstance(v, allowed_types) or k in key_cv_params:
@@ -1264,7 +1466,7 @@ class ClassificationPipeline:
                 # --- Other summary fields ---
                 'best_cv_score': results_data.get('best_score', np.nan),  # From non-nested grid search
                 'best_epoch': results_data.get('best_epoch', np.nan),  # From single_train
-                **summary_params  # Add filtered/key parameters
+                **summary_params # Add filtered/key parameters including evaluated_on
             }
             summary = {k: (None if isinstance(v, float) and np.isnan(v) else v) for k, v in summary.items()}
 
@@ -1285,6 +1487,7 @@ class ClassificationPipeline:
                                n_iter: Optional[int] = None,  # For RandomizedSearch
                                method: str = 'grid',  # 'grid' or 'random'
                                scoring: str = 'accuracy',  # Sklearn scorer string or callable
+                               save_best_model: bool = True,  # <<< ADDED PARAMETER
                                save_results: bool = True) -> Dict[str, Any]:
         """
         Performs non-nested hyperparameter search (Grid/RandomizedSearchCV)
@@ -1293,6 +1496,8 @@ class ClassificationPipeline:
         test set itself. Works by passing paths directly.
         """
         method_lower = method.lower()
+        # --- Generate unique run_id for this execution ---
+        run_id = f"non_nested_{method_lower}_{datetime.now().strftime('%H%M%S_%f')}"
         search_type = "GridSearchCV" if method_lower == 'grid' else "RandomizedSearchCV"
         logger.info(f"Performing non-nested {search_type} with {cv}-fold CV.")
         logger.info(f"Parameter Grid/Dist: {param_grid}")
@@ -1320,7 +1525,7 @@ class ClassificationPipeline:
         # --- Setup Skorch Estimator for Search ---
         adapter_config = self.model_adapter_config.copy()
         adapter_config['train_split'] = train_split_config # Always set a valid split
-        adapter_config['verbose'] = 3 # Show epoch table
+        adapter_config['verbose'] = 0 # Show epoch table
 
         # Remove config keys not needed by SkorchModelAdapter init
         adapter_config.pop('patience_cfg', None)
@@ -1347,8 +1552,22 @@ class ClassificationPipeline:
         search = SearchClass(**search_kwargs)
 
         # --- Run Search ---
-        logger.info(f"Fitting {SearchClass.__name__} on train+validation data...")
-        search.fit(X_trainval, y=np.array(y_trainval))  # Fit on trainval only
+        logger.info(f"Fitting {SearchClass.__name__} on train+validation data (search verbose={search.verbose})...")
+
+        if search.verbose > 0:
+            logger_tee = LoggerTee(sys.stdout, logger, log_level=logging.INFO,
+                                   prefix="[SKL_CV] ",
+                                   write_to_original=False)  # <<< SET TO FALSE
+            with logger_tee:
+                try:
+                    search.fit(X_trainval, y=np.array(y_trainval))
+                except Exception as e:
+                    logger.error(f"Error during {SearchClass.__name__}.fit: {e}", exc_info=True)
+                    # LoggerTee's __exit__ will still flush and restore stdout
+                    raise
+        else:
+            search.fit(X_trainval, y=np.array(y_trainval))
+
         logger.info(f"Search completed.")
 
         # --- Collect Results (Search Results Only) ---
@@ -1365,31 +1584,71 @@ class ClassificationPipeline:
             'macro_avg': {}  # Indicate no test metrics from this step
         }
 
-        # --- Update the pipeline's main adapter with the refitted best model ---
+        # --- Store full config used by the winning estimator ---
         if hasattr(search, 'best_estimator_'):
+             # Store best_params found by the search itself as the primary config
+             results['full_params_used'] = search.best_params_.copy()
+             # Augment with fixed params from original config that were not tuned
+             for k,v in self.model_adapter_config.items():
+                  # Add fixed params if they are not part of the tuned HPs and not complex objects
+                  if not k.startswith(('optimizer__', 'module__', 'lr', 'batch_size', 'callbacks', 'train_transform', 'valid_transform')) and \
+                     k not in results['full_params_used'] and isinstance(v, (str, int, float, bool, type(None))):
+                        results['full_params_used'][k] = v
+        else:
+             results['full_params_used'] = {}
+
+
+        # --- Update the pipeline's main adapter ---
+        best_estimator_refit = None # Initialize
+        if hasattr(search, 'best_estimator_'):
+            best_estimator_refit = search.best_estimator_
             logger.info("Updating main pipeline adapter with the best model found and refit by GridSearchCV.")
-            self.model_adapter = search.best_estimator_
+            self.model_adapter = best_estimator_refit
             if not self.model_adapter.initialized_:
-                logger.warning("Refit best estimator seems not initialized, attempting initialize.")
-                try:
-                    self.model_adapter.initialize()
-                except Exception as init_err:
-                    logger.error(f"Failed to initialize refit estimator: {init_err}", exc_info=True)
+                 logger.warning("Refit best estimator seems not initialized, attempting initialize.")
+                 try: self.model_adapter.initialize()
+                 except Exception as init_err: logger.error(f"Failed to initialize refit estimator: {init_err}", exc_info=True)
         else:
             logger.warning("GridSearchCV did not produce a 'best_estimator_'. Pipeline adapter not updated.")
 
-        # --- Save Results (Search results + Best Params) ---
+        # --- Save Model (if requested and available) ---
+        model_path_str = None
+        if save_best_model and best_estimator_refit is not None:
+            try:
+                # Results for this method run will be in experiment_dir / run_id /
+                method_run_dir = self.experiment_dir / run_id
+                method_run_dir.mkdir(parents=True, exist_ok=True)
+
+                # Construct filename using best score or params
+                score_str = f"cv_score{results.get('best_score', 0.0):.4f}".replace('.', 'p')
+                params_str_simple = "_".join([f"{k.split('__')[-1]}={v}" for k, v in sorted(results.get('best_params', {}).items())])
+                params_str_simple = re.sub(r'[<>:"/\\|?*]', '_', params_str_simple)[:50] # Sanitize and shorten
+
+                model_filename = f"{self.model_type}_best_{params_str_simple}_{score_str}.pt"
+                model_path = method_run_dir / model_filename
+
+                torch.save(best_estimator_refit.module_.state_dict(), model_path)
+                model_path_str = str(model_path)
+                logger.info(f"Best refit model state_dict saved to: {model_path_str}")
+                results['saved_model_path'] = model_path_str
+            except Exception as e:
+                 logger.error(f"Failed to save best refit model: {e}", exc_info=True)
+                 results['saved_model_path'] = None
+        elif save_best_model: # save_best_model is True but no estimator
+             logger.warning("save_best_model=True but no best estimator was found/refit.")
+             results['saved_model_path'] = None
+        # --- End Save Model ---
+
+        # --- Save Results ---
         if save_results:
-             # Prepare params for saving (include best params found)
-             save_params = results['params'].copy()
-             save_params.update({f"best_{k}": v for k, v in results.get('best_params', {}).items()})
-             # Pass only simple params relevant to the *search itself* for filename/summary
-             filename_params = {k: v for k, v in save_params.items() if k in ['cv', 'n_iter', 'method', 'scoring']}
-             run_id_for_save = f"{method_lower}_{datetime.now().strftime('%H%M%S')}" # Generate ID
-             # --- FIX: Use method_params= ---
+             # Prepare params for saving summary row
+             summary_params = results['params'].copy()
+             # Add best params found to summary params
+             summary_params.update({f"best_{k}": v for k, v in results.get('best_params', {}).items() if isinstance(v, (str, int, float, bool))})
+             # Pass the run_id generated earlier
              self._save_results(results, f"non_nested_{method_lower}_search",
-                                run_id=run_id_for_save,
-                                method_params=filename_params) # Use correct keyword
+                                run_id=run_id,
+                                method_params=summary_params)
 
         logger.info(f"Non-nested {method_lower} search finished. Best CV score ({scoring}): {search.best_score_:.4f}")
         logger.info(f"Best parameters found: {search.best_params_}")
@@ -1487,41 +1746,59 @@ class ClassificationPipeline:
         # --- Run Nested CV using cross_validate ---
         logger.info(f"Running standard nested CV using cross_validate...")
         try:
-             cv_results = cross_validate(
-                 inner_search, X_full, y_full_np, cv=outer_cv_splitter, scoring=scoring_dict,
-                 return_estimator=False, # Don't return estimators by default (memory)
-                 n_jobs=1, verbose=3, error_score='raise'
-             )
-             logger.info("Nested cross-validation finished.")
+            # --- Use LoggerTee to capture stdout from the inner GridSearchCV ---
+            if inner_search.verbose > 0:
+                logger_tee = LoggerTee(sys.stdout, logger, log_level=logging.INFO,
+                                       prefix="[NESTED_INNER_CV] ",
+                                       write_to_original=False)
+                with logger_tee:
+                    try:
+                        cv_results = cross_validate(
+                            inner_search, X_full, y_full_np, cv=outer_cv_splitter, scoring=scoring_dict,
+                            return_estimator=False,
+                            n_jobs=1,  # If n_jobs > 1, joblib handles parallelism and its own verbosity
+                            # verbose for cross_validate itself controls joblib's output level, not inner_search's print statements directly
+                            error_score='raise'
+                        )
+                    except Exception as e:
+                        logger.error(f"Error during cross_validate: {e}", exc_info=True)
+                        raise
+            else:  # If inner_search.verbose is 0, fit normally
+                cv_results = cross_validate(
+                    inner_search, X_full, y_full_np, cv=outer_cv_splitter, scoring=scoring_dict,
+                    return_estimator=False, n_jobs=1, error_score='raise'
+                )
+                # --- End LoggerTee usage ---
+            logger.info("Nested cross-validation finished.")
 
-             # --- Process and Save Results ---
-             results = {
-                 'method': f"nested_{method_lower}_search",
-                 'params': {'outer_cv': outer_cv, 'inner_cv': inner_cv, 'n_iter': n_iter if method_lower=='random' else 'N/A', 'method': method_lower, 'scoring': scoring, 'forced_flat': self.force_flat_for_fixed_cv},
-                 'outer_cv_scores': {k: v.tolist() for k, v in cv_results.items() if k.startswith('test_')},
-                 'mean_test_accuracy': float(np.mean(cv_results['test_accuracy'])),
-                 'std_test_accuracy': float(np.std(cv_results['test_accuracy'])),
-                 'mean_test_f1_macro': float(np.mean(cv_results['test_f1_macro'])),
-                 'std_test_f1_macro': float(np.std(cv_results['test_f1_macro'])),
-                 # 'best_params_per_fold': "Estimators not returned" # Or return them if needed
-             }
-             # For summary file
-             results['accuracy'] = results['mean_test_accuracy']
-             results['macro_avg'] = {'f1': results['mean_test_f1_macro']}
+            # --- Process and Save Results ---
+            results = {
+                'method': f"nested_{method_lower}_search",
+                'params': {'outer_cv': outer_cv, 'inner_cv': inner_cv, 'n_iter': n_iter if method_lower=='random' else 'N/A', 'method': method_lower, 'scoring': scoring, 'forced_flat': self.force_flat_for_fixed_cv},
+                'outer_cv_scores': {k: v.tolist() for k, v in cv_results.items() if k.startswith('test_')},
+                'mean_test_accuracy': float(np.mean(cv_results['test_accuracy'])),
+                'std_test_accuracy': float(np.std(cv_results['test_accuracy'])),
+                'mean_test_f1_macro': float(np.mean(cv_results['test_f1_macro'])),
+                'std_test_f1_macro': float(np.std(cv_results['test_f1_macro'])),
+                # 'best_params_per_fold': "Estimators not returned" # Or return them if needed
+            }
+            # For summary file
+            results['accuracy'] = results['mean_test_accuracy']
+            results['macro_avg'] = {'f1': results['mean_test_f1_macro']}
 
-             if save_results:
-                 # Clean params for saving filename/summary
-                 # Pass the results['params'] which contains outer_cv, inner_cv etc.
-                 run_id_for_save = f"{method_lower}_{datetime.now().strftime('%H%M%S')}"  # Generate ID
-                 # --- FIX: Use method_params= ---
-                 self._save_results(results, f"nested_{method_lower}_search",
+            if save_results:
+                # Clean params for saving filename/summary
+                # Pass the results['params'] which contains outer_cv, inner_cv etc.
+                run_id_for_save = f"{method_lower}_{datetime.now().strftime('%H%M%S')}"  # Generate ID
+                # --- FIX: Use method_params= ---
+                self._save_results(results, f"nested_{method_lower}_search",
                                     run_id=run_id_for_save,
                                     method_params=results['params'])  # Use correct keyword
 
-             logger.info(f"Nested CV Results (avg over {outer_cv} outer folds):")
-             logger.info(f"  Mean Test Accuracy: {results['mean_test_accuracy']:.4f} +/- {results['std_test_accuracy']:.4f}")
-             logger.info(f"  Mean Test Macro F1: {results['mean_test_f1_macro']:.4f} +/- {results['std_test_f1_macro']:.4f}")
-             return results
+            logger.info(f"Nested CV Results (avg over {outer_cv} outer folds):")
+            logger.info(f"  Mean Test Accuracy: {results['mean_test_accuracy']:.4f} +/- {results['std_test_accuracy']:.4f}")
+            logger.info(f"  Mean Test Macro F1: {results['mean_test_f1_macro']:.4f} +/- {results['std_test_f1_macro']:.4f}")
+            return results
 
         except Exception as e:
              logger.error(f"Standard nested CV failed: {e}", exc_info=True)
@@ -1534,33 +1811,67 @@ class ClassificationPipeline:
 
     def cv_model_evaluation(self,
                             cv: int = 5,
+                            evaluate_on: str = 'full',  # 'full' or 'test'
                             internal_val_split_ratio: Optional[float] = None,
                             params: Optional[Dict] = None,
                             confidence_level: float = 0.95,
                             save_results: bool = True) -> Dict[str, Any]:
         """
         Performs K-Fold CV for evaluation using fixed hyperparameters.
-        Uses full dataset (respecting force_flat_for_fixed_cv). Skorch adapter's
-        internal ValidSplit is used for monitoring within each fold's training.
-        Calculates confidence intervals for aggregated metrics.
+        Can evaluate either on the 'full' dataset (trainval or combined)
+        or only on the 'test' set. Uses Skorch adapter's internal
+        ValidSplit for monitoring within each fold's training. Calculates CIs.
+
+        Args:
+            cv: Number of folds for cross-validation.
+            evaluate_on: Which data split to use ('full' or 'test'). Default 'full'.
+            internal_val_split_ratio: Fraction for internal validation split during fold training.
+                                      Defaults to handler's val_split_ratio or 0.15 fallback.
+            params: Dictionary of fixed hyperparameters to use for training each fold.
+                    If None, uses defaults from pipeline config. Can be merged with
+                    best_params from a previous step using executor logic.
+            confidence_level: Confidence level for calculating CI (e.g., 0.95 for 95%).
+            save_results: Whether to save JSON results and update summary CSV.
         """
         logger.info(f"Performing {cv}-fold CV for evaluation with fixed parameters.")
         if not 0 < confidence_level < 1:
             raise ValueError("confidence_level must be between 0 and 1 (exclusive).")
 
-        # --- Check Compatibility ---
-        if self.dataset_handler.structure == DatasetStructure.FIXED and not self.force_flat_for_fixed_cv:
-            raise ValueError(
-                "cv_model_evaluation requires a FLAT dataset structure or a FIXED structure with force_flat_for_fixed_cv=True.")
+        # Inside cv_model_evaluation, after initial logger info:
+        valid_eval_on = ['full', 'test']
+        if evaluate_on not in valid_eval_on:
+            raise ValueError(f"Invalid 'evaluate_on' value: '{evaluate_on}'. Must be one of {valid_eval_on}")
+        if not 0 < confidence_level < 1:
+            raise ValueError("confidence_level must be between 0 and 1 (exclusive).")
 
-        # --- Get Full Data ---
-        try:
-            X_full, y_full = self.dataset_handler.get_full_paths_labels_for_cv()
-            if not X_full: raise RuntimeError("Full dataset for CV is empty.")
-            y_full_np = np.array(y_full)  # Needed for stratification
-        except Exception as e:
-            logger.error(f"Failed to get full dataset paths/labels for CV evaluation: {e}", exc_info=True)
-            raise
+        # --- Get Data based on 'evaluate_on' ---
+        if evaluate_on == 'full':
+            if self.dataset_handler.structure == DatasetStructure.FIXED and not self.force_flat_for_fixed_cv:
+                raise ValueError(
+                    "cv_model_evaluation(evaluate_on='full') requires FLAT dataset or FIXED dataset with force_flat_for_fixed_cv=True.")
+            try:
+                X_selected, y_selected_list = self.dataset_handler.get_full_paths_labels_for_cv()
+                logger.info(f"Using full dataset ({len(X_selected)} samples) for CV evaluation.")
+            except Exception as e:
+                logger.error(f"Failed to get full dataset paths/labels for CV evaluation: {e}", exc_info=True)
+                raise
+        elif evaluate_on == 'test':
+            try:
+                X_selected, y_selected_list = self.dataset_handler.get_test_paths_labels()
+                logger.info(f"Using TEST dataset ({len(X_selected)} samples) for CV evaluation.")
+                if not X_selected:
+                    raise ValueError("Cannot perform CV evaluation on test set: Test set is empty.")
+            except Exception as e:
+                logger.error(f"Failed to get test set paths/labels for CV evaluation: {e}", exc_info=True)
+                raise
+        else:  # Should be caught by initial check
+            raise ValueError(f"Internal error: Unknown evaluate_on='{evaluate_on}'")
+
+        y_selected_np = np.array(y_selected_list)
+        if len(np.unique(y_selected_np)) < 2:
+            logger.warning(
+                f"Only one class present in the selected data ({evaluate_on} set). Stratification might behave unexpectedly.")
+        # --- End Get Data ---
 
         # --- Hyperparameters for this evaluation ---
         eval_params = self.model_adapter_config.copy()
@@ -1585,23 +1896,34 @@ class ClassificationPipeline:
             f"Skorch internal validation split configured: {val_frac_to_use * 100:.1f}% of each CV fold's training data.")
 
         # --- Setup CV Strategy ---
+        min_samples_per_class = cv if cv > 1 else 1
+        unique_labels, counts = np.unique(y_selected_np, return_counts=True)
+        if K := min(counts) < min_samples_per_class:
+            logger.warning(f"The selected data ({evaluate_on} set) has only {K} instances "
+                           f"of class '{unique_labels[np.argmin(counts)]}', "
+                           f"which is less than the number of folds ({cv}). "
+                           f"StratifiedKFold may fail or produce unreliable splits.")
+
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
         fold_results = []  # Store summary dicts like {'accuracy': 0.X, 'f1_macro': 0.Y, ...}
         fold_histories = []
         fold_detailed_results = []  # Store detailed metrics dicts if self.save_detailed_results
 
         # --- Manual Outer CV Loop ---
-        for fold_idx, (outer_train_indices, outer_test_indices) in enumerate(cv_splitter.split(X_full, y_full_np)):
+        for fold_idx, (outer_train_indices, outer_test_indices) in enumerate(
+                cv_splitter.split(X_selected, y_selected_np)):  # <<< USE SELECTED DATA
             logger.info(f"--- Starting CV Evaluation Fold {fold_idx + 1}/{cv} ---")
 
-            X_outer_train = [X_full[i] for i in outer_train_indices]
-            y_outer_train = y_full_np[outer_train_indices]
-            X_test = [X_full[i] for i in outer_test_indices]
-            y_test = y_full_np[outer_test_indices]
-            logger.debug(f"Outer split: {len(X_outer_train)} train samples, {len(X_test)} test samples.")
+            # --- Get Outer Fold Data from the SELECTED dataset ---
+            X_outer_train = [X_selected[i] for i in outer_train_indices]
+            y_outer_train = y_selected_np[outer_train_indices]
+            X_fold_test = [X_selected[i] for i in outer_test_indices]  # Test set for this fold
+            y_fold_test = y_selected_np[outer_test_indices]
+            logger.debug(
+                f"Outer split ({evaluate_on} set): {len(X_outer_train)} train / {len(X_fold_test)} test samples.")
 
-            if not X_outer_train or not X_test:
-                logger.warning(f"Fold {fold_idx + 1} resulted in empty train or test set. Skipping.")
+            if not X_outer_train or not X_fold_test: # Check the fold's train and test parts
+                logger.warning(f"Fold {fold_idx + 1} resulted in empty train ({len(X_outer_train)}) or test ({len(X_fold_test)}) set. Skipping.")
                 # Append NaNs for all potential metrics if skipping
                 fold_results.append({k: np.nan for k in ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro',
                                                          'specificity_macro', 'roc_auc_macro', 'pr_auc_macro']})
@@ -1613,7 +1935,7 @@ class ClassificationPipeline:
             fold_adapter_config = eval_params.copy()
             fold_adapter_config['train_split'] = ValidSplit(cv=val_frac_to_use, stratified=True,
                                                             random_state=RANDOM_SEED + fold_idx)
-            fold_adapter_config['verbose'] = 1  # Show epoch table per fold
+            fold_adapter_config['verbose'] = 0  # Show epoch table per fold
 
             n_outer_train = len(X_outer_train)
             n_inner_val = int(n_outer_train * val_frac_to_use)
@@ -1643,10 +1965,11 @@ class ClassificationPipeline:
             # Evaluate on Outer Test Set
             logger.info(f"Evaluating model on outer test set for fold {fold_idx + 1}...")
             try:
-                y_pred_test = estimator_fold.predict(X_test)
-                y_score_test = estimator_fold.predict_proba(X_test)
-                fold_metrics = self._compute_metrics(y_test, y_pred_test, y_score_test,
-                                                     detailed=self.save_detailed_results)
+                y_pred_fold_test = estimator_fold.predict(X_fold_test) # <<< Use X_fold_test
+                y_score_fold_test = estimator_fold.predict_proba(X_fold_test) # <<< Use X_fold_test
+                # Compute metrics using fold's test set labels
+                fold_metrics = self._compute_metrics(y_fold_test, y_pred_fold_test, y_score_fold_test, # <<< Use y_fold_test
+                                                  detailed=self.save_detailed_results)
 
                 fold_summary = {
                     'accuracy': fold_metrics.get('overall_accuracy', np.nan),
@@ -1679,18 +2002,15 @@ class ClassificationPipeline:
                     'error': 'All folds failed or were skipped.'}
 
         df_results = pd.DataFrame(fold_results)
-        # Base results structure
         results = {
-            'method': 'cv_model_evaluation',
-            # Store effective params used for the folds
-            'params_used_for_folds': {k: v for k, v in eval_params.items() if not callable(v)},
-            # Cleaned eval_params
-            'n_folds_requested': cv,
-            'n_folds_processed': len(fold_results),
-            'confidence_level': confidence_level,  # Store CI level used
-            'cv_fold_scores': df_results.to_dict(orient='list'),  # Raw summary scores per fold
-            # Include detailed fold results only if flag is set
-            **({'fold_detailed_results': fold_detailed_results} if self.save_detailed_results else {}),
+             'method': 'cv_model_evaluation',
+             'params_used_for_folds': {k:v for k,v in eval_params.items() if not callable(v)},
+             'evaluated_on': evaluate_on, # <<< STORE which data was used
+             'n_folds_requested': cv,
+             'n_folds_processed': len(fold_results),
+             'confidence_level': confidence_level,
+             'cv_fold_scores': df_results.to_dict(orient='list'),
+             **({'fold_detailed_results': fold_detailed_results} if self.save_detailed_results else {}),
         }
 
         # Calculate aggregated stats only if enough folds completed
@@ -1749,18 +2069,18 @@ class ClassificationPipeline:
         # --- End Update ---
 
         if save_results:
-            # Prepare params for saving summary row
             summary_params = {k: v for k, v in eval_params.items() if isinstance(v, (str, int, float, bool))}
             summary_params['cv'] = cv
+            summary_params['evaluated_on'] = evaluate_on  # <<< Add to summary params
             summary_params['internal_val_split_ratio'] = val_frac_to_use
             summary_params['confidence_level'] = confidence_level
-            run_id_for_save = f"cv_model_evaluation_{datetime.now().strftime('%H%M%S_%f')}"
+            run_id_for_save = f"cv_model_evaluation_{evaluate_on}_{datetime.now().strftime('%H%M%S_%f')}"  # Include mode in ID
             self._save_results(results, "cv_model_evaluation",
                                run_id=run_id_for_save,
-                               method_params=summary_params)  # Pass params for summary
+                               method_params=summary_params)  # Pass updated params
 
         # --- Updated Logging ---
-        logger.info(f"CV Evaluation Summary (Avg over {K} folds, {confidence_level * 100:.0f}% CI):")
+        logger.info(f"CV Evaluation Summary (on {evaluate_on} data, {K} folds, {confidence_level * 100:.0f}% CI):")
         for metric_key, stats_dict in aggregated_metrics.items():
             mean_val = stats_dict.get('mean', np.nan)
             h_val = stats_dict.get('margin_of_error')  # Can be None or NaN
@@ -1876,12 +2196,12 @@ class ClassificationPipeline:
             adapter_config['callbacks'] = current_callbacks
         # --- End Callback Handling ---
 
-        adapter_config['verbose'] = 1  # Show epoch table with train_acc
+        adapter_config['verbose'] = 0  # Show epoch table with train_acc
 
         # Pop config keys not needed by SkorchModelAdapter init directly
-        adapter_config.pop('patience_cfg', None);
+        adapter_config.pop('patience_cfg', None)
         adapter_config.pop('monitor_cfg', None)
-        adapter_config.pop('lr_policy_cfg', None);
+        adapter_config.pop('lr_policy_cfg', None)
         adapter_config.pop('lr_patience_cfg', None)
 
         # Instantiate the adapter for this training run
@@ -2104,14 +2424,13 @@ class PipelineExecutor:
         # --- Configure Logger AFTER pipeline init ---
         logger_name = 'ImgClassPipe'
         experiment_log_dir = self.pipeline.experiment_dir # Get dir from pipeline
-        logger = setup_logger( # Reconfigure the global logger
-             name=logger_name,
+        logger = setup_logger(
+             name=logger_name_global, # Use the globally defined name
              log_dir=experiment_log_dir,
-             log_filename=f"experiment_{Path(experiment_log_dir).name}.log", # Unique log filename per experiment
-             level=logging.DEBUG,
+             log_filename=f"experiment_{Path(experiment_log_dir).name}.log",
+             level=logging.DEBUG, # Set desired level
              use_colors=True
          )
-        print(get_log_header(use_colors=True)) # Print header after setup
         logger.info(f"--- Starting Experiment Run ---")
         logger.info(f"Pipeline Executor initialized for model '{model_type}' on dataset '{Path(dataset_path).name}'")
         logger.info(f"Results base directory: {self.pipeline.experiment_dir}")
@@ -2362,7 +2681,7 @@ if __name__ == "__main__":
     methods_seq_2 = [
         ('non_nested_grid_search', {
             'param_grid': chosen_param_grid, 'cv': 3, 'method': 'grid',
-            'scoring': 'accuracy', 'save_results': True
+            'scoring': 'accuracy', 'save_best_model': True, 'save_results': True
         }),
         # The best model is refit and stored in pipeline.model_adapter after search
         ('single_eval', {'save_results': True}), # Evaluate the refit best model
@@ -2379,6 +2698,7 @@ if __name__ == "__main__":
          ('cv_model_evaluation', {
              'cv': 3,
              'params': fixed_params_for_eval, # Pass fixed hyperparams
+             'evaluate_on': 'full', # Explicitly state (or rely on default)
              'save_results': True
         })
     ]
@@ -2390,6 +2710,7 @@ if __name__ == "__main__":
             'cv': 3,
             'method': 'grid',
             'scoring': 'accuracy',
+            'save_best_model': True,
             'save_results': True
         }),
          ('cv_model_evaluation', {
@@ -2398,6 +2719,7 @@ if __name__ == "__main__":
              'use_best_params_from_step': 0,
              # Optionally provide specific params for cv_eval to override defaults if needed
              # 'params': {'max_epochs': 15}, # e.g., override max_epochs just for CV eval
+             'evaluate_on': 'test',  # <<< Specify test set here
              'save_results': True
         })
     ]
@@ -2411,7 +2733,7 @@ if __name__ == "__main__":
 
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_seq_4 # <--- SELECT SEQUENCE TO RUN
+    chosen_sequence = methods_seq_1 # <--- SELECT SEQUENCE TO RUN
 
     logger.info(f"Executing sequence: {[m[0] for m in chosen_sequence]}")
 
