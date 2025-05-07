@@ -1,0 +1,134 @@
+{
+    "method": "non_nested_grid_search",
+    "params": {
+        "cv": 3,
+        "n_iter": "N/A",
+        "method": "grid",
+        "scoring": "accuracy"
+    },
+    "best_params": {
+        "batch_size": 16,
+        "lr": 5e-05,
+        "max_epochs": 5,
+        "optimizer__weight_decay": 0.001
+    },
+    "best_score": 0.7841269841269841,
+    "cv_results": {
+        "mean_fit_time": [
+            71.4319354693095,
+            69.05548850695293
+        ],
+        "std_fit_time": [
+            1.6504891249482192,
+            0.24986982826699106
+        ],
+        "mean_score_time": [
+            3.7634359995524087,
+            3.7601439158121743
+        ],
+        "std_score_time": [
+            0.053631485093216136,
+            0.04515889490641004
+        ],
+        "param_batch_size": [
+            16,
+            16
+        ],
+        "param_lr": [
+            5e-05,
+            5e-05
+        ],
+        "param_max_epochs": [
+            5,
+            5
+        ],
+        "param_optimizer__weight_decay": [
+            0.01,
+            0.001
+        ],
+        "params": [
+            {
+                "batch_size": 16,
+                "lr": 5e-05,
+                "max_epochs": 5,
+                "optimizer__weight_decay": 0.01
+            },
+            {
+                "batch_size": 16,
+                "lr": 5e-05,
+                "max_epochs": 5,
+                "optimizer__weight_decay": 0.001
+            }
+        ],
+        "split0_test_score": [
+            0.7571428571428571,
+            0.8095238095238095
+        ],
+        "split1_test_score": [
+            0.7547619047619047,
+            0.7357142857142858
+        ],
+        "split2_test_score": [
+            0.7333333333333333,
+            0.8071428571428572
+        ],
+        "mean_test_score": [
+            0.7484126984126984,
+            0.7841269841269841
+        ],
+        "std_test_score": [
+            0.010706934573993698,
+            0.03424674446093874
+        ],
+        "rank_test_score": [
+            2,
+            1
+        ],
+        "split0_train_score": [
+            0.7642857142857142,
+            0.8047619047619048
+        ],
+        "split1_train_score": [
+            0.7273809523809524,
+            0.7095238095238096
+        ],
+        "split2_train_score": [
+            0.8023809523809524,
+            0.8238095238095238
+        ],
+        "mean_train_score": [
+            0.7646825396825397,
+            0.7793650793650793
+        ],
+        "std_train_score": [
+            0.03061990749819118,
+            0.049993700787376555
+        ]
+    },
+    "test_set_evaluation": {
+        "message": "Test set evaluation not performed in this method."
+    },
+    "accuracy": NaN,
+    "macro_avg": {},
+    "full_params_used": {
+        "batch_size": 16,
+        "lr": 5e-05,
+        "max_epochs": 5,
+        "optimizer__weight_decay": 0.001,
+        "device": "cuda",
+        "patience_cfg": 3,
+        "monitor_cfg": "valid_loss",
+        "verbose": 0
+    },
+    "saved_model_path": "C:\\Users\\Stefan\\Documents\\GitHub\\UBB-Y3-AI-Research\\model_src\\pipeline_v4\\results\\Swimcat-extend\\vit\\20250507_051750_seed42\\non_nested_grid_051750_470819\\vit_best_batch_size=16_lr=5e-05_max_epochs=5_weight_decay=0_cv_score0p7841.pt",
+    "method_params_used": {
+        "cv": 3,
+        "n_iter": "N/A",
+        "method": "grid",
+        "scoring": "accuracy",
+        "best_batch_size": 16,
+        "best_lr": 5e-05,
+        "best_max_epochs": 5,
+        "best_optimizer__weight_decay": 0.001
+    }
+}

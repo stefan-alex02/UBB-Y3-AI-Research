@@ -1,0 +1,178 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-05-07 05:17:50 | INFO     | [code_v7   :setup_logger      : 216] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend\vit\20250507_051750_seed42\experiment_20250507_051750_seed42.log
+2025-05-07 05:17:50 | INFO     | [code_v7   :__init__          :2404] | ℹ️ --- Starting Experiment Run ---
+2025-05-07 05:17:50 | INFO     | [code_v7   :__init__          :2405] | ℹ️ Pipeline Executor initialized for model 'vit' on dataset 'Swimcat-extend'
+2025-05-07 05:17:50 | INFO     | [code_v7   :__init__          :2406] | ℹ️ Results base directory: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend\vit\20250507_051750_seed42
+2025-05-07 05:17:50 | DEBUG    | [code_v7   :_validate_methods :2436] | 🐞 Basic method validation successful.
+2025-05-07 05:17:50 | INFO     | [code_v7   :__init__          :2417] | ℹ️ Executor configured to run methods: non_nested_grid_search, single_eval
+2025-05-07 05:17:50 | INFO     | [code_v7   :run               :2450] | ℹ️ Starting execution of pipeline methods...
+2025-05-07 05:17:50 | INFO     | [code_v7   :run               :2455] | ℹ️ --- Running Method 1/2: non_nested_grid_search (non_nested_grid_search_0) ---
+2025-05-07 05:17:50 | DEBUG    | [code_v7   :run               :2498] | 🐞 Running with effective parameters: {'param_grid': {'lr': [5e-05], 'batch_size': [16], 'optimizer__weight_decay': [0.01, 0.001], 'max_epochs': [5]}, 'cv': 3, 'method': 'grid', 'scoring': 'accuracy', 'save_best_model': True, 'save_results': True}
+2025-05-07 05:17:50 | INFO     | [code_v7   :non_nested_grid...:1449] | ℹ️ Performing non-nested GridSearchCV with 3-fold CV.
+2025-05-07 05:17:50 | INFO     | [code_v7   :non_nested_grid...:1450] | ℹ️ Parameter Grid/Dist: {'lr': [5e-05], 'batch_size': [16], 'optimizer__weight_decay': [0.01, 0.001], 'max_epochs': [5]}
+2025-05-07 05:17:50 | INFO     | [code_v7   :non_nested_grid...:1451] | ℹ️ Scoring Metric: accuracy
+2025-05-07 05:17:50 | INFO     | [code_v7   :non_nested_grid...:1460] | ℹ️ Using 1260 samples for Train+Validation in GridSearchCV.
+2025-05-07 05:17:50 | INFO     | [code_v7   :non_nested_grid...:1468] | ℹ️ Skorch internal validation split configured: 20.0% of each CV fold's training data.
+2025-05-07 05:17:50 | INFO     | [code_v7   :non_nested_grid...:1501] | ℹ️ Fitting GridSearchCV on train+validation data (search verbose=3)...
+2025-05-07 05:17:50 | INFO     | [code_v7   :non_nested_grid...:1503] | ℹ️ Total combinations to search: 2 (grid)
+2025-05-07 05:17:50 | DEBUG    | [code_v7   :__init__          : 764] | 🐞 Loading pre-trained vit_b_16 model...
+2025-05-07 05:17:51 | DEBUG    | [code_v7   :__init__          : 766] | 🐞 Pre-trained model loaded.
+2025-05-07 05:17:51 | DEBUG    | [code_v7   :__init__          : 769] | 🐞 Replaced ViT head for 6 classes.
+2025-05-07 05:17:51 | INFO     | [code_v7   :__init__          : 780] | ℹ️ SimpleViT: Froze layers, unfroze last 4 parameter groups.
+2025-05-07 05:17:51 | DEBUG    | [code_v7   :get_split_datasets: 949] | 🐞 Split created: 672 train, 168 validation.
+2025-05-07 05:17:51 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=672, batch_size=16, shuffle=True, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:17:51 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=168, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:18:06 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-07 05:18:06 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-07 05:18:06 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       1     ▲ 0.1815      ▼ 1.8219     ▲ 0.2560      ▼ 1.7155        5e-05  15.0956
+2025-05-07 05:18:20 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       2     ▲ 0.3854      ▼ 1.6671     ▲ 0.4048      ▼ 1.5969        5e-05  13.9125
+2025-05-07 05:18:34 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       3     ▲ 0.5402      ▼ 1.5504     ▲ 0.5714      ▼ 1.4910        5e-05  14.138
+2025-05-07 05:18:48 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       4     ▲ 0.6622      ▼ 1.4351     ▲ 0.6667      ▼ 1.3986        5e-05  13.8408
+2025-05-07 05:19:02 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       5     ▲ 0.7649      ▼ 1.3371     ▲ 0.7500      ▼ 1.3108        5e-05  14.2098
+2025-05-07 05:19:02 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:19:02 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=420, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:19:06 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:19:06 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=840, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:19:14 | DEBUG    | [code_v7   :__init__          : 764] | 🐞 Loading pre-trained vit_b_16 model...
+2025-05-07 05:19:15 | DEBUG    | [code_v7   :__init__          : 766] | 🐞 Pre-trained model loaded.
+2025-05-07 05:19:15 | DEBUG    | [code_v7   :__init__          : 769] | 🐞 Replaced ViT head for 6 classes.
+2025-05-07 05:19:15 | INFO     | [code_v7   :__init__          : 780] | ℹ️ SimpleViT: Froze layers, unfroze last 4 parameter groups.
+2025-05-07 05:19:15 | DEBUG    | [code_v7   :get_split_datasets: 949] | 🐞 Split created: 672 train, 168 validation.
+2025-05-07 05:19:15 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=672, batch_size=16, shuffle=True, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:19:15 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=168, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:19:29 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-07 05:19:29 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-07 05:19:29 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       1     ▲ 0.1443      ▼ 1.8530     ▲ 0.1667      ▼ 1.7653        5e-05  14.4521
+2025-05-07 05:19:44 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       2     ▲ 0.2917      ▼ 1.7135     ▲ 0.3333      ▼ 1.6374        5e-05  14.6944
+2025-05-07 05:19:59 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       3     ▲ 0.4405      ▼ 1.5903     ▲ 0.4583      ▼ 1.5273        5e-05  14.8271
+2025-05-07 05:20:13 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       4     ▲ 0.5476      ▼ 1.4797     ▲ 0.5952      ▼ 1.4299        5e-05  14.0611
+2025-05-07 05:20:27 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       5     ▲ 0.7068      ▼ 1.3822     ▲ 0.6845      ▼ 1.3404        5e-05  13.5837
+2025-05-07 05:20:27 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:20:27 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=420, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:20:30 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:20:30 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=840, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:20:38 | DEBUG    | [code_v7   :__init__          : 764] | 🐞 Loading pre-trained vit_b_16 model...
+2025-05-07 05:20:39 | DEBUG    | [code_v7   :__init__          : 766] | 🐞 Pre-trained model loaded.
+2025-05-07 05:20:39 | DEBUG    | [code_v7   :__init__          : 769] | 🐞 Replaced ViT head for 6 classes.
+2025-05-07 05:20:39 | INFO     | [code_v7   :__init__          : 780] | ℹ️ SimpleViT: Froze layers, unfroze last 4 parameter groups.
+2025-05-07 05:20:39 | DEBUG    | [code_v7   :get_split_datasets: 949] | 🐞 Split created: 672 train, 168 validation.
+2025-05-07 05:20:39 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=672, batch_size=16, shuffle=True, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:20:39 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=168, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:20:52 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-07 05:20:52 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-07 05:20:52 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       1     ▲ 0.2292      ▼ 1.7632     ▲ 0.3929      ▼ 1.6936        5e-05  13.6316
+2025-05-07 05:21:06 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       2     ▲ 0.4881      ▼ 1.6192     ▲ 0.5476      ▼ 1.5652        5e-05  13.6193
+2025-05-07 05:21:20 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       3     ▲ 0.6473      ▼ 1.5108     ▲ 0.6310      ▼ 1.4547        5e-05  13.7178
+2025-05-07 05:21:33 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       4     ▲ 0.6979      ▼ 1.4058     ▲ 0.7143      ▼ 1.3594        5e-05  13.5025
+2025-05-07 05:21:47 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       5     ▲ 0.8006      ▼ 1.3050     ▲ 0.7679      ▼ 1.2697        5e-05  13.5624
+2025-05-07 05:21:47 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:21:47 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=420, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:21:51 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:21:51 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=840, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:21:58 | DEBUG    | [code_v7   :__init__          : 764] | 🐞 Loading pre-trained vit_b_16 model...
+2025-05-07 05:21:59 | DEBUG    | [code_v7   :__init__          : 766] | 🐞 Pre-trained model loaded.
+2025-05-07 05:21:59 | DEBUG    | [code_v7   :__init__          : 769] | 🐞 Replaced ViT head for 6 classes.
+2025-05-07 05:21:59 | INFO     | [code_v7   :__init__          : 780] | ℹ️ SimpleViT: Froze layers, unfroze last 4 parameter groups.
+2025-05-07 05:21:59 | DEBUG    | [code_v7   :get_split_datasets: 949] | 🐞 Split created: 672 train, 168 validation.
+2025-05-07 05:21:59 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=672, batch_size=16, shuffle=True, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:21:59 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=168, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:22:13 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-07 05:22:13 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-07 05:22:13 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       1     ▲ 0.2634      ▼ 1.7061     ▲ 0.4107      ▼ 1.6271        5e-05  13.8441
+2025-05-07 05:22:27 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       2     ▲ 0.4568      ▼ 1.5701     ▲ 0.5536      ▼ 1.5198        5e-05  13.5552
+2025-05-07 05:22:40 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       3     ▲ 0.6176      ▼ 1.4545     ▲ 0.6488      ▼ 1.4211        5e-05  13.3966
+2025-05-07 05:22:53 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       4     ▲ 0.6845      ▼ 1.3678     ▲ 0.7143      ▼ 1.3333        5e-05  13.3215
+2025-05-07 05:23:07 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       5     ▲ 0.7649      ▼ 1.2718     ▲ 0.7738      ▼ 1.2518        5e-05  13.5968
+2025-05-07 05:23:07 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:23:07 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=420, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:23:11 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:23:11 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=840, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:23:18 | DEBUG    | [code_v7   :__init__          : 764] | 🐞 Loading pre-trained vit_b_16 model...
+2025-05-07 05:23:19 | DEBUG    | [code_v7   :__init__          : 766] | 🐞 Pre-trained model loaded.
+2025-05-07 05:23:19 | DEBUG    | [code_v7   :__init__          : 769] | 🐞 Replaced ViT head for 6 classes.
+2025-05-07 05:23:19 | INFO     | [code_v7   :__init__          : 780] | ℹ️ SimpleViT: Froze layers, unfroze last 4 parameter groups.
+2025-05-07 05:23:19 | DEBUG    | [code_v7   :get_split_datasets: 949] | 🐞 Split created: 672 train, 168 validation.
+2025-05-07 05:23:19 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=672, batch_size=16, shuffle=True, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:23:19 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=168, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:23:33 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-07 05:23:33 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-07 05:23:33 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       1     ▲ 0.0997      ▼ 1.8175     ▲ 0.1667      ▼ 1.7487        5e-05  13.6709
+2025-05-07 05:23:47 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       2     ▲ 0.2857      ▼ 1.6787     ▲ 0.4226      ▼ 1.6257        5e-05  13.4761
+2025-05-07 05:24:00 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       3     ▲ 0.4658      ▼ 1.5672     ▲ 0.5238      ▼ 1.5205        5e-05  13.6447
+2025-05-07 05:24:14 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       4     ▲ 0.6057      ▼ 1.4627     ▲ 0.6071      ▼ 1.4249        5e-05  13.4592
+2025-05-07 05:24:27 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       5     ▲ 0.6964      ▼ 1.3720     ▲ 0.6667      ▼ 1.3376        5e-05  13.7381
+2025-05-07 05:24:27 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:24:27 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=420, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:24:31 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:24:31 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=840, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:24:39 | DEBUG    | [code_v7   :__init__          : 764] | 🐞 Loading pre-trained vit_b_16 model...
+2025-05-07 05:24:40 | DEBUG    | [code_v7   :__init__          : 766] | 🐞 Pre-trained model loaded.
+2025-05-07 05:24:40 | DEBUG    | [code_v7   :__init__          : 769] | 🐞 Replaced ViT head for 6 classes.
+2025-05-07 05:24:40 | INFO     | [code_v7   :__init__          : 780] | ℹ️ SimpleViT: Froze layers, unfroze last 4 parameter groups.
+2025-05-07 05:24:40 | DEBUG    | [code_v7   :get_split_datasets: 949] | 🐞 Split created: 672 train, 168 validation.
+2025-05-07 05:24:40 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=672, batch_size=16, shuffle=True, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:24:40 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=168, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:24:53 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-07 05:24:53 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-07 05:24:53 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       1     ▲ 0.3110      ▼ 1.6933     ▲ 0.3810      ▼ 1.6349        5e-05  13.5181
+2025-05-07 05:25:07 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       2     ▲ 0.5253      ▼ 1.5686     ▲ 0.5893      ▼ 1.5195        5e-05  13.537
+2025-05-07 05:25:20 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       3     ▲ 0.6830      ▼ 1.4532     ▲ 0.7024      ▼ 1.4159        5e-05  13.6237
+2025-05-07 05:25:34 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       4     ▲ 0.7827      ▼ 1.3593     ▲ 0.7679      ▼ 1.3220        5e-05  13.8753
+2025-05-07 05:25:48 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       5     ▲ 0.8378      ▼ 1.2615     ▲ 0.7798      ▼ 1.2367        5e-05  13.7101
+2025-05-07 05:25:48 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:25:48 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=420, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:25:52 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:25:52 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=840, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:25:59 | DEBUG    | [code_v7   :__init__          : 764] | 🐞 Loading pre-trained vit_b_16 model...
+2025-05-07 05:26:00 | DEBUG    | [code_v7   :__init__          : 766] | 🐞 Pre-trained model loaded.
+2025-05-07 05:26:00 | DEBUG    | [code_v7   :__init__          : 769] | 🐞 Replaced ViT head for 6 classes.
+2025-05-07 05:26:00 | INFO     | [code_v7   :__init__          : 780] | ℹ️ SimpleViT: Froze layers, unfroze last 4 parameter groups.
+2025-05-07 05:26:00 | DEBUG    | [code_v7   :get_split_datasets: 949] | 🐞 Split created: 1008 train, 252 validation.
+2025-05-07 05:26:00 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=1008, batch_size=16, shuffle=True, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:26:00 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=252, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:26:21 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-07 05:26:21 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-07 05:26:21 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       1     ▲ 0.3026      ▼ 1.7482     ▲ 0.4841      ▼ 1.6510        5e-05  20.4808
+2025-05-07 05:26:42 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       2     ▲ 0.5119      ▼ 1.5515     ▲ 0.6508      ▼ 1.4773        5e-05  20.8434
+2025-05-07 05:27:03 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       3     ▲ 0.7163      ▼ 1.3975     ▲ 0.7817      ▼ 1.3354        5e-05  20.9061
+2025-05-07 05:27:23 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       4     ▲ 0.8125      ▼ 1.2539     ▲ 0.8333      ▼ 1.2106        5e-05  20.1615
+2025-05-07 05:27:43 | INFO     | [code_v7   :on_epoch_end      : 371] | ℹ️       5     ▲ 0.8690      ▼ 1.1458     ▲ 0.8492      ▼ 1.1047        5e-05  20.034
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1526] | ℹ️ Search completed.
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1530] | ℹ️ --- GridSearchCV Internal CV Progress (Captured) ---
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1532] | ℹ️ [SKL_CV] Fitting 3 folds for each of 2 candidates, totalling 6 fits
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1532] | ℹ️ [SKL_CV] [CV 1/3] END batch_size=16, lr=5e-05, max_epochs=5, optimizer__weight_decay=0.01;, score=(train=0.764, test=0.757) total time= 1.3min
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1532] | ℹ️ [SKL_CV] [CV 2/3] END batch_size=16, lr=5e-05, max_epochs=5, optimizer__weight_decay=0.01;, score=(train=0.727, test=0.755) total time= 1.3min
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1532] | ℹ️ [SKL_CV] [CV 3/3] END batch_size=16, lr=5e-05, max_epochs=5, optimizer__weight_decay=0.01;, score=(train=0.802, test=0.733) total time= 1.2min
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1532] | ℹ️ [SKL_CV] [CV 1/3] END batch_size=16, lr=5e-05, max_epochs=5, optimizer__weight_decay=0.001;, score=(train=0.805, test=0.810) total time= 1.2min
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1532] | ℹ️ [SKL_CV] [CV 2/3] END batch_size=16, lr=5e-05, max_epochs=5, optimizer__weight_decay=0.001;, score=(train=0.710, test=0.736) total time= 1.2min
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1532] | ℹ️ [SKL_CV] [CV 3/3] END batch_size=16, lr=5e-05, max_epochs=5, optimizer__weight_decay=0.001;, score=(train=0.824, test=0.807) total time= 1.2min
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1533] | ℹ️ --- End GridSearchCV Internal CV Progress ---
+2025-05-07 05:27:43 | INFO     | [code_v7   :non_nested_grid...:1567] | ℹ️ Updating main pipeline adapter with the best model found and refit by GridSearchCV.
+2025-05-07 05:27:44 | INFO     | [code_v7   :non_nested_grid...:1594] | ℹ️ Best refit model state_dict saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend\vit\20250507_051750_seed42\non_nested_grid_051750_470819\vit_best_batch_size=16_lr=5e-05_max_epochs=5_weight_decay=0_cv_score0p7841.pt
+2025-05-07 05:27:44 | DEBUG    | [code_v7   :_save_results     :1296] | 🐞 Saving results for non_nested_grid_051750_470819 to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend\vit\20250507_051750_seed42\non_nested_grid_051750_470819
+2025-05-07 05:27:44 | DEBUG    | [code_v7   :_save_results     :1327] | 🐞 Saving full detailed results for run 'non_nested_grid_051750_470819'.
+2025-05-07 05:27:44 | INFO     | [code_v7   :_save_results     :1362] | ℹ️ Results JSON saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend\vit\20250507_051750_seed42\non_nested_grid_051750_470819\non_nested_grid_search_results_20250507_052744.json
+2025-05-07 05:27:44 | INFO     | [code_v7   :_save_results     :1423] | ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend\vit\20250507_051750_seed42\summary_results_seed42.csv
+2025-05-07 05:27:44 | INFO     | [code_v7   :non_nested_grid...:1615] | ℹ️ Non-nested grid search finished. Best CV score (accuracy): 0.7841
+2025-05-07 05:27:44 | INFO     | [code_v7   :non_nested_grid...:1616] | ℹ️ Best parameters found: {'batch_size': 16, 'lr': 5e-05, 'max_epochs': 5, 'optimizer__weight_decay': 0.001}
+2025-05-07 05:27:44 | INFO     | [code_v7   :non_nested_grid...:1617] | ℹ️ Pipeline adapter has been updated with the best model refit on train+validation data.
+2025-05-07 05:27:44 | INFO     | [code_v7   :run               :2515] | ℹ️ --- Method non_nested_grid_search (non_nested_grid_search_0) completed successfully in 593.62s ---
+2025-05-07 05:27:44 | INFO     | [code_v7   :run               :2455] | ℹ️ --- Running Method 2/2: single_eval (single_eval_1) ---
+2025-05-07 05:27:44 | DEBUG    | [code_v7   :run               :2498] | 🐞 Running with effective parameters: {'save_results': True}
+2025-05-07 05:27:44 | INFO     | [code_v7   :single_eval       :2287] | ℹ️ Starting model evaluation on the test set...
+2025-05-07 05:27:44 | INFO     | [code_v7   :single_eval       :2300] | ℹ️ Evaluating on 840 test samples...
+2025-05-07 05:27:44 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:27:44 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=840, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:27:51 | DEBUG    | [code_v7   :get_iterator      : 979] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-07 05:27:51 | DEBUG    | [code_v7   :get_iterator      :1006] | 🐞 Creating DataLoader: size=840, batch_size=16, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-07 05:27:59 | DEBUG    | [code_v7   :_compute_metrics  :1281] | 🐞 Computed Metrics: Acc=0.8929, Macro F1=0.8929
+2025-05-07 05:27:59 | DEBUG    | [code_v7   :_save_results     :1296] | 🐞 Saving results for single_eval_052759 to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend\vit\20250507_051750_seed42\single_eval_052759
+2025-05-07 05:27:59 | DEBUG    | [code_v7   :_save_results     :1327] | 🐞 Saving full detailed results for run 'single_eval_052759'.
+2025-05-07 05:27:59 | INFO     | [code_v7   :_save_results     :1362] | ℹ️ Results JSON saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend\vit\20250507_051750_seed42\single_eval_052759\single_eval_results_20250507_052759.json
+2025-05-07 05:27:59 | INFO     | [code_v7   :_save_results     :1423] | ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\pipeline_v4\results\Swimcat-extend\vit\20250507_051750_seed42\summary_results_seed42.csv
+2025-05-07 05:27:59 | INFO     | [code_v7   :run               :2515] | ℹ️ --- Method single_eval (single_eval_1) completed successfully in 15.64s ---
+2025-05-07 05:27:59 | INFO     | [code_v7   :run               :2541] | ℹ️ Pipeline execution finished in 609.26s.
+2025-05-07 05:27:59 | INFO     | [code_v7   :<module>          :2753] | ℹ️ --- Final Execution Results Summary ---
+2025-05-07 05:27:59 | INFO     | [code_v7   :<module>          :2762] | ℹ️ Method non_nested_grid_search_0: Completed. (Acc: nan, F1: nan, BestScore: 0.7841)
+2025-05-07 05:27:59 | INFO     | [code_v7   :<module>          :2762] | ℹ️ Method single_eval_1: Completed. (Acc: nan, F1: 0.8929, BestScore: nan)

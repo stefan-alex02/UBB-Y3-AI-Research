@@ -1,4 +1,5 @@
 # --- START OF FILE code_v7.py ---
+import contextlib
 import io  # For capturing print output to a string
 import json
 import logging
@@ -45,11 +46,13 @@ RANDOM_SEED = 42
 np.random.seed(RANDOM_SEED)
 torch.manual_seed(RANDOM_SEED)
 random.seed(RANDOM_SEED) # Ensure random module is also seeded
+
+# Commenting these out might sometimes resolve unrelated CUDA errors, but reduces reproducibility
 if torch.cuda.is_available():
     torch.cuda.manual_seed_all(RANDOM_SEED)
-# Commenting these out might sometimes resolve unrelated CUDA errors, but reduces reproducibility
-# torch.backends.cudnn.deterministic = True
-# torch.backends.cudnn.benchmark = False
+torch.backends.cudnn.deterministic = True # <<< UNCOMMENT
+torch.backends.cudnn.benchmark = False   # <<< UNCOMMENT
+
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 NUM_WORKERS = 0 # Set to 0 for stability with image loading, especially on Windows
 
@@ -1031,62 +1034,6 @@ class SkorchModelAdapter(NeuralNetClassifier):
         # Return y_pred so skorch can calculate valid_acc etc.
         return {'loss': loss, 'y_pred': y_pred}
 
-import sys
-import logging
-
-class LoggerTee:
-    def __init__(self, original_stream,
-                 logger_instance: logging.Logger,
-                 log_level: int = logging.INFO,
-                 prefix: str = "",
-                 write_to_original: bool = True): # <<< ADDED FLAG
-        self.original_stream = original_stream
-        self.logger = logger_instance
-        self.log_level = log_level
-        self.prefix = prefix
-        self.line_buffer = ""
-        self.write_to_original = write_to_original # <<< STORE FLAG
-
-    def write(self, text: str):
-        if self.write_to_original and self.original_stream: # <<< CHECK FLAG
-            try:
-                self.original_stream.write(text)
-                self.original_stream.flush()
-            except Exception as e:
-                print(f"LoggerTee: Error writing to original stream: {e}", file=sys.__stderr__)
-
-        self.line_buffer += text
-        while '\n' in self.line_buffer:
-            line, self.line_buffer = self.line_buffer.split('\n', 1)
-            if line.strip():
-                self.logger.log(self.log_level, f"{self.prefix}{line.strip()}")
-
-    def flush(self):
-        if self.write_to_original and self.original_stream: # <<< CHECK FLAG
-            try:
-                self.original_stream.flush()
-            except Exception as e:
-                print(f"LoggerTee: Error flushing original stream: {e}", file=sys.__stderr__)
-
-        if self.line_buffer.strip():
-            self.logger.log(self.log_level, f"{self.prefix}{self.line_buffer.strip()}")
-            self.line_buffer = ""
-
-    def isatty(self):
-        if self.original_stream:
-            return hasattr(self.original_stream, 'isatty') and self.original_stream.isatty()
-        return False
-
-    def __enter__(self):
-        self._original_stdout_backup = sys.stdout
-        sys.stdout = self
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.flush()
-        sys.stdout = self._original_stdout_backup
-        self._original_stdout_backup = None
-
 # --- Classification Pipeline ---
 
 class ClassificationPipeline:
@@ -1551,24 +1498,39 @@ class ClassificationPipeline:
             search_kwargs['random_state'] = RANDOM_SEED
         search = SearchClass(**search_kwargs)
 
-        # --- Run Search ---
         logger.info(f"Fitting {SearchClass.__name__} on train+validation data (search verbose={search.verbose})...")
+        # Describe number of combinations to search
+        logger.info(f"Total combinations to search: {np.prod([len(v) for v in param_grid.values()] if method_lower == 'grid' else n_iter)} "
+                    f"({'grid' if method_lower == 'grid' else 'random'})")
 
-        if search.verbose > 0:
-            logger_tee = LoggerTee(sys.stdout, logger, log_level=logging.INFO,
-                                   prefix="[SKL_CV] ",
-                                   write_to_original=False)  # <<< SET TO FALSE
-            with logger_tee:
+        # --- Capture stdout for scikit-learn's CV progress ---
+        # Ensure contextlib is imported: import contextlib
+        # Ensure io is imported: import io
+        cv_progress_log = ""
+        if search.verbose > 0: # Only capture if it's going to print
+            string_io_buffer = io.StringIO()
+            with contextlib.redirect_stdout(string_io_buffer): # Requires 'import contextlib'
                 try:
                     search.fit(X_trainval, y=np.array(y_trainval))
                 except Exception as e:
+                    # Log intermediate output even if fit fails
+                    cv_progress_log = string_io_buffer.getvalue()
                     logger.error(f"Error during {SearchClass.__name__}.fit: {e}", exc_info=True)
-                    # LoggerTee's __exit__ will still flush and restore stdout
-                    raise
-        else:
+                    raise # Re-raise
+            cv_progress_log = string_io_buffer.getvalue()
+            string_io_buffer.close()
+        else: # If search.verbose is 0, fit normally without capture
             search.fit(X_trainval, y=np.array(y_trainval))
+        # --- End capture ---
 
         logger.info(f"Search completed.")
+
+        # Log captured CV progress (if any)
+        if cv_progress_log.strip():
+            logger.info("--- GridSearchCV Internal CV Progress (Captured) ---")
+            for line in cv_progress_log.strip().splitlines():
+                logger.info(f"[SKL_CV] {line}")
+            logger.info("--- End GridSearchCV Internal CV Progress ---")
 
         # --- Collect Results (Search Results Only) ---
         results = {
@@ -1744,32 +1706,40 @@ class ClassificationPipeline:
         }
 
         # --- Run Nested CV using cross_validate ---
-        logger.info(f"Running standard nested CV using cross_validate...")
+        logger.info(
+            f"Running standard nested CV using cross_validate. Inner GridSearchCV verbose: {inner_search.verbose}")
         try:
-            # --- Use LoggerTee to capture stdout from the inner GridSearchCV ---
-            if inner_search.verbose > 0:
-                logger_tee = LoggerTee(sys.stdout, logger, log_level=logging.INFO,
-                                       prefix="[NESTED_INNER_CV] ",
-                                       write_to_original=False)
-                with logger_tee:
+            # --- Capture stdout ---
+            cv_progress_log = ""
+            if inner_search.verbose > 0:  # Capture if inner search will print
+                string_io_buffer = io.StringIO()
+                with contextlib.redirect_stdout(string_io_buffer):
                     try:
                         cv_results = cross_validate(
                             inner_search, X_full, y_full_np, cv=outer_cv_splitter, scoring=scoring_dict,
-                            return_estimator=False,
-                            n_jobs=1,  # If n_jobs > 1, joblib handles parallelism and its own verbosity
-                            # verbose for cross_validate itself controls joblib's output level, not inner_search's print statements directly
-                            error_score='raise'
+                            return_estimator=False, n_jobs=1, error_score='raise'
+                            # cross_validate's own verbose controls joblib, not the inner_search prints directly for n_jobs=1
                         )
                     except Exception as e:
+                        cv_progress_log = string_io_buffer.getvalue()
                         logger.error(f"Error during cross_validate: {e}", exc_info=True)
                         raise
-            else:  # If inner_search.verbose is 0, fit normally
+                cv_progress_log = string_io_buffer.getvalue()
+                string_io_buffer.close()
+            else:
                 cv_results = cross_validate(
                     inner_search, X_full, y_full_np, cv=outer_cv_splitter, scoring=scoring_dict,
                     return_estimator=False, n_jobs=1, error_score='raise'
                 )
-                # --- End LoggerTee usage ---
+            # --- End capture ---
+
             logger.info("Nested cross-validation finished.")
+
+            if cv_progress_log.strip():
+                logger.info("--- Nested CV Inner Loop Progress (Captured) ---")
+                for line in cv_progress_log.strip().splitlines():
+                    logger.info(f"[NESTED_SKL_CV] {line}")
+                logger.info("--- End Nested CV Inner Loop Progress ---")
 
             # --- Process and Save Results ---
             results = {
@@ -2578,8 +2548,8 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    dataset_path = script_dir / "../data/mini-GCD-flat" # FLAT example
-    # dataset_path = script_dir / "../data/Swimcat-extend" # FIXED example
+    # dataset_path = script_dir / "../data/mini-GCD-flat" # FLAT example
+    dataset_path = script_dir / "../data/Swimcat-extend" # FIXED example
     # dataset_path = Path("PATH_TO_YOUR_DATASET") # Use your actual path
 
     if not Path(dataset_path).exists():
@@ -2588,7 +2558,10 @@ if __name__ == "__main__":
          exit()
 
     # Select Model:
-    model_type = "cnn"  # 'cnn', 'vit', 'diffusion'
+    model_type = "vit"  # 'cnn', 'vit', 'diffusion'
+
+    # Image size for the model
+    img_size = (224, 224)  # Common size for CNNs and ViTs
 
     # Flag for CV methods on FIXED datasets:
     # Set to True to allow nested_grid_search and cv_model_evaluation on FIXED datasets
@@ -2626,7 +2599,7 @@ if __name__ == "__main__":
         # You *could* potentially tune which layers are frozen, but that's complex via grid search.
 
         # Training duration / EarlyStopping focus
-        # 'max_epochs': [5, 10, 15], # If fine-tuning quickly
+        'max_epochs': [5, 10, 15], # If fine-tuning quickly
     }
 
     param_grid_diffusion = {
@@ -2656,12 +2629,30 @@ if __name__ == "__main__":
         exit()
 
     # Temporarily set param grid
-    chosen_param_grid = {
-        # Skorch parameters
-        'lr': [0.001],
+    # chosen_param_grid = {
+    #     # Skorch parameters
+    #     'lr': [0.001],
+    #
+    #     # Module (SimpleCNN) parameters
+    #     'module__dropout_rate': [0.3, 0.6],  # Tune dropout in the classifier head
+    # }
 
-        # Module (SimpleCNN) parameters
-        'module__dropout_rate': [0.3, 0.6],  # Tune dropout in the classifier head
+    chosen_param_grid = {
+        # Skorch parameters (especially LR for fine-tuning)
+        'lr': [0.001, 0.0005, 0.0001],  # Often lower LRs for fine-tuning
+        'batch_size': [16],  # Memory constraints often tighter with ViT
+
+        # Optimizer (AdamW) parameters
+        'optimizer__weight_decay': [0.01, 0.001],  # Weight decay is important
+
+        # Module (SimpleViT) parameters
+        # Since we only replaced the head and froze most layers, there are fewer
+        # *direct* module hyperparameters to tune via __init__.
+        # If you added dropout to the new head, you could tune 'module__dropout_rate'.
+        # You *could* potentially tune which layers are frozen, but that's complex via grid search.
+
+        # Training duration / EarlyStopping focus
+        'max_epochs': [10, 15], # If fine-tuning quickly
     }
 
     fixed_params_for_eval = {
@@ -2674,7 +2665,7 @@ if __name__ == "__main__":
     # --- Define Method Sequence ---
     # Example 1: Single Train (using val split) and Eval
     methods_seq_1 = [
-        ('single_train', {'max_epochs': 5, 'save_model': True, 'save_results': True, 'val_split_ratio': 0.2}), # Explicit val split
+        ('single_train', {'max_epochs': 10, 'save_model': True, 'save_results': True, 'val_split_ratio': 0.2}), # Explicit val split
         ('single_eval', {'save_results': True}),
     ]
     # Example 2: Non-Nested Grid Search + Eval best model
@@ -2707,14 +2698,14 @@ if __name__ == "__main__":
     methods_seq_5 = [
         ('non_nested_grid_search', {
             'param_grid': chosen_param_grid,
-            'cv': 3,
+            'cv': 4,
             'method': 'grid',
             'scoring': 'accuracy',
             'save_best_model': True,
             'save_results': True
         }),
          ('cv_model_evaluation', {
-             'cv': 3,
+             'cv': 4,
              # Special key indicates using best_params from previous step (index 0)
              'use_best_params_from_step': 0,
              # Optionally provide specific params for cv_eval to override defaults if needed
@@ -2733,7 +2724,7 @@ if __name__ == "__main__":
 
 
     # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_seq_1 # <--- SELECT SEQUENCE TO RUN
+    chosen_sequence = methods_seq_5 # <--- SELECT SEQUENCE TO RUN
 
     logger.info(f"Executing sequence: {[m[0] for m in chosen_sequence]}")
 
@@ -2746,12 +2737,13 @@ if __name__ == "__main__":
             methods=chosen_sequence,
             force_flat_for_fixed_cv=force_flat, # Pass the flag
             # Pipeline default parameters (can be overridden by methods)
-            img_size=(64, 64), # Smaller size for faster demo
+            img_size=img_size, # Smaller size for faster demo
             batch_size=16,     # Smaller batch size for demo
             max_epochs=10,     # Fewer epochs for demo
             patience=3,        # Reduced patience for demo
             lr=0.001,
             optimizer__weight_decay=0.01,
+            test_split_ratio_if_flat=0.4, # For flat datasets
             # module__dropout_rate=0.5 # If applicable to model
             save_detailed_results=True,  # Or False, depending on desired output level
         )
