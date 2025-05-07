@@ -1,3 +1,0 @@
-method_run_id,timestamp,accuracy,macro_f1,accuracy_ci_margin,f1_macro_ci_margin,precision_macro,recall_macro,specificity_macro,roc_auc_macro,pr_auc_macro,best_cv_score,best_epoch,cv,n_iter,method,scoring,best_batch_size,best_lr,best_max_epochs,best_optimizer__weight_decay
-non_nested_grid_051750_470819,20250507_052744,,,,,,,,,,0.7841269841269841,,3,N/A,grid,accuracy,16,5e-05,5,0.001
-single_eval_052759,20250507_052759,0.8928571428571429,0.8929159907175386,,,0.9052223420814535,0.8928571428571428,0.9785714285714285,0.9903367346938777,0.959573102907306,,

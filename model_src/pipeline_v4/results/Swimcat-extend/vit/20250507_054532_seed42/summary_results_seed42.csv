@@ -1,0 +1,3 @@
+method_run_id,timestamp,accuracy,macro_f1,accuracy_ci_margin,f1_macro_ci_margin,precision_macro,recall_macro,specificity_macro,roc_auc_macro,pr_auc_macro,best_cv_score,best_epoch,cv,n_iter,method,scoring,best_batch_size,best_lr,best_max_epochs,best_optimizer__weight_decay
+non_nested_grid_054532_610581,20250507_064104,,,,,,,,,,0.9738095238095239,,4,N/A,grid,accuracy,16,0.001,15,0.01
+cv_model_evaluation_test_064434_189526,20250507_064434,0.975,0.9750151675578227,0.01136587966172947,0.0112400317938294,0.9756392183177207,0.9750000000000001,0.995,0.999170068027211,0.9851919638778174,,,6,0.001,15,16,cuda,3,valid_loss,ReduceLROnPlateau,5,0,0.01,4,test,0.2,0.95

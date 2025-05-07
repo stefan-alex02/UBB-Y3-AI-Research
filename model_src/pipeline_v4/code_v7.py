@@ -2665,7 +2665,7 @@ if __name__ == "__main__":
     # --- Define Method Sequence ---
     # Example 1: Single Train (using val split) and Eval
     methods_seq_1 = [
-        ('single_train', {'max_epochs': 10, 'save_model': True, 'save_results': True, 'val_split_ratio': 0.2}), # Explicit val split
+        ('single_train', {'max_epochs': 5, 'save_model': True, 'save_results': True, 'val_split_ratio': 0.2}), # Explicit val split
         ('single_eval', {'save_results': True}),
     ]
     # Example 2: Non-Nested Grid Search + Eval best model
