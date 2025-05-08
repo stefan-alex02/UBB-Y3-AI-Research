@@ -1,0 +1,386 @@
+2025-04-26 19:21:06 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-26 19:21:06 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-26 19:21:06 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-26 19:21:06 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-26 19:21:06 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-26 19:21:06 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: single_train, single_eval, non_nested_grid_search
+2025-04-26 19:21:06 [INFO] ℹ️ ℹ️ Running method: single_train
+2025-04-26 19:21:06 [INFO] ℹ️ ℹ️ Performing single training run with max_epochs=30
+2025-04-26 19:21:46 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:23:16 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-26 19:23:16 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-26 19:23:16 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-26 19:23:16 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-26 19:23:16 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-26 19:23:16 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: single_train, single_eval, non_nested_grid_search
+2025-04-26 19:23:16 [INFO] ℹ️ ℹ️ Running method: single_train
+2025-04-26 19:23:16 [INFO] ℹ️ ℹ️ Performing single training run with max_epochs=30
+2025-04-26 19:23:54 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:24:04 [INFO] ℹ️ ℹ️ Model saved to results\mini-GCD\cnn\cnn_e16_vl1.3141.pt
+2025-04-26 19:24:04 [INFO] ℹ️ ℹ️ Single training completed
+2025-04-26 19:24:04 [INFO] ℹ️ ℹ️ Best epoch: 16
+2025-04-26 19:24:04 [INFO] ℹ️ ℹ️ Best validation loss: 1.3141
+2025-04-26 19:24:04 [INFO] ℹ️ ℹ️ Running method: single_eval
+2025-04-26 19:24:04 [INFO] ℹ️ ℹ️ Performing model evaluation on test set
+2025-04-26 19:24:20 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\single_eval__20250426_192420.json
+2025-04-26 19:24:20 [INFO] ℹ️ ℹ️ Model evaluation completed
+2025-04-26 19:24:20 [INFO] ℹ️ ℹ️ Test accuracy: 0.3810
+2025-04-26 19:24:20 [INFO] ℹ️ ℹ️ Macro avg precision: 0.3476
+2025-04-26 19:24:20 [INFO] ℹ️ ℹ️ Macro avg recall: 0.3810
+2025-04-26 19:24:20 [INFO] ℹ️ ℹ️ Macro avg F1: 0.3404
+2025-04-26 19:24:20 [INFO] ℹ️ ℹ️ Running method: non_nested_grid_search
+2025-04-26 19:24:20 [INFO] ℹ️ ℹ️ Performing non-nested grid search with 3-fold cross-validation
+2025-04-26 19:31:20 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-26 19:31:20 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-26 19:31:20 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-26 19:31:20 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-26 19:31:20 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-26 19:31:20 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: single_train, single_eval, non_nested_grid_search
+2025-04-26 19:31:20 [INFO] ℹ️ ℹ️ Running method: single_train
+2025-04-26 19:31:20 [INFO] ℹ️ ℹ️ Performing single training run with max_epochs=30
+2025-04-26 19:31:59 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:32:09 [INFO] ℹ️ ℹ️ Model saved to results\mini-GCD\cnn\cnn_e16_vl1.3141.pt
+2025-04-26 19:32:09 [INFO] ℹ️ ℹ️ Single training completed
+2025-04-26 19:32:09 [INFO] ℹ️ ℹ️ Best epoch: 16
+2025-04-26 19:32:09 [INFO] ℹ️ ℹ️ Best validation loss: 1.3141
+2025-04-26 19:32:09 [INFO] ℹ️ ℹ️ Running method: single_eval
+2025-04-26 19:32:09 [INFO] ℹ️ ℹ️ Performing model evaluation on test set
+2025-04-26 19:32:25 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\single_eval__20250426_193225.json
+2025-04-26 19:32:25 [INFO] ℹ️ ℹ️ Model evaluation completed
+2025-04-26 19:32:25 [INFO] ℹ️ ℹ️ Test accuracy: 0.3810
+2025-04-26 19:32:25 [INFO] ℹ️ ℹ️ Macro avg precision: 0.3476
+2025-04-26 19:32:25 [INFO] ℹ️ ℹ️ Macro avg recall: 0.3810
+2025-04-26 19:32:25 [INFO] ℹ️ ℹ️ Macro avg F1: 0.3404
+2025-04-26 19:32:25 [INFO] ℹ️ ℹ️ Running method: non_nested_grid_search
+2025-04-26 19:32:25 [INFO] ℹ️ ℹ️ Performing non-nested grid search with 3-fold cross-validation
+2025-04-26 19:39:25 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-26 19:39:25 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-26 19:39:25 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-26 19:39:25 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-26 19:39:25 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-26 19:39:25 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: single_train, single_eval, non_nested_grid_search
+2025-04-26 19:39:25 [INFO] ℹ️ ℹ️ Running method: single_train
+2025-04-26 19:39:25 [INFO] ℹ️ ℹ️ Performing single training run with max_epochs=30
+2025-04-26 19:40:05 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:40:15 [INFO] ℹ️ ℹ️ Model saved to results\mini-GCD\cnn\cnn_e16_vl1.3141.pt
+2025-04-26 19:40:15 [INFO] ℹ️ ℹ️ Single training completed
+2025-04-26 19:40:15 [INFO] ℹ️ ℹ️ Best epoch: 16
+2025-04-26 19:40:15 [INFO] ℹ️ ℹ️ Best validation loss: 1.3141
+2025-04-26 19:40:15 [INFO] ℹ️ ℹ️ Running method: single_eval
+2025-04-26 19:40:15 [INFO] ℹ️ ℹ️ Performing model evaluation on test set
+2025-04-26 19:40:31 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\single_eval__20250426_194031.json
+2025-04-26 19:40:31 [INFO] ℹ️ ℹ️ Model evaluation completed
+2025-04-26 19:40:31 [INFO] ℹ️ ℹ️ Test accuracy: 0.3810
+2025-04-26 19:40:31 [INFO] ℹ️ ℹ️ Macro avg precision: 0.3476
+2025-04-26 19:40:31 [INFO] ℹ️ ℹ️ Macro avg recall: 0.3810
+2025-04-26 19:40:31 [INFO] ℹ️ ℹ️ Macro avg F1: 0.3404
+2025-04-26 19:40:31 [INFO] ℹ️ ℹ️ Running method: non_nested_grid_search
+2025-04-26 19:40:31 [INFO] ℹ️ ℹ️ Performing non-nested grid search with 3-fold cross-validation
+2025-04-26 19:41:52 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:41:58 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:42:04 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:42:11 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:42:19 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:42:28 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:42:36 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:42:42 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:42:48 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:42:54 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:43:01 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:43:09 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:43:16 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:43:22 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:43:28 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:43:34 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:43:42 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:43:49 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:43:59 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:44:04 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:44:10 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:44:16 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:44:23 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:44:31 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:44:41 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-26 19:45:09 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\non_nested_grid_search_cv=3_n_iter=3_20250426_194509.json
+2025-04-28 01:49:20 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-28 01:49:20 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-28 01:49:20 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-28 01:49:20 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 01:49:20 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-28 01:49:20 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: single_train, single_eval, non_nested_grid_search
+2025-04-28 01:49:20 [INFO] ℹ️ ℹ️ Running method: single_train
+2025-04-28 01:49:20 [INFO] ℹ️ ℹ️ Performing single training run with max_epochs=30
+2025-04-28 01:49:41 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:49:47 [INFO] ℹ️ ℹ️ Model saved to results\mini-GCD\cnn\cnn_e15_vl1.2095.pt
+2025-04-28 01:49:47 [INFO] ℹ️ ℹ️ Single training completed
+2025-04-28 01:49:47 [INFO] ℹ️ ℹ️ Best epoch: 15
+2025-04-28 01:49:47 [INFO] ℹ️ ℹ️ Best validation loss: 1.2095
+2025-04-28 01:49:47 [INFO] ℹ️ ℹ️ Running method: single_eval
+2025-04-28 01:49:47 [INFO] ℹ️ ℹ️ Performing model evaluation on test set
+2025-04-28 01:49:56 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\single_eval__20250428_014956.json
+2025-04-28 01:49:56 [INFO] ℹ️ ℹ️ Model evaluation completed
+2025-04-28 01:49:56 [INFO] ℹ️ ℹ️ Test accuracy: 0.3690
+2025-04-28 01:49:56 [INFO] ℹ️ ℹ️ Macro avg precision: 0.3372
+2025-04-28 01:49:56 [INFO] ℹ️ ℹ️ Macro avg recall: 0.3690
+2025-04-28 01:49:56 [INFO] ℹ️ ℹ️ Macro avg F1: 0.3265
+2025-04-28 01:49:56 [INFO] ℹ️ ℹ️ Running method: non_nested_grid_search
+2025-04-28 01:49:56 [INFO] ℹ️ ℹ️ Performing non-nested grid search with 3-fold cross-validation
+2025-04-28 01:50:37 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:50:40 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:50:44 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:50:48 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:50:51 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:50:55 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:50:59 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:51:13 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\non_nested_grid_search_cv=3_n_iter=3_20250428_015113.json
+2025-04-28 01:57:48 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-28 01:57:48 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-28 01:57:48 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-28 01:57:48 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 01:57:48 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-28 01:57:48 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: single_train, single_eval, non_nested_grid_search
+2025-04-28 01:57:48 [INFO] ℹ️ ℹ️ Running method: single_train
+2025-04-28 01:57:48 [INFO] ℹ️ ℹ️ Performing single training run with max_epochs=30
+2025-04-28 01:58:22 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:59:07 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-28 01:59:07 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-28 01:59:07 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-28 01:59:07 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 01:59:07 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-28 01:59:07 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: single_train, single_eval, non_nested_grid_search
+2025-04-28 01:59:07 [INFO] ℹ️ ℹ️ Running method: single_train
+2025-04-28 01:59:07 [INFO] ℹ️ ℹ️ Performing single training run with max_epochs=30
+2025-04-28 01:59:38 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 01:59:45 [INFO] ℹ️ ℹ️ Model saved to results\mini-GCD\cnn\cnn_e15_vl1.2095.pt
+2025-04-28 01:59:45 [INFO] ℹ️ ℹ️ Single training completed
+2025-04-28 01:59:45 [INFO] ℹ️ ℹ️ Best epoch: 15
+2025-04-28 01:59:45 [INFO] ℹ️ ℹ️ Best validation loss: 1.2095
+2025-04-28 01:59:45 [INFO] ℹ️ ℹ️ Running method: single_eval
+2025-04-28 01:59:45 [INFO] ℹ️ ℹ️ Performing model evaluation on test set
+2025-04-28 02:00:00 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\single_eval__20250428_020000.json
+2025-04-28 02:00:00 [INFO] ℹ️ ℹ️ Model evaluation completed
+2025-04-28 02:00:00 [INFO] ℹ️ ℹ️ Test accuracy: 0.3690
+2025-04-28 02:00:00 [INFO] ℹ️ ℹ️ Macro avg precision: 0.3372
+2025-04-28 02:00:00 [INFO] ℹ️ ℹ️ Macro avg recall: 0.3690
+2025-04-28 02:00:00 [INFO] ℹ️ ℹ️ Macro avg F1: 0.3265
+2025-04-28 02:00:00 [INFO] ℹ️ ℹ️ Running method: non_nested_grid_search
+2025-04-28 02:00:00 [INFO] ℹ️ ℹ️ Performing non-nested grid search with 3-fold cross-validation
+2025-04-28 02:01:04 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:01:09 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:01:13 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:01:17 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:01:22 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:01:26 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:01:30 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:01:50 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\non_nested_grid_search_cv=3_n_iter=3_20250428_020150.json
+2025-04-28 02:01:50 [INFO] ℹ️ ℹ️ Non-nested grid search completed
+2025-04-28 02:01:50 [INFO] ℹ️ ℹ️ Best parameters: {'batch_size': 16, 'lr': 0.0001, 'max_epochs': 10}
+2025-04-28 02:01:50 [INFO] ℹ️ ℹ️ Best CV score: 0.6056
+2025-04-28 02:01:50 [INFO] ℹ️ ℹ️ Test accuracy: 0.3810
+2025-04-28 02:04:14 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-28 02:04:14 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-28 02:04:14 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-28 02:04:14 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:04:14 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-28 02:04:14 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: nested_grid_search
+2025-04-28 02:04:14 [INFO] ℹ️ ℹ️ Running method: nested_grid_search
+2025-04-28 02:04:14 [INFO] ℹ️ ℹ️ Performing nested grid search with 3-fold outer CV and 2-fold inner CV
+2025-04-28 02:04:14 [WARNING] ⚠️ ⚠️ Using nested CV with FIXED dataset structure might not be appropriate
+2025-04-28 02:05:34 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:05:38 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:05:43 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:05:46 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:05:49 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:05:56 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\nested_grid_search_outer_cv=3_inner_cv=2_n_iter=3_20250428_020556.json
+2025-04-28 02:08:18 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-28 02:08:18 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-28 02:08:18 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-28 02:08:18 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:08:18 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-28 02:08:18 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: nested_grid_search
+2025-04-28 02:08:18 [INFO] ℹ️ ℹ️ Running method: nested_grid_search
+2025-04-28 02:08:18 [INFO] ℹ️ ℹ️ Performing nested grid search with 3-fold outer CV and 2-fold inner CV
+2025-04-28 02:08:18 [WARNING] ⚠️ ⚠️ Using nested CV with FIXED dataset structure might not be appropriate
+2025-04-28 02:09:25 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:09:28 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:09:32 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:09:35 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:09:38 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:09:44 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\nested_grid_search_outer_cv=3_inner_cv=2_n_iter=3_20250428_020944.json
+2025-04-28 02:09:44 [INFO] ℹ️ ℹ️ Nested grid search completed
+2025-04-28 02:09:44 [INFO] ℹ️ ℹ️ Best parameters: {'batch_size': 16, 'lr': 0.0001, 'max_epochs': 10}
+2025-04-28 02:09:44 [INFO] ℹ️ ℹ️ Best CV score: 0.5743
+2025-04-28 02:09:44 [INFO] ℹ️ ℹ️ Test accuracy: 0.3571
+2025-04-28 02:15:34 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-28 02:15:34 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-28 02:15:34 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-28 02:15:34 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:15:34 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-28 02:15:34 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: nested_grid_search
+2025-04-28 02:15:34 [INFO] ℹ️ ℹ️ Running method: nested_grid_search
+2025-04-28 02:15:34 [INFO] ℹ️ ℹ️ Performing nested grid search with 3-fold outer CV and 2-fold inner CV
+2025-04-28 02:15:34 [WARNING] ⚠️ ⚠️ Using nested CV with FIXED dataset structure might not be appropriate
+2025-04-28 02:16:51 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:16:54 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:16:57 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:17:01 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:17:05 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:17:10 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\nested_grid_search_outer_cv=3_inner_cv=2_n_iter=3_20250428_021710.json
+2025-04-28 02:17:10 [INFO] ℹ️ ℹ️ Nested grid search completed
+2025-04-28 02:17:10 [INFO] ℹ️ ℹ️ Best parameters: {'batch_size': 16, 'lr': 0.0001, 'max_epochs': 10}
+2025-04-28 02:17:10 [INFO] ℹ️ ℹ️ Best CV score: 0.5743
+2025-04-28 02:17:10 [INFO] ℹ️ ℹ️ Test accuracy: 0.3571
+2025-04-28 02:21:54 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-28 02:21:54 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-28 02:21:54 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-28 02:21:54 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:21:54 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-28 02:21:54 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: nested_grid_search
+2025-04-28 02:21:54 [INFO] ℹ️ ℹ️ Running method: nested_grid_search
+2025-04-28 02:21:54 [INFO] ℹ️ ℹ️ Performing nested grid search with 3-fold outer CV and 2-fold inner CV
+2025-04-28 02:22:39 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-28 02:22:39 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-28 02:22:39 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-28 02:22:39 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:22:39 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-28 02:22:39 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: nested_grid_search
+2025-04-28 02:22:39 [INFO] ℹ️ ℹ️ Running method: nested_grid_search
+2025-04-28 02:22:39 [INFO] ℹ️ ℹ️ Performing nested grid search with 3-fold outer CV and 2-fold inner CV
+2025-04-28 02:23:27 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:30 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:32 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:35 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:37 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:42 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:44 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:47 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:50 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:53 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:23:57 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:24:00 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:24:02 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:24:06 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:24:08 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:07 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-28 02:28:07 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-28 02:28:07 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-28 02:28:07 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:28:07 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-28 02:28:07 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: nested_grid_search
+2025-04-28 02:28:07 [INFO] ℹ️ ℹ️ Running method: nested_grid_search
+2025-04-28 02:28:07 [INFO] ℹ️ ℹ️ Performing nested grid search with 3-fold outer CV and 2-fold inner CV
+2025-04-28 02:28:28 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:30 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:32 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:34 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:37 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:42 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:44 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:47 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:49 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:52 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:57 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:28:59 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:29:02 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:29:04 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:29:07 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:29:12 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD-flat\cnn\nested_grid_search_outer_cv=3_inner_cv=2_n_iter=3_20250428_022912.json
+2025-04-28 02:29:12 [INFO] ℹ️ ℹ️ Nested grid search completed
+2025-04-28 02:29:12 [INFO] ℹ️ ℹ️ Mean CV accuracy: 0.6037 ± 0.0046
+2025-04-28 02:34:42 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-28 02:34:42 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-28 02:34:42 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-28 02:34:42 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:34:42 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-28 02:34:42 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: nested_grid_search
+2025-04-28 02:34:42 [INFO] ℹ️ ℹ️ Running method: nested_grid_search
+2025-04-28 02:34:42 [INFO] ℹ️ ℹ️ Performing nested grid search with 3-fold outer CV and 2-fold inner CV
+2025-04-28 02:34:42 [WARNING] ⚠️ ⚠️ Using nested CV with FIXED dataset structure might not be appropriate
+2025-04-28 02:35:52 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:35:56 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:36:00 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:36:03 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:36:07 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:36:13 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD\cnn\nested_grid_search_outer_cv=3_inner_cv=2_n_iter=3_20250428_023613.json
+2025-04-28 02:36:13 [INFO] ℹ️ ℹ️ Nested grid search completed
+2025-04-28 02:36:13 [INFO] ℹ️ ℹ️ Best parameters: {'batch_size': 16, 'lr': 0.0001, 'max_epochs': 10}
+2025-04-28 02:36:13 [INFO] ℹ️ ℹ️ Best CV score: 0.5743
+2025-04-28 02:36:13 [INFO] ℹ️ ℹ️ Test accuracy: 0.3571
+2025-04-28 02:36:30 [INFO] ℹ️ ℹ️ Detected dataset structure: fixed
+2025-04-28 02:36:30 [INFO] ℹ️ ℹ️ Loading FIXED structure dataset
+2025-04-28 02:36:30 [INFO] ℹ️ ℹ️ Dataset loaded: 280 train, 70 validation, 84 test samples
+2025-04-28 02:36:30 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:36:30 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and fixed dataset
+2025-04-28 02:36:53 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-28 02:36:53 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-28 02:36:53 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-28 02:36:53 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:36:53 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-28 02:36:53 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: cv_model_evaluation
+2025-04-28 02:36:53 [INFO] ℹ️ ℹ️ Running method: cv_model_evaluation
+2025-04-28 02:36:53 [INFO] ℹ️ ℹ️ Performing CV model evaluation with 5-fold cross-validation
+2025-04-28 02:37:27 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:37:33 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:37:38 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:37:44 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:37:49 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:37:54 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD-flat\cnn\cv_model_evaluation_cv=5_20250428_023754.json
+2025-04-28 02:41:26 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-28 02:41:26 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-28 02:41:26 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-28 02:41:26 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:41:26 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-28 02:41:26 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: cv_model_evaluation
+2025-04-28 02:41:26 [INFO] ℹ️ ℹ️ Running method: cv_model_evaluation
+2025-04-28 02:41:26 [INFO] ℹ️ ℹ️ Performing CV model evaluation with 5-fold cross-validation
+2025-04-28 02:41:58 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:42:03 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:42:09 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:42:15 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:42:21 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:42:26 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD-flat\cnn\cv_model_evaluation_cv=5_20250428_024226.json
+2025-04-28 02:45:25 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-28 02:45:25 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-28 02:45:25 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-28 02:45:25 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:45:25 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-28 02:45:25 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: cv_model_evaluation
+2025-04-28 02:45:25 [INFO] ℹ️ ℹ️ Running method: cv_model_evaluation
+2025-04-28 02:45:25 [INFO] ℹ️ ℹ️ Performing CV model evaluation with 5-fold cross-validation
+2025-04-28 02:45:56 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:46:04 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:46:10 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:46:16 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:46:22 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:48:22 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-28 02:48:22 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-28 02:48:22 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-28 02:48:22 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 02:48:22 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-28 02:48:22 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: cv_model_evaluation
+2025-04-28 02:48:22 [INFO] ℹ️ ℹ️ Running method: cv_model_evaluation
+2025-04-28 02:48:22 [INFO] ℹ️ ℹ️ Performing CV model evaluation with 5-fold cross-validation
+2025-04-28 02:48:54 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:49:01 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:49:09 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:49:15 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:49:20 [INFO] ℹ️ ℹ️ Training SimpleCNN model
+2025-04-28 02:49:25 [INFO] ℹ️ ℹ️ Results saved to results\mini-GCD-flat\cnn\cv_model_evaluation_cv=5_20250428_024925.json
+2025-04-28 02:49:25 [INFO] ℹ️ ℹ️ CV model evaluation completed
+2025-04-28 02:49:25 [INFO] ℹ️ ℹ️ Mean CV accuracy: 0.6083 ± 0.0486
+2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: cv_model_evaluation
+2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Running method: cv_model_evaluation
+2025-04-28 03:03:09 [INFO] ℹ️ ℹ️ Performing CV model evaluation with 5-fold cross-validation
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Detected dataset structure: flat
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Loading FLAT structure dataset
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Dataset split: 277 train, 70 validation, 87 test samples
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Pipeline initialized with cnn model and flat dataset
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Pipeline executor initialized with methods: cv_model_evaluation
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Running method: cv_model_evaluation
+2025-04-29 00:58:05 [INFO] ℹ️ ℹ️ Performing CV model evaluation with 5-fold cross-validation

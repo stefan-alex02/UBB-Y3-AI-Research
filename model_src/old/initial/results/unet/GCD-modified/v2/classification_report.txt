@@ -1,8 +1,0 @@
-              precision    recall  f1-score   support
-
-   1_cumulus       1.00      1.00      1.00         8
-  4_clearsky       1.00      1.00      1.00        19
-
-    accuracy                           1.00        27
-   macro avg       1.00      1.00      1.00        27
-weighted avg       1.00      1.00      1.00        27

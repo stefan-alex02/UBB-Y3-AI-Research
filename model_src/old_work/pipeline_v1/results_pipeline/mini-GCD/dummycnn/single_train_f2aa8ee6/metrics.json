@@ -1,0 +1,27 @@
+{
+    "method": "single_train",
+    "training_history": [
+        {
+            "batches": [
+                {
+                    "train_loss": 1.1034705638885498,
+                    "train_batch_size": 16
+                },
+                {
+                    "train_loss": 1.2418980598449707,
+                    "train_batch_size": 16
+                },
+                {
+                    "train_loss": 1.106019139289856,
+                    "train_batch_size": 16
+                },
+                {
+                    "train_loss": 1.1007280349731445,
+                    "train_batch_size": 8
+                }
+            ],
+            "epoch": 1,
+            "train_batch_count": 4
+        }
+    ]
+}

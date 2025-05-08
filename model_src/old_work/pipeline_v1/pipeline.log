@@ -1,0 +1,209 @@
+2025-04-26 14:12:11 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 14:12:12 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 14:41:02 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 14:41:02 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 14:41:03 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 14:57:58 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 14:57:58 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 14:58:00 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 14:59:02 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 14:59:02 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 14:59:03 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 15:23:47 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 15:23:47 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 15:23:48 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 15:38:27 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 15:38:27 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 15:38:28 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 15:39:39 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 15:39:39 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 15:39:40 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 15:46:34 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 15:46:34 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 15:46:35 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 15:48:29 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 15:48:29 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 15:48:30 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 16:13:17 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 16:13:17 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 16:13:18 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 16:14:02 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 16:14:02 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 16:14:03 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 16:14:28 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 16:14:28 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 16:14:29 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 16:29:05 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 16:29:05 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 16:29:06 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 16:31:20 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 16:31:20 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 16:31:21 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 16:34:52 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 16:34:52 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 16:34:52 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 16:40:49 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 16:40:49 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 16:40:50 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 16:51:03 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 16:51:03 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 16:51:04 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:03:08 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:03:08 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:03:09 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:09:21 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:09:21 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:09:22 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:11:44 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:11:44 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:11:45 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:14:14 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:14:14 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:14:15 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:14:43 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:14:43 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:14:44 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:16:04 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:16:04 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:16:05 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:18:22 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:18:22 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:18:24 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:20:19 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:20:19 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:20:20 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:26:05 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:26:05 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:26:06 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:31:18 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:31:18 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:31:19 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:32:17 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:32:17 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:32:18 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:34:23 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:34:23 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:34:24 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:36:27 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:36:27 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:36:28 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:39:01 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:39:01 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:39:02 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:52:58 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:52:58 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:52:59 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:55:25 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:55:25 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:55:25 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 17:56:37 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 17:56:37 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 17:56:38 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:00:31 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:00:31 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:00:32 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:01:24 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:01:24 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:01:25 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:05:39 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:05:39 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:05:40 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:07:22 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:07:22 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:07:23 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:09:29 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:09:29 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:09:30 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:10:38 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:10:38 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:10:39 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:27:24 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:27:24 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:27:25 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:29:10 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:29:11 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:29:11 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:30:11 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:30:11 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:30:12 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:41:29 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:41:29 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:41:30 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:42:33 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:42:33 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:42:34 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:43:50 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:43:50 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:43:51 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:44:47 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:44:47 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:44:48 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:45:23 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:45:23 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:45:24 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:46:04 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:46:04 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:46:05 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:47:07 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:47:08 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:47:08 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:51:50 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:51:51 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:51:51 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 18:53:45 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 18:53:45 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 18:53:46 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 19:02:01 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 19:02:01 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 19:02:02 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 19:18:57 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 19:18:57 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 19:18:58 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 19:53:39 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 19:53:39 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 19:53:40 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 19:56:56 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 19:56:56 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 19:56:57 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 20:10:47 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 20:10:47 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 20:10:48 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 22:05:41 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 22:05:41 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 22:05:42 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 22:09:49 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 22:09:49 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 22:09:50 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 22:11:17 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 22:11:17 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 22:11:18 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 22:13:41 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 22:13:41 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 22:13:41 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 22:14:17 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 22:14:17 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 22:14:18 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 22:14:53 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 22:14:53 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 22:14:54 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-26 22:16:30 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-26 22:16:30 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-26 22:16:31 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-27 12:34:30 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-27 12:34:30 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-27 12:34:31 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-27 12:35:31 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-27 12:35:32 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-27 12:35:33 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-27 12:55:00 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-27 12:55:00 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-27 12:55:01 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-27 12:57:34 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-27 12:57:35 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-27 12:57:35 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-28 01:45:35 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-28 01:45:35 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-28 01:45:35 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'
+2025-04-28 03:07:27 - ⚠️ WARNING - [main.py:27] - ⚠️ Dummy dataset path 'mini-GCD' already exists. Removing and recreating.
+2025-04-28 03:07:27 - ✨ INFO - [main.py:30] - 🛠️ Creating dummy dataset 'mini-GCD' with structure: FIXED
+2025-04-28 03:07:27 - ✨ INFO - [main.py:60] - ✅ Dummy dataset created at 'mini-GCD'

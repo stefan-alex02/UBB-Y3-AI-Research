@@ -1,3 +1,0 @@
-method,timestamp,accuracy,macro_avg_precision,macro_avg_recall,macro_avg_f1,macro_avg_roc_auc,macro_avg_pr_auc,outer_cv,inner_cv,n_iter
-nested_grid_search,20250428_022912,0.6036717752234994,0.6418501146292513,0.6026077097505669,0.5858208645956887,0.0,0.0,3,2,3
-cv_model_evaluation,20250428_024925,0.6083132852178561,0.640324280245775,0.6075091575091575,0.5915634955391529,0.0,0.0,5
