@@ -3,7 +3,7 @@ import time
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional, Union
 
-from .config import logger_name_global, DEFAULT_IMG_SIZE
+from .config import logger_name_global, DEFAULT_IMG_SIZE, ModelType
 from .logger_utils import setup_logger
 from .pipeline import ClassificationPipeline
 
@@ -16,10 +16,11 @@ class PipelineExecutor:
     """
     def __init__(self,
                  dataset_path: Union[str, Path],
-                 model_type: str = 'cnn',
+                 model_type: Union[str, ModelType] = ModelType.CNN,
                  model_load_path: Optional[Union[str, Path]] = None,
                  results_dir: Union[str, Path] = 'results',
                  results_detail_level: int = 1,
+                 plot_level: int = 0,
                  methods: List[Tuple[str, Dict[str, Any]]]= None,
                  # Pipeline config params passed down
                  img_size: Tuple[int, int] = DEFAULT_IMG_SIZE,
@@ -39,7 +40,8 @@ class PipelineExecutor:
 
             Args:
                 dataset_path: Path to the root of the image dataset.
-                model_type: Type of model to use ('cnn', 'vit', 'diffusion').
+                model_type: Type of model to use for classification.
+                    Options: 'cnn', 'simple_vit', 'flexible_vit', 'diffusion'.
                 model_load_path: Optional path to pre-trained model weights to load at pipeline init.
                 results_dir: Base directory where experiment results will be saved.
                              Each experiment run will create a subdirectory structure here.
@@ -56,6 +58,10 @@ class PipelineExecutor:
                       ROC/PR curve data, and full GridSearchCV cv_results.
                     - 3 (Full Detail including Batch Data): Includes Level 2, and preserves
                       per-batch training data if present in skorch History.
+                plot_level: Default level for plotting results after methods run (0-2).
+                        0: No plots, 1: Save plots, 2: Save and show plots.
+                        Can be overridden per method in the `methods` sequence via
+                        `plot_level_override`.
                 methods: A list of (method_name, params_dict) tuples defining the sequence
                          of pipeline operations to run.
                 img_size: Target image size for transformations (height, width).
@@ -72,11 +78,29 @@ class PipelineExecutor:
         """
         global logger # <<< Access the global logger instance
 
+        # Convert string to ModelType if necessary (or let ClassificationPipeline handle it)
+        # For consistency, it's good if PipelineExecutor also expects/handles the Enum.
+        _model_type_enum: ModelType
+        if isinstance(model_type, str):
+            try:
+                _model_type_enum = ModelType(model_type)
+            except ValueError:
+                raise ValueError(
+                    f"Invalid model_type string in Executor: '{model_type}'. "
+                    f"Valid types are: {[mt.value for mt in ModelType]}"
+                )
+        elif isinstance(model_type, ModelType):
+            _model_type_enum = model_type
+        else:
+            raise TypeError(
+                f"Executor model_type must be string or ModelType enum, got {type(model_type)}"
+            )
+
         # --- Initialize Pipeline FIRST to get experiment_dir ---
         self.pipeline = ClassificationPipeline(
-            dataset_path=dataset_path, model_type=model_type, model_load_path=model_load_path,
+            dataset_path=dataset_path, model_type=_model_type_enum, model_load_path=model_load_path,
             results_dir=results_dir,
-            results_detail_level=results_detail_level,
+            results_detail_level=results_detail_level, plot_level=plot_level,
             img_size=img_size, val_split_ratio=val_split_ratio,
             test_split_ratio_if_flat=test_split_ratio_if_flat, data_augmentation=data_augmentation,
             force_flat_for_fixed_cv=force_flat_for_fixed_cv, lr=lr, max_epochs=max_epochs,
@@ -96,7 +120,7 @@ class PipelineExecutor:
              use_colors=True
         )
         logger.info(f"--- Starting Experiment Run ---")
-        logger.info(f"Pipeline Executor initialized for model '{model_type}' on dataset '{Path(dataset_path).name}'")
+        logger.info(f"Pipeline Executor initialized for model '{_model_type_enum.value}' on dataset '{Path(dataset_path).name}'")
         logger.info(f"Results base directory: {self.pipeline.experiment_dir}")
         # --- End Logger Config ---
 

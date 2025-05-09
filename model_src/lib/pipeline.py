@@ -26,8 +26,8 @@ from skorch.callbacks import EarlyStopping, LRScheduler
 from skorch.dataset import ValidSplit
 
 from .dataset_utils import ImageDatasetHandler, DatasetStructure
-from .models import SimpleCNN, SimpleViT, DiffusionClassifier
-from .config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE
+from .models import SimpleCNN, SimpleViT, DiffusionClassifier, FlexibleViT
+from .config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE, ModelType
 from .logger_utils import logger
 from .skorch_adapter import SkorchModelAdapter
 from .skorch_callbacks import _get_default_callbacks
@@ -42,11 +42,12 @@ class ClassificationPipeline:
 
     def __init__(self,
                  dataset_path: Union[str, Path],
-                 model_type: str = 'cnn',
+                 model_type: ModelType = ModelType.CNN,
                  model_load_path: Optional[Union[str, Path]] = None,
                  img_size: Tuple[int, int] = DEFAULT_IMG_SIZE,
                  results_dir: Union[str, Path] = 'results',
                  results_detail_level: int = 1, # Flag for detailed results
+                 plot_level: int = 0,
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2,
                  data_augmentation: bool = True,
@@ -63,7 +64,8 @@ class ClassificationPipeline:
 
             Args:
                 dataset_path: Path to the root of the image dataset.
-                model_type: Type of model to use ('cnn', 'vit', 'diffusion').
+                model_type: Type of model to use for classification.
+                    Options are 'cnn', 'simple_vit', 'flexible_vit', or 'diffusion'.
                 model_load_path: Optional path to pre-trained model weights (.pt file) to load.
                 img_size: Target image size for transformations (height, width).
                 results_dir: Base directory where experiment results will be saved.
@@ -92,6 +94,15 @@ class ClassificationPipeline:
                     - 3 (Full Detail including Batch Data): Includes everything from Level 2, and
                       also preserves per-batch training/validation data (e.g., loss, batch size)
                       if present within the skorch History objects' epoch entries.
+                plot_level: Default level for plotting results after methods run.
+                    This can be overridden per method call via the `plot_level` parameter
+                    in individual pipeline methods.
+                    Levels:
+                    - 0: No plotting is performed automatically after method execution.
+                    - 1: Plots are generated and saved to files in a subdirectory next
+                         to the results JSON.
+                    - 2: Plots are generated, saved to files, AND displayed interactively
+                         (using `plt.show()`). Requires a graphical backend.
                 val_split_ratio: Default ratio for splitting train+validation data into
                                  training and validation sets for methods like `single_train` or
                                  as the internal validation split within skorch/CV folds if not
@@ -112,15 +123,30 @@ class ClassificationPipeline:
                                       (if the model architecture supports it via __init__).
         """
         self.dataset_path = Path(dataset_path).resolve()
-        self.model_type = model_type.lower()
+        # Ensure model_type is an instance of ModelType Enum
+        if isinstance(model_type, str):
+            try:
+                self.model_type = ModelType(model_type)  # Convert string to Enum member
+            except ValueError:
+                raise ValueError(
+                    f"Invalid model_type string: '{model_type}'. "
+                    f"Valid types are: {[mt.value for mt in ModelType]}"
+                )
+        elif isinstance(model_type, ModelType):
+            self.model_type = model_type
+        else:
+            raise TypeError(f"model_type must be a string or ModelType enum member, got {type(model_type)}")
         self.force_flat_for_fixed_cv = force_flat_for_fixed_cv
         self.results_detail_level = results_detail_level
-        # Logger is configured externally by the Executor now
+        self.plot_level = plot_level
+
+        # Logger is configured externally by the Executor
         logger.info(f"Initializing Classification Pipeline:")
         logger.info(f"  Dataset Path: {self.dataset_path}")
-        logger.info(f"  Model Type: {self.model_type}")
+        logger.info(f"  Model Type: {self.model_type.value}")
         logger.info(f"  Force Flat for Fixed CV: {self.force_flat_for_fixed_cv}")
-        logger.info(f"  Results Detail Level: {self.results_detail_level}")
+        logger.info(f"  Default Results Detail Level: {self.results_detail_level}")
+        logger.info(f"  Default Plot Level: {self.plot_level}")
 
         self.dataset_handler = ImageDatasetHandler(
             root_path=self.dataset_path, img_size=img_size,
@@ -131,9 +157,9 @@ class ClassificationPipeline:
         base_results_dir = Path(results_dir).resolve()
         dataset_name = self.dataset_path.name
         timestamp_init = datetime.now().strftime('%Y%m%d_%H%M%S')
-        self.experiment_dir = base_results_dir / dataset_name / self.model_type / f"{timestamp_init}_seed{RANDOM_SEED}"
+        self.experiment_dir = base_results_dir / dataset_name / self.model_type.value / f"{timestamp_init}_seed{RANDOM_SEED}"
         # Experiment dir created by Executor before logger setup
-        # logger.info(f"  Base experiment results dir: {self.experiment_dir}") # Logged by executor
+        logger.info(f"  Base experiment results dir: {self.experiment_dir}") # Logged by executor
 
         model_class = self._get_model_class(self.model_type)
 
@@ -179,11 +205,17 @@ class ClassificationPipeline:
         # logger.info(f"Pipeline initialized successfully.") # Logged by executor
 
     @staticmethod
-    def _get_model_class(model_type_str: str) -> Type[nn.Module]:
-        model_mapping = {'cnn': SimpleCNN, 'vit': SimpleViT, 'diffusion': DiffusionClassifier}
-        model_class = model_mapping.get(model_type_str.lower())
+    def _get_model_class(model_type_enum: ModelType) -> Type[nn.Module]:
+        model_mapping = {
+            ModelType.CNN: SimpleCNN,
+            ModelType.SIMPLE_VIT: SimpleViT,  # Kept SimpleViT
+            ModelType.FLEXIBLE_VIT: FlexibleViT,  # Added FlexibleViT
+            ModelType.DIFFUSION: DiffusionClassifier
+        }
+        model_class = model_mapping.get(model_type_enum) # Direct lookup using Enum member
         if model_class is None:
-            raise ValueError(f"Unsupported model type: '{model_type_str}'. Choose from {list(model_mapping.keys())}.")
+            # This should ideally not happen if model_type_enum is validated
+            raise ValueError(f"Unsupported model type: '{model_type_enum.value}'.")
         return model_class
 
     # In ClassificationPipeline class:
@@ -339,7 +371,7 @@ class ClassificationPipeline:
                       run_id: str,
                       method_params: Optional[Dict[str, Any]] = None,
                       results_detail_level: Optional[int] = None
-                      ) -> None:
+                      ) -> Optional[Path]:
         method_params = method_params or {}
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         method_dir = self.experiment_dir / run_id
@@ -465,8 +497,8 @@ class ClassificationPipeline:
                 f"Final keys to save in JSON for level {current_detail_level}: {list(results_to_save.keys())}")
 
             # --- Save results JSON ---
-            json_filename = f"{method_name}_results_{timestamp}.json"
-            json_filepath = method_dir / json_filename
+            json_filename = f"{method_name}_results.json"
+            json_filepath_local = method_dir / json_filename
             try:
                 # Your json_serializer function (ensure it's defined or imported)
                 def json_serializer(obj):
@@ -491,13 +523,14 @@ class ClassificationPipeline:
                     except TypeError:
                         return str(obj)
 
-                with open(json_filepath, 'w', encoding='utf-8') as f:
+                with open(json_filepath_local, 'w', encoding='utf-8') as f:
                     json.dump(results_to_save, f, indent=4, default=json_serializer)
-                logger.info(f"Results JSON saved to: {json_filepath}")
+                logger.info(f"Results JSON saved to: {json_filepath_local}")
+                json_filepath = json_filepath_local # Assign to outer scope variable on success
             except OSError as oe:
-                logger.error(f"OS Error saving results JSON {json_filepath}: {oe}", exc_info=True)
+                logger.error(f"OS Error saving results JSON {json_filepath_local}: {oe}", exc_info=True)
             except Exception as e:
-                logger.error(f"Failed to save results JSON {json_filepath}: {e}", exc_info=True)
+                logger.error(f"Failed to save results JSON {json_filepath_local}: {e}", exc_info=True)
 
         # --- Prepare and save summary CSV (always attempted if not returned early for level 0) ---
         csv_filepath = self.experiment_dir / f"summary_results_seed{RANDOM_SEED}.csv"
@@ -549,18 +582,21 @@ class ClassificationPipeline:
         except Exception as e:
             logger.error(f"Failed to save summary results to CSV {csv_filepath}: {e}", exc_info=True)
 
+        return json_filepath  # <<< RETURN PATH or None
+
 
     # --- Pipeline Methods ---
 
     def non_nested_grid_search(self,
-                               param_grid: Dict[str, List],
+                               param_grid: Union[Dict[str, list], List[Dict[str, list]]],
                                cv: int = 5,
                                internal_val_split_ratio: Optional[float] = None,
                                n_iter: Optional[int] = None,  # For RandomizedSearch
                                method: str = 'grid',  # 'grid' or 'random'
                                scoring: str = 'accuracy',  # Sklearn scorer string or callable
                                save_best_model: bool = True,
-                               results_detail_level: Optional[int] = None) -> Dict[str, Any]:
+                               results_detail_level: Optional[int] = None,
+                               plot_level: Optional[int] = None) -> Dict[str, Any]:
         """
         Performs non-nested hyperparameter search (Grid/RandomizedSearchCV)
         using the train+validation data. Refits the best model on the train+val
@@ -572,7 +608,7 @@ class ClassificationPipeline:
         run_id = f"non_nested_{method_lower}_{datetime.now().strftime('%H%M%S_%f')}"
         search_type = "GridSearchCV" if method_lower == 'grid' else "RandomizedSearchCV"
         logger.info(f"Performing non-nested {search_type} with {cv}-fold CV.")
-        logger.info(f"Parameter Grid/Dist: {param_grid}")
+        logger.info(f"Parameter Grid/Dist:\n{json.dumps(param_grid, indent=2)}") # Log the potentially complex grid
         logger.info(f"Scoring Metric: {scoring}")
 
         if method_lower == 'random' and n_iter is None: raise ValueError("n_iter required for random search.")
@@ -615,6 +651,7 @@ class ClassificationPipeline:
             'n_jobs': 1, 'verbose': 3, 'refit': True,  # Keep refit=True
             'return_train_score': True, 'error_score': 'raise'
         }
+
         if method_lower == 'grid':
             search_kwargs['param_grid'] = param_grid
         else:
@@ -624,9 +661,24 @@ class ClassificationPipeline:
         search = SearchClass(**search_kwargs)
 
         logger.info(f"Fitting {SearchClass.__name__} on train+validation data (search verbose={search.verbose})...")
-        # Describe number of combinations to search
-        logger.info(f"Total combinations to search: {np.prod([len(v) for v in param_grid.values()] if method_lower == 'grid' else n_iter)} "
-                    f"({'grid' if method_lower == 'grid' else 'random'})")
+
+        # --- Describe number of combinations to search (adjusted for list of dicts) ---
+        total_combinations = 0
+        if method_lower == 'grid':
+            if isinstance(param_grid, dict):
+                total_combinations = int(np.prod([len(v) for v in param_grid.values() if isinstance(v, list)]))
+            elif isinstance(param_grid, list):
+                for pg_dict in param_grid:
+                    if isinstance(pg_dict, dict):
+                        total_combinations += int(np.prod([len(v) for v in pg_dict.values() if isinstance(v, list)]))
+            logger.info(f"Total combinations to search (GridSearchCV): {total_combinations}")
+        else:  # RandomizedSearchCV
+            # If param_grid is a list of dicts for RandomizedSearchCV, n_iter applies per dict (subspace)
+            # in newer scikit-learn versions. If it's a single dict, n_iter is the total.
+            # The actual number of fits can be complex to pre-calculate precisely for RandomizedSearchCV with list of dicts
+            # as it depends on scikit-learn version behavior.
+            # The `n_candidates_` attribute of the fitted search object will tell the exact number.
+            logger.info(f"Target number of iterations (RandomizedSearchCV): {n_iter}")
 
         # --- Capture stdout for scikit-learn's CV progress ---
         # Ensure contextlib is imported: import contextlib
@@ -743,7 +795,7 @@ class ClassificationPipeline:
                 params_str_simple = "_".join([f"{k.split('__')[-1]}={v}" for k, v in sorted(results.get('best_params', {}).items())])
                 params_str_simple = re.sub(r'[<>:"/\\|?*]', '_', params_str_simple)[:50] # Sanitize and shorten
 
-                model_filename = f"{self.model_type}_best_{params_str_simple}_{score_str}.pt"
+                model_filename = f"{self.model_type.value}_best_{params_str_simple}_{score_str}.pt"
                 model_path = method_run_dir / model_filename
 
                 torch.save(best_estimator_refit.module_.state_dict(), model_path)
@@ -767,11 +819,35 @@ class ClassificationPipeline:
 
         summary_params = results['params'].copy()
         summary_params.update({f"best_{k}": v for k, v in results.get('best_params', {}).items() if isinstance(v, (str, int, float, bool))})
-        self._save_results(results, f"non_nested_{method_lower}_search",
+        saved_json_path = self._save_results(results, f"non_nested_{method_lower}_search",
                            run_id=run_id,
                            method_params=summary_params,
                            results_detail_level=results_detail_level
                            )
+
+        # --- Determine effective plot level ---
+        current_plot_level = self.plot_level  # Start with pipeline default
+        if plot_level is not None:
+            current_plot_level = plot_level  # Use override if provided
+            logger.debug(f"Plot level overridden for this run to: {current_plot_level}")
+
+        # --- Plot results (conditionally) ---
+        if current_plot_level > 0 and saved_json_path:
+            logger.info(f"Plotting results for {run_id} (level {current_plot_level})...")
+            show_plots_flag = (current_plot_level == 2)
+            try:
+                from .plotter import ResultsPlotter  # Or move import to top
+                ResultsPlotter.plot_non_nested_cv_results(
+                    json_path=saved_json_path,
+                    show_plots=show_plots_flag
+                )
+            except ImportError:
+                logger.error("Plotting skipped: ResultsPlotter class not found or plotting libraries missing.")
+            except Exception as plot_err:
+                logger.error(f"Plotting failed for {run_id}: {plot_err}", exc_info=True)
+        elif current_plot_level > 0 and not saved_json_path:
+            logger.warning(
+                f"Plotting skipped for {run_id} because results JSON was not saved (detail level might be 0).")
 
         logger.info(f"Non-nested {method_lower} search finished. Best CV score ({scoring}): {search.best_score_:.4f}")
         logger.info(f"Best parameters found: {search.best_params_}")
@@ -780,14 +856,15 @@ class ClassificationPipeline:
         return results
 
     def nested_grid_search(self,
-                           param_grid: Dict[str, List],
+                           param_grid: Union[Dict[str, list], List[Dict[str, list]]],
                            outer_cv: int = 5,
                            inner_cv: int = 3,
                            internal_val_split_ratio: Optional[float] = None,
                            n_iter: Optional[int] = None, # For RandomizedSearch
                            method: str = 'grid', # 'grid' or 'random'
                            scoring: str = 'accuracy', # Sklearn scorer string or callable
-                           results_detail_level: Optional[int] = None) -> Dict[str, Any]:
+                           results_detail_level: Optional[int] = None,
+                           plot_level: Optional[int] = None) -> Dict[str, Any]:
         """
         Performs nested cross-validation for unbiased performance estimation.
         Uses the full dataset (respecting force_flat_for_fixed_cv).
@@ -797,7 +874,7 @@ class ClassificationPipeline:
         search_type = "GridSearchCV" if method_lower == 'grid' else "RandomizedSearchCV"
         logger.info(f"Performing nested {search_type} search.")
         logger.info(f"  Outer CV folds: {outer_cv}, Inner CV folds: {inner_cv}")
-        logger.info(f"  Parameter Grid/Dist: {param_grid}")
+        logger.info(f"  Parameter Grid/Dist for inner search:\n{json.dumps(param_grid, indent=2)}")
         logger.info(f"  Scoring Metric: {scoring}")
 
         # --- Check Compatibility ---
@@ -848,6 +925,7 @@ class ClassificationPipeline:
             'estimator': base_estimator, 'cv': inner_cv_splitter, 'scoring': scoring,
             'n_jobs': 1, 'verbose': 3, 'refit': True, 'error_score': 'raise'
         }
+
         if method_lower == 'grid': inner_search_kwargs['param_grid'] = param_grid
         else:
             inner_search_kwargs['param_distributions'] = param_grid
@@ -926,21 +1004,29 @@ class ClassificationPipeline:
             if 'estimator' in cv_results:
                 fold_histories_nested = []
                 best_params_per_fold_nested = []
+                inner_score_per_fold_nested = []
                 for fold_idx, outer_fold_search_estimator in enumerate(cv_results['estimator']):
+                    # History
                     if hasattr(outer_fold_search_estimator, 'best_estimator_') and \
-                       hasattr(outer_fold_search_estimator.best_estimator_, 'history_') and \
-                       outer_fold_search_estimator.best_estimator_.history_:
+                            hasattr(outer_fold_search_estimator.best_estimator_, 'history_') and \
+                            outer_fold_search_estimator.best_estimator_.history_:
                         fold_histories_nested.append(outer_fold_search_estimator.best_estimator_.history_.to_list())
                     else:
-                        fold_histories_nested.append(None) # Or an empty list
-
+                        fold_histories_nested.append(None)
+                    # Best Params
                     if hasattr(outer_fold_search_estimator, 'best_params_'):
                         best_params_per_fold_nested.append(outer_fold_search_estimator.best_params_)
                     else:
                         best_params_per_fold_nested.append(None)
+                    # Inner Best Score <<< NEW SECTION
+                    if hasattr(outer_fold_search_estimator, 'best_score_'):
+                        inner_score_per_fold_nested.append(outer_fold_search_estimator.best_score_)
+                    else:
+                        inner_score_per_fold_nested.append(np.nan)
 
                 results['outer_fold_best_model_histories'] = fold_histories_nested
                 results['outer_fold_best_params_found'] = best_params_per_fold_nested
+                results['outer_fold_inner_cv_best_score'] = inner_score_per_fold_nested
 
             # For summary file
             results['accuracy'] = results['mean_test_accuracy']
@@ -948,14 +1034,39 @@ class ClassificationPipeline:
 
             # --- Save Results ---
             run_id_for_save = f"{method_lower}_{datetime.now().strftime('%H%M%S')}"  # Generate ID
-            self._save_results(results, f"nested_{method_lower}_search",
+            saved_json_path = self._save_results(results, f"nested_{method_lower}_search",
                                 run_id=run_id_for_save,
                                 method_params=results['params'],
                                 results_detail_level=results_detail_level)
 
+            # --- Determine effective plot level ---
+            current_plot_level = self.plot_level  # Start with pipeline default
+            if plot_level is not None:
+                current_plot_level = plot_level  # Use override if provided
+                logger.debug(f"Plot level overridden for this run to: {current_plot_level}")
+
+            # --- Plot results (conditionally) ---
+            if current_plot_level > 0 and saved_json_path:
+                logger.info(f"Plotting results for {run_id_for_save} (level {current_plot_level})...")
+                show_plots_flag = (current_plot_level == 2)
+                try:
+                    from .plotter import ResultsPlotter  # Or move import to top
+                    ResultsPlotter.plot_nested_cv_results(
+                        json_path=saved_json_path,
+                        show_plots=show_plots_flag
+                    )
+                except ImportError:
+                    logger.error("Plotting skipped: ResultsPlotter class not found or plotting libraries missing.")
+                except Exception as plot_err:
+                    logger.error(f"Plotting failed for {run_id_for_save}: {plot_err}", exc_info=True)
+            elif current_plot_level > 0 and not saved_json_path:
+                logger.warning(
+                    f"Plotting skipped for {run_id_for_save} because results JSON was not saved (detail level might be 0).")
+
             logger.info(f"Nested CV Results (avg over {outer_cv} outer folds):")
             logger.info(f"  Mean Test Accuracy: {results['mean_test_accuracy']:.4f} +/- {results['std_test_accuracy']:.4f}")
             logger.info(f"  Mean Test Macro F1: {results['mean_test_f1_macro']:.4f} +/- {results['std_test_f1_macro']:.4f}")
+
             return results
 
         except Exception as e:
@@ -973,7 +1084,8 @@ class ClassificationPipeline:
                             internal_val_split_ratio: Optional[float] = None,
                             params: Optional[Dict] = None,
                             confidence_level: float = 0.95,
-                            results_detail_level: Optional[int] = None) -> Dict[str, Any]:
+                            results_detail_level: Optional[int] = None,
+                            plot_level: Optional[int] = None) -> Dict[str, Any]:
         """
         Performs K-Fold CV for evaluation using fixed hyperparameters.
         Can evaluate either on the 'full' dataset (trainval or combined)
@@ -1023,7 +1135,8 @@ class ClassificationPipeline:
                 logger.error(f"Failed to get test set paths/labels for CV evaluation: {e}", exc_info=True)
                 raise
         else:  # Should be caught by initial check
-            raise ValueError(f"Internal error: Unknown evaluate_on='{evaluate_on}'")
+            pass
+            # raise ValueError(f"Internal error: Unknown evaluate_on='{evaluate_on}'")
 
         y_selected_np = np.array(y_selected_list)
         if len(np.unique(y_selected_np)) < 2:
@@ -1039,7 +1152,7 @@ class ClassificationPipeline:
         else:
             logger.info(f"Using pipeline_v1 default parameters for CV evaluation.")
         module_dropout_rate = eval_params.pop('module__dropout_rate', None)
-        eval_params.setdefault('module', self._get_model_class(self.model_type))
+        eval_params.setdefault('module', self._get_model_class(self.model_type.value))
         eval_params.setdefault('module__num_classes', self.dataset_handler.num_classes)
         if module_dropout_rate is not None: eval_params['module__dropout_rate'] = module_dropout_rate
 
@@ -1066,6 +1179,22 @@ class ClassificationPipeline:
         fold_results = []  # Store summary dicts like {'accuracy': 0.X, 'f1_macro': 0.Y, ...}
         fold_histories = []
         fold_detailed_results = []
+
+        # --- Determine if detailed metrics needed based on save/plot levels ---
+        compute_detailed_metrics_flag = False
+        effective_detail_level_for_compute = results_detail_level or self.results_detail_level
+
+        current_plot_level = self.plot_level  # Start with pipeline default
+        if plot_level is not None:
+            current_plot_level = plot_level  # Use override if provided
+            logger.debug(f"Plot level overridden for this run to: {current_plot_level}")
+
+        # Compute if saving JSON (level > 0) AND plotting potentially detailed plots (plot_level > 0),
+        # OR if saving detailed JSON (level >= 2)
+        if (effective_detail_level_for_compute > 0 and current_plot_level > 0) or effective_detail_level_for_compute >= 2:
+            compute_detailed_metrics_flag = True
+            logger.debug(
+                f"Will compute detailed metrics (detail_level={effective_detail_level_for_compute}, plot_level={current_plot_level})")
 
         # --- Manual Outer CV Loop ---
         for fold_idx, (outer_train_indices, outer_test_indices) in enumerate(
@@ -1130,7 +1259,7 @@ class ClassificationPipeline:
                 y_score_fold_test = estimator_fold.predict_proba(X_fold_test) # <<< Use X_fold_test
                 # Compute metrics using fold's test set labels
                 fold_metrics = self._compute_metrics(y_fold_test, y_pred_fold_test, y_score_fold_test, # <<< Use y_fold_test
-                                                  detailed=(results_detail_level or self.results_detail_level) > 1)
+                                                  detailed=compute_detailed_metrics_flag)
 
                 fold_summary = {
                     'accuracy': fold_metrics.get('overall_accuracy', np.nan),
@@ -1169,7 +1298,7 @@ class ClassificationPipeline:
              'confidence_level': confidence_level,
              'cv_fold_scores': df_results.to_dict(orient='list'),
              'fold_detailed_results': fold_detailed_results,
-             **({'fold_training_histories': fold_histories} if fold_histories else {}),
+             'fold_training_histories': [h.to_list() if h else [] for h in fold_histories],
         }
 
         # Calculate aggregated stats only if enough folds completed
@@ -1234,10 +1363,29 @@ class ClassificationPipeline:
         summary_params['internal_val_split_ratio'] = val_frac_to_use
         summary_params['confidence_level'] = confidence_level
         run_id_for_save = f"cv_model_evaluation_{evaluate_on}_{datetime.now().strftime('%H%M%S_%f')}"  # Include mode in ID
-        self._save_results(results, "cv_model_evaluation",
+        saved_json_path = self._save_results(results, "cv_model_evaluation",
                            run_id=run_id_for_save,
                            method_params=summary_params,
                            results_detail_level=results_detail_level)  # Pass updated params
+
+        # --- Plot results (conditionally) ---
+        if current_plot_level > 0 and saved_json_path:
+            logger.info(f"Plotting results for {run_id_for_save} (level {current_plot_level})...")
+            show_plots_flag = (current_plot_level == 2)
+            try:
+                from .plotter import ResultsPlotter  # Or move import to top
+                ResultsPlotter.plot_cv_model_evaluation_results(
+                    json_path=saved_json_path,
+                    class_names=self.dataset_handler.classes,  # Pass class names
+                    show_plots=show_plots_flag
+                )
+            except ImportError:
+                logger.error("Plotting skipped: ResultsPlotter class not found or plotting libraries missing.")
+            except Exception as plot_err:
+                logger.error(f"Plotting failed for {run_id_for_save}: {plot_err}", exc_info=True)
+        elif current_plot_level > 0 and not saved_json_path:
+            logger.warning(
+                f"Plotting skipped for {run_id_for_save} because results JSON was not saved (detail level might be 0).")
 
         # --- Updated Logging ---
         logger.info(f"CV Evaluation Summary (on {evaluate_on} data, {K} folds, {confidence_level * 100:.0f}% CI):")
@@ -1264,7 +1412,8 @@ class ClassificationPipeline:
                      module__dropout_rate: Optional[float] = None,
                      val_split_ratio: Optional[float] = None,  # Override handler's default split
                      save_model: bool = True,
-                     results_detail_level: Optional[int] = None) -> Dict[str, Any]:
+                     results_detail_level: Optional[int] = None,
+                     plot_level: Optional[int] = None) -> Dict[str, Any]:
         """
         Performs a single training run using a train/validation split.
         Manually creates the split and uses Skorch with PredefinedSplit.
@@ -1440,7 +1589,7 @@ class ClassificationPipeline:
                 val_metric_val = results.get('best_valid_metric_value', np.nan)
                 val_metric_str = f"val_{valid_loss_key.replace('_', '-')}{val_metric_val:.4f}" if not np.isnan(
                     val_metric_val) else "no_val"
-                model_filename = f"{self.model_type}_epoch{results.get('best_epoch', 0)}_{val_metric_str}.pt"
+                model_filename = f"{self.model_type.value}_epoch{results.get('best_epoch', 0)}_{val_metric_str}.pt"
                 model_path = method_run_dir / model_filename
 
                 torch.save(adapter_for_train.module_.state_dict(), model_path)
@@ -1464,17 +1613,45 @@ class ClassificationPipeline:
         simple_params = {k: v for k, v in adapter_config.items() if isinstance(v, (str, int, float, bool))}
         simple_params['val_split_ratio_used'] = current_val_split_ratio if train_split_config else 0.0
         # Pass run_id generated at the start
-        self._save_results(results, "single_train",
+        saved_json_path = self._save_results(results, "single_train",
                            run_id=run_id,
                            method_params=simple_params,
                            results_detail_level=results_detail_level)
 
+        # --- Determine effective plot level ---
+        current_plot_level = self.plot_level  # Start with pipeline default
+        if plot_level is not None:
+            current_plot_level = plot_level  # Use override if provided
+            logger.debug(f"Plot level overridden for this run to: {current_plot_level}")
+
+        # --- Plot results (conditionally) ---
+        if current_plot_level > 0 and saved_json_path:
+            logger.info(f"Plotting results for {run_id} (level {current_plot_level})...")
+            show_plots_flag = (current_plot_level == 2)
+            try:
+                # Import plotter class within the method or at the top of the file
+                from .plotter import ResultsPlotter  # Or move import to top
+                ResultsPlotter.plot_single_train_results(
+                    json_path=saved_json_path,
+                    show_plots=show_plots_flag
+                )
+            except ImportError:
+                logger.error("Plotting skipped: ResultsPlotter class not found or plotting libraries missing.")
+            except Exception as plot_err:
+                logger.error(f"Plotting failed for {run_id}: {plot_err}", exc_info=True)
+        elif current_plot_level > 0 and not saved_json_path:
+            logger.warning(
+                f"Plotting skipped for {run_id} because results JSON was not saved (detail level might be 0).")
+
         return results
 
 
-    def single_eval(self, results_detail_level: Optional[int] = None) -> Dict[str, Any]:
+    def single_eval(self,
+                    results_detail_level: Optional[int] = None,
+                    plot_level: Optional[int] = None) -> Dict[str, Any]:
         """ Evaluates the current model adapter on the test set. """
         logger.info("Starting model evaluation on the test set...")
+        run_id = f"single_eval_{datetime.now().strftime('%H%M%S_%f')}" # Generate run_id here
 
         if not self.model_adapter.initialized_:
              raise RuntimeError("Model adapter not initialized. Train or load first.")
@@ -1495,16 +1672,55 @@ class ClassificationPipeline:
              logger.error(f"Prediction failed during single_eval: {e}", exc_info=True)
              raise RuntimeError("Failed to get predictions from model adapter.") from e
 
+        # --- Compute Metrics ---
+        # Determine detail level for computing metrics based on potential plotting needs
+        compute_detailed_metrics_flag = False
+        effective_detail_level_for_compute = results_detail_level or self.results_detail_level
+
+        # --- Determine effective plot level ---
+        current_plot_level = self.plot_level  # Start with pipeline default
+        if plot_level is not None:
+            current_plot_level = plot_level  # Use override if provided
+            logger.debug(f"Plot level overridden for this run to: {current_plot_level}")
+
         # --- Compute Metrics (pass detailed flag) ---
-        metrics = self._compute_metrics(y_test_np, y_pred_test, y_score_test,
-                                        detailed=(results_detail_level or self.results_detail_level) > 1)
+        # If saving JSON (level > 0) AND plotting potentially detailed plots (plot_level > 0),
+        # OR if saving detailed JSON (level >= 2), compute detailed metrics.
+        if (effective_detail_level_for_compute > 0 and current_plot_level > 0) or effective_detail_level_for_compute >= 2:
+            compute_detailed_metrics_flag = True
+
+        metrics = self._compute_metrics(y_test_np, y_pred_test, y_score_test, detailed=compute_detailed_metrics_flag)
         results = {'method': 'single_eval', 'params': {}, **metrics}
 
         run_id_for_save = f"single_eval_{datetime.now().strftime('%H%M%S')}"
-        self._save_results(results, "single_eval",
+        saved_json_path = self._save_results(results, "single_eval",
                            method_params=results['params'],
                            run_id=run_id_for_save,
                            results_detail_level=results_detail_level)
+
+        # --- Plot results (conditionally) ---
+        if current_plot_level > 0 and saved_json_path:
+            logger.info(f"Plotting results for {run_id} (level {current_plot_level})...")
+            show_plots_flag = (current_plot_level == 2)
+            try:
+                from .plotter import ResultsPlotter  # Or move import to top
+                # Check if detail level was high enough to compute necessary data for plots
+                if compute_detailed_metrics_flag:
+                    ResultsPlotter.plot_single_eval_results(
+                        json_path=saved_json_path,
+                        class_names=self.dataset_handler.classes,  # Pass class names
+                        show_plots=show_plots_flag
+                    )
+                else:
+                    logger.warning(
+                        f"Skipping detailed plots for {run_id}: Required data not computed (detail/plot level too low).")
+            except ImportError:
+                logger.error("Plotting skipped: ResultsPlotter class not found or plotting libraries missing.")
+            except Exception as plot_err:
+                logger.error(f"Plotting failed for {run_id}: {plot_err}", exc_info=True)
+        elif current_plot_level > 0 and not saved_json_path:
+            logger.warning(
+                f"Plotting skipped for {run_id} because results JSON was not saved (detail level might be 0).")
 
         return results
 
@@ -1526,7 +1742,7 @@ class ClassificationPipeline:
 
         try:
             map_location = self.model_adapter.device
-            state_dict = torch.load(model_path, map_location=map_location)
+            state_dict = torch.load(model_path, map_location=map_location, weights_only=True)
             logger.debug(f"State_dict loaded successfully to device '{map_location}'.")
             self.model_adapter.module_.load_state_dict(state_dict)
             self.model_adapter.module_.eval() # Set to eval mode

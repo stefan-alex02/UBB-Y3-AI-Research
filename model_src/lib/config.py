@@ -1,5 +1,5 @@
 import random
-from enum import IntEnum
+from enum import Enum
 
 import numpy as np
 import torch
@@ -38,3 +38,20 @@ class LogColors:
     WHITE = "\033[37m"
     BOLD = "\033[1m"
     DIM = "\033[2m"
+
+class ModelType(str, Enum):  # Inheriting from str makes it directly usable as a string
+    CNN = "cnn"
+    SIMPLE_VIT = "vit"
+    FLEXIBLE_VIT = "fvit"  # New type for the more advanced ViT
+    DIFFUSION = "diff"
+
+    @classmethod
+    def _missing_(cls, value):  # Optional: for case-insensitive matching or aliases
+        if isinstance(value, str):
+            for member in cls:
+                if member.value == value.lower():
+                    return member
+        return super()._missing_(value)
+
+    def __str__(self):  # Ensures that str(ModelType.CNN) is "cnn"
+        return self.value

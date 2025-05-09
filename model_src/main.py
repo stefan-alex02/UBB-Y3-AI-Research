@@ -4,7 +4,11 @@ from pathlib import Path
 import numpy as np
 
 from lib import PipelineExecutor
+from lib.config import ModelType
 from lib.logger_utils import logger
+from lib.params import debug_fixed_params, cnn_fixed_params, flexible_vit_fixed_params, \
+    flexible_vit_param_grid, diffusion_param_grid
+from lib.params import debug_param_grid, cnn_param_grid
 
 # --- Example Usage ---
 if __name__ == "__main__":
@@ -13,17 +17,27 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    dataset_path = script_dir / "data/mini-GCD-flat" # FLAT example
+    dataset_path = script_dir / "data/mini-GCD"  # FIXED example
+    # dataset_path = script_dir / "data/mini-GCD-flat"  # FLAT example
     # dataset_path = script_dir / "data/Swimcat-extend" # FIXED example
     # dataset_path = Path("PATH_TO_YOUR_DATASET") # Use your actual path
 
-    # if not Path(dataset_path).exists():
-    #      logger.error(f"Dataset path not found: {dataset_path}")
-    #      logger.error("Please create the dataset or modify the 'dataset_path' variable.")
-    #      exit()
+    if not Path(dataset_path).exists():
+         logger.error(f"Dataset path not found: {dataset_path}")
+         logger.error("Please create the dataset or modify the 'dataset_path' variable.")
+         exit()
 
     # Select Model:
-    model_type = "cnn"  # 'cnn', 'vit', 'diffusion'
+    model_type = "cnn"  # 'cnn', 'vit', 'fvit', 'diff'
+
+    # Chosen sequence index: (1-6)
+    # 1: Single Train and Eval
+    # 2: Non-Nested Grid Search + Eval best model
+    # 3: Nested Grid Search (Requires FLAT or FIXED with force_flat=True)
+    # 4: Simple CV Evaluation (Requires FLAT or FIXED with force_flat=True)
+    # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
+    # 6: Load Pre-trained and Evaluate
+    chosen_sequence_idx = 4  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -31,143 +45,82 @@ if __name__ == "__main__":
     # Flag for CV methods on FIXED datasets:
     # Set to True to allow nested_grid_search and cv_model_evaluation on FIXED datasets
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
-    force_flat = False
+    force_flat = True
 
-    param_grid_cnn = {
-        # Skorch parameters
-        'lr': [0.005, 0.001, 0.0005],
-        'batch_size': [16, 32],  # Note: Changing batch size can affect memory and convergence
+    # Flag for overriding parameters:
+    override_params = True # Set to True to use the override params for any model type
 
-        # Optimizer (AdamW) parameters
-        'optimizer__weight_decay': [0.01, 0.001, 0.0001],
-        # 'optimizer__betas': [(0.9, 0.999), (0.85, 0.99)], # Less common to tune
-
-        # Module (SimpleCNN) parameters
-        'module__dropout_rate': [0.3, 0.4, 0.5, 0.6],  # Tune dropout in the classifier head
-
-        # Maybe max_epochs if not using EarlyStopping effectively? Usually fixed or high w/ early stopping.
-        # 'max_epochs': [15, 25],
-    }
-
-    param_grid_vit = {
-        # Skorch parameters (especially LR for fine-tuning)
-        'lr': [0.001, 0.0005, 0.0001, 0.00005],  # Often lower LRs for fine-tuning
-        'batch_size': [16, 32],  # Memory constraints often tighter with ViT
-
-        # Optimizer (AdamW) parameters
-        'optimizer__weight_decay': [0.01, 0.001, 0.0],  # Weight decay is important
-
-        # Module (SimpleViT) parameters
-        # Since we only replaced the head and froze most layers, there are fewer
-        # *direct* module hyperparameters to tune via __init__.
-        # If you added dropout to the new head, you could tune 'module__dropout_rate'.
-        # You *could* potentially tune which layers are frozen, but that's complex via grid search.
-
-        # Training duration / EarlyStopping focus
-        'max_epochs': [5, 10, 15], # If fine-tuning quickly
-    }
-
-    param_grid_diffusion = {
-        # Skorch parameters
-        'lr': [0.001, 0.0005, 0.0001],  # Fine-tuning learning rate
-        'batch_size': [16, 32, 64],  # ResNet might be less memory-intensive than ViT
-
-        # Optimizer (AdamW) parameters
-        'optimizer__weight_decay': [0.01, 0.001, 0.0001],
-
-        # Module (DiffusionClassifier) parameters
-        'module__dropout_rate': [0.3, 0.4, 0.5, 0.6],  # Tune dropout in the custom head
-
-        # Training duration
-        # 'max_epochs': [10, 20, 30],
-    }
 
     # --- Define Hyperparameter Grid / Fixed Params based on Model Type ---
-    if model_type == 'cnn':
-        chosen_param_grid = param_grid_cnn
+    if override_params:
+        # Override the chosen_param_grid with the override_params
+        chosen_fixed_params = debug_fixed_params
+        chosen_param_grid = debug_param_grid
 
-    elif model_type == 'vit':
-        chosen_param_grid = param_grid_vit
+    elif model_type == ModelType.CNN:
+        chosen_fixed_params = cnn_fixed_params
+        chosen_param_grid = cnn_param_grid
 
-    elif model_type == 'diffusion':
-        chosen_param_grid = param_grid_diffusion
+    elif model_type == ModelType.SIMPLE_VIT:
+        chosen_fixed_params = debug_fixed_params # Using debug fixed params for simplicity (TODO: remove this)
+        chosen_param_grid = debug_param_grid # Using debug grid for simplicity (TODO: remove this)
+
+
+    elif model_type == ModelType.FLEXIBLE_VIT:
+        chosen_fixed_params = flexible_vit_fixed_params
+        chosen_param_grid = flexible_vit_param_grid
+
+    elif model_type == ModelType.DIFFUSION:
+        chosen_fixed_params = debug_fixed_params # Using debug fixed params for the moment (TODO: update)
+        chosen_param_grid = diffusion_param_grid
+
     else:
-        logger.error(f"Model type '{model_type}' not recognized. Supported: 'cnn', 'vit', 'diffusion'.")
+        logger.error(f"Model type '{model_type}' not recognized. Supported: {[m.value for m in ModelType]}")
         exit()
 
-    # Temporarily set param grid
-    chosen_param_grid = {
-        # Skorch parameters
-        'lr': [0.001, 0.0005],  # Fine-tuning learning rate
-
-        'max_epochs': [5], # If fine-tuning quickly
-
-        # Module (SimpleCNN) parameters
-        # 'module__dropout_rate': [0.3, 0.6],  # Tune dropout in the classifier head
-    }
-
-    # chosen_param_grid = {
-    #     # Skorch parameters (especially LR for fine-tuning)
-    #     'lr': [0.001, 0.0005, 0.0001],  # Often lower LRs for fine-tuning
-    #     'batch_size': [16],  # Memory constraints often tighter with ViT
-    #
-    #     # Optimizer (AdamW) parameters
-    #     'optimizer__weight_decay': [0.01, 0.001],  # Weight decay is important
-    #
-    #     # Module (SimpleViT) parameters
-    #     # Since we only replaced the head and froze most layers, there are fewer
-    #     # *direct* module hyperparameters to tune via __init__.
-    #     # If you added dropout to the new head, you could tune 'module__dropout_rate'.
-    #     # You *could* potentially tune which layers are frozen, but that's complex via grid search.
-    #
-    #     # Training duration / EarlyStopping focus
-    #     'max_epochs': [10, 15], # If fine-tuning quickly
-    # }
-
-    fixed_params_for_eval = {
-        'lr': 0.001,
-        'optimizer__weight_decay': 0.01,
-        # 'module__dropout_rate': 0.4
-    }
-
-
     # --- Define Method Sequence ---
-    # Example 1: Single Train (using val split) and Eval
+    # Example 1: Single Train and Eval
     methods_seq_1 = [
         ('single_train', {
-            'max_epochs': 5,
+            **chosen_fixed_params, # Fixed hyperparams
             'save_model': True,
-            'val_split_ratio': 0.2,
-        }), # Explicit val split
-        ('single_eval', {}),
+            'val_split_ratio': 0.2, # Explicit val split
+        }),
+        ('single_eval', {
+        }),
     ]
 
     # Example 2: Non-Nested Grid Search + Eval best model
     methods_seq_2 = [
         ('non_nested_grid_search', {
-            'param_grid': chosen_param_grid, 'cv': 3, 'method': 'grid',
-            'scoring': 'accuracy', 'save_best_model': True
+            'param_grid': chosen_param_grid,
+            'cv': 3,
+            'method': 'grid',
+            'scoring': 'accuracy',
+            'save_best_model': True
         }),
-        # The best model is refit and stored in pipeline_v1.model_adapter after search
+        # The best model is refit and stored in pipeline.model_adapter after search
         ('single_eval', {}), # Evaluate the refit best model
     ]
 
     # Example 3: Nested Grid Search (Requires FLAT or FIXED with force_flat=True)
     methods_seq_3 = [
          ('nested_grid_search', {
-             'param_grid': chosen_param_grid, 'outer_cv': 3, 'inner_cv': 2,
-             'method': 'grid', 'scoring': 'accuracy'
+             'param_grid': chosen_param_grid,
+             'outer_cv': 3,
+             'inner_cv': 2,
+             'method': 'grid',
+             'scoring': 'accuracy'
          })
     ]
 
     # Example 4: Simple CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     methods_seq_4 = [
          ('cv_model_evaluation', {
+             'params': chosen_fixed_params, # Pass fixed hyperparams
              'cv': 3,
-             'params': fixed_params_for_eval, # Pass fixed hyperparams
-             # 'params': { 'max_epochs': 5 }, # Pass fixed hyperparams
              'evaluate_on': 'full', # Explicitly state (or rely on default)
-             # 'results_detail_level': 2,
+             'results_detail_level': 3,
         })
     ]
 
@@ -175,31 +128,43 @@ if __name__ == "__main__":
     methods_seq_5 = [
         ('non_nested_grid_search', {
             'param_grid': chosen_param_grid,
-            'cv': 4,
+            'cv': 2,
             'method': 'grid',
             'scoring': 'accuracy',
             'save_best_model': True
         }),
          ('cv_model_evaluation', {
-             'cv': 4,
-             # Special key indicates using best_params from previous step (index 0)
-             'use_best_params_from_step': 0,
+             'cv': 2,
+             'use_best_params_from_step': 0, # Special key indicates using best_params from previous step (index 0)
              # Optionally provide specific params for cv_eval to override defaults if needed
              # 'params': {'max_epochs': 15}, # e.g., override max_epochs just for CV eval
-             'evaluate_on': 'test'
+             'evaluate_on': 'test',
+             'results_detail_level': 2,
         })
     ]
 
     # Example 6: Load Pre-trained and Evaluate
-    pretrained_model_path = "results/SOME_DATASET_cnn_TIMESTAMP/cnn_epochX_val....pt" # Replace with actual path
+    pretrained_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
     methods_seq_6 = [
         ('load_model', {'model_path': pretrained_model_path}),
-        ('single_eval', {}),
+        ('single_eval', {
+            'plot_level': 2  # Save AND show plots after single_eval
+        }),
     ]
 
+    # Example 7: Load Pre-trained and Fine-tune + Evaluate (Non-functional for now)
+    # pretrained_model_path = "./results/mini-GCD-flat/cnn/20250508_155404_seed42/single_train_20250508_155404_816633/cnn_epoch5_val_valid-loss3.1052.pt" # Replace with actual path
+    # methods_seq_7 = [
+    #     ('load_model', {'model_path': pretrained_model_path}),
+    #     ('single_train', {
+    #         'save_model': True,
+    #         'val_split_ratio': 0.2,
+    #     }),
+    #     ('single_eval', {}),
+    # ]
 
-    # --- Choose Sequence and Execute ---
-    chosen_sequence = methods_seq_4 # <--- SELECT SEQUENCE TO RUN
+    # --- Select the chosen sequence based on index (1-6) ---
+    chosen_sequence = globals()[f"methods_seq_{chosen_sequence_idx}"]
 
     logger.info(f"Executing sequence: {[m[0] for m in chosen_sequence]}")
 
@@ -221,6 +186,7 @@ if __name__ == "__main__":
             test_split_ratio_if_flat=0.4, # For flat datasets
             # module__dropout_rate=0.5 # If applicable to model
             results_detail_level=3,
+            plot_level=2,
         )
         final_results = executor.run()
 
