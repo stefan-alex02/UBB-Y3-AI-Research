@@ -1,10 +1,8 @@
-# Example in a separate script or notebook
 from pathlib import Path
-from lib.plotter import ResultsPlotter
-# Assuming config and dataset_utils are needed for setup or class names
-# from model_src.config import ModelType
-from lib.dataset_utils import ImageDatasetHandler
-from lib.logger_utils import logger # Use your logger if needed
+
+from ml.dataset_utils import ImageDatasetHandler
+from ml.logger_utils import logger
+from ml.plotter import ResultsPlotter
 
 # --- Configuration ---
 # IMPORTANT: Replace these paths with your actual paths

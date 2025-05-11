@@ -1,43 +1,37 @@
-# --- START OF FILE main.py ---
 from pathlib import Path
 
 import numpy as np
 
-from lib import PipelineExecutor
-from lib.config import ModelType
-from lib.logger_utils import logger
-from lib.params import debug_fixed_params, cnn_fixed_params, flexible_vit_fixed_params, \
+from ml import PipelineExecutor
+from ml.config import ModelType, DATASET_DICT
+from ml.logger_utils import logger
+from ml.params import debug_fixed_params, cnn_fixed_params, flexible_vit_fixed_params, \
     flexible_vit_param_grid, diffusion_param_grid
-from lib.params import debug_param_grid, cnn_param_grid
+from ml.params import debug_param_grid, cnn_param_grid
 
-# --- Example Usage ---
 if __name__ == "__main__":
     script_dir = Path(__file__).parent if "__file__" in locals() else Path.cwd()
+
+    # --- Set up results directory ---
     results_base_dir = script_dir / 'results'
+    # results_base_dir = None
 
     # --- Configuration ---
     # Select Dataset:
-    dataset_path = script_dir / "data/mini-GCD"  # FIXED example
-    # dataset_path = script_dir / "data/mini-GCD-flat"  # FLAT example
-    # dataset_path = script_dir / "data/Swimcat-extend" # FIXED example
-    # dataset_path = Path("PATH_TO_YOUR_DATASET") # Use your actual path
-
-    if not Path(dataset_path).exists():
-         logger.error(f"Dataset path not found: {dataset_path}")
-         logger.error("Please create the dataset or modify the 'dataset_path' variable.")
-         exit()
+    selected_dataset = "mGCDf"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "cnn"  # 'cnn', 'vit', 'fvit', 'diff'
 
-    # Chosen sequence index: (1-6)
+    # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
     # 2: Non-Nested Grid Search + Eval best model
     # 3: Nested Grid Search (Requires FLAT or FIXED with force_flat=True)
     # 4: Simple CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
-    chosen_sequence_idx = 4  # Change this to select the sequence you want to run
+    # 7: Load Pre-trained and Predict on New Images
+    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -50,6 +44,27 @@ if __name__ == "__main__":
     # Flag for overriding parameters:
     override_params = True # Set to True to use the override params for any model type
 
+    # Trained model path for loading
+    # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
+    saved_model_path = "./results/Swimcat-extend/vit/20250510_203038_seed42/single_train_20250510_203038_177942/vit_epoch6_val_valid-loss0.4971.pt"
+
+    # New image paths for prediction
+    # existing_prediction_paths = [
+    #     "C:/Users/Stefan/Downloads/cumulonimbus-clouds-1024x641.jpeg",
+    #     "C:/Users/Stefan/Downloads/heavy-downpours-cumulonimbus.webp",
+    #     "C:/Users/Stefan/Downloads/cumulonimbus-at-night-cschoeps.jpg",
+    # ]
+    # iterate over the images in the directory (first 10)
+    existing_prediction_paths = [
+        str(p) for p in Path("./data/Swimcat-extend/E-Thick Dark Clouds").glob("*.png")
+    ][:10]
+
+    # --- Check if the dataset path exists ---
+    dataset_path = script_dir / DATASET_DICT[selected_dataset]  # Path to the dataset
+    if not Path(dataset_path).exists():
+         logger.error(f"Dataset path not found: {dataset_path}")
+         logger.error("Please create the dataset or modify the 'dataset_path' variable.")
+         exit()
 
     # --- Define Hyperparameter Grid / Fixed Params based on Model Type ---
     if override_params:
@@ -94,7 +109,7 @@ if __name__ == "__main__":
     methods_seq_2 = [
         ('non_nested_grid_search', {
             'param_grid': chosen_param_grid,
-            'cv': 3,
+            'cv': 2,
             'method': 'grid',
             'scoring': 'accuracy',
             'save_best_model': True
@@ -107,7 +122,7 @@ if __name__ == "__main__":
     methods_seq_3 = [
          ('nested_grid_search', {
              'param_grid': chosen_param_grid,
-             'outer_cv': 3,
+             'outer_cv': 2,
              'inner_cv': 2,
              'method': 'grid',
              'scoring': 'accuracy'
@@ -144,17 +159,28 @@ if __name__ == "__main__":
     ]
 
     # Example 6: Load Pre-trained and Evaluate
-    pretrained_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
     methods_seq_6 = [
-        ('load_model', {'model_path': pretrained_model_path}),
+        ('load_model', {'model_path': saved_model_path}),
         ('single_eval', {
             'plot_level': 2  # Save AND show plots after single_eval
         }),
     ]
 
-    # Example 7: Load Pre-trained and Fine-tune + Evaluate (Non-functional for now)
+    # Example 7: Load Pre-trained and Predict on New Images
+    methods_seq_7 = [
+        ('load_model', {
+            'model_path': saved_model_path
+        }),
+        ('predict_images', {
+            'image_paths': existing_prediction_paths,  # Use the list of image paths
+            'results_detail_level': 3,  # Save a basic JSON of predictions
+            'plot_level': 2  # Save and show prediction plots
+        })
+    ]
+
+    # Example 8: Load Pre-trained and Fine-tune + Evaluate (Non-functional for now)
     # pretrained_model_path = "./results/mini-GCD-flat/cnn/20250508_155404_seed42/single_train_20250508_155404_816633/cnn_epoch5_val_valid-loss3.1052.pt" # Replace with actual path
-    # methods_seq_7 = [
+    # methods_seq_8 = [
     #     ('load_model', {'model_path': pretrained_model_path}),
     #     ('single_train', {
     #         'save_model': True,
@@ -176,11 +202,12 @@ if __name__ == "__main__":
             results_dir=results_base_dir,
             methods=chosen_sequence,
             force_flat_for_fixed_cv=force_flat, # Pass the flag
+
             # Pipeline default parameters (can be overridden by methods)
-            img_size=img_size, # Smaller size for faster demo
-            batch_size=16,     # Smaller batch size for demo
-            max_epochs=10,     # Fewer epochs for demo
-            patience=3,        # Reduced patience for demo
+            img_size=img_size,
+            batch_size=16,
+            max_epochs=10,
+            patience=5,
             lr=0.001,
             optimizer__weight_decay=0.01,
             test_split_ratio_if_flat=0.4, # For flat datasets
