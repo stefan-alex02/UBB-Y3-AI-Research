@@ -4,6 +4,8 @@ from enum import Enum
 import numpy as np
 import torch
 
+from .architectures import SimpleCNN, PretrainedViT, ScratchViT, DiffusionClassifier
+
 # --- Default Parameters ---
 DEFAULT_IMG_SIZE = (224, 224) # Default image size for the model
 
@@ -39,11 +41,22 @@ class LogColors:
     BOLD = "\033[1m"
     DIM = "\033[2m"
 
+model_mapping = {
+    "cnn": SimpleCNN,
+    "pvit": PretrainedViT,
+    "svit": ScratchViT,
+    "diff": DiffusionClassifier,
+}
+
 class ModelType(str, Enum):  # Inheriting from str makes it directly usable as a string
     CNN = "cnn"
-    SIMPLE_VIT = "vit"
-    FLEXIBLE_VIT = "fvit"  # New type for the more advanced ViT
+    PRETRAINED_VIT = "pvit"
+    SCRATCH_VIT = "svit"
     DIFFUSION = "diff"
+
+    def get_model_class(self):
+        """Returns the model class associated with the model type."""
+        return model_mapping.get(self.value, None)
 
     @classmethod
     def _missing_(cls, value):  # Optional: for case-insensitive matching or aliases

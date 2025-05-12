@@ -1,11 +1,11 @@
 from .cnn import SimpleCNN
-from .simple_vit import SimpleViT
-from .flexible_vit import FlexibleViT
 from .diffusion_classifier import DiffusionClassifier
+from .pretrained_vit import PretrainedViT
+from .scratch_vit import ScratchViT
 
 __all__ = [
     "SimpleCNN",
-    "SimpleViT",
-    "FlexibleViT",
+    "PretrainedViT",
+    "ScratchViT",
     "DiffusionClassifier"
 ]

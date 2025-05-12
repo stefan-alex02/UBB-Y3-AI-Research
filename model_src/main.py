@@ -5,8 +5,8 @@ import numpy as np
 from ml import PipelineExecutor
 from ml.config import ModelType, DATASET_DICT
 from ml.logger_utils import logger
-from ml.params import debug_fixed_params, cnn_fixed_params, flexible_vit_fixed_params, \
-    flexible_vit_param_grid, diffusion_param_grid
+from ml.params import (debug_fixed_params, cnn_fixed_params, pretrained_vit_fixed_params_option1,
+                       param_grid_pretrained_vit_diminished, diffusion_param_grid)
 from ml.params import debug_param_grid, cnn_param_grid
 
 if __name__ == "__main__":
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     selected_dataset = "mGCDf"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "cnn"  # 'cnn', 'vit', 'fvit', 'diff'
+    model_type = "cnn"  # 'cnn', 'pvit', 'svit', 'diff'
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -76,14 +76,9 @@ if __name__ == "__main__":
         chosen_fixed_params = cnn_fixed_params
         chosen_param_grid = cnn_param_grid
 
-    elif model_type == ModelType.SIMPLE_VIT:
-        chosen_fixed_params = debug_fixed_params # Using debug fixed params for simplicity (TODO: remove this)
-        chosen_param_grid = debug_param_grid # Using debug grid for simplicity (TODO: remove this)
-
-
-    elif model_type == ModelType.FLEXIBLE_VIT:
-        chosen_fixed_params = flexible_vit_fixed_params
-        chosen_param_grid = flexible_vit_param_grid
+    elif model_type == ModelType.PRETRAINED_VIT:
+        chosen_fixed_params = pretrained_vit_fixed_params_option1
+        chosen_param_grid = param_grid_pretrained_vit_diminished
 
     elif model_type == ModelType.DIFFUSION:
         chosen_fixed_params = debug_fixed_params # Using debug fixed params for the moment (TODO: update)

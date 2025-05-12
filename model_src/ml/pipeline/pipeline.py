@@ -215,13 +215,7 @@ class ClassificationPipeline:
 
     @staticmethod
     def _get_model_class(model_type_enum: ModelType) -> Type[nn.Module]:
-        model_mapping = {
-            ModelType.CNN: SimpleCNN,
-            ModelType.SIMPLE_VIT: SimpleViT,  # Kept SimpleViT
-            ModelType.FLEXIBLE_VIT: FlexibleViT,  # Added FlexibleViT
-            ModelType.DIFFUSION: DiffusionClassifier
-        }
-        model_class = model_mapping.get(model_type_enum) # Direct lookup using Enum member
+        model_class = model_type_enum.get_model_class()
         if model_class is None:
             # This should ideally not happen if model_type_enum is validated
             raise ValueError(f"Unsupported model type: '{model_type_enum.value}'.")
