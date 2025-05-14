@@ -166,6 +166,7 @@ class PretrainedViT(nn.Module):
                 head_layers.append(nn.ReLU(inplace=True))
                 if head_dropout_rate > 0: head_layers.append(nn.Dropout(head_dropout_rate))
                 current_in_features = hidden_dim
+                # TODO: add BatchNorm
             head_layers.append(nn.Linear(current_in_features, num_classes))
             final_head = nn.Sequential(*head_layers)
             logger.debug(f"Created custom MLP head: hidden_dims={custom_head_hidden_dims}, in_feat={original_head_in_features}")
