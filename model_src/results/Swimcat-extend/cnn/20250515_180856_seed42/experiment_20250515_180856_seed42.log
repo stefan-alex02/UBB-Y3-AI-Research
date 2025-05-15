@@ -1,0 +1,54 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-05-15 18:08:56 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\results\Swimcat-extend\cnn\20250515_180856_seed42\experiment_20250515_180856_seed42.log
+2025-05-15 18:08:56 | INFO     | [executor  :__init__          : 127] | ℹ️ --- Starting Experiment Run ---
+2025-05-15 18:08:56 | INFO     | [executor  :__init__          : 128] | ℹ️ Pipeline Executor initialized for model 'cnn' on dataset 'Swimcat-extend'
+2025-05-15 18:08:56 | INFO     | [executor  :__init__          : 130] | ℹ️ Results base directory: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\results\Swimcat-extend\cnn\20250515_180856_seed42
+2025-05-15 18:08:56 | DEBUG    | [executor  :_validate_methods : 163] | 🐞 Basic method validation successful.
+2025-05-15 18:08:56 | INFO     | [executor  :__init__          : 142] | ℹ️ Executor configured to run methods: load_model, predict_images
+2025-05-15 18:08:56 | INFO     | [executor  :run               : 177] | ℹ️ Starting execution of pipeline_v1 methods...
+2025-05-15 18:08:56 | INFO     | [executor  :run               : 182] | ℹ️ --- Running Method 1/2: load_model (load_model_0) ---
+2025-05-15 18:08:56 | DEBUG    | [executor  :run               : 225] | 🐞 Running with effective parameters: {'model_path': './results/Swimcat-extend/cnn/20250515_160130_seed42/single_train_20250515_160130_450999/cnn_epoch4_val_valid-loss0.3059.pt'}
+2025-05-15 18:08:56 | INFO     | [pipeline  :load_model        :2102] | ℹ️ Loading model state_dict from: results\Swimcat-extend\cnn\20250515_160130_seed42\single_train_20250515_160130_450999\cnn_epoch4_val_valid-loss0.3059.pt
+2025-05-15 18:08:56 | DEBUG    | [pipeline  :load_model        :2106] | 🐞 Initializing skorch adapter before loading state_dict...
+2025-05-15 18:08:56 | DEBUG    | [cnn       :__init__          :  44] | 🐞 SimpleCNN initialized with 6 classes and image size (224, 224).
+2025-05-15 18:08:56 | DEBUG    | [pipeline  :load_model        :2116] | 🐞 State_dict loaded successfully to device 'cuda'.
+2025-05-15 18:08:56 | INFO     | [pipeline  :load_model        :2119] | ℹ️ Model state_dict loaded successfully into the model adapter.
+2025-05-15 18:08:56 | INFO     | [executor  :run               : 242] | ℹ️ --- Method load_model (load_model_0) completed successfully in 0.17s ---
+2025-05-15 18:08:56 | INFO     | [executor  :run               : 182] | ℹ️ --- Running Method 2/2: predict_images (predict_images_1) ---
+2025-05-15 18:08:56 | DEBUG    | [executor  :run               : 225] | 🐞 Running with effective parameters: {'image_sources': ['data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img1.png', 'data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img10.png', 'data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img100.png', 'data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img101.png', 'data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img102.png', 'data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img103.png', 'data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img104.png', 'data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img105.png', 'data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img106.png', 'data\\Swimcat-extend\\E-Thick Dark Clouds\\E_img107.png'], 'generate_lime_explanations': True, 'results_detail_level': 3, 'plot_level': 2}
+2025-05-15 18:08:56 | INFO     | [pipeline  :predict_images    :1788] | ℹ️ Starting prediction (predict_images_20250815_180856_257532) for 10 image sources...
+2025-05-15 18:08:56 | INFO     | [pipeline  :predict_images    :1805] | ℹ️ LIME explanations will be generated (num_features=5, num_samples=1000). This may take extra time per image.
+2025-05-15 18:08:56 | INFO     | [pipeline  :predict_images    :1849] | ℹ️ Successfully loaded 10 images for processing.
+2025-05-15 18:08:56 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_0 (Predicted: E-Thick Dark Clouds)
+2025-05-15 18:08:59 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_0 (top class E-Thick Dark Clouds): [(0, 0.0), (1, 0.0)]...
+2025-05-15 18:08:59 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_1 (Predicted: E-Thick Dark Clouds)
+2025-05-15 18:09:01 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_1 (top class E-Thick Dark Clouds): [(5, 0.035739555195395664), (3, -0.030553984141029774)]...
+2025-05-15 18:09:01 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_2 (Predicted: E-Thick Dark Clouds)
+2025-05-15 18:09:04 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_2 (top class E-Thick Dark Clouds): [(9, 5.228589705710532e-09), (6, 5.118863199315557e-09)]...
+2025-05-15 18:09:04 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_3 (Predicted: E-Thick Dark Clouds)
+2025-05-15 18:09:07 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_3 (top class E-Thick Dark Clouds): [(0, 0.0), (1, 0.0)]...
+2025-05-15 18:09:07 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_4 (Predicted: E-Thick Dark Clouds)
+2025-05-15 18:09:09 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_4 (top class E-Thick Dark Clouds): [(7, 0.15257201110706303), (13, -0.13205903814578848)]...
+2025-05-15 18:09:09 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_5 (Predicted: F-Veil Clouds)
+2025-05-15 18:09:12 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_5 (top class F-Veil Clouds): [(8, 0.0025053582114087604), (1, 0.002356562446118462)]...
+2025-05-15 18:09:12 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_6 (Predicted: E-Thick Dark Clouds)
+2025-05-15 18:09:16 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_6 (top class E-Thick Dark Clouds): [(0, 0.0), (1, 0.0)]...
+2025-05-15 18:09:16 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_7 (Predicted: E-Thick Dark Clouds)
+2025-05-15 18:09:18 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_7 (top class E-Thick Dark Clouds): [(0, 0.0), (1, 0.0)]...
+2025-05-15 18:09:18 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_8 (Predicted: E-Thick Dark Clouds)
+2025-05-15 18:09:21 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_8 (top class E-Thick Dark Clouds): [(14, -0.07492060245939254), (5, 0.07405586526811762)]...
+2025-05-15 18:09:21 | DEBUG    | [pipeline  :predict_images    :1986] | 🐞 Generating LIME for: source_9 (Predicted: E-Thick Dark Clouds)
+2025-05-15 18:09:24 | DEBUG    | [pipeline  :predict_images    :2000] | 🐞 LIME weights for source_9 (top class E-Thick Dark Clouds): [(15, -0.11555382279144702), (18, -0.10195635554751706)]...
+2025-05-15 18:09:24 | INFO     | [pipeline  :predict_images    :2007] | ℹ️ Successfully generated predictions for 10 out of 10 loaded images.
+2025-05-15 18:09:24 | INFO     | [pipeline  :predict_images    :2016] | ℹ️ Saving prediction results (predict_images_20250815_180856_257532) with detail level 3...
+2025-05-15 18:09:24 | DEBUG    | [pipeline  :_save_results     : 400] | 🐞 Results detail level overridden for this run to: 3
+2025-05-15 18:09:24 | DEBUG    | [pipeline  :_save_results     : 408] | 🐞 Saving results for predict_images_20250815_180856_257532 to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\results\Swimcat-extend\cnn\20250515_180856_seed42\predict_images_20250815_180856_257532 (detail level: 3)
+2025-05-15 18:09:24 | DEBUG    | [pipeline  :_save_results     : 514] | 🐞 Final keys to save in JSON for level 3: ['method', 'run_id', 'params', 'predictions']
+2025-05-15 18:09:24 | INFO     | [pipeline  :_save_results     : 546] | ℹ️ Results JSON saved to: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\results\Swimcat-extend\cnn\20250515_180856_seed42\predict_images_20250815_180856_257532\predict_images_results.json
+2025-05-15 18:09:24 | INFO     | [pipeline  :_save_results     : 599] | ℹ️ Summary results updated in: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\results\Swimcat-extend\cnn\20250515_180856_seed42\summary_results_seed42.csv
+2025-05-15 18:09:24 | CRITICAL | [executor  :run               : 263] | 💀 !!! An unexpected critical error occurred during 'predict_images': name 'plot_level_override' is not defined
+2025-05-15 18:09:24 | INFO     | [executor  :run               : 268] | ℹ️ Pipeline execution finished in 28.26s.
+2025-05-15 18:09:24 | INFO     | [main      :<module>          : 218] | ℹ️ --- Final Execution Results Summary ---
+2025-05-15 18:09:24 | INFO     | [main      :<module>          : 230] | ℹ️ Method load_model_0: Completed. Result: None
+2025-05-15 18:09:24 | ERROR    | [main      :<module>          : 221] | ❌ Method predict_images_1: FAILED - name 'plot_level_override' is not defined

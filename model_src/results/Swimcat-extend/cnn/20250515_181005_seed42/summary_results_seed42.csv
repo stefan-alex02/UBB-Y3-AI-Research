@@ -1,0 +1,2 @@
+method_run_id,timestamp,accuracy,macro_f1,accuracy_ci_margin,f1_macro_ci_margin,precision_macro,recall_macro,specificity_macro,roc_auc_macro,pr_auc_macro,best_cv_score,best_epoch,num_original_sources,num_valid_loaded,num_images_predicted
+predict_images_20251015_181006_033376,20250515_181017,,,,,,,,,,,,4,4,4

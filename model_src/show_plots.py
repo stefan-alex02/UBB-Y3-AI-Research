@@ -7,10 +7,11 @@ from ml.plotter import ResultsPlotter
 # --- Configuration ---
 # IMPORTANT: Replace these paths with your actual paths
 # json_file_path_str = "./results/Swimcat-extend/vit/20250507_054532_seed42/cv_model_evaluation_test_064434_189526/cv_model_evaluation_results_20250507_064434.json"
-json_file_path_str = "./results/Swimcat-extend/vit/20250507_054532_seed42/non_nested_grid_054532_610581/non_nested_grid_search_results_20250507_064104.json"
+json_file_path_str = "./results/mini-GCD-flat/cnn/20250515_154721_seed42/cv_model_evaluation_full_154721_089844/cv_model_evaluation_results.json"
 
 # dataset_root_for_classes_str = "data/mini-GCD" # Path to the dataset root to get classes
-dataset_root_for_classes_str = "data/Swimcat-extend" # Path to the dataset root to get classes
+dataset_root_for_classes_str = "data/mini-GCD-flat" # Path to the dataset root to get classes
+# dataset_root_for_classes_str = "data/Swimcat-extend" # Path to the dataset root to get classes
 
 json_file_path = Path(json_file_path_str)
 dataset_root_for_classes = Path(dataset_root_for_classes_str)
@@ -61,7 +62,8 @@ try:
         ResultsPlotter.plot_nested_cv_results(json_file_path, show_plots=True)
     elif method_name_in_file.startswith("cv_model_evaluation"): # Handle potential random suffix
         if class_names:
-             ResultsPlotter.plot_cv_model_evaluation_results(json_file_path, class_names=class_names, show_plots=True)
+             ResultsPlotter.plot_cv_model_evaluation_results(results_input=json_file_path, class_names=class_names,
+                                                             show_plots=True, plot_save_dir_base=json_file_path.parent)
         else:
             logger.error("Cannot plot cv_model_evaluation results: Class names are required but could not be loaded.")
     else:

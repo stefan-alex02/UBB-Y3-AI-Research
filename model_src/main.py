@@ -3,7 +3,8 @@ from pathlib import Path
 import numpy as np
 
 from ml import PipelineExecutor
-from ml.config import ModelType, DATASET_DICT
+from ml.architectures import ModelType
+from ml.config import DATASET_DICT
 from ml.logger_utils import logger
 from ml.params import (debug_fixed_params, cnn_fixed_params, pretrained_vit_fixed_params_option1,
                        param_grid_pretrained_vit_diminished, diffusion_param_grid)
@@ -18,7 +19,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "mGCDf"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "cnn"  # 'cnn', 'pvit', 'svit', 'diff'
@@ -31,7 +32,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 7  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -46,7 +47,7 @@ if __name__ == "__main__":
 
     # Trained model path for loading
     # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
-    saved_model_path = "./results/Swimcat-extend/vit/20250510_203038_seed42/single_train_20250510_203038_177942/vit_epoch6_val_valid-loss0.4971.pt"
+    saved_model_path = "./results/Swimcat-extend/cnn/20250515_160130_seed42/single_train_20250515_160130_450999/cnn_epoch4_val_valid-loss0.3059.pt"
 
     # New image paths for prediction
     # existing_prediction_paths = [
@@ -57,7 +58,7 @@ if __name__ == "__main__":
     # iterate over the images in the directory (first 10)
     existing_prediction_paths = [
         str(p) for p in Path("./data/Swimcat-extend/E-Thick Dark Clouds").glob("*.png")
-    ][:10]
+    ][:4]
 
     # --- Check if the dataset path exists ---
     dataset_path = script_dir / DATASET_DICT[selected_dataset]  # Path to the dataset
@@ -167,7 +168,8 @@ if __name__ == "__main__":
             'model_path': saved_model_path
         }),
         ('predict_images', {
-            'image_paths': existing_prediction_paths,  # Use the list of image paths
+            'image_sources': existing_prediction_paths,  # Use the list of image paths
+            'generate_lime_explanations': True,
             'results_detail_level': 3,  # Save a basic JSON of predictions
             'plot_level': 2  # Save and show prediction plots
         })

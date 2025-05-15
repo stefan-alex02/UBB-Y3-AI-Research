@@ -3,9 +3,10 @@ import time
 from pathlib import Path
 from typing import Dict, List, Tuple, Any, Optional, Union
 
-from ..config import logger_name_global, DEFAULT_IMG_SIZE, ModelType
-from ..logger_utils import setup_logger
 from .pipeline import ClassificationPipeline
+from ..architectures import ModelType
+from ..config import logger_name_global, DEFAULT_IMG_SIZE
+from ..logger_utils import setup_logger
 
 
 class PipelineExecutor:

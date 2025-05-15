@@ -9,9 +9,11 @@ from typing import Dict, List, Tuple, Callable, Any, Type, Optional, Union
 
 import numpy as np
 import pandas as pd
+import requests
 import scipy.stats as stats
 import torch
 import torch.nn as nn
+from PIL import Image
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score, f1_score,
     roc_auc_score, precision_recall_curve, auc, make_scorer,
@@ -25,13 +27,21 @@ from skorch.callbacks import Callback
 from skorch.callbacks import EarlyStopping, LRScheduler
 from skorch.dataset import ValidSplit
 
-from ..config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE, ModelType
+from ..architectures import ModelType
+from ..config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE
 from ..dataset_utils import ImageDatasetHandler, DatasetStructure, PathImageDataset
 from ..logger_utils import logger
-from ..plotter import ResultsPlotter, _create_plot_dir_from_base
 from ..skorch_utils import SkorchModelAdapter
 from ..skorch_utils import get_default_callbacks
-from ..architectures import *
+
+try:
+    from lime.lime_image import LimeImageExplainer
+    from skimage.segmentation import mark_boundaries
+    LIME_AVAILABLE = True
+except ImportError:
+    LIME_AVAILABLE = False
+    LimeImageExplainer = None
+    mark_boundaries = None
 
 
 # --- Classification Pipeline ---
@@ -854,7 +864,7 @@ class ClassificationPipeline:
                 try:
                     from ..plotter import ResultsPlotter
                     ResultsPlotter.plot_non_nested_cv_results(
-                        results_data=results,
+                        results_input=results,
                         plot_save_dir_base=plot_save_dir,
                         show_plots=show_plots_flag
                     )
@@ -1075,7 +1085,7 @@ class ClassificationPipeline:
                     try:
                         from ..plotter import ResultsPlotter
                         ResultsPlotter.plot_nested_cv_results(
-                            results_data=results,
+                            results_input=results,
                             plot_save_dir_base=plot_save_dir,
                             show_plots=show_plots_flag
                         )
@@ -1122,7 +1132,6 @@ class ClassificationPipeline:
                     If None, uses defaults from pipeline_v1 config. Can be merged with
                     best_params from a previous step using executor logic.
             confidence_level: Confidence level for calculating CI (e.g., 0.95 for 95%).
-            save_results: Whether to save JSON results and update summary CSV.
         """
         logger.info(f"Performing {cv}-fold CV for evaluation with fixed parameters.")
         if not 0 < confidence_level < 1:
@@ -1175,7 +1184,7 @@ class ClassificationPipeline:
         else:
             logger.info(f"Using pipeline_v1 default parameters for CV evaluation.")
         module_dropout_rate = eval_params.pop('module__dropout_rate', None)
-        eval_params.setdefault('module', self._get_model_class(self.model_type.value))
+        eval_params.setdefault('module', self._get_model_class(self.model_type))
         eval_params.setdefault('module__num_classes', self.dataset_handler.num_classes)
         if module_dropout_rate is not None: eval_params['module__dropout_rate'] = module_dropout_rate
 
@@ -1411,7 +1420,7 @@ class ClassificationPipeline:
                 try:
                     from ..plotter import ResultsPlotter # Corrected relative import
                     ResultsPlotter.plot_cv_model_evaluation_results(
-                        results_data=results, # Pass the in-memory results
+                        results_input=results, # Pass the in-memory results
                         class_names=self.dataset_handler.classes,
                         plot_save_dir_base=plot_save_dir_base, # Pass base dir for plots (can be None)
                         show_plots=should_show_plot # show_plots_flag was defined based on current_plot_level
@@ -1676,7 +1685,7 @@ class ClassificationPipeline:
                 try:
                     from ..plotter import ResultsPlotter
                     ResultsPlotter.plot_single_train_results(
-                        results_data=results,
+                        results_input=results,
                         plot_save_dir_base=plot_save_dir,
                         show_plots=show_plots_flag
                     )
@@ -1753,7 +1762,7 @@ class ClassificationPipeline:
                 try:
                     from ..plotter import ResultsPlotter
                     ResultsPlotter.plot_single_eval_results(
-                        results_data=results,
+                        results_input=results,
                         class_names=self.dataset_handler.classes,
                         plot_save_dir_base=plot_save_dir,
                         show_plots=show_plots_flag
@@ -1766,170 +1775,260 @@ class ClassificationPipeline:
         return results
 
     def predict_images(self,
-                       image_paths: List[Union[str, Path]],
-                       results_detail_level: Optional[int] = None,  # For saving results
+                       image_sources: List[Union[str, Path, Image.Image, bytes]],
+                       original_identifiers: Optional[List[str]] = None,
+                       results_detail_level: Optional[int] = None,
                        plot_level: int = 0,
-                       # Optional: Add max_cols for plotting here if you want to control it via method params
-                       # prediction_plot_max_cols: Optional[int] = None
+                       generate_lime_explanations: bool = False,
+                       lime_num_features: int = 5,
+                       lime_num_samples: int = 1000,
+                       prediction_plot_max_cols: int = 4
                        ) -> List[Dict[str, Any]]:
-        """
-        Performs prediction on a list of new images.
-
-        Args:
-            image_paths: A list of file paths to the images to be predicted.
-            results_detail_level_override: Controls saving of prediction results to a JSON file.
-                If > 0, results are saved. Levels 1-3 behave like other methods regarding
-                what's included if more data were to be added to the 'results_for_json' dict.
-                Currently, it saves the 'predictions_output' list.
-                If None, uses pipeline's default self.results_detail_level.
-            plot_level: Level for plotting prediction results (0: no plot, 1: save, 2: save & show).
-            # prediction_plot_max_cols_override: Optional override for max columns in prediction plot.
-
-        Returns:
-            A list of dictionaries, where each dictionary contains prediction details for an image.
-        """
         run_id = f"predict_images_{datetime.now().strftime('%Y%M%d_%H%M%S_%f')}"
-        logger.info(f"Starting prediction ({run_id}) for {len(image_paths)} images...")
+        logger.info(f"Starting prediction ({run_id}) for {len(image_sources)} image sources...")
 
         if not self.model_adapter.initialized_:
             raise RuntimeError("Model adapter not initialized. Train or load a model first.")
-        if not image_paths:
-            logger.warning("No image paths provided for prediction.")
+        if not image_sources:
+            logger.warning("No image sources provided for prediction.")
             return []
 
-        # Ensure image_paths are Path objects and filter out non-existent ones upfront
-        valid_image_paths = []
-        for p_str in image_paths:
-            p = Path(p_str)
-            if p.exists() and p.is_file():
-                valid_image_paths.append(p)
-            else:
-                logger.warning(f"Image path does not exist or is not a file, skipping: {p}")
+        if original_identifiers and len(original_identifiers) != len(image_sources):
+            logger.warning(
+                "Mismatch: len(image_sources) != len(original_identifiers). Identifiers will be auto-generated.")
+            original_identifiers = None  # Fallback to auto-generated
 
-        if not valid_image_paths:
-            logger.error("No valid image paths remaining after checking existence.")
+        if generate_lime_explanations and not LIME_AVAILABLE:
+            logger.warning("LIME requested but library not available. Skipping LIME.")
+            generate_lime_explanations = False
+        elif generate_lime_explanations:
+            logger.info(
+                f"LIME explanations will be generated (num_features={lime_num_features}, num_samples={lime_num_samples}). This may take extra time per image.")
+
+        pil_images_for_processing: List[Tuple[Optional[Image.Image], str]] = []  # (PIL_Image or None, identifier)
+
+        for i, source in enumerate(image_sources):
+            identifier = original_identifiers[i] if original_identifiers else f"source_{i}"
+            pil_image: Optional[Image.Image] = None
+            try:
+                if isinstance(source, (str, Path)):
+                    source_path = Path(source)
+                    if str(source).startswith(('http://', 'https://')):
+                        logger.debug(f"Downloading image from URL: {source}")
+                        response = requests.get(str(source), timeout=10)
+                        response.raise_for_status()
+                        pil_image = Image.open(io.BytesIO(response.content)).convert('RGB')
+                    elif source_path.exists() and source_path.is_file():
+                        pil_image = Image.open(source_path).convert('RGB')
+                    else:
+                        logger.warning(f"Image path does not exist or is not a file: {source_path}")
+                elif isinstance(source, Image.Image):
+                    pil_image = source.convert('RGB') if source.mode != 'RGB' else source
+                elif isinstance(source, bytes):
+                    pil_image = Image.open(io.BytesIO(source)).convert('RGB')
+                else:
+                    logger.warning(f"Unsupported image source type: {type(source)} for identifier: {identifier}")
+            except Exception as e:
+                logger.error(
+                    f"Failed to load image for identifier '{identifier}' from source '{str(source)[:100]}...': {e}")
+
+            pil_images_for_processing.append((pil_image, identifier))
+
+        valid_pil_images: List[Image.Image] = []
+        valid_identifiers: List[str] = []
+
+        for img, ident in pil_images_for_processing:
+            if img is not None:
+                valid_pil_images.append(img)
+                valid_identifiers.append(ident)
+
+        if not valid_pil_images:
+            logger.error("No valid images could be loaded for prediction.")
             return []
 
-        logger.info(f"Found {len(valid_image_paths)} valid image paths for prediction.")
+        logger.info(f"Successfully loaded {len(valid_pil_images)} images for processing.")
+
+        # --- Create a custom in-memory dataset for PIL images ---
+        class InMemoryPILDataset(torch.utils.data.Dataset):
+            def __init__(self, pil_images: List[Image.Image], identifiers: List[str], transform: Callable):
+                self.pil_images = pil_images
+                self.identifiers = identifiers  # Store identifiers to potentially pass them if needed
+                self.transform = transform
+
+            def __len__(self):
+                return len(self.pil_images)
+
+            def __getitem__(self, idx):
+                img = self.pil_images[idx]
+                identifier = self.identifiers[idx]  # Get corresponding identifier
+                label_tensor = torch.tensor(-1, dtype=torch.long)  # Dummy label tensor
+                try:
+                    transformed_img = self.transform(img)
+                    # Optionally, return identifier if collate_fn is adapted
+                    return transformed_img, label_tensor  # , identifier
+                except Exception as e:
+                    logger.warning(f"Transform failed for image '{identifier}' (index {idx}): {e}")
+                    return None, label_tensor  # , identifier
 
         eval_transform = self.dataset_handler.get_eval_transform()
-        # Use only valid_image_paths for the dataset
-        prediction_dataset = PathImageDataset(paths=valid_image_paths, labels=None, transform=eval_transform)
+        prediction_dataset = InMemoryPILDataset(
+            pil_images=valid_pil_images,
+            identifiers=valid_identifiers,  # Pass identifiers
+            transform=eval_transform
+        )
 
         dataloader = torch.utils.data.DataLoader(
             prediction_dataset,
             batch_size=self.model_adapter_config.get('batch_size', 32),
             shuffle=False,
-            num_workers=0,  # Consistent with other parts of your code
-            collate_fn=PathImageDataset.collate_fn
+            num_workers=0,
+            collate_fn=PathImageDataset.collate_fn  # This collate_fn filters Nones
         )
 
-        all_probabilities_np: List[np.ndarray] = []  # Store as list of numpy arrays
-        processed_image_indices_in_batch: List[List[int]] = []  # To track original indices if collate_fn filters
+        all_probabilities_np: List[np.ndarray] = []
+        # To map back results if collate_fn filters items, we need to know which items passed
+        # This is complex if collate_fn is generic. Alternative: dataset returns (img, label, original_idx_or_id)
+        # For now, assume collate_fn filters, and we map back based on order of non-None items.
+        # This requires that the order of 'valid_identifiers' matches the order of items *before* collation filtering.
+
+        # Let's create a list of identifiers that correspond to the images *after* potential transform failures
+        # that would lead to `None` images being passed to collate_fn.
+        # The `dataloader` will only yield batches from successfully transformed images.
+
+        # Create a temporary list of indices for images that are successfully transformed and batched
+        successful_indices_after_transform_and_collation = []
+        temp_dataloader_for_indices = torch.utils.data.DataLoader(
+            InMemoryPILDataset(pil_images=valid_pil_images, identifiers=valid_identifiers, transform=eval_transform),
+            batch_size=self.model_adapter_config.get('batch_size', 32),
+            shuffle=False, num_workers=0,
+            collate_fn=lambda batch: [item[0] is not None for item in batch]  # just check if image is not None
+        )
+
+        temp_idx_counter = 0
+        for batch_success_flags in temp_dataloader_for_indices:
+            for success in batch_success_flags:
+                if success:
+                    successful_indices_after_transform_and_collation.append(temp_idx_counter)
+                temp_idx_counter += 1
+        # Now successful_indices_after_transform_and_collation contains indices relative to valid_pil_images
 
         self.model_adapter.module_.eval()
         with torch.no_grad():
-            current_original_idx = 0
-            for batch_images, _ in dataloader:  # Labels will be dummy from PathImageDataset if None was passed
-                num_expected_in_batch = min(dataloader.batch_size, len(valid_image_paths) - current_original_idx)
-
+            for batch_images, _ in dataloader:  # This dataloader uses the filtering collate_fn
                 if batch_images is None or len(batch_images) == 0:
-                    logger.warning(
-                        f"A batch (expecting {num_expected_in_batch} images starting from original index {current_original_idx}) "
-                        f"resulted in no processable images after collation. These images will be skipped.")
-                    # Advance current_original_idx by the number of images this batch *should* have processed
-                    current_original_idx += num_expected_in_batch
-                    continue  # Skip to next batch
-
+                    # This should ideally not happen if collate_fn returns empty tensors for empty batches
+                    continue
                 batch_images = batch_images.to(self.model_adapter.device)
                 logits = self.model_adapter.module_(batch_images)
                 probabilities = torch.softmax(logits, dim=1)
+                all_probabilities_np.extend(probabilities.cpu().numpy())
 
-                # Store probabilities
-                batch_probs_np = probabilities.cpu().numpy()
-                all_probabilities_np.extend(batch_probs_np)
-
-                # Track which original images were successfully processed in this batch
-                # This assumes PathImageDataset.__getitem__ returns (None,None) for bad images
-                # and collate_fn filters them, so len(batch_images) is num successfully processed.
-                # This part is tricky if PathImageDataset doesn't perfectly track original indices through errors.
-                # For now, assume successful collation means they correspond to the next set of valid_image_paths.
-                # A more robust way might be for PathImageDataset to return the original index.
-                indices_this_batch = list(range(current_original_idx, current_original_idx + len(batch_images)))
-                processed_image_indices_in_batch.append(indices_this_batch)
-                current_original_idx += num_expected_in_batch  # Advance by expected, collate handles errors within
-
-        # Process results
         predictions_output = []
         class_names = self.dataset_handler.classes
-        num_classes = self.dataset_handler.num_classes
+        num_classes_total = self.dataset_handler.num_classes
 
-        # Flatten the list of successfully processed indices
-        flat_processed_original_indices = [idx for sublist in processed_image_indices_in_batch for idx in sublist]
-
-        if len(all_probabilities_np) != len(flat_processed_original_indices):
-            logger.error(
-                f"Mismatch between number of probabilities ({len(all_probabilities_np)}) and tracked processed indices ({len(flat_processed_original_indices)}). This indicates an issue in tracking processed images.")
-            # Fallback: iterate up to the minimum length to avoid index errors
-            min_len = min(len(all_probabilities_np), len(flat_processed_original_indices))
+        if len(all_probabilities_np) != len(successful_indices_after_transform_and_collation):
+            logger.error(f"Critical mismatch after prediction: {len(all_probabilities_np)} probabilities vs "
+                         f"{len(successful_indices_after_transform_and_collation)} successfully transformed images. "
+                         "Results may be misaligned.")
+            # Handle this error, e.g. by returning empty or raising an exception
+            # For now, proceed with min_len but this indicates a deeper issue
+            min_len = min(len(all_probabilities_np), len(successful_indices_after_transform_and_collation))
         else:
             min_len = len(all_probabilities_np)
 
-        for i in range(min_len):
-            original_path_idx = flat_processed_original_indices[i]
-            if original_path_idx >= len(valid_image_paths):  # Should not happen with correct tracking
-                logger.error(
-                    f"Tracked original index {original_path_idx} is out of bounds for valid_image_paths (len {len(valid_image_paths)}).")
-                continue
+        lime_explainer = None
+        if generate_lime_explanations and LIME_AVAILABLE:
+            lime_explainer = LimeImageExplainer(random_state=RANDOM_SEED)
 
-            current_image_path = valid_image_paths[original_path_idx]
+            def lime_predict_fn(numpy_images_batch_lime):
+                # ... (lime_predict_fn implementation from previous response) ...
+                processed_images_lime = []
+                for img_np_lime in numpy_images_batch_lime:
+                    if img_np_lime.dtype == np.double or img_np_lime.dtype == np.float64 or img_np_lime.dtype == np.float32:
+                        if img_np_lime.max() <= 1.0 and img_np_lime.min() >= 0.0:
+                            img_np_lime = (img_np_lime * 255).astype(np.uint8)
+                        else:
+                            img_np_lime = np.clip(img_np_lime, 0, 255).astype(np.uint8)
+                    pil_img_lime = Image.fromarray(img_np_lime)
+                    transformed_img_lime = self.dataset_handler.get_eval_transform()(pil_img_lime)
+                    processed_images_lime.append(transformed_img_lime)
+                if not processed_images_lime: return np.array([])
+                batch_tensor_lime = torch.stack(processed_images_lime).to(self.model_adapter.device)
+                self.model_adapter.module_.eval()
+                with torch.no_grad():
+                    logits_lime = self.model_adapter.module_(batch_tensor_lime); probs_lime = torch.softmax(logits_lime,
+                                                                                                            dim=1)
+                return probs_lime.cpu().numpy()
+
+        for i in range(min_len):
+            original_valid_idx = successful_indices_after_transform_and_collation[i]
+            current_identifier = valid_identifiers[original_valid_idx]
+            pil_image_for_lime = valid_pil_images[original_valid_idx]
             probs_np = all_probabilities_np[i]
 
-            predicted_idx = np.argmax(probs_np)
+            predicted_idx = int(np.argmax(probs_np))
+            # ... (rest of prediction item creation and LIME logic - unchanged from previous response) ...
             predicted_name = class_names[predicted_idx] if class_names and 0 <= predicted_idx < len(
-                class_names) else f"Class_{predicted_idx}"
-            top_k_val = min(3, num_classes)
-            top_k_indices = np.argsort(probs_np)[-top_k_val:][::-1]
+                class_names) else f"Class_{predicted_idx}";
+            top_k_val = min(3, num_classes_total);
+            top_k_indices = np.argsort(probs_np)[-top_k_val:][::-1];
             top_k_preds_list = []
-            for k_idx in top_k_indices:
-                k_name = class_names[k_idx] if class_names and 0 <= k_idx < len(class_names) else f"Class_{k_idx}"
-                top_k_preds_list.append((k_name, float(probs_np[k_idx])))
+            for k_idx in top_k_indices: k_name = class_names[k_idx] if class_names and 0 <= k_idx < len(
+                class_names) else f"Class_{k_idx}"; top_k_preds_list.append((k_name, float(probs_np[k_idx])))
+            pred_item = {'identifier': current_identifier,
+                         'image_path': str(current_identifier) if isinstance(current_identifier, (str, Path)) and Path(
+                             current_identifier).is_file() else "in-memory/url", 'probabilities': probs_np.tolist(),
+                         'predicted_class_idx': predicted_idx, 'predicted_class_name': predicted_name,
+                         'confidence': float(probs_np[predicted_idx]), 'top_k_predictions': top_k_preds_list,
+                         'lime_explanation': None}
+            if generate_lime_explanations and lime_explainer is not None:
+                logger.debug(f"Generating LIME for: {current_identifier} (Predicted: {predicted_name})")
+                try:
+                    img_for_lime_np = np.array(pil_image_for_lime)  # Use the already loaded PIL image
+                    explanation = lime_explainer.explain_instance(
+                        image=img_for_lime_np, classifier_fn=lime_predict_fn, top_labels=1, hide_color=0,
+                        num_features=lime_num_features, num_samples=lime_num_samples, random_seed=RANDOM_SEED
+                    )
+                    lime_weights = explanation.local_exp.get(predicted_idx, [])
 
-            predictions_output.append({
-                'image_path': str(current_image_path),
-                'probabilities': probs_np.tolist(),
-                'predicted_class_idx': int(predicted_idx),
-                'predicted_class_name': predicted_name,
-                'confidence': float(probs_np[predicted_idx]),
-                'top_k_predictions': top_k_preds_list
-            })
+                    # Store LIME weights, and optionally the segments if needed for later plotting from JSON.
+                    # For now, to keep JSON smaller, let's only store weights.
+                    # The plotter will need the original image and weights to show LIME.
+                    # If a very precise LIME plot reproduction from JSON is needed later,
+                    # then segments might be required, or a reference to the LIME object itself.
+                    pred_item['lime_explanation'] = {
+                        'explained_class_idx': predicted_idx,
+                        'explained_class_name': predicted_name,
+                        'feature_weights': lime_weights,
+                        # 'segments': explanation.segments.tolist(), # Removed for smaller JSON by default
+                        # 'image_for_lime_shape': img_for_lime_np.shape # May not be needed if plotter reloads image
+                    }
+                    logger.debug(
+                        f"LIME weights for {current_identifier} (top class {predicted_name}): {lime_weights[:2]}...")
+                except Exception as lime_e:
+                    logger.error(f"LIME explanation failed for {current_identifier}: {lime_e}", exc_info=False)
+                    pred_item['lime_explanation'] = {'error': str(lime_e)}
+            predictions_output.append(pred_item)
 
         logger.info(
-            f"Successfully generated predictions for {len(predictions_output)} out of {len(valid_image_paths)} valid input images.")
+            f"Successfully generated predictions for {len(predictions_output)} out of {len(successful_indices_after_transform_and_collation)} loaded images.")
 
         # --- Optionally Save Prediction Results to JSON ---
-        results_detail_level = results_detail_level or self.results_detail_level
-
+        # ... (logic for saving JSON via _save_results - unchanged from previous response) ...
+        effective_save_detail_level = self.results_detail_level;
+        if results_detail_level is not None: effective_save_detail_level = results_detail_level
         saved_json_path = None
-        if results_detail_level > 0:
-            logger.info(f"Saving prediction results ({run_id}) with detail level {results_detail_level}...")
-            results_for_json = {
-                'method': 'predict_images',
-                'run_id': run_id,
-                'params': {
-                    'num_original_input_paths': len(image_paths),  # Original number requested
-                    'num_valid_input_paths': len(valid_image_paths),  # Number found to exist
-                    'num_images_processed': len(predictions_output)  # Number actually predicted
-                },
-                'predictions': predictions_output
-            }
-            saved_json_path = self._save_results(
-                results_data=results_for_json,
-                method_name="predict_images",
-                run_id=run_id,
-                method_params=results_for_json['params'],
-                results_detail_level=results_detail_level
-            )
+        if effective_save_detail_level > 0:
+            logger.info(f"Saving prediction results ({run_id}) with detail level {effective_save_detail_level}...")
+            results_for_json = {'method': 'predict_images', 'run_id': run_id,
+                                'params': {'num_original_sources': len(image_sources),
+                                           'num_valid_loaded': len(valid_pil_images),
+                                           'num_images_predicted': len(predictions_output)},
+                                'predictions': predictions_output}
+            saved_json_path = self._save_results(results_data=results_for_json, method_name="predict_images",
+                                                 run_id=run_id, method_params=results_for_json['params'],
+                                                 results_detail_level=effective_save_detail_level)
         else:
             logger.info(f"Skipping saving of prediction results JSON for {run_id} (detail level is 0).")
 
@@ -1939,45 +2038,67 @@ class ClassificationPipeline:
             current_plot_level = plot_level
             logger.debug(f"Plot level for this prediction run: {current_plot_level}")
 
-        # Define max_cols for plot, potentially from an override
-        # For now, using a fixed value or a default from plotter itself.
-        # If you add 'prediction_plot_max_cols' to method signature:
-        # plot_max_cols = self.prediction_plot_max_cols # default from pipeline init
-        # if prediction_plot_max_cols is not None:
-        #    plot_max_cols = prediction_plot_max_cols
-        # else:
-        plot_max_cols = 4  # Default from plotter will be used if not passed.
-
         if current_plot_level > 0 and predictions_output:
-            plot_save_location: Optional[Path] = None  # Specific directory for these prediction plots
-            if self.experiment_dir:  # If we have a base directory, save plots there
+            plot_save_location: Optional[Path] = None
+            if self.experiment_dir:
                 pred_plot_dir_parent = self.experiment_dir / "predictions_plots"
                 plot_save_location = pred_plot_dir_parent / run_id
-                # The plotter's _create_plot_dir_from_base will handle mkdir if plot_save_location is passed
-                # OR if plot_predictions directly takes plot_save_location as the final dir
 
             show_plots_flag = (current_plot_level == 2)
 
             if current_plot_level == 1 and not plot_save_location:
                 logger.warning(
-                    "Plot saving for predictions skipped: plot_level is 1 (save only) but no results_dir was specified for the pipeline.")
+                    "Plot saving for predictions skipped: plot_level is 1 (save only) but no results_dir for pipeline.")
             else:
                 logger.info(
                     f"Plotting prediction results (level {current_plot_level}). Save location base: {plot_save_location if plot_save_location else 'None (showing only)'}")
                 try:
-                    from ..plotter import ResultsPlotter
+                    from ..plotter import ResultsPlotter  # Corrected relative import
+
+                    # We need to pass the actual image data for plotting if the 'identifier' isn't a loadable path
+                    # The `valid_pil_images` list contains the PIL objects for successfully processed images.
+                    # We also need `valid_identifiers` to map.
+                    # The `predictions_output` contains identifiers that match `valid_identifiers`.
+
+                    # Create a mapping from identifier to PIL image for easy lookup in plotter
+                    identifier_to_pil_map = {
+                        ident: img for ident, img in zip(valid_identifiers, valid_pil_images)
+                        # This assumes valid_identifiers and valid_pil_images are for successfully PROCESSED images,
+                        # which might be fewer than initially loaded if transforms failed and collate filtered them.
+                        # The `predictions_output` list should correspond one-to-one with successfully predicted images.
+                    }
+
+                    # Augment predictions_output with actual PIL images for the plotter,
+                    # but only for images that were actually predicted.
+                    images_for_plotter = []
+                    for pred_item in predictions_output:
+                        img_obj = identifier_to_pil_map.get(pred_item['identifier'])
+                        if img_obj:
+                            images_for_plotter.append(img_obj)
+                        else:
+                            # This case means an image was predicted but its original PIL object wasn't found
+                            # in our map, which would be an internal logic error. Or, if identifier in
+                            # predictions_output is just a path, the plotter can try to load it.
+                            # For simplicity, if the plotter gets a path, it tries to load.
+                            # If it gets an image object, it uses it.
+                            images_for_plotter.append(pred_item['image_path'])  # Fallback to path
+
                     ResultsPlotter.plot_predictions(
-                        predictions_output=predictions_output,  # Pass raw data
-                        plot_save_dir=plot_save_location,  # Pass the specific directory for saving (can be None)
+                        predictions_output=predictions_output,  # Contains metadata and identifiers/paths
+                        # image_objects_for_display=images_for_plotter, # <<< PASS LOADED IMAGES
+                        image_pil_map=identifier_to_pil_map,  # <<< Pass map of identifier to PIL image
+                        plot_save_dir=plot_save_location,
                         show_plots=show_plots_flag,
-                        max_cols=4  # Or make this configurable
+                        max_cols=prediction_plot_max_cols,  # Use the passed param
+                        generate_lime_plots=generate_lime_explanations
                     )
                 except ImportError:
-                    logger.error("Plotting skipped: ResultsPlotter class not found or plotting libraries missing.")
+                    logger.error(
+                        "Plotting skipped: ResultsPlotter/LIME class not found or plotting libraries missing.")
                 except Exception as plot_err:
                     logger.error(f"Prediction plotting failed for {run_id}: {plot_err}", exc_info=True)
         elif current_plot_level > 0 and not predictions_output:
-            logger.warning(f"Plotting skipped for predictions run {run_id}: No prediction outputs were generated.")
+            logger.warning(f"Plotting skipped for predictions run {run_id}: No prediction outputs.")
 
         return predictions_output
 
