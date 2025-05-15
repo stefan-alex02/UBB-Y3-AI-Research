@@ -6,7 +6,7 @@ from typing import Optional, Tuple, List
 
 import requests
 from flask import Flask, request, jsonify
-from flask_cors import CORS # <<< IMPORT CORS
+from flask_cors import CORS
 from PIL import Image
 import io
 import base64
@@ -14,9 +14,8 @@ import traceback
 import numpy as np
 import torch # For torch.no_grad
 
-# ... (your model_src imports for Pipeline, ModelType, logger, etc.)
 from ml.pipeline import ClassificationPipeline
-from ml.config import RANDOM_SEED # Import RANDOM_SEED if used by LIME
+from ml.config import RANDOM_SEED # for LIME
 from ml.architectures import ModelType
 from ml.logger_utils import logger, setup_logger, logger_name_global
 
@@ -34,7 +33,7 @@ except ImportError:
 
 # --- Global Variables & Setup ---
 app = Flask(__name__)
-CORS(app) # <<< ENABLE CORS FOR ALL ROUTES IN YOUR APP
+CORS(app)
 
 # If you want to be more specific (e.g., only for /predict or only from certain origins):
 # cors = CORS(app, resources={r"/predict": {"origins": "*"}}) # Allow all origins for /predict
@@ -52,7 +51,6 @@ def get_lime_explainer():
     return LIME_EXPLAINER_INSTANCE
 
 def server_lime_predict_fn(numpy_images_batch_lime: np.ndarray) -> np.ndarray:
-    # ... (implementation unchanged) ...
     if PIPELINE_INSTANCE is None or not PIPELINE_INSTANCE.model_adapter.initialized_: raise RuntimeError("LIME predict_fn: Pipeline or model not ready.")
     processed_images_lime = []
     for img_np_lime in numpy_images_batch_lime:
@@ -68,11 +66,10 @@ def server_lime_predict_fn(numpy_images_batch_lime: np.ndarray) -> np.ndarray:
 
 
 def initialize_pipeline_server():
-    # ... (implementation unchanged) ...
     global PIPELINE_INSTANCE, MODEL_LOADED_SUCCESSFULLY
     DEFAULT_MODEL_TYPE_STR = os.environ.get("DEFAULT_MODEL_TYPE", "cnn")
     # DEFAULT_MODEL_PATH = os.environ.get("DEFAULT_MODEL_PATH", None)
-    DEFAULT_MODEL_PATH = os.environ.get("DEFAULT_MODEL_PATH", "./results/Swimcat-extend/cnn/20250515_160130_seed42/single_train_20250515_160130_450999/cnn_epoch4_val_valid-loss0.3059.pt")
+    DEFAULT_MODEL_PATH = os.environ.get("DEFAULT_MODEL_PATH", "./results/Swimcat-extend/cnn/20250515_193234_seed42/single_train_20250515_193234_180758/cnn_epoch3_val_valid-loss0.3494.pt")
     DEFAULT_DATASET_FOR_HANDLER = os.environ.get("DEFAULT_DATASET_PATH", "./data/Swimcat-extend")
     logger.info(f"Attempting to initialize pipeline with model_type='{DEFAULT_MODEL_TYPE_STR}', model_path='{DEFAULT_MODEL_PATH}'")
     try:
@@ -92,7 +89,6 @@ initialize_pipeline_server()
 
 @app.route('/predict', methods=['POST'])
 def predict_endpoint():
-    # ... (implementation largely unchanged, but now CORS headers will be added by Flask-CORS) ...
     if not MODEL_LOADED_SUCCESSFULLY or PIPELINE_INSTANCE is None: return jsonify({"error": "Model service not ready."}), 503
     pil_images_loaded: List[Tuple[str, Optional[Image.Image]]] = []
     if 'images' in request.files:

@@ -1,3 +1,0 @@
-method_run_id,timestamp,accuracy,macro_f1,accuracy_ci_margin,f1_macro_ci_margin,precision_macro,recall_macro,specificity_macro,roc_auc_macro,pr_auc_macro,best_cv_score,best_epoch,module__num_classes,lr,max_epochs,batch_size,device,verbose,optimizer__weight_decay,val_split_ratio_used
-single_train_20250510_203038_177942,20250510_203243,,,,,,,,,,,6,6,0.0001,6,8,cuda,0,0.01,0.2
-single_eval_203259,20250510_203259,0.9428571428571428,0.9427738193790055,,,0.9448626707917852,0.942857142857143,0.9885714285714285,0.9966921768707483,0.984125785348824,,
