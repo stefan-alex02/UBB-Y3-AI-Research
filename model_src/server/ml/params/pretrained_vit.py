@@ -44,6 +44,47 @@ pretrained_vit_fixed_params_option2_head_only = {
 
 # --- Parameter Space Definitions ---
 
+param_dist_pretrained_vit_single_dict = {
+    # --- Skorch Training Loop Parameters ---
+    'lr': [1e-5, 3e-5, 5e-5, 1e-4, 3e-4, 5e-4, 1e-3], # Wider range for LR
+    'batch_size': [8, 16, 32],
+    'max_epochs': [15, 25, 30, 40, 50], # Rely on EarlyStopping
+
+    # --- Optimizer (AdamW) Parameters ---
+    'optimizer__weight_decay': [0.0, 0.001, 0.005, 0.01, 0.05],
+
+    # --- PretrainedViT Module Parameters (module__) ---
+    'module__vit_model_variant': ['vit_b_16'], # Keep fixed for this example, or add 'vit_l_16'
+                                               # but be mindful of batch size/LR differences.
+    'module__pretrained': [True],
+
+    'module__unfreeze_strategy': [
+        'none',             # Corresponds to 'head_only' style active unfreezing
+        'encoder_tail',
+        # 'full_encoder'    # Generally very resource intensive, include if specifically testing
+    ],
+    # This parameter will be sampled regardless of strategy, but only used by 'encoder_tail'.
+    # Your PretrainedViT should ignore it if strategy is not 'encoder_tail'.
+    'module__num_transformer_blocks_to_unfreeze': [1, 2, 3, 4, 6], # Range of blocks for 'encoder_tail'
+
+    # Flags for specific component unfreezing (these are active regardless of block strategy,
+    # unless 'none' strategy in PretrainedViT re-freezes them, which it currently does not explicitly for CLS/PosEmb if strategy is 'none')
+    # For 'none' strategy (head_only style), these define what besides the head gets unfrozen.
+    # For 'encoder_tail' or 'full_encoder', these are often True.
+    'module__unfreeze_cls_token': [True, False], # Test impact of freezing/unfreezing
+    'module__unfreeze_pos_embedding': [True, False],
+    'module__unfreeze_patch_embedding': [False], # Typically always False for fine-tuning
+    'module__unfreeze_encoder_layernorm': [True, False], # Test impact
+
+    'module__custom_head_hidden_dims': [
+        None,       # Simple linear head
+        [256],
+        [512],
+        [512, 256]
+    ],
+    'module__head_dropout_rate': [0.0, 0.1, 0.25, 0.4, 0.5],
+}
+
 param_grid_pretrained_vit_conditional = [
     # --- Scenario 1: 'encoder_tail' - Fine-tune last N encoder blocks ---
     # This is a common and effective strategy.

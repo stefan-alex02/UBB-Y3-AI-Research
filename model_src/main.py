@@ -56,7 +56,7 @@ if __name__ == "__main__":
     force_flat = True
 
     # Flag for overriding parameters:
-    override_params = True # Set to True to use the override params for any model type
+    override_params = False # Set to True to use the override params for any model type
 
     # Trained model path for loading
     # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
@@ -130,7 +130,7 @@ if __name__ == "__main__":
             'param_grid': chosen_param_grid,
             'cv': 5,
             'method': 'random',
-            'n_iter': 25,
+            'n_iter': 15,
             'internal_val_split_ratio': 0.2,
             'scoring': 'accuracy',
             'save_best_model': True,
