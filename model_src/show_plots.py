@@ -1,8 +1,8 @@
 from pathlib import Path
 
-from ml.dataset_utils import ImageDatasetHandler
-from ml.logger_utils import logger
-from ml.plotter import ResultsPlotter
+from model_src.server.ml import ImageDatasetHandler
+from model_src.server.ml import logger
+from model_src.server.ml import ResultsPlotter
 
 # --- Configuration ---
 # IMPORTANT: Replace these paths with your actual paths
@@ -51,11 +51,11 @@ try:
 
     if method_name_in_file == "single_eval":
         if class_names:
-            ResultsPlotter.plot_single_eval_results(json_file_path, class_names=class_names, show_plots=True)
+            ResultsPlotter.plot_single_eval_results(plot_artifact_base_key_or_path=json_file_path, class_names=class_names, show_plots=True)
         else:
             logger.error("Cannot plot single_eval results: Class names are required but could not be loaded.")
     elif method_name_in_file.startswith("single_train"): # Handle potential random suffix
-        ResultsPlotter.plot_single_train_results(json_file_path, show_plots=True)
+        ResultsPlotter.plot_single_train_results(plot_artifact_base_key_or_path=json_file_path, show_plots=True)
     elif method_name_in_file.startswith("non_nested"): # Handle potential grid/random suffix
         ResultsPlotter.plot_non_nested_cv_results(json_file_path, show_plots=True)
     elif method_name_in_file.startswith("nested"): # Handle potential grid/random suffix

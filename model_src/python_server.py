@@ -10,14 +10,13 @@ from flask_cors import CORS
 from PIL import Image
 import io
 import base64
-import traceback
 import numpy as np
 import torch # For torch.no_grad
 
-from ml.pipeline import ClassificationPipeline
-from ml.config import RANDOM_SEED # for LIME
-from ml.architectures import ModelType
-from ml.logger_utils import logger, setup_logger, logger_name_global
+from model_src.server.ml.pipeline import ClassificationPipeline
+from model_src.server.ml import RANDOM_SEED # for LIME
+from model_src.server.ml import ModelType
+from model_src.server.ml import logger, setup_logger, logger_name_global
 
 # Assuming LIME and skimage are installed
 try:
@@ -69,7 +68,7 @@ def initialize_pipeline_server():
     global PIPELINE_INSTANCE, MODEL_LOADED_SUCCESSFULLY
     DEFAULT_MODEL_TYPE_STR = os.environ.get("DEFAULT_MODEL_TYPE", "cnn")
     # DEFAULT_MODEL_PATH = os.environ.get("DEFAULT_MODEL_PATH", None)
-    DEFAULT_MODEL_PATH = os.environ.get("DEFAULT_MODEL_PATH", "./results/Swimcat-extend/cnn/20250515_193234_seed42/single_train_20250515_193234_180758/cnn_epoch3_val_valid-loss0.3494.pt")
+    DEFAULT_MODEL_PATH = os.environ.get("DEFAULT_MODEL_PATH", "./results/Swimcat-extend/cnn/20250515_160130_seed42/single_train_20250515_160130_450999/cnn_epoch4_val_valid-loss0.3059.pt")
     DEFAULT_DATASET_FOR_HANDLER = os.environ.get("DEFAULT_DATASET_PATH", "./data/Swimcat-extend")
     logger.info(f"Attempting to initialize pipeline with model_type='{DEFAULT_MODEL_TYPE_STR}', model_path='{DEFAULT_MODEL_PATH}'")
     try:
@@ -92,7 +91,7 @@ def predict_endpoint():
     if not MODEL_LOADED_SUCCESSFULLY or PIPELINE_INSTANCE is None: return jsonify({"error": "Model service not ready."}), 503
     pil_images_loaded: List[Tuple[str, Optional[Image.Image]]] = []
     if 'images' in request.files:
-        uploaded_files = request.files.getlist('images');
+        uploaded_files = request.files.getlist('images')
         for file_storage in uploaded_files:
             if file_storage and file_storage.filename:
                 try: image_bytes = file_storage.read(); img = Image.open(io.BytesIO(image_bytes)).convert('RGB'); pil_images_loaded.append((file_storage.filename, img))
