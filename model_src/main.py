@@ -139,6 +139,7 @@ if __name__ == "__main__":
             'internal_val_split_ratio': 0.2,
             'scoring': 'accuracy',
             'save_best_model': True,
+            'results_detail_level': 2,
         }),
         # The best model is refit and stored in pipeline.model_adapter after search
         ('single_eval', {}), # Evaluate the refit best model
