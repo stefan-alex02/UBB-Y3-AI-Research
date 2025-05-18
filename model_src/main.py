@@ -2,13 +2,14 @@ from pathlib import Path
 
 import numpy as np
 
-from model_src.server.ml.logger_utils import logger
+from server.ml.logger_utils import logger
+from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused
+from server.ml.params.scratch_vit import fixed_params_vit_scratch, param_grid_vit_from_scratch
 from server.ml import ModelType
 from server.ml import PipelineExecutor
 from server.ml.config import DATASET_DICT
 from server.ml.params import (debug_fixed_params, cnn_fixed_params, pretrained_vit_fixed_params_option1,
-                              param_grid_pretrained_vit_diminished, diffusion_param_grid,
-                              param_grid_pretrained_vit_conditional)
+                              diffusion_param_grid, param_grid_pretrained_vit_conditional)
 from server.ml.params import debug_param_grid, cnn_param_grid
 from server.persistence import load_file_repository, load_minio_repository
 
@@ -32,7 +33,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "pvit"  # 'cnn', 'pvit', 'svit', 'diff'
@@ -101,7 +102,11 @@ if __name__ == "__main__":
 
     elif model_type == ModelType.PRETRAINED_VIT:
         chosen_fixed_params = pretrained_vit_fixed_params_option1
-        chosen_param_grid = param_grid_pretrained_vit_conditional
+        chosen_param_grid = param_grid_pretrained_vit_focused
+
+    elif model_type == ModelType.SCRATCH_VIT:
+        chosen_fixed_params = fixed_params_vit_scratch
+        chosen_param_grid = param_grid_vit_from_scratch
 
     elif model_type == ModelType.DIFFUSION:
         chosen_fixed_params = debug_fixed_params # Using debug fixed params for the moment (TODO: update)
@@ -130,7 +135,7 @@ if __name__ == "__main__":
             'param_grid': chosen_param_grid,
             'cv': 5,
             'method': 'random',
-            'n_iter': 15,
+            'n_iter': 8,
             'internal_val_split_ratio': 0.2,
             'scoring': 'accuracy',
             'save_best_model': True,
@@ -230,7 +235,7 @@ if __name__ == "__main__":
             img_size=img_size,
             batch_size=16,
             max_epochs=10,
-            patience=5,
+            patience=10,
             lr=0.001,
             optimizer__weight_decay=0.01,
             test_split_ratio_if_flat=0.2, # For flat datasets

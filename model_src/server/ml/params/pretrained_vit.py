@@ -152,69 +152,40 @@ param_grid_pretrained_vit_conditional = [
     # },
 ]
 
-# Slightly Diminished Parameter Grid for PretrainedViT (Conditional - List of Dicts)
-# Suitable for a more focused GridSearchCV or a quicker RandomizedSearchCV
-param_grid_pretrained_vit_diminished = [
-    # --- Scenario 1: 'encoder_tail' - Fine-tune last N encoder blocks ---
-    # This is a common and effective strategy.
+param_grid_pretrained_vit_focused = [
+    # Scenario 1: Minimal fine-tuning (Head + CLS/PosEmb/EncoderLN)
+    {
+        'module__vit_model_variant': ['vit_b_16'],
+        'module__pretrained': [True],
+        'module__unfreeze_strategy': ['none'], # Encoder blocks frozen
+        'module__unfreeze_cls_token': [True],
+        'module__unfreeze_pos_embedding': [True],
+        'module__unfreeze_patch_embedding': [False],
+        'module__unfreeze_encoder_layernorm': [True], # Unfreeze final LN even if blocks are frozen
+        'module__custom_head_hidden_dims': [None, [512]],
+        'module__head_dropout_rate': [0.25, 0.5],
+
+        'lr': [1e-4, 3e-4],
+        'optimizer__weight_decay': [0.001, 0.01],
+        'batch_size': [32],
+        'max_epochs': [50], # Rely on early stopping
+    },
+    # Scenario 2: Fine-tune last few encoder blocks
     {
         'module__vit_model_variant': ['vit_b_16'],
         'module__pretrained': [True],
         'module__unfreeze_strategy': ['encoder_tail'],
-        'module__num_transformer_blocks_to_unfreeze': [2, 4], # Test unfreezing a few vs. more
+        'module__num_transformer_blocks_to_unfreeze': [2, 4], # ViT-B has 12 blocks
         'module__unfreeze_cls_token': [True],
         'module__unfreeze_pos_embedding': [True],
         'module__unfreeze_patch_embedding': [False],
         'module__unfreeze_encoder_layernorm': [True],
-
-        'module__custom_head_hidden_dims': [None, [512]], # Simple linear vs. one hidden layer
-        'module__head_dropout_rate': [0.0, 0.25],      # No dropout vs. some dropout
-
-        # Skorch & Optimizer parameters
-        'lr': [5e-5, 1e-4],             # Key learning rates for this strategy
-        'optimizer__weight_decay': [0.01], # Often a good default
-        'batch_size': [16],                 # Keep batch size fixed or pick one common value
-        'max_epochs': [30],                 # Fixed epochs, rely on early stopping
-    },
-
-    # --- Scenario 2: 'head_only' style via 'none' strategy + specific unfreezes ---
-    # (Effectively fine-tunes only explicitly flagged components like head, CLS, PosEmb)
-    {
-        'module__vit_model_variant': ['vit_b_16'],
-        'module__pretrained': [True],
-        'module__unfreeze_strategy': ['none'],
-        'module__unfreeze_cls_token': [True],
-        'module__unfreeze_pos_embedding': [True],
-        'module__unfreeze_patch_embedding': [False],
-        'module__unfreeze_encoder_layernorm': [False], # Keep LN frozen if blocks are
-
-        'module__custom_head_hidden_dims': [None, [512]],
+        'module__custom_head_hidden_dims': [None], # Keep head simple when unfreezing more
         'module__head_dropout_rate': [0.0, 0.25],
 
-        # Skorch & Optimizer parameters
-        'lr': [1e-4, 5e-4],             # Can try slightly higher LRs
-        'optimizer__weight_decay': [0.001],
-        'batch_size': [32],
-        'max_epochs': [20],
-    },
-
-    # --- Scenario 3: (Optional but more focused) 'full_encoder' ---
-    # If you want to test this, keep it very limited.
-    # {
-    #     'module__vit_model_variant': ['vit_b_16'],
-    #     'module__pretrained': [True],
-    #     'module__unfreeze_strategy': ['full_encoder'],
-    #     'module__unfreeze_cls_token': [True],
-    #     'module__unfreeze_pos_embedding': [True],
-    #     'module__unfreeze_patch_embedding': [False],
-    #     'module__unfreeze_encoder_layernorm': [True],
-
-    #     'module__custom_head_hidden_dims': [None], # Simplest head for full fine-tune
-    #     'module__head_dropout_rate': [0.0, 0.2],
-
-    #     'lr': [1e-5, 3e-5], # Very low LRs
-    #     'optimizer__weight_decay': [0.01, 0.05],
-    #     'batch_size': [8], # Smallest batch size
-    #     'max_epochs': [50],
-    # },
+        'lr': [3e-5, 5e-5, 1e-4], # Smaller LRs for deeper fine-tuning
+        'optimizer__weight_decay': [0.01, 0.05],
+        'batch_size': [16], # Potentially smaller batch for more unfrozen layers
+        'max_epochs': [70],
+    }
 ]
