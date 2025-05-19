@@ -193,6 +193,7 @@ class SkorchModelAdapter(NeuralNetClassifier):
     def train_step_single(self, batch, **fit_params):
         self.module_.train()
         Xi, yi = batch  # Already transformed tensors
+        # TODO: add optional visualisation of the batch
         yi = yi.to(dtype=torch.long)
         y_pred = self.infer(Xi, **fit_params)
         loss = self.get_loss(y_pred, yi, X=Xi, training=True)

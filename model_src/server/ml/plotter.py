@@ -8,6 +8,8 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 
+from model_src.server.persistence import LocalFileSystemRepository
+
 # Assuming ArtifactRepository can be imported for type hinting if needed
 # from ..artifact_repository import ArtifactRepository, LocalFileSystemRepository
 
@@ -907,110 +909,164 @@ class ResultsPlotter:
 
     @staticmethod
     def plot_predictions(predictions_output: List[Dict[str, Any]],
-                         image_pil_map: Dict[Any, Image.Image],
+                         image_pil_map: Dict[Any, Image.Image],  # Map of identifier to PIL Image
                          plot_save_dir_base: Optional[Union[str, Path]],
                          repository_for_plots: Optional[Any] = None,
                          show_plots: bool = False,
                          max_cols: int = 4,
-                         generate_lime_plots: bool = False,
-                         lime_num_features_to_display: int = 5):
-        if not predictions_output or not MATPLOTLIB_AVAILABLE: logger.warning(
-            "No predictions to plot or matplotlib not available."); return
-        if not _check_plotting_libs(): return
+                         generate_lime_plots: bool = False,  # Flag from pipeline call
+                         lime_num_features_to_display: int = 5  # How many features to highlight in plot
+                         ):
+        if not predictions_output or not MATPLOTLIB_AVAILABLE:
+            logger.warning("No predictions to plot or matplotlib not available.");
+            return
+        if not _check_plotting_libs(): return  # Includes LIME_PLOTTER_AVAILABLE check if that's added
 
-        run_id = "prediction_run"  # Generic for this plot type
-        method_name = "predict_images"  # Implied method
+        # Determine the specific directory or S3 key prefix for *this method's plots*
+        # This will be plot_save_dir_base / "predict_images_plots"
+        final_plots_location_prefix: Optional[str] = None # For S3 key or local directory path string
 
-        plot_artifact_base: Optional[str] = None
         if plot_save_dir_base:
-            plot_artifact_base = str((PurePath(plot_save_dir_base) / f"{method_name}_plots").as_posix())
+            # Use PurePath for constructing OS-agnostic "paths" that also work as S3 prefixes
+            final_plots_location_prefix = str( (PurePath(plot_save_dir_base) / "predict_images_plots").as_posix() )
+            # If it's a local path and not a repo, ensure the directory exists
+            if not repository_for_plots and isinstance(plot_save_dir_base, (str, Path)):
+                Path(final_plots_location_prefix).mkdir(parents=True, exist_ok=True)
 
-        if generate_lime_plots and not SKIMAGE_AVAILABLE: logger.warning(
-            "LIME plot generation skipped: scikit-image not installed."); generate_lime_plots = False
-        if generate_lime_plots and not LIME_PLOTTER_AVAILABLE: logger.warning(
-            "LIME plot generation skipped: LIME library not installed."); generate_lime_plots = False
-        logger.info(f"Plotting {len(predictions_output)} predictions. LIME plots: {generate_lime_plots}")
+        if generate_lime_plots and not SKIMAGE_AVAILABLE:
+            logger.warning("LIME plot generation skipped: scikit-image (for mark_boundaries) is not installed.")
+            generate_lime_plots = False
+        # LIME_PLOTTER_AVAILABLE check isn't strictly needed here if we are just using mark_boundaries
+        # and not re-running LimeImageExplainer.explain_instance.
 
+        run_id_for_log = predictions_output[0].get('run_id',
+                                                   "prediction_run") if predictions_output else "prediction_run"
+        logger.info(
+            f"Plotting {len(predictions_output)} predictions for {run_id_for_log}. LIME plots: {generate_lime_plots}")
         num_images_to_plot = len(predictions_output)
         if num_images_to_plot == 0: return
 
-        cols = min(num_images_to_plot, max_cols);
+        cols = min(num_images_to_plot, max_cols)
         rows = (num_images_to_plot + cols - 1) // cols
-        img_width_unit = 3.5 if not generate_lime_plots else 5.0;
-        img_height_unit = 4.0 if not generate_lime_plots else 5.5
+        img_width_unit = 3.5 if not generate_lime_plots else 4.5
+        img_height_unit = 4.0 if not generate_lime_plots else 5.0
         fig_width = cols * img_width_unit;
-        fig_height = rows * img_height_unit;
-        max_fig_height = 40;
+        fig_height = rows * img_height_unit
+        max_fig_height = 45;
         fig_height = min(fig_height, max_fig_height)
-        fig, axes = plt.subplots(rows, cols, figsize=(fig_width, fig_height), squeeze=False);
-        axes_flat = axes.flatten();
+
+        fig, axes = plt.subplots(rows, cols, figsize=(fig_width, fig_height), squeeze=False)
+        axes_flat = axes.flatten()
         plotted_images_count = 0
 
         for i, pred_data in enumerate(predictions_output):
-            # ... (Loop to draw on axes_flat[i] as before) ...
-            if i >= len(axes_flat): break;
-            ax = axes_flat[i]; ax.axis('off'); identifier = pred_data.get('identifier'); image_path_str = pred_data.get('image_path', str(identifier)); img_pil_for_display: \
-            Optional[Image.Image] = image_pil_map.get(identifier)
+            if i >= len(axes_flat): break
+            ax = axes_flat[i];
+            ax.axis('off')
+            identifier = pred_data.get('identifier')
+            image_path_str_for_title = pred_data.get('image_path', str(identifier))
+
+            img_pil_for_display: Optional[Image.Image] = image_pil_map.get(identifier)
+
             try:
-                if img_pil_for_display is None:
-                    if isinstance(identifier, (str, Path)) and Path(identifier).is_file() and Path(
-                        identifier).exists(): img_pil_for_display = Image.open(identifier).convert('RGB')
-                lime_explanation_data = pred_data.get('lime_explanation');
-                lime_image_base64 = lime_explanation_data.get('lime_image_base64') if isinstance(lime_explanation_data,
-                                                                                                 dict) else None;
+                if img_pil_for_display is None:  # Attempt to load if not in map (e.g. direct call to plotter with paths)
+                    if isinstance(identifier, (str, Path)) and Path(identifier).is_file() and Path(identifier).exists():
+                        img_pil_for_display = Image.open(identifier).convert('RGB')
+
+                lime_explanation_data = pred_data.get('lime_explanation')
                 lime_info = ""
-                if generate_lime_plots and lime_image_base64 and isinstance(lime_image_base64, str):
+                img_to_show_on_axis = np.array(img_pil_for_display) if img_pil_for_display else None  # Default
+
+                if generate_lime_plots and lime_explanation_data and \
+                        isinstance(lime_explanation_data, dict) and \
+                        'feature_weights' in lime_explanation_data and \
+                        'segments_for_render' in lime_explanation_data and \
+                        lime_explanation_data.get('segments_for_render') is not None and \
+                        SKIMAGE_AVAILABLE and img_pil_for_display is not None:
                     try:
-                        img_bytes = base64.b64decode(lime_image_base64); lime_img_pil = Image.open(
-                            io.BytesIO(img_bytes)); ax.imshow(np.array(
-                            lime_img_pil)); lime_info = f"\nLIME: {lime_explanation_data.get('explained_class_name', 'N/A')}"
-                    except Exception as e_lime_disp:
+                        img_np_original = np.array(img_pil_for_display)  # For LIME base
+                        segments = np.array(lime_explanation_data['segments_for_render'])
+                        weights = dict(lime_explanation_data['feature_weights'])
+
+                        lime_mask = np.zeros(segments.shape, dtype=bool)
+                        num_features_lime = lime_explanation_data.get('num_features_from_lime_run',
+                                                                      lime_num_features_to_display)
+
+                        positive_features = sorted([(seg_id, w) for seg_id, w in weights.items() if w > 0],
+                                                   key=lambda x: x[1], reverse=True)
+
+                        features_shown_count = 0
+                        for seg_id, weight_val in positive_features:  # Renamed weight to avoid conflict
+                            if features_shown_count < num_features_lime:
+                                lime_mask[segments == seg_id] = True
+                                features_shown_count += 1
+                            else:
+                                break
+
+                        if np.any(lime_mask):
+                            img_norm_for_lime_plot = img_np_original.astype(
+                                float) / 255.0 if img_np_original.max() > 1.0 else img_np_original.astype(float)
+                            img_to_show_on_axis = mark_boundaries(img_norm_for_lime_plot, lime_mask, color=(1, 0, 0),
+                                                                  mode='thick', outline_color=(1, 0, 0))
+                            if img_to_show_on_axis.max() <= 1.0 and img_to_show_on_axis.dtype == np.float64:  # mark_boundaries returns float [0,1]
+                                img_to_show_on_axis = (img_to_show_on_axis * 255).astype(np.uint8)
+                            lime_info = f"\nLIME: {lime_explanation_data.get('explained_class_name', 'N/A')}"
+                        else:
+                            logger.debug(f"LIME: No positive features for {identifier}, showing original.")
+                            lime_info = "\nLIME: (No positive features)"
+                    except Exception as e_lime_render:
                         logger.warning(
-                            f"Could not display LIME image for {identifier}: {e_lime_disp}. Showing original.");
-                    if img_pil_for_display:
-                        ax.imshow(np.array(img_pil_for_display)); lime_info = "\n(LIME error)"
-                    else:
-                        ax.text(0.5, 0.5, f"Image ID: {identifier}\n(Preview N/A)", ha="center", va="center",
-                                transform=ax.transAxes)
-                elif img_pil_for_display:
-                    ax.imshow(
-                        np.array(img_pil_for_display)); lime_info = "\n(LIME not shown)" if generate_lime_plots else ""
+                            f"Could not render LIME overlay for {identifier}: {e_lime_render}. Showing original.")
+                        lime_info = "\n(LIME render error)"
+                elif img_pil_for_display:  # If not plotting LIME, or if LIME failed before render
+                    lime_info = "\n(LIME data absent)" if generate_lime_plots and not lime_explanation_data else \
+                        ("\n(LIME not generated)" if generate_lime_plots else "")
+                # else img_to_show_on_axis remains None or original
+
+                if img_to_show_on_axis is not None:
+                    ax.imshow(img_to_show_on_axis)
                 else:
-                    if not (lime_explanation_data and lime_explanation_data.get('error')): ax.text(0.5, 0.5,
-                                                                                                   f"Image ID: {identifier}\n(Preview N/A)",
-                                                                                                   ha="center",
-                                                                                                   va="center",
-                                                                                                   transform=ax.transAxes)
-                    lime_info = ""
-                title_str = f"Pred: {pred_data['predicted_class_name']} (Conf: {pred_data['confidence']:.2f})";
+                    err_msg = pred_data.get('lime_explanation', {}).get('error',
+                                                                        "Preview N/A") if generate_lime_plots else "Preview N/A"
+                    ax.text(0.5, 0.5, f"Image ID: {identifier}\n({err_msg})", ha="center", va="center",
+                            transform=ax.transAxes, fontsize=8, color='gray')
+
+                title_str = f"Pred: {pred_data['predicted_class_name']} (Conf: {pred_data['confidence']:.2f})"
                 top_k = pred_data.get('top_k_predictions')
                 if top_k and isinstance(top_k, list) and len(top_k) > 1:
-                    if top_k[1][0] != pred_data[
-                        'predicted_class_name']: title_str += f"\n2nd: {top_k[1][0]} ({top_k[1][1]:.2f})"
-                title_str += lime_info;
-                ax.set_title(title_str, fontsize=8);
+                    if top_k[1][0] != pred_data['predicted_class_name']:
+                        title_str += f"\n2nd: {top_k[1][0]} ({top_k[1][1]:.2f})"
+                title_str += lime_info
+                ax.set_title(title_str, fontsize=8)
                 plotted_images_count += 1
+
             except Exception as e:
-                logger.error(f"Error plotting image {identifier}: {e}", exc_info=True); ax.text(0.5, 0.5,
-                                                                                                "Error Plotting",
-                                                                                                ha='center',
-                                                                                                va='center',
-                                                                                                transform=ax.transAxes,
-                                                                                                fontsize=8,
-                                                                                                color='red'); ax.set_title(
-                    f"{Path(str(identifier)).name}", fontsize=7, color='gray', y=0.95)
+                logger.error(f"Error plotting image for identifier {identifier}: {e}", exc_info=True)
+                ax.text(0.5, 0.5, "Error Plotting", ha="center", va="center", transform=ax.transAxes, fontsize=8,
+                        color='red')
+                ax.set_title(f"{Path(str(image_path_str_for_title)).name}", fontsize=7, color='gray', y=0.95)
             finally:
                 ax.axis('off')
 
         for j in range(plotted_images_count, len(axes_flat)): axes_flat[j].set_visible(False)
-        if plotted_images_count > 0 and fig is not None:
-            try:
-                fig.tight_layout(pad=1.0, h_pad=2.5, w_pad=1.5)
-            except ValueError:
-                logger.warning("Could not apply tight_layout to prediction grid.")
-            key_pred_grid = str(
-                (PurePath(plot_artifact_base) / "image_predictions_grid.png").as_posix()) if plot_artifact_base else None
-            _save_figure_or_show(fig, repository_for_plots, key_pred_grid, show_plots)
-        elif fig is not None:
-            plt.close(fig)
 
+        if plotted_images_count == 0:
+            logger.warning("No images were successfully prepared for the prediction grid plot.")
+            if 'fig' in locals() and fig is not None: plt.close(fig)
+            return
+
+        if 'fig' in locals() and fig is not None:
+            if plotted_images_count > 0:
+                try:
+                    fig.tight_layout(pad=1.0, h_pad=2.5, w_pad=1.5)
+                except ValueError:
+                    logger.warning("Could not apply tight_layout to prediction grid.")
+
+                # Construct the final save path/key for the grid plot
+                final_grid_plot_save_key_or_path: Optional[Union[str, Path]] = None
+                if final_plots_location_prefix: # This is .../run_id/predict_images_plots
+                    final_grid_plot_save_key_or_path = str((PurePath(final_plots_location_prefix) / "image_predictions_grid.png").as_posix())
+
+                _save_figure_or_show(fig, repository_for_plots, final_grid_plot_save_key_or_path, show_plots)
+            else:
+                plt.close(fig)

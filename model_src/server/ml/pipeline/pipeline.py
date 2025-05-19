@@ -32,6 +32,7 @@ from ..dataset_utils import ImageDatasetHandler, DatasetStructure, PathImageData
 from model_src.server.ml.logger_utils import logger
 from ..skorch_utils import SkorchModelAdapter
 from ..skorch_utils import get_default_callbacks
+from ...persistence import MinIORepository
 from ...persistence.artifact_repo import ArtifactRepository
 
 try:
@@ -41,6 +42,13 @@ try:
 except ImportError:
     LIME_AVAILABLE = False
     LimeImageExplainer = None
+    mark_boundaries = None
+
+try:
+    from skimage.segmentation import mark_boundaries
+    SKIMAGE_AVAILABLE = True
+except ImportError:
+    SKIMAGE_AVAILABLE = False
     mark_boundaries = None
 
 
@@ -196,7 +204,7 @@ class ClassificationPipeline:
 
         self.model_adapter_config = {
             'module': model_class, 'module__num_classes': self.dataset_handler.num_classes,
-            'criterion': nn.CrossEntropyLoss, 'optimizer': torch.optim.AdamW,
+            'criterion': nn.CrossEntropyLoss, 'optimizer': torch.optim.AdamW, # TODO: Add support for other optimizers
             'lr': lr, 'max_epochs': max_epochs, 'batch_size': batch_size, 'device': DEVICE,
             'callbacks': initial_callbacks_list,
             'patience_cfg': patience, 'monitor_cfg': 'valid_loss',
@@ -1712,7 +1720,11 @@ class ClassificationPipeline:
             compute_detailed_metrics_flag = True
 
         metrics = self._compute_metrics(y_test_np, y_pred_test, y_score_test, detailed=compute_detailed_metrics_flag)
-        results = {'method': 'single_eval', 'params': {}, **metrics}
+        results = {
+            'method': 'single_eval',
+            'params': {},
+            'run_id': run_id,
+            **metrics}
         method_name = results['method']  # Used for saving
 
         saved_json_path = self._save_results(results, "single_eval",
@@ -1762,6 +1774,7 @@ class ClassificationPipeline:
     def predict_images(self,
                        image_sources: List[Union[str, Path, Image.Image, bytes]],
                        original_identifiers: Optional[List[str]] = None,
+                       persist_prediction_artifacts: bool = True,
                        results_detail_level: Optional[int] = None,
                        plot_level: int = 0,
                        generate_lime_explanations: bool = False,
@@ -1771,6 +1784,8 @@ class ClassificationPipeline:
                        ) -> List[Dict[str, Any]]:
         run_id = f"predict_images_{datetime.now().strftime('%Y%M%d_%H%M%S_%f')}"
         logger.info(f"Starting prediction ({run_id}) for {len(image_sources)} image sources...")
+        if not persist_prediction_artifacts:
+            logger.info(f"Prediction run {run_id}: Artifact persistence is DISABLED.")
 
         if not self.model_adapter.initialized_:
             raise RuntimeError("Model adapter not initialized. Train or load a model first.")
@@ -1908,25 +1923,17 @@ class ClassificationPipeline:
                 probabilities = torch.softmax(logits, dim=1)
                 all_probabilities_np.extend(probabilities.cpu().numpy())
 
-        predictions_output = []
+        predictions_output = []  # This will be returned
         class_names = self.dataset_handler.classes
         num_classes_total = self.dataset_handler.num_classes
-
-        if len(all_probabilities_np) != len(successful_indices_after_transform_and_collation):
-            logger.error(f"Critical mismatch after prediction: {len(all_probabilities_np)} probabilities vs "
-                         f"{len(successful_indices_after_transform_and_collation)} successfully transformed images. "
-                         "Results may be misaligned.")
-            # Handle this error, e.g. by returning empty or raising an exception
-            # For now, proceed with min_len but this indicates a deeper issue
-            min_len = min(len(all_probabilities_np), len(successful_indices_after_transform_and_collation))
-        else:
-            min_len = len(all_probabilities_np)
 
         lime_explainer = None
         if generate_lime_explanations and LIME_AVAILABLE:
             lime_explainer = LimeImageExplainer(random_state=RANDOM_SEED)
 
+            # Define lime_predict_fn locally (needs self)
             def lime_predict_fn(numpy_images_batch_lime):
+                # ... (lime_predict_fn implementation) ...
                 processed_images_lime = []
                 for img_np_lime in numpy_images_batch_lime:
                     if img_np_lime.dtype == np.double or img_np_lime.dtype == np.float64 or img_np_lime.dtype == np.float32:
@@ -1934,145 +1941,203 @@ class ClassificationPipeline:
                             img_np_lime = (img_np_lime * 255).astype(np.uint8)
                         else:
                             img_np_lime = np.clip(img_np_lime, 0, 255).astype(np.uint8)
-                    pil_img_lime = Image.fromarray(img_np_lime)
-                    transformed_img_lime = self.dataset_handler.get_eval_transform()(pil_img_lime)
+                    elif img_np_lime.dtype != np.uint8:
+                        img_np_lime = np.clip(img_np_lime, 0, 255).astype(np.uint8)
+                    pil_img_lime = Image.fromarray(img_np_lime);
+                    transformed_img_lime = self.dataset_handler.get_eval_transform()(pil_img_lime);
                     processed_images_lime.append(transformed_img_lime)
                 if not processed_images_lime: return np.array([])
-                batch_tensor_lime = torch.stack(processed_images_lime).to(self.model_adapter.device)
+                batch_tensor_lime = torch.stack(processed_images_lime).to(self.model_adapter.device);
                 self.model_adapter.module_.eval()
                 with torch.no_grad():
                     logits_lime = self.model_adapter.module_(batch_tensor_lime); probs_lime = torch.softmax(logits_lime,
                                                                                                             dim=1)
                 return probs_lime.cpu().numpy()
 
+        # Build prediction output and generate LIME data if needed
+        min_len = len(all_probabilities_np)  # Assume mapping logic from previous step is correct
         for i in range(min_len):
             original_valid_idx = successful_indices_after_transform_and_collation[i]
             current_identifier = valid_identifiers[original_valid_idx]
-            pil_image_for_lime = valid_pil_images[original_valid_idx]
+            pil_image_for_lime_and_plot = valid_pil_images[original_valid_idx]  # The actual PIL image
             probs_np = all_probabilities_np[i]
-
             predicted_idx = int(np.argmax(probs_np))
-            # ... (rest of prediction item creation and LIME logic - unchanged from previous response) ...
             predicted_name = class_names[predicted_idx] if class_names and 0 <= predicted_idx < len(
-                class_names) else f"Class_{predicted_idx}";
+                class_names) else f"Class_{predicted_idx}"
+            # ... (top-k prediction logic) ...
             top_k_val = min(3, num_classes_total);
             top_k_indices = np.argsort(probs_np)[-top_k_val:][::-1];
             top_k_preds_list = []
             for k_idx in top_k_indices: k_name = class_names[k_idx] if class_names and 0 <= k_idx < len(
                 class_names) else f"Class_{k_idx}"; top_k_preds_list.append((k_name, float(probs_np[k_idx])))
-            pred_item = {'identifier': current_identifier,
-                         'image_path': str(current_identifier) if isinstance(current_identifier, (str, Path)) and Path(
-                             current_identifier).is_file() else "in-memory/url", 'probabilities': probs_np.tolist(),
-                         'predicted_class_idx': predicted_idx, 'predicted_class_name': predicted_name,
-                         'confidence': float(probs_np[predicted_idx]), 'top_k_predictions': top_k_preds_list,
-                         'lime_explanation': None}
+
+            pred_item = {
+                'identifier': current_identifier,
+                'image_path': str(current_identifier) if isinstance(current_identifier, (str, Path)) and Path(
+                    current_identifier).is_file() else "in-memory/url",
+                'probabilities': probs_np.tolist(),
+                'predicted_class_idx': predicted_idx,
+                'predicted_class_name': predicted_name,
+                'confidence': float(probs_np[predicted_idx]),
+                'top_k_predictions': top_k_preds_list,
+                'lime_explanation': None  # Initialize
+            }
+
             if generate_lime_explanations and lime_explainer is not None:
-                logger.debug(f"Generating LIME for: {current_identifier} (Predicted: {predicted_name})")
+                logger.debug(f"Generating LIME explanation for: {current_identifier} (Predicted: {predicted_name})")
+                lime_data_for_output = {'error': 'LIME generation failed or skipped.'}
                 try:
-                    img_for_lime_np = np.array(pil_image_for_lime)  # Use the already loaded PIL image
+                    img_np_for_lime = np.array(pil_image_for_lime_and_plot)
                     explanation = lime_explainer.explain_instance(
-                        image=img_for_lime_np, classifier_fn=lime_predict_fn, top_labels=1, hide_color=0,
+                        image=img_np_for_lime, classifier_fn=lime_predict_fn, top_labels=1, hide_color=0,
                         num_features=lime_num_features, num_samples=lime_num_samples, random_seed=RANDOM_SEED
                     )
                     lime_weights = explanation.local_exp.get(predicted_idx, [])
-
-                    # Store LIME weights, and optionally the segments if needed for later plotting from JSON.
-                    # For now, to keep JSON smaller, let's only store weights.
-                    # The plotter will need the original image and weights to show LIME.
-                    # If a very precise LIME plot reproduction from JSON is needed later,
-                    # then segments might be required, or a reference to the LIME object itself.
-                    pred_item['lime_explanation'] = {
+                    lime_data_for_output = {
                         'explained_class_idx': predicted_idx,
                         'explained_class_name': predicted_name,
                         'feature_weights': lime_weights,
-                        # 'segments': explanation.segments.tolist(), # Removed for smaller JSON by default
-                        # 'image_for_lime_shape': img_for_lime_np.shape # May not be needed if plotter reloads image
+                        # We need segments for the server/plotter to render the LIME image.
+                        # This will be part of the returned data, but NOT necessarily saved to JSON by default.
+                        'segments_for_render': explanation.segments.tolist(),
+                        'num_features_from_lime_run': lime_num_features
                     }
-                    logger.debug(
-                        f"LIME weights for {current_identifier} (top class {predicted_name}): {lime_weights[:2]}...")
+
+                    # --- Generate and Store LIME Image if MinIO Repo is used and persistence is on ---
+                    if persist_prediction_artifacts and isinstance(self.artifact_repo, MinIORepository) and \
+                            self.experiment_run_key_prefix and SKIMAGE_AVAILABLE and mark_boundaries:
+                        logger.debug(f"Generating LIME image for S3 storage for {current_identifier}")
+                        temp_lime_mask = np.zeros(explanation.segments.shape, dtype=bool)
+                        positive_features_lime = sorted([(seg_id, w) for seg_id, w in lime_weights if w > 0],
+                                                        key=lambda x: x[1], reverse=True)
+                        feats_shown_count = 0
+                        for seg_id, weight in positive_features_lime:
+                            if feats_shown_count < lime_num_features:
+                                temp_lime_mask[explanation.segments == seg_id] = True; feats_shown_count += 1
+                            else:
+                                break
+
+                        if np.any(temp_lime_mask):
+                            img_norm_lime = img_np_for_lime.astype(
+                                float) / 255.0 if img_np_for_lime.max() > 1.0 else img_np_for_lime.astype(float)
+                            lime_viz_np = mark_boundaries(img_norm_lime, temp_lime_mask, color=(1, 0, 0), mode='thick',
+                                                          outline_color=(1, 0, 0))
+                            lime_viz_pil = Image.fromarray((lime_viz_np * 255).astype(np.uint8))
+
+                            lime_img_buffer = io.BytesIO()
+                            lime_viz_pil.save(lime_img_buffer, format="PNG")
+                            lime_img_buffer.seek(0)
+
+                            # Construct S3 key for this LIME image.
+                            # Example: <experiment_run_key_prefix>/<predict_run_id>/lime_explanations/<identifier_clean>.png
+                            # The identifier might have slashes if it's a path, clean it.
+                            safe_identifier_fname = re.sub(r'[\\/*?:"<>|]', "_",
+                                                           str(pred_item['identifier']))  # Sanitize
+                            if len(safe_identifier_fname) > 100: safe_identifier_fname = safe_identifier_fname[
+                                                                                         -100:]  # Truncate
+
+                            lime_img_s3_key = str((PurePath(
+                                self.experiment_run_key_prefix) / run_id / "lime_visualizations" / f"{safe_identifier_fname}_lime.png").as_posix())
+
+                            saved_lime_path = self.artifact_repo.save_image_object(
+                                lime_img_buffer.getvalue(),
+                                # self.artifact_repo.bucket_name, # Repo method should know its bucket
+                                lime_img_s3_key,
+                                content_type='image/png'
+                            )
+                            if saved_lime_path:
+                                lime_data_for_output['s3_lime_image_key'] = saved_lime_path  # Store S3 path
+                                logger.info(f"LIME visualization for {current_identifier} saved to: {saved_lime_path}")
+                            else:
+                                logger.error(f"Failed to save LIME visualization for {current_identifier} to S3.")
+                        else:
+                            logger.debug(
+                                f"LIME: No positive features to highlight for {current_identifier}, not saving LIME image to S3.")
+
+
                 except Exception as lime_e:
-                    logger.error(f"LIME explanation failed for {current_identifier}: {lime_e}", exc_info=False)
-                    pred_item['lime_explanation'] = {'error': str(lime_e)}
+                    logger.error(f"LIME explanation processing failed for {current_identifier}: {lime_e}",
+                                 exc_info=False)
+                    lime_data_for_output = {'error': str(lime_e)}
+                pred_item['lime_explanation'] = lime_data_for_output
+
             predictions_output.append(pred_item)
 
-        logger.info(
-            f"Successfully generated predictions for {len(predictions_output)} out of {len(successful_indices_after_transform_and_collation)} loaded images.")
+        logger.info(f"Successfully generated predictions for {len(predictions_output)} images.")
 
-        # --- Optionally Save Prediction Results to JSON ---
-        # ... (logic for saving JSON via _save_results - unchanged from previous response) ...
-        effective_save_detail_level = self.results_detail_level;
-        if results_detail_level is not None: effective_save_detail_level = results_detail_level
-        saved_json_path = None
-        if effective_save_detail_level > 0:
-            logger.info(f"Saving prediction results ({run_id}) with detail level {effective_save_detail_level}...")
-            results_for_json = {'method': 'predict_images', 'run_id': run_id,
-                                'params': {'num_original_sources': len(image_sources),
-                                           'num_valid_loaded': len(valid_pil_images),
-                                           'num_images_predicted': len(predictions_output)},
-                                'predictions': predictions_output}
-            saved_json_path = self._save_results(results_data=results_for_json, method_name="predict_images",
-                                                 run_id=run_id, method_params=results_for_json['params'],
-                                                 results_detail_level=effective_save_detail_level)
+        # --- Optionally Save Prediction Results (JSON) ---
+        if persist_prediction_artifacts:
+            effective_save_detail_level = self.results_detail_level
+            if results_detail_level is not None:
+                effective_save_detail_level = results_detail_level
+
+            if effective_save_detail_level > 0:
+                logger.info(
+                    f"Saving prediction results JSON ({run_id}) with detail level {effective_save_detail_level}...")
+
+                # Create a copy of predictions_output for JSON, excluding 'segments_for_render'
+                # if we want to keep the JSON smaller, as it's mainly for the plotter's immediate use.
+                predictions_for_json = []
+                for item in predictions_output:
+                    item_copy = item.copy()
+                    if 'lime_explanation' in item_copy and isinstance(item_copy['lime_explanation'], dict):
+                        item_copy['lime_explanation'] = {k: v for k, v in item_copy['lime_explanation'].items() if
+                                                         k != 'segments_for_render'}
+                    predictions_for_json.append(item_copy)
+
+                results_for_json = {
+                    'method': 'predict_images', 'run_id': run_id,
+                    'params': {'num_original_sources': len(image_sources), 'num_valid_loaded': len(valid_pil_images),
+                               'num_images_predicted': len(predictions_output)},
+                    'predictions': predictions_for_json  # Save the version without segments
+                }
+                self._save_results(  # This method uses self.artifact_repo internally
+                    results_data=results_for_json, method_name="predict_images", run_id=run_id,
+                    method_params=results_for_json['params'],
+                    results_detail_level=effective_save_detail_level
+                )
+            else:
+                logger.info(f"JSON results for {run_id} not saved (detail level 0).")
         else:
-            logger.info(f"Skipping saving of prediction results JSON for {run_id} (detail level is 0).")
+            logger.info(f"JSON results for {run_id} not saved (persist_prediction_artifacts is False).")
 
         # --- Plotting (Optional) ---
         current_plot_level = self.plot_level
-        if plot_level is not None:
-            current_plot_level = plot_level
-            logger.debug(f"Plot level for this prediction run: {current_plot_level}")
+        if plot_level is not None: current_plot_level = plot_level
 
         if current_plot_level > 0 and predictions_output:
-            # Base key/path for this specific predict_images run's artifacts.
-            # The plotter will create a "_plots" sub-component to this.
             plot_save_location_base_for_run: Optional[str] = None
-            if self.artifact_repo and self.experiment_run_key_prefix:
-                # For S3 or LocalFileSystemRepository via repo, this is the base "folder" for this run
+            # Only define a save location if persistence is enabled AND repo is configured
+            if persist_prediction_artifacts and self.artifact_repo and self.experiment_run_key_prefix:
                 plot_save_location_base_for_run = str((PurePath(self.experiment_run_key_prefix) / run_id).as_posix())
-            # No direct self.experiment_dir fallback here anymore for plotting,
-            # relies on artifact_repo for persistent storage location.
 
-            can_save_plots_via_repo_or_local = (current_plot_level >= 1 and plot_save_location_base_for_run is not None)
+            can_save_plots = (current_plot_level >= 1 and plot_save_location_base_for_run is not None)
             should_show_plots_flag = (current_plot_level == 2)
 
-            if not can_save_plots_via_repo_or_local and current_plot_level == 1:
-                logger.warning(
-                    f"Plot saving to file for predictions {run_id} skipped: plot_level is 1 (save only) but no save location could be determined (no repository/base_prefix).")
+            if not can_save_plots and current_plot_level == 1:
+                logger.warning(f"Plot saving for predictions {run_id} skipped: plot_level 1 but no save location.")
 
-            if can_save_plots_via_repo_or_local or should_show_plots_flag:  # Proceed if saving OR showing
+            if can_save_plots or should_show_plots_flag:
                 logger.info(f"Plotting prediction results for {run_id} (plot level {current_plot_level}).")
                 try:
-                    from ..plotter import ResultsPlotter  # Ensure correct relative import
-
-                    # Create map of identifier to PIL image for the plotter
-                    # This map should contain images for which predictions were successfully made
-                    # and are present in predictions_output.
-                    identifier_to_pil_map = {}
-                    # We need to map identifiers from predictions_output back to valid_pil_images
-                    # This assumes that `predictions_output[j]['identifier']` corresponds to `valid_identifiers[k]`
-                    # and thus `valid_pil_images[k]`. This requires careful index management if images failed processing.
-                    # Let's rebuild the map based on what's in predictions_output for safety:
-                    valid_identifiers_map = {ident: img for ident, img in zip(valid_identifiers, valid_pil_images)}
-                    for pred_item in predictions_output:
-                        ident = pred_item.get('identifier')
-                        if ident in valid_identifiers_map:
-                            identifier_to_pil_map[ident] = valid_identifiers_map[ident]
-
+                    from ..plotter import ResultsPlotter
+                    identifier_to_pil_map = {ident: img for ident, img in zip(valid_identifiers, valid_pil_images)}
                     ResultsPlotter.plot_predictions(
-                        predictions_output=predictions_output,
+                        predictions_output=predictions_output,  # Contains LIME data including segments_for_render
                         image_pil_map=identifier_to_pil_map,
-                        plot_save_dir_base=plot_save_location_base_for_run,  # Base key/path for this run's plots
-                        repository_for_plots=self.artifact_repo if can_save_plots_via_repo_or_local else None,
+                        plot_save_dir_base=plot_save_location_base_for_run,
+                        repository_for_plots=self.artifact_repo if can_save_plots else None,
                         show_plots=should_show_plots_flag,
                         max_cols=prediction_plot_max_cols,
-                        generate_lime_plots=generate_lime_explanations
+                        generate_lime_plots=generate_lime_explanations,  # This tells plotter to look for LIME data
+                        lime_num_features_to_display=lime_num_features  # Use the one from predict_images
                     )
                 except ImportError:
-                    logger.error("Plotting skipped: ResultsPlotter class not found or plotting libraries missing.")
+                    logger.error("Plotting skipped: ResultsPlotter/LIME class not found or libraries missing.")
                 except Exception as plot_err:
                     logger.error(f"Prediction plotting failed for {run_id}: {plot_err}", exc_info=True)
         elif current_plot_level > 0 and not predictions_output:
-            logger.warning(f"Plotting skipped for predictions run {run_id}: No prediction outputs were generated.")
+            logger.warning(f"Plotting skipped for predictions run {run_id}: No prediction outputs.")
 
         return predictions_output
 

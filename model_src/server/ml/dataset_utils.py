@@ -206,6 +206,7 @@ class ImageDatasetHandler:
         return DatasetStructure.FLAT
 
 
+    # TODO: Add customized transforms for different datasets
     def _setup_train_transform(self) -> transforms.Compose:
         return transforms.Compose([
             transforms.Resize(self.img_size),

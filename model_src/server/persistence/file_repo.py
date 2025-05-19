@@ -115,3 +115,15 @@ class LocalFileSystemRepository(ArtifactRepository):
         except Exception as e:
             logger.error(f"Failed to copy file locally from {source_path} to {destination_path}: {e}")
             return None
+
+    def save_image_object(self, image_bytes: bytes, key: str, content_type: str = 'image/png') -> Optional[str]:
+        full_path = self._get_full_path(key)
+        try:
+            full_path.parent.mkdir(parents=True, exist_ok=True)
+            with open(full_path, 'wb') as f:
+                f.write(image_bytes)
+            logger.info(f"Image object saved locally: {full_path}")
+            return str(full_path)
+        except Exception as e:
+            logger.error(f"Failed to save image object locally to {full_path}: {e}")
+            return None

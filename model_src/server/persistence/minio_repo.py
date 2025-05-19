@@ -170,3 +170,13 @@ class MinIORepository(ArtifactRepository):
         except Exception as e:
             logger.error(f"Failed to upload {local_file_path} to S3 {self.bucket_name}/{key}: {e}")
         return None
+
+    def save_image_object(self, image_bytes: bytes, key: str, content_type: str = 'image/png') -> Optional[str]:
+        try:
+            self.client.put_object(Bucket=self.bucket_name, Key=key, Body=image_bytes, ContentType=content_type)
+            s3_identifier = f"s3://{self.bucket_name}/{key}"
+            logger.info(f"Image object saved to S3: {s3_identifier}")
+            return s3_identifier
+        except Exception as e:
+            logger.error(f"Failed to save image object to S3 (s3://{self.bucket_name}/{key}): {e}")
+            return None

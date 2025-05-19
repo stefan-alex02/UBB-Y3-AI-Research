@@ -37,3 +37,7 @@ class ArtifactRepository(ABC):
     def upload_file(self, local_file_path: Union[str, Path], key: str) -> Optional[str]:
         """Uploads a local file to the repository. Returns identifier (path/key) or None."""
         pass
+
+    @abstractmethod
+    def save_image_object(self, image_bytes: bytes, key: str, content_type: str = 'image/png') -> Optional[str]:
+        pass

@@ -1,0 +1,221 @@
+{
+    "method": "non_nested_grid_search",
+    "run_id": "non_nested_grid_192150",
+    "params": {
+        "cv": 2,
+        "n_iter": "N/A",
+        "method": "grid",
+        "scoring": "accuracy",
+        "internal_val_split_ratio": 0.2
+    },
+    "macro_avg": {},
+    "best_params": {
+        "batch_size": 8,
+        "lr": 0.0001,
+        "max_epochs": 4,
+        "optimizer__weight_decay": 0.01
+    },
+    "best_score": 0.3048180924287119,
+    "best_refit_model_epoch_info": {
+        "best_epoch": 2,
+        "best_valid_metric_value": 2.0959747112939633,
+        "train_loss_at_best": 2.16174382718707,
+        "train_acc_at_best": 0.26306084818684694,
+        "valid_acc_at_best": 0.2972972972972973
+    },
+    "saved_model_path": "C:\\Users\\Stefan\\Documents\\GitHub\\UBB-Y3-AI-Research\\model_src\\experiments\\CCSN\\cnn\\20250518_192150_seed42\\non_nested_grid_192150\\cnn_best_batch_size=8_lr=0.0001_max_epochs=4_weight_decay=0_cv_score0p3048.pt",
+    "cv_results_summary": {
+        "mean_fit_time": [
+            39.79987,
+            41.23035
+        ],
+        "std_fit_time": [
+            0.63846,
+            3.40107
+        ],
+        "mean_score_time": [
+            4.65861,
+            4.13953
+        ],
+        "std_score_time": [
+            0.9394,
+            0.31822
+        ],
+        "mean_test_score": [
+            0.30482,
+            0.20993
+        ],
+        "std_test_score": [
+            0.00885,
+            0.00639
+        ],
+        "rank_test_score": [
+            1,
+            2
+        ],
+        "mean_train_score": [
+            0.41986,
+            0.24238
+        ],
+        "std_train_score": [
+            0.01377,
+            0.00147
+        ]
+    },
+    "full_params_used": {
+        "batch_size": 8,
+        "lr": 0.0001,
+        "max_epochs": 4,
+        "optimizer__weight_decay": 0.01,
+        "device": "cuda",
+        "patience_cfg": 10,
+        "monitor_cfg": "valid_loss",
+        "verbose": 0
+    },
+    "cv_results": {
+        "mean_fit_time": [
+            39.79986655712128,
+            41.23035132884979
+        ],
+        "std_fit_time": [
+            0.6384574174880981,
+            3.4010685682296753
+        ],
+        "mean_score_time": [
+            4.658608317375183,
+            4.139533877372742
+        ],
+        "std_score_time": [
+            0.9394034147262573,
+            0.31822431087493896
+        ],
+        "param_batch_size": [
+            8,
+            8
+        ],
+        "param_lr": [
+            0.0001,
+            0.001
+        ],
+        "param_max_epochs": [
+            4,
+            4
+        ],
+        "param_optimizer__weight_decay": [
+            0.01,
+            0.01
+        ],
+        "params": [
+            {
+                "batch_size": 8,
+                "lr": 0.0001,
+                "max_epochs": 4,
+                "optimizer__weight_decay": 0.01
+            },
+            {
+                "batch_size": 8,
+                "lr": 0.001,
+                "max_epochs": 4,
+                "optimizer__weight_decay": 0.01
+            }
+        ],
+        "split0_test_score": [
+            0.295968534906588,
+            0.21632251720747295
+        ],
+        "split1_test_score": [
+            0.3136676499508358,
+            0.20353982300884957
+        ],
+        "mean_test_score": [
+            0.3048180924287119,
+            0.20993117010816126
+        ],
+        "std_test_score": [
+            0.008849557522123908,
+            0.006391347099311689
+        ],
+        "rank_test_score": [
+            1,
+            2
+        ],
+        "split0_train_score": [
+            0.4060963618485742,
+            0.24090462143559488
+        ],
+        "split1_train_score": [
+            0.4336283185840708,
+            0.24385447394296952
+        ],
+        "mean_train_score": [
+            0.4198623402163225,
+            0.24237954768928222
+        ],
+        "std_train_score": [
+            0.013765978367748288,
+            0.0014749262536873223
+        ]
+    },
+    "best_refit_model_history": [
+        {
+            "epoch": 1,
+            "train_batch_count": 204,
+            "valid_batch_count": 51,
+            "dur": 21.146821975708008,
+            "train_loss": 2.447912695148494,
+            "train_loss_best": true,
+            "valid_loss": 2.3732816926970237,
+            "valid_loss_best": true,
+            "valid_acc": 0.28501228501228504,
+            "valid_acc_best": true,
+            "event_lr": 0.0001,
+            "train_acc": 0.22372464658881377,
+            "train_acc_best": true
+        },
+        {
+            "epoch": 2,
+            "train_batch_count": 204,
+            "valid_batch_count": 51,
+            "dur": 25.451855897903442,
+            "train_loss": 2.16174382718707,
+            "train_loss_best": true,
+            "valid_loss": 2.0959747112939633,
+            "valid_loss_best": true,
+            "valid_acc": 0.2972972972972973,
+            "valid_acc_best": true,
+            "event_lr": 0.0001,
+            "train_acc": 0.26306084818684694,
+            "train_acc_best": true
+        },
+        {
+            "epoch": 3,
+            "train_batch_count": 204,
+            "valid_batch_count": 51,
+            "dur": 20.480695962905884,
+            "train_loss": 2.0861738798584613,
+            "train_loss_best": true,
+            "valid_loss": 2.1553161126682743,
+            "valid_loss_best": false,
+            "valid_acc": 0.3316953316953317,
+            "valid_acc_best": true,
+            "event_lr": 0.0001,
+            "train_acc": 0.2876459741856177,
+            "train_acc_best": true
+        },
+        {
+            "epoch": 4,
+            "train_batch_count": 204,
+            "valid_batch_count": 51,
+            "dur": 18.30294966697693,
+            "train_loss": 2.0356483509295837,
+            "train_loss_best": true,
+            "valid_loss": 2.1646272585491584,
+            "valid_loss_best": false,
+            "valid_acc": 0.3194103194103194,
+            "valid_acc_best": false,
+            "event_lr": 0.0001,
+            "train_acc": 0.3060848186846958,
+            "train_acc_best": true
+        }
+    ]
+}

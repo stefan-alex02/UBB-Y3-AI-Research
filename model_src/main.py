@@ -21,7 +21,7 @@ if __name__ == "__main__":
     local_repo_base_path = str(script_dir)
 
     # --- Load Artifact Repository ---
-    repo_option = "local"  # "local", "minio", or "none"
+    repo_option = "minio"  # "local", "minio", or "none"
 
     # --- Base Prefix/Directory for this set of experiments ---
     # This will be further structured by dataset/model/timestamp by the PipelineExecutor
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 2  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 7  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -57,12 +57,12 @@ if __name__ == "__main__":
     force_flat = True
 
     # Flag for overriding parameters:
-    override_params = False # Set to True to use the override params for any model type
+    enable_debug_params = False # Set to True to use the override params for any model type
 
     # Trained model path for loading
     # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
     # saved_model_path = "./results/Swimcat-extend/cnn/20250515_160130_seed42/single_train_20250515_160130_450999/cnn_epoch4_val_valid-loss0.3059.pt"
-    saved_model_path = "./experiments/mini-GCD-flat/cnn/20250517_072947_seed42/single_train_072947/cnn_epoch4_val_valid-loss1.1870.pt"
+    saved_model_path = "./experiments/CCSN/pvit/20250518_193300_seed42/non_nested_random_193300/pvit_best_batch_size=16_lr=3e-05_max_epochs=70_custom_head_h_cv_score0p4671.pt"
 
     # New image paths for prediction
     # existing_prediction_paths = [
@@ -91,7 +91,7 @@ if __name__ == "__main__":
         repo = None
 
     # --- Define Hyperparameter Grid / Fixed Params based on Model Type ---
-    if override_params:
+    if enable_debug_params:
         # Override the chosen_param_grid with the override_params
         chosen_fixed_params = debug_fixed_params
         chosen_param_grid = debug_param_grid
@@ -133,9 +133,10 @@ if __name__ == "__main__":
     methods_seq_2 = [
         ('non_nested_grid_search', {
             'param_grid': chosen_param_grid,
-            'cv': 5,
+            'cv': 2,
+            # 'method': 'grid',
             'method': 'random',
-            'n_iter': 8,
+            'n_iter': 2,
             'internal_val_split_ratio': 0.2,
             'scoring': 'accuracy',
             'save_best_model': True,
