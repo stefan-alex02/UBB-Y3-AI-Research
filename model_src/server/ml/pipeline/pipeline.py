@@ -27,9 +27,9 @@ from skorch.callbacks import EarlyStopping, LRScheduler
 from skorch.dataset import ValidSplit
 
 from ..architectures import ModelType
-from ..config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE
+from ..config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE, AugmentationStrategy
 from ..dataset_utils import ImageDatasetHandler, DatasetStructure, PathImageDataset
-from model_src.server.ml.logger_utils import logger
+from ..logger_utils import logger
 from ..skorch_utils import SkorchModelAdapter
 from ..skorch_utils import get_default_callbacks
 from ...persistence import MinIORepository
@@ -70,7 +70,8 @@ class ClassificationPipeline:
                  plot_level: int = 0,
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2,
-                 data_augmentation: bool = True,
+                 augmentation_strategy: Union[str, AugmentationStrategy, Callable, None] = AugmentationStrategy.DEFAULT_STANDARD,
+                 show_first_batch_augmentation_default: bool = False,
                  force_flat_for_fixed_cv: bool = False,
                  lr: float = 0.001,
                  max_epochs: int = 20,
@@ -128,7 +129,6 @@ class ClassificationPipeline:
                                  otherwise specified.
                 test_split_ratio_if_flat: Ratio for splitting a FLAT dataset into
                                           train+validation and test sets. Ignored for FIXED datasets.
-                data_augmentation: Whether to apply data augmentation to the training set.
                 force_flat_for_fixed_cv: If True, treats a FIXED dataset structure (train/test splits)
                                          as a single pool of data for CV methods that operate on the
                                          'full' dataset (e.g., nested_grid_search, cv_model_evaluation
@@ -158,23 +158,29 @@ class ClassificationPipeline:
         self.force_flat_for_fixed_cv = force_flat_for_fixed_cv
         self.results_detail_level = results_detail_level
         self.plot_level = plot_level
+        self.augmentation_strategy = augmentation_strategy
+        self.show_first_batch_augmentation_default = show_first_batch_augmentation_default
+        self.artifact_repo : Optional[ArtifactRepository] = artifact_repository
+        self.experiment_run_key_prefix: Optional[str] = experiment_base_key_prefix
 
-        # Logger is configured externally by the Executor
-        logger.info(f"Initializing Classification Pipeline:")
+        # --- LOGGING CAN NOW HAPPEN RELIABLY ---
+        logger.info(f"Initializing Classification Pipeline:") # This will now use the configured logger
         logger.info(f"  Dataset Path: {self.dataset_path}")
         logger.info(f"  Model Type: {self.model_type.value}")
-        logger.info(f"  Force Flat for Fixed CV: {self.force_flat_for_fixed_cv}")
-        logger.info(f"  Default Results Detail Level: {self.results_detail_level}")
-        logger.info(f"  Default Plot Level: {self.plot_level}")
+
+        if self.artifact_repo and self.experiment_run_key_prefix:
+            logger.info(f"  Artifact base key prefix for this run: {self.experiment_run_key_prefix} (using {type(self.artifact_repo).__name__})")
+        else:
+            logger.info("  Artifact repository not configured or base prefix missing. File outputs might be limited.")
+
+        logger.info(f"  Default Augmentation Strategy: {str(augmentation_strategy)}") # Log received strategy
+        logger.info(f"  Default Show First Batch Aug: {show_first_batch_augmentation_default}")
 
         self.dataset_handler = ImageDatasetHandler(
             root_path=self.dataset_path, img_size=img_size,
             val_split_ratio=val_split_ratio, test_split_ratio_if_flat=test_split_ratio_if_flat,
-            data_augmentation=data_augmentation, force_flat_for_fixed_cv=self.force_flat_for_fixed_cv
+            augmentation_strategy=self.augmentation_strategy, force_flat_for_fixed_cv=self.force_flat_for_fixed_cv
         )
-
-        self.artifact_repo : Optional[ArtifactRepository] = artifact_repository
-        self.experiment_run_key_prefix: Optional[str] = experiment_base_key_prefix
 
         if self.artifact_repo and self.experiment_run_key_prefix:
             logger.info(
@@ -211,6 +217,7 @@ class ClassificationPipeline:
             'lr_policy_cfg': 'ReduceLROnPlateau', 'lr_patience_cfg': 5,
             'train_transform': self.dataset_handler.get_train_transform(),
             'valid_transform': self.dataset_handler.get_eval_transform(),
+            'show_first_batch_augmentation': self.show_first_batch_augmentation_default,
             'classes': np.arange(self.dataset_handler.num_classes),
             'verbose': 0, # Default verbosity for adapter itself
             'optimizer__weight_decay': optimizer__weight_decay,
@@ -332,7 +339,7 @@ class ClassificationPipeline:
                 score_for_class = y_score[:, class_label]
                 if len(np.unique(true_is_class)) > 1:  # AUC/curves require both +ve/-ve samples
                     try:
-                        roc_auc = roc_auc_score(true_is_class, score_for_class)
+                        roc_auc = roc_auc_score(true_is_class, score_for_class) # TODO: investigate one-point roc calculation vs this approach
                     except ValueError:
                         pass  # Ignore if only one class present after all
                     except Exception as e:
@@ -1665,7 +1672,7 @@ class ClassificationPipeline:
                     from ..plotter import ResultsPlotter  # Ensure correct relative import
                     ResultsPlotter.plot_single_train_results(
                         results_input=results,
-                        plot_artifact_base_key_or_path=plot_save_location_base,  # Pass base key/path for plots
+                        plot_save_dir_base=plot_save_location_base,  # Pass base key/path for plots
                         repository_for_plots=self.artifact_repo if plot_save_location_base else None,
                         # Pass repo if saving
                         show_plots=show_plots_flag

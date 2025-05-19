@@ -1,4 +1,5 @@
 import random
+from enum import Enum
 
 import numpy as np
 import torch
@@ -45,3 +46,10 @@ DATASET_DICT = {
     'swimcat': "data/Swimcat-extend",
     'ccsn': "data/CCSN",
 }
+
+class AugmentationStrategy(str, Enum):
+    DEFAULT_STANDARD = "default_standard" # Your current versatile one
+    SKY_ONLY_ROTATION = "sky_only_rotation" # Allows full rotation, good for GCD/Swimcat
+    GROUND_AWARE_NO_ROTATION = "ground_aware_no_rotation" # For CCSN - no vertical flips/major rotations
+    NO_AUGMENTATION = "no_augmentation" # Just resize, ToTensor, Normalize
+    # You can add more named strategies here

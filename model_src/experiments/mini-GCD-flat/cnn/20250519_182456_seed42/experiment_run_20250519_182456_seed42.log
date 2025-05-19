@@ -1,0 +1,68 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-05-19 18:24:56 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\experiments\mini-GCD-flat\cnn\20250519_182456_seed42\experiment_run_20250519_182456_seed42.log
+2025-05-19 18:24:56 | INFO     | [executor  :__init__          : 100] | ℹ️ --- Starting Experiment Run (ID: 20250519_182456_seed42) ---
+2025-05-19 18:24:56 | INFO     | [executor  :__init__          : 101] | ℹ️ Executor initialized for model 'cnn' on dataset 'mini-GCD-flat'
+2025-05-19 18:24:56 | INFO     | [executor  :__init__          : 104] | ℹ️ Local artifact storage base: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src
+2025-05-19 18:24:56 | INFO     | [executor  :__init__          : 108] | ℹ️ Base key/prefix for this run's artifacts: experiments/mini-GCD-flat/cnn/20250519_182456_seed42
+2025-05-19 18:24:56 | INFO     | [executor  :__init__          : 110] | ℹ️ Local log file for this run (might be temporary): C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\experiments\mini-GCD-flat\cnn\20250519_182456_seed42\experiment_run_20250519_182456_seed42.log
+2025-05-19 18:24:56 | INFO     | [pipeline  :__init__          : 165] | ℹ️ Initializing Classification Pipeline:
+2025-05-19 18:24:56 | INFO     | [pipeline  :__init__          : 166] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-05-19 18:24:56 | INFO     | [pipeline  :__init__          : 167] | ℹ️   Model Type: cnn
+2025-05-19 18:24:56 | INFO     | [pipeline  :__init__          : 168] | ℹ️   Force Flat for Fixed CV: True
+2025-05-19 18:24:56 | INFO     | [pipeline  :__init__          : 169] | ℹ️   Default Results Detail Level: 3
+2025-05-19 18:24:56 | INFO     | [pipeline  :__init__          : 170] | ℹ️   Default Plot Level: 2
+2025-05-19 18:24:56 | INFO     | [pipeline  :__init__          : 171] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.SKY_ONLY_ROTATION
+2025-05-19 18:24:56 | INFO     | [dataset...:__init__          : 226] | ℹ️ Using augmentation strategy: AugmentationStrategy.SKY_ONLY_ROTATION
+2025-05-19 18:24:56 | INFO     | [dataset...:__init__          : 247] | ℹ️ Detected dataset structure: flat
+2025-05-19 18:24:56 | INFO     | [dataset...:_load_paths_and...: 341] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-05-19 18:24:56 | INFO     | [dataset...:__init__          : 267] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-05-19 18:24:56 | INFO     | [dataset...:__init__          : 270] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-05-19 18:24:56 | INFO     | [pipeline  :__init__          : 183] | ℹ️   Artifact base key prefix for this run: experiments/mini-GCD-flat/cnn/20250519_182456_seed42 (using LocalFileSystemRepository)
+2025-05-19 18:24:56 | DEBUG    | [callbacks :get_default_cal...: 170] | 🐞 _get_default_callbacks generated: ['default_early_stopping', 'default_lr_scheduler', 'default_train_acc_scorer', 'file_log_table_cb']
+2025-05-19 18:24:56 | INFO     | [pipeline  :__init__          : 231] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-05-19 18:24:56 | DEBUG    | [executor  :_validate_methods : 152] | 🐞 Basic method validation successful.
+2025-05-19 18:24:56 | INFO     | [executor  :__init__          : 136] | ℹ️ Executor configured to run methods: single_train, single_eval
+2025-05-19 18:24:56 | INFO     | [executor  :run               : 162] | ℹ️ Starting execution of pipeline methods...
+2025-05-19 18:24:56 | INFO     | [executor  :run               : 166] | ℹ️ --- Running Method 1/2: single_train (single_train_0) ---
+2025-05-19 18:24:56 | DEBUG    | [executor  :run               : 191] | 🐞 Running with effective parameters: {'max_epochs': 4, 'batch_size': 8, 'lr': 0.0001, 'optimizer__weight_decay': 0.01, 'save_model': True, 'val_split_ratio': 0.2, 'results_detail_level': 2}
+2025-05-19 18:24:56 | INFO     | [pipeline  :single_train      :1438] | ℹ️ Starting single training run...
+2025-05-19 18:24:56 | INFO     | [pipeline  :single_train      :1491] | ℹ️ Using split: 277 train / 70 validation samples.
+2025-05-19 18:24:56 | INFO     | [pipeline  :single_train      :1535] | ℹ️ Fitting model (run_id: single_train_182456)...
+2025-05-19 18:24:56 | DEBUG    | [adapter   :get_split_datasets: 130] | 🐞 Split created: 277 train, 70 validation.
+2025-05-19 18:24:56 | DEBUG    | [adapter   :get_iterator      : 187] | 🐞 Creating DataLoader: size=277, batch_size=8, shuffle=True, collate_fn=Assigned, other_kwargs={}
+2025-05-19 18:24:56 | DEBUG    | [adapter   :get_iterator      : 187] | 🐞 Creating DataLoader: size=70, batch_size=8, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-19 18:25:05 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp       lr     dur
+2025-05-19 18:25:05 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ------  ------
+2025-05-19 18:25:05 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       1     ▲ 0.3105      ▼ 2.0608     ▲ 0.4857      ▼ 1.5384        0.0001  8.8069
+2025-05-19 18:25:09 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       2     ▲ 0.4188      ▼ 1.8056     ▲ 0.5571      ▼ 1.2240        0.0001  4.0444
+2025-05-19 18:25:13 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       3     ▲ 0.4296      ▼ 1.7361       0.5429      ▼ 1.1815        0.0001  3.8967
+2025-05-19 18:25:17 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       4     ▲ 0.4368      ▼ 1.5279     ▲ 0.5571        1.2186        0.0001  3.8621
+2025-05-19 18:25:17 | INFO     | [pipeline  :single_train      :1567] | ℹ️ Training finished. Best validation performance found at Epoch 3 (valid_loss=1.1815)
+2025-05-19 18:25:17 | INFO     | [pipeline  :single_train      :1617] | ℹ️ Model state_dict saved via repository to: C:\Users\Stefan\Documents\Github\UBB-Y3-AI-Research\model_src\experiments\mini-GCD-flat\cnn\20250519_182456_seed42\single_train_182456\cnn_epoch3_val_valid-loss1.1815.pt
+2025-05-19 18:25:17 | INFO     | [pipeline  :single_train      :1629] | ℹ️ Main pipeline model adapter updated from single_train run: single_train_182456
+2025-05-19 18:25:17 | DEBUG    | [pipeline  :_save_results     : 428] | 🐞 Results detail level overridden for this run to: 2
+2025-05-19 18:25:17 | DEBUG    | [pipeline  :_save_results     : 436] | 🐞 Saving results for single_train_182456 (detail level: 2)
+2025-05-19 18:25:17 | INFO     | [pipeline  :_save_results     : 545] | ℹ️ Results JSON saved via repository to: experiments/mini-GCD-flat/cnn/20250519_182456_seed42/single_train_182456/single_train_results.json
+2025-05-19 18:25:17 | INFO     | [pipeline  :single_train      :1666] | ℹ️ Plotting single_train results for single_train_182456 (plot level 2).
+2025-05-19 18:25:18 | INFO     | [plotter   :plot_single_tra...: 566] | ℹ️ Plotting single_train results for: single_train_182456
+2025-05-19 18:25:19 | INFO     | [plotter   :plot_single_tra...: 584] | ℹ️ Finished plotting for single_train: single_train_182456
+2025-05-19 18:25:19 | INFO     | [executor  :run               : 198] | ℹ️ --- Method single_train (single_train_0) completed successfully in 22.84s ---
+2025-05-19 18:25:19 | INFO     | [executor  :run               : 166] | ℹ️ --- Running Method 2/2: single_eval (single_eval_1) ---
+2025-05-19 18:25:19 | DEBUG    | [executor  :run               : 191] | 🐞 Running with effective parameters: {}
+2025-05-19 18:25:19 | INFO     | [pipeline  :single_eval       :1687] | ℹ️ Starting model evaluation on the test set...
+2025-05-19 18:25:19 | INFO     | [pipeline  :single_eval       :1701] | ℹ️ Evaluating on 87 test samples...
+2025-05-19 18:25:19 | DEBUG    | [adapter   :get_iterator      : 160] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-19 18:25:19 | DEBUG    | [adapter   :get_iterator      : 187] | 🐞 Creating DataLoader: size=87, batch_size=8, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-19 18:25:19 | DEBUG    | [adapter   :get_iterator      : 160] | 🐞 get_iterator creating PathImageDataset for evaluation/prediction.
+2025-05-19 18:25:19 | DEBUG    | [adapter   :get_iterator      : 187] | 🐞 Creating DataLoader: size=87, batch_size=8, shuffle=False, collate_fn=Assigned, other_kwargs={}
+2025-05-19 18:25:20 | DEBUG    | [pipeline  :_compute_metrics  : 408] | 🐞 Computed Metrics: Acc=0.5287, Macro F1=0.4777
+2025-05-19 18:25:20 | DEBUG    | [pipeline  :_save_results     : 430] | 🐞 Using pipeline results detail level for this run: 3
+2025-05-19 18:25:20 | DEBUG    | [pipeline  :_save_results     : 436] | 🐞 Saving results for single_eval_182519 (detail level: 3)
+2025-05-19 18:25:20 | INFO     | [pipeline  :_save_results     : 545] | ℹ️ Results JSON saved via repository to: experiments/mini-GCD-flat/cnn/20250519_182456_seed42/single_eval_182519/single_eval_results.json
+2025-05-19 18:25:20 | INFO     | [pipeline  :single_eval       :1761] | ℹ️ Plotting single_eval results for single_eval_182519 (plot level 2).
+2025-05-19 18:25:20 | INFO     | [plotter   :plot_single_eva...: 601] | ℹ️ Plotting single_eval results for: single_eval_182519
+2025-05-19 18:25:22 | INFO     | [plotter   :plot_single_eva...: 649] | ℹ️ Finished plotting for single_eval: single_eval_182519
+2025-05-19 18:25:22 | INFO     | [executor  :run               : 198] | ℹ️ --- Method single_eval (single_eval_1) completed successfully in 3.06s ---
+2025-05-19 18:25:22 | INFO     | [executor  :run               : 212] | ℹ️ Pipeline execution finished in 25.90s.
+2025-05-19 18:25:22 | CRITICAL | [main      :<module>          : 279] | 💀 An unexpected error occurred: 'NoneType' object has no attribute 'exists'

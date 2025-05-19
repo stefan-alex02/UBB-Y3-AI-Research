@@ -6,7 +6,7 @@ from skorch.callbacks import Callback
 from skorch.callbacks import EarlyStopping, LRScheduler, EpochScoring
 
 from ..config import logger_name_global
-from model_src.server.ml.logger_utils import logger
+from ..logger_utils import logger
 
 try:
     import tabulate

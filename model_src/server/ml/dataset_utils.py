@@ -12,7 +12,9 @@ from torch.utils.data import Dataset
 from torchvision import transforms
 
 from .config import RANDOM_SEED, DEFAULT_IMG_SIZE
-from model_src.server.ml.logger_utils import logger
+from ..ml.logger_utils import logger
+
+from .config import AugmentationStrategy
 
 
 # --- Dataset Handling ---
@@ -122,6 +124,60 @@ class PathImageDataset(Dataset):
         return images, labels
 
 
+def get_sky_only_rotation_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
+    """Augmentations suitable for sky/cloud images where orientation is less critical."""
+    return transforms.Compose([
+        transforms.Resize(img_size),  # Or transforms.Resize(256) -> transforms.RandomCrop(img_size)
+        transforms.RandomResizedCrop(size=img_size, scale=(0.8, 1.0), ratio=(0.75, 1.33)),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),  # <<< Suitable for sky-only
+        transforms.RandomRotation(degrees=180),  # <<< Full rotation possible
+        transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.2, hue=0.05),
+        transforms.RandomApply([
+            transforms.GaussianBlur(kernel_size=5, sigma=(0.1, 2.0))
+        ], p=0.3),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+
+def get_ground_aware_no_rotation_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
+    """Augmentations for images with ground elements; avoids vertical flips and significant rotations."""
+    return transforms.Compose([
+        transforms.Resize(img_size),  # Or transforms.Resize(256) -> transforms.RandomCrop(img_size)
+        transforms.RandomResizedCrop(size=img_size, scale=(0.85, 1.0), ratio=(0.9, 1.1)),  # Less aggressive crop
+        transforms.RandomHorizontalFlip(p=0.5),
+        # No RandomVerticalFlip
+        # transforms.RandomRotation(degrees=15),  # <<< Limited rotation
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
+        # Could add minor affine transforms for shear/translation if desired
+        # transforms.RandomAffine(degrees=0, translate=(0.05, 0.05), shear=5),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+
+def get_default_standard_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
+    """Your previous standard augmentation set."""
+    return transforms.Compose([
+        transforms.Resize(img_size),
+        transforms.RandomHorizontalFlip(),
+        transforms.RandomRotation(10),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+
+def get_no_augmentation_transform(img_size: Tuple[int, int]) -> transforms.Compose:
+    """Only basic preprocessing, no augmentation. Same as eval_transform."""
+    return transforms.Compose([
+        transforms.Resize(img_size),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+
 class ImageDatasetHandler:
     """
     Handles loading image paths and labels from disk, detecting structure,
@@ -132,7 +188,7 @@ class ImageDatasetHandler:
                  img_size: Tuple[int, int] = DEFAULT_IMG_SIZE,
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2, # Ratio for test split if structure is FLAT
-                 data_augmentation: bool = True,
+                 augmentation_strategy: Union[str, AugmentationStrategy, Callable, None] = AugmentationStrategy.DEFAULT_STANDARD,
                  force_flat_for_fixed_cv: bool = False): # New flag
         self.root_path = Path(root_path).resolve()
         if not self.root_path.is_dir():
@@ -145,8 +201,47 @@ class ImageDatasetHandler:
         self.img_size = img_size
         self.val_split_ratio = val_split_ratio
         self.test_split_ratio_if_flat = test_split_ratio_if_flat
-        self.data_augmentation = data_augmentation
         self.force_flat_for_fixed_cv = force_flat_for_fixed_cv
+
+        # --- Process augmentation_strategy ---
+        if isinstance(augmentation_strategy, str):
+            try:
+                self.augmentation_strategy_enum = AugmentationStrategy(augmentation_strategy.lower())
+            except ValueError:
+                logger.warning(
+                    f"Invalid augmentation_strategy string: '{augmentation_strategy}'. Defaulting to NO_AUGMENTATION.")
+                self.augmentation_strategy_enum = AugmentationStrategy.NO_AUGMENTATION
+        elif isinstance(augmentation_strategy, AugmentationStrategy):
+            self.augmentation_strategy_enum = augmentation_strategy
+        elif callable(augmentation_strategy):  # User passed a custom transform function
+            self.augmentation_strategy_enum = None  # Mark that it's custom
+            self.custom_train_transform = augmentation_strategy
+        elif augmentation_strategy is None:  # Explicitly no augmentation
+            self.augmentation_strategy_enum = AugmentationStrategy.NO_AUGMENTATION
+        else:
+            logger.warning(
+                f"Invalid augmentation_strategy type: {type(augmentation_strategy)}. Defaulting to NO_AUGMENTATION.")
+            self.augmentation_strategy_enum = AugmentationStrategy.NO_AUGMENTATION
+
+        logger.info(
+            f"Using augmentation strategy: {str(self.augmentation_strategy_enum) if self.augmentation_strategy_enum else 'Custom Transform'}")
+
+        # --- Transforms ---
+        self.eval_transform = get_no_augmentation_transform(self.img_size)  # Eval transform is fixed
+
+        if hasattr(self, 'custom_train_transform'):
+            self.train_transform = self.custom_train_transform
+        elif self.augmentation_strategy_enum == AugmentationStrategy.SKY_ONLY_ROTATION:
+            self.train_transform = get_sky_only_rotation_augmentations(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.GROUND_AWARE_NO_ROTATION:
+            self.train_transform = get_ground_aware_no_rotation_augmentations(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.DEFAULT_STANDARD:
+            self.train_transform = get_default_standard_augmentations(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.NO_AUGMENTATION:
+            self.train_transform = self.eval_transform  # Same as eval
+        else:  # Fallback, should not be reached if logic above is correct
+            logger.warning("Unknown augmentation strategy, defaulting to no augmentation.")
+            self.train_transform = self.eval_transform
 
         self.structure = self._detect_structure()
         logger.info(f"Detected dataset structure: {self.structure.value}")
@@ -154,10 +249,6 @@ class ImageDatasetHandler:
              logger.warning("Dataset is FIXED, but force_flat_for_fixed_cv=True. "
                             "CV methods will treat train+test as a single dataset. "
                             "Results might not reflect standard fixed-test evaluation.")
-
-        # Transforms
-        self.train_transform = self._setup_train_transform() if self.data_augmentation else self._setup_eval_transform()
-        self.eval_transform = self._setup_eval_transform()
 
         # Load paths and labels
         self._all_paths: List[Path] = []

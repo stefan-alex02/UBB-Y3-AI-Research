@@ -3,7 +3,7 @@ import sys
 from pathlib import Path
 from typing import Union
 
-from model_src.server.ml.config import LogColors, logger_name_global
+from ..ml.config import LogColors, logger_name_global
 
 
 class EnhancedFormatter(logging.Formatter):

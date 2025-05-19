@@ -1,15 +1,12 @@
 import json
 from pathlib import Path, PurePath
-from typing import Dict, List, Optional, Any, Union
-import io # For BytesIO in plot_predictions (LIME image)
-import base64 # For LIME image
+from typing import Dict, List, Optional, Any, Union, Tuple
 
 import numpy as np
 import pandas as pd
+import torch
+import torchvision.utils
 from PIL import Image
-
-from model_src.server.persistence import LocalFileSystemRepository
-
 # Assuming ArtifactRepository can be imported for type hinting if needed
 # from ..artifact_repository import ArtifactRepository, LocalFileSystemRepository
 
@@ -52,7 +49,7 @@ except ImportError:
     PlotterLimeImageExplainer = None
 
 try:
-    from model_src.server.ml.logger_utils import logger
+    from ..ml.logger_utils import logger
 except ImportError:
     import logging
     logger = logging.getLogger(__name__)
@@ -67,6 +64,7 @@ def _check_plotting_libs() -> bool:
     if not TABULATE_AVAILABLE: logger.warning("Tabulate library not found. Metrics tables will not be generated.")
     if sns is None: logger.warning("Seaborn library not found. Plot aesthetics might be affected.")
     return libs_ok
+
 
 def _save_figure_or_show(fig: plt.Figure,
                          repository: Optional[Any],
@@ -110,44 +108,95 @@ class ResultsPlotter:
     @staticmethod
     def _plot_learning_curves(history: List[Dict[str, Any]], title: str,
                               ax_loss_provided=None, ax_acc_provided=None
-                             ) -> Optional[plt.Figure]:
+                              ) -> Optional[plt.Figure]:
         if not history or not MATPLOTLIB_AVAILABLE: return None
         try:
             df = pd.DataFrame(history)
-            if 'epoch' not in df.columns: logger.warning(f"Plotting LC for '{title}': 'epoch' missing."); return None
+            if 'epoch' not in df.columns:
+                logger.warning(f"Plotting LC for '{title}': 'epoch' column missing.");
+                return None
+
             is_standalone_plot = ax_loss_provided is None or ax_acc_provided is None
-            fig_to_return: Optional[plt.Figure] = None
+            fig: Optional[plt.Figure] = None  # Initialize fig
+
             if is_standalone_plot:
-                fig, axes = plt.subplots(1, 2, figsize=(14, 5)); fig.suptitle(title, fontsize=14)
-                ax_loss, ax_acc = axes[0], axes[1]; fig_to_return = fig
+                # Create new figure and axes
+                fig, (ax_loss, ax_acc) = plt.subplots(1, 2, figsize=(12, 4.5))  # Slightly smaller for many folds
+                fig.suptitle(title, fontsize=12)  # Standalone title
             else:
+                # Use provided axes
                 ax_loss, ax_acc = ax_loss_provided, ax_acc_provided
-                if ax_loss: fig_to_return = ax_loss.figure
-            plot_occurred = False
-            has_train_loss = 'train_loss' in df.columns and df['train_loss'].notna().any(); has_valid_loss = 'valid_loss' in df.columns and df['valid_loss'].notna().any()
+                if ax_loss:
+                    fig = ax_loss.figure  # Get figure from provided axis
+                elif ax_acc:
+                    fig = ax_acc.figure  # Or from the other axis
+                # If both axes are provided, they should belong to the same figure
+
+            if fig is None and (
+                    ax_loss is not None or ax_acc is not None):  # Should not happen if axes are from subplots
+                logger.error("Provided axes for learning curve plot do not have a figure.")
+                return None
+
+            plot_occurred_on_loss_ax = False
+            plot_occurred_on_acc_ax = False
+
+            # Loss Plot
+            has_train_loss = 'train_loss' in df.columns and df['train_loss'].notna().any()
+            has_valid_loss = 'valid_loss' in df.columns and df['valid_loss'].notna().any()
             if has_train_loss: ax_loss.plot(df['epoch'], df['train_loss'], marker='o', ms=3, ls='-', label='Train Loss')
-            if has_valid_loss: ax_loss.plot(df['epoch'], df['valid_loss'], marker='x', ms=4, ls='--', label='Valid Loss')
+            if has_valid_loss: ax_loss.plot(df['epoch'], df['valid_loss'], marker='x', ms=4, ls='--',
+                                            label='Valid Loss')
             if has_train_loss or has_valid_loss:
-                plot_occurred = True; ax_loss.set_xlabel('Epoch'); ax_loss.set_ylabel('Loss'); ax_loss.set_title('Loss' if not is_standalone_plot else f"Loss vs. Epoch")
-                if MaxNLocator: ax_loss.xaxis.set_major_locator(MaxNLocator(integer=True));
-                ax_loss.legend(fontsize='small'); ax_loss.grid(True, alpha=0.6)
-            else: ax_loss.text(0.5,0.5,'No Loss Data',ha='center',va='center',transform=ax_loss.transAxes); ax_loss.set_title('Loss Data Missing')
-            has_train_acc = 'train_acc' in df.columns and df['train_acc'].notna().any(); has_valid_acc = 'valid_acc' in df.columns and df['valid_acc'].notna().any()
+                plot_occurred_on_loss_ax = True
+                ax_loss.set_xlabel('Epoch', fontsize=9)
+                ax_loss.set_ylabel('Loss', fontsize=9)
+                ax_loss.set_title('Loss' if not is_standalone_plot else "Loss vs. Epoch", fontsize=10)
+                if MaxNLocator: ax_loss.xaxis.set_major_locator(MaxNLocator(integer=True))
+                ax_loss.legend(fontsize='xx-small')  # Always show legend, adjust size for subplots
+                ax_loss.grid(True, alpha=0.6)
+                ax_loss.tick_params(axis='both', labelsize=8)
+            else:
+                ax_loss.text(0.5, 0.5, 'No Loss Data', ha='center', va='center', transform=ax_loss.transAxes)
+                ax_loss.set_title('Loss Data Missing', fontsize=10)
+
+            # Accuracy Plot
+            has_train_acc = 'train_acc' in df.columns and df['train_acc'].notna().any()
+            has_valid_acc = 'valid_acc' in df.columns and df['valid_acc'].notna().any()
             if has_train_acc: ax_acc.plot(df['epoch'], df['train_acc'], marker='o', ms=3, ls='-', label='Train Acc')
             if has_valid_acc: ax_acc.plot(df['epoch'], df['valid_acc'], marker='x', ms=4, ls='--', label='Valid Acc')
             if has_train_acc or has_valid_acc:
-                plot_occurred = True; ax_acc.set_xlabel('Epoch'); ax_acc.set_ylabel('Accuracy')
-                try: ymin, ymax = ax_acc.get_ylim(); ax_acc.set_ylim(bottom=max(0, ymin), top=min(1.05, ymax))
-                except: ax_acc.set_ylim(bottom=0, top=1.05)
-                ax_acc.set_title('Accuracy' if not is_standalone_plot else f"Accuracy vs. Epoch");
-                if MaxNLocator: ax_acc.xaxis.set_major_locator(MaxNLocator(integer=True));
-                ax_acc.legend(fontsize='small'); ax_acc.grid(True, alpha=0.6)
-            else: ax_acc.text(0.5,0.5,'No Acc Data',ha='center',va='center',transform=ax_acc.transAxes); ax_acc.set_title('Acc Data Missing')
-            if not plot_occurred and is_standalone_plot and fig_to_return: plt.close(fig_to_return); return None
-            return fig_to_return
-        except Exception as e: logger.error(f"Error plotting LC for '{title}': {e}", exc_info=True)
-        if 'fig_to_return' in locals() and fig_to_return is not None and is_standalone_plot: plt.close(fig_to_return) # Check if fig_to_return was defined
-        return None
+                plot_occurred_on_acc_ax = True
+                ax_acc.set_xlabel('Epoch', fontsize=9)
+                ax_acc.set_ylabel('Accuracy', fontsize=9)
+                try:  # Set Y limits for accuracy, robustly
+                    current_ymin, current_ymax = ax_acc.get_ylim()
+                    new_ymin = max(0, current_ymin if current_ymin > -float('inf') else 0)
+                    new_ymax = min(1.05, current_ymax if current_ymax < float('inf') else 1.05)
+                    ax_acc.set_ylim(bottom=new_ymin, top=new_ymax)
+                except Exception:
+                    ax_acc.set_ylim(bottom=0, top=1.05)  # Fallback
+                ax_acc.set_title('Accuracy' if not is_standalone_plot else "Accuracy vs. Epoch", fontsize=10)
+                if MaxNLocator: ax_acc.xaxis.set_major_locator(MaxNLocator(integer=True))
+                ax_acc.legend(fontsize='xx-small')
+                ax_acc.grid(True, alpha=0.6)
+                ax_acc.tick_params(axis='both', labelsize=8)
+            else:
+                ax_acc.text(0.5, 0.5, 'No Acc Data', ha='center', va='center', transform=ax_acc.transAxes)
+                ax_acc.set_title('Acc Data Missing', fontsize=10)
+
+            if not (plot_occurred_on_loss_ax or plot_occurred_on_acc_ax):  # If nothing was plotted on either axis
+                if is_standalone_plot and fig:  # Only close if we created it
+                    plt.close(fig)
+                return None  # Indicate no figure to save/show
+
+            return fig  # Return the figure object (could be newly created or passed via axes)
+
+        except Exception as e:
+            logger.error(f"Error plotting learning curves for '{title}': {e}", exc_info=True)
+            # Attempt to close figure if it was created in this function call and an error occurred
+            if 'fig' in locals() and fig is not None and is_standalone_plot:
+                plt.close(fig)
+            return None
 
     @staticmethod
     def _generate_metrics_table(metrics_data: Dict[str, Any], output_path: Optional[Path], repository: Optional[Any]=None, s3_key: Optional[str]=None):
@@ -504,11 +553,12 @@ class ResultsPlotter:
 
     @staticmethod
     def plot_single_train_results(results_input: Union[Dict[str, Any], str, Path],
-                                  plot_artifact_base_key_or_path: Optional[Union[str, Path]] = None,
+                                  plot_save_dir_base: Optional[Union[str, Path]] = None,
                                   repository_for_plots: Optional[Any] = None,
                                   show_plots: bool = False):
         results_data = ResultsPlotter._load_results_if_path(results_input)
-        if not results_data or not _check_plotting_libs(): return
+        if not results_data: return
+        if not _check_plotting_libs(): return  # Essential check at the start
 
         run_id = results_data.get('run_id', "unknown_run")
         method_name = results_data.get('method', "single_train")
@@ -516,15 +566,24 @@ class ResultsPlotter:
             logger.info(f"Plotting single_train results for: {run_id}")
             history = results_data.get('training_history')
             if history:
-                fig_lc = ResultsPlotter._plot_learning_curves(history, f"Single Train Learning Curves ({run_id})")
-                if fig_lc:
-                    final_save_path_lc = None
-                    if plot_artifact_base_key_or_path:
-                        final_save_path_lc = str((PurePath(plot_artifact_base_key_or_path) / f"{method_name}_plots" / "learning_curves.png").as_posix())
-                    _save_figure_or_show(fig_lc, repository_for_plots, final_save_path_lc, show_plots)
-            else: logger.warning(f"No 'training_history' found for {run_id} learning curve plot.")
+                # _plot_learning_curves will create its own figure here as no axes are passed
+                fig_lc = ResultsPlotter._plot_learning_curves(
+                    history, f"Single Train Learning Curves ({run_id})"
+                )
+                if fig_lc:  # Check if a figure was actually returned
+                    s3_key_or_local_path_lc: Optional[Union[str, Path]] = None
+                    if plot_save_dir_base:  # If a base location for saving is provided
+                        s3_key_or_local_path_lc = str(
+                            PurePath(plot_save_dir_base) / f"{method_name}_plots" / "learning_curves.png")
+
+                    # _save_figure_or_show will handle if s3_key_or_local_path_lc is None (only show if show_plots)
+                    _save_figure_or_show(fig_lc, repository_for_plots, s3_key_or_local_path_lc, show_plots)
+                # If fig_lc is None, it means _plot_learning_curves handled closing its own figure if it was empty.
+            else:
+                logger.warning(f"No 'training_history' found for {run_id} learning curve plot.")
             logger.info(f"Finished plotting for single_train: {run_id}")
-        except Exception as e: logger.error(f"Failed to plot single_train for {run_id}: {e}", exc_info=True)
+        except Exception as e:
+            logger.error(f"Failed to plot single_train results for {run_id}: {e}", exc_info=True)
 
     @staticmethod
     def plot_single_eval_results(results_input: Union[Dict[str, Any], str, Path],
@@ -1070,3 +1129,54 @@ class ResultsPlotter:
                 _save_figure_or_show(fig, repository_for_plots, final_grid_plot_save_key_or_path, show_plots)
             else:
                 plt.close(fig)
+
+    @staticmethod
+    def plot_image_batch(batch_tensor: torch.Tensor,
+                         title: str = "Image Batch",
+                         output_path: Optional[Union[str, Path]] = None, # For saving the plot
+                         repository_for_plots: Optional[Any] = None,
+                         show_plots: bool = True,
+                         mean: Tuple[float, float, float] = (0.485, 0.456, 0.406), # For denormalization
+                         std: Tuple[float, float, float] = (0.229, 0.224, 0.225)   # For denormalization
+                        ):
+        """
+        Plots a batch of images (PyTorch tensor).
+        Assumes images are normalized and denormalizes them for display.
+
+        Args:
+            batch_tensor: Tensor of shape (B, C, H, W).
+            title: Title for the plot.
+            output_path: Optional local path or S3 key (if repo provided) to save the plot.
+            repository_for_plots: Optional ArtifactRepository instance.
+            show_plots: Whether to display the plot.
+            mean: Mean used for normalization (for denormalization).
+            std: Standard deviation used for normalization (for denormalization).
+        """
+        if not MATPLOTLIB_AVAILABLE:
+            logger.warning("Matplotlib not available, skipping batch plot.")
+            return
+        if not isinstance(batch_tensor, torch.Tensor) or batch_tensor.ndim != 4:
+            logger.warning(f"Invalid batch_tensor for plotting. Expected (B,C,H,W), got {batch_tensor.shape if hasattr(batch_tensor, 'shape') else type(batch_tensor)}")
+            return
+
+        try:
+            # Denormalize the images for proper display
+            # Create a denormalization transform
+            denorm_images = batch_tensor.clone() # Work on a copy
+            for i in range(denorm_images.shape[0]): # Iterate over batch
+                for c in range(denorm_images.shape[1]): # Iterate over channels
+                    denorm_images[i, c] = denorm_images[i, c] * std[c] + mean[c]
+            denorm_images = torch.clamp(denorm_images, 0, 1) # Clamp to [0, 1] range
+
+            # Make a grid of images
+            grid_img = torchvision.utils.make_grid(denorm_images, nrow=4) # Adjust nrow as needed
+
+            fig, ax = plt.subplots(figsize=(12, max(3, 3 * (batch_tensor.size(0) // 4 + 1 )))) # Adjust figsize
+            ax.imshow(grid_img.permute(1, 2, 0).cpu().numpy()) # Convert to HWC for matplotlib
+            ax.set_title(title, fontsize=14)
+            ax.axis('off')
+
+            _save_figure_or_show(fig, repository_for_plots, output_path, show_plots)
+
+        except Exception as e:
+            logger.error(f"Error plotting image batch '{title}': {e}", exc_info=True)

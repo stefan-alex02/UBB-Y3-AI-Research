@@ -1,0 +1,60 @@
+{
+    "method": "single_train",
+    "run_id": "single_train_180949",
+    "macro_avg": {},
+    "best_epoch": 1,
+    "best_valid_metric_value": NaN,
+    "valid_metric_name": "valid_loss",
+    "train_loss_at_best": NaN,
+    "train_acc_at_best": NaN,
+    "valid_acc_at_best": NaN,
+    "saved_model_path": "C:\\Users\\Stefan\\Documents\\Github\\UBB-Y3-AI-Research\\model_src\\experiments\\mini-GCD-flat\\cnn\\20250519_180949_seed42\\single_train_180949\\cnn_epoch1_no_val.pt",
+    "full_params_used": {
+        "module": null,
+        "module__num_classes": 7,
+        "criterion": null,
+        "optimizer": null,
+        "lr": 0.0001,
+        "max_epochs": 4,
+        "batch_size": 8,
+        "device": "cuda",
+        "callbacks": [
+            [
+                "default_early_stopping",
+                "EarlyStopping"
+            ],
+            [
+                "default_lr_scheduler",
+                "LRScheduler"
+            ],
+            [
+                "default_train_acc_scorer",
+                "EpochScoring"
+            ],
+            [
+                "file_log_table_cb",
+                "FileLogTable"
+            ]
+        ],
+        "train_transform": null,
+        "valid_transform": null,
+        "show_first_batch_augmentation": true,
+        "classes": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        ],
+        "verbose": 0,
+        "optimizer__weight_decay": 0.01,
+        "train_split": null
+    },
+    "training_history": [
+        {
+            "epoch": 1
+        }
+    ]
+}

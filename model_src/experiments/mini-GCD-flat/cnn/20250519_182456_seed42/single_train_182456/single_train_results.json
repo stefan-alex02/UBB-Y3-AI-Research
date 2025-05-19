@@ -1,0 +1,117 @@
+{
+    "method": "single_train",
+    "run_id": "single_train_182456",
+    "macro_avg": {},
+    "best_epoch": 3,
+    "best_valid_metric_value": 1.1814745664596558,
+    "valid_metric_name": "valid_loss",
+    "train_loss_at_best": 1.736051010310865,
+    "train_acc_at_best": 0.4296028880866426,
+    "valid_acc_at_best": 0.5428571428571428,
+    "saved_model_path": "C:\\Users\\Stefan\\Documents\\Github\\UBB-Y3-AI-Research\\model_src\\experiments\\mini-GCD-flat\\cnn\\20250519_182456_seed42\\single_train_182456\\cnn_epoch3_val_valid-loss1.1815.pt",
+    "full_params_used": {
+        "module": null,
+        "module__num_classes": 7,
+        "criterion": null,
+        "optimizer": null,
+        "lr": 0.0001,
+        "max_epochs": 4,
+        "batch_size": 8,
+        "device": "cuda",
+        "callbacks": [
+            [
+                "default_early_stopping",
+                "EarlyStopping"
+            ],
+            [
+                "default_lr_scheduler",
+                "LRScheduler"
+            ],
+            [
+                "default_train_acc_scorer",
+                "EpochScoring"
+            ],
+            [
+                "file_log_table_cb",
+                "FileLogTable"
+            ]
+        ],
+        "train_transform": null,
+        "valid_transform": null,
+        "show_first_batch_augmentation": true,
+        "classes": [
+            0,
+            1,
+            2,
+            3,
+            4,
+            5,
+            6
+        ],
+        "verbose": 0,
+        "optimizer__weight_decay": 0.01,
+        "train_split": null
+    },
+    "training_history": [
+        {
+            "epoch": 1,
+            "train_batch_count": 35,
+            "valid_batch_count": 9,
+            "dur": 8.806943893432617,
+            "train_loss": 2.060764859299367,
+            "train_loss_best": true,
+            "valid_loss": 1.5383751937321255,
+            "valid_loss_best": true,
+            "valid_acc": 0.4857142857142857,
+            "valid_acc_best": true,
+            "event_lr": 0.0001,
+            "train_acc": 0.3104693140794224,
+            "train_acc_best": true
+        },
+        {
+            "epoch": 2,
+            "train_batch_count": 35,
+            "valid_batch_count": 9,
+            "dur": 4.04436993598938,
+            "train_loss": 1.805647045266327,
+            "train_loss_best": true,
+            "valid_loss": 1.2239780936922346,
+            "valid_loss_best": true,
+            "valid_acc": 0.5571428571428572,
+            "valid_acc_best": true,
+            "event_lr": 0.0001,
+            "train_acc": 0.4187725631768953,
+            "train_acc_best": true
+        },
+        {
+            "epoch": 3,
+            "train_batch_count": 35,
+            "valid_batch_count": 9,
+            "dur": 3.8967432975769043,
+            "train_loss": 1.736051010310865,
+            "train_loss_best": true,
+            "valid_loss": 1.1814745664596558,
+            "valid_loss_best": true,
+            "valid_acc": 0.5428571428571428,
+            "valid_acc_best": false,
+            "event_lr": 0.0001,
+            "train_acc": 0.4296028880866426,
+            "train_acc_best": true
+        },
+        {
+            "epoch": 4,
+            "train_batch_count": 35,
+            "valid_batch_count": 9,
+            "dur": 3.8621110916137695,
+            "train_loss": 1.5279407066558672,
+            "train_loss_best": true,
+            "valid_loss": 1.2185506105422974,
+            "valid_loss_best": false,
+            "valid_acc": 0.5571428571428572,
+            "valid_acc_best": false,
+            "event_lr": 0.0001,
+            "train_acc": 0.4368231046931408,
+            "train_acc_best": true
+        }
+    ]
+}

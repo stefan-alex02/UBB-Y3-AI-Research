@@ -1,15 +1,14 @@
-# --- START OF FILE model_src/pipeline/executor.py ---
-
 import logging
 import time
 from datetime import datetime
 from pathlib import Path, PurePath
-from typing import Dict, List, Tuple, Any, Optional, Union
+from typing import Dict, List, Tuple, Any, Optional, Union, Callable
 
 from .pipeline import ClassificationPipeline
 from ..architectures import ModelType  # Assuming ModelType is in architectures or config
-from ..config import logger_name_global, DEFAULT_IMG_SIZE, RANDOM_SEED  # Assuming these are in config
-from model_src.server.ml.logger_utils import setup_logger, logger  # Import the logger instance
+from ..config import logger_name_global, DEFAULT_IMG_SIZE, RANDOM_SEED, \
+    AugmentationStrategy  # Assuming these are in config
+from ..logger_utils import setup_logger, logger  # Import the logger instance
 from ...persistence import ArtifactRepository, LocalFileSystemRepository, MinIORepository
 
 
@@ -17,17 +16,18 @@ class PipelineExecutor:
     def __init__(self,
                  dataset_path: Union[str, Path],
                  model_type: Union[str, ModelType] = ModelType.CNN,
-                 model_load_path: Optional[Union[str, Path]] = None,  # Could be S3 key or local path
-                 artifact_repository: Optional[ArtifactRepository] = None,  # <<< NEW
-                 experiment_base_key_prefix: str = "experiments",  # <<< NEW: Base for S3 keys/local subdirs
+                 model_load_path: Optional[Union[str, Path]] = None,
+                 artifact_repository: Optional[ArtifactRepository] = None,
+                 experiment_base_key_prefix: str = "experiments",
                  results_detail_level: int = 1,
                  plot_level: int = 0,
-                 methods: Optional[List[Tuple[str, Dict[str, Any]]]] = None,  # Type hint correction
-                 # Pipeline config params passed down
+                 methods: Optional[List[Tuple[str, Dict[str, Any]]]] = None,
                  img_size: Tuple[int, int] = DEFAULT_IMG_SIZE,
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2,
-                 data_augmentation: bool = True,
+                 augmentation_strategy: Union[
+                     str, AugmentationStrategy, Callable, None] = AugmentationStrategy.DEFAULT_STANDARD,
+                 show_first_batch_augmentation_default: bool = False,  # Added from previous context
                  force_flat_for_fixed_cv: bool = False,
                  lr: float = 0.001,
                  max_epochs: int = 20,
@@ -36,19 +36,8 @@ class PipelineExecutor:
                  optimizer__weight_decay: float = 0.01,
                  module__dropout_rate: Optional[float] = None
                  ):
-        """
-        Initializes the Pipeline Executor.
 
-        Args:
-            # ... (other args) ...
-            artifact_repository: Optional repository instance for saving/loading artifacts.
-                                 If None, file outputs are disabled or use local fallback if implemented.
-            experiment_base_key_prefix: Base prefix for storing experiment artifacts in the repository
-                                        (e.g., 'experiments_data') or base subfolder for local storage.
-            # ...
-        """
-        # global logger # No longer needed if logger is imported from logger_utils
-
+        # --- 1. Determine key identifiers and paths FIRST ---
         _model_type_enum: ModelType
         if isinstance(model_type, str):
             try:
@@ -60,87 +49,94 @@ class PipelineExecutor:
         else:
             raise TypeError(f"Executor model_type must be str or ModelType, got {type(model_type)}")
 
-        # --- Determine full experiment identifier for logging and potential local fallback ---
-        # This conceptual path is used for logging even if repo is primary storage
         dataset_name_for_path = Path(dataset_path).name
         timestamp_init_for_path = datetime.now().strftime('%Y%m%d_%H%M%S')
         conceptual_experiment_run_name = f"{timestamp_init_for_path}_seed{RANDOM_SEED}"
 
-        # Base key for this specific pipeline instance run (used by pipeline for its artifacts)
-        # e.g., experiments/dataset_name/model_type/timestamp_seed
-        current_experiment_run_key_prefix = str((PurePath(
-            experiment_base_key_prefix) / dataset_name_for_path / _model_type_enum.value / conceptual_experiment_run_name).as_posix())
+        current_experiment_run_key_prefix = str(PurePath(
+            experiment_base_key_prefix,
+            dataset_name_for_path,
+            _model_type_enum.value,
+            conceptual_experiment_run_name
+        ).as_posix())
 
-        # --- Initialize Pipeline FIRST ---
-        self.pipeline = ClassificationPipeline(
-            dataset_path=dataset_path, model_type=_model_type_enum, model_load_path=model_load_path,
-            artifact_repository=artifact_repository,  # <<< PASS REPOSITORY
-            experiment_base_key_prefix=current_experiment_run_key_prefix,  # <<< PASS BASE KEY FOR THIS RUN
-            results_detail_level=results_detail_level, plot_level=plot_level,
-            # ... other params passed to ClassificationPipeline ...
-            img_size=img_size, val_split_ratio=val_split_ratio,
-            test_split_ratio_if_flat=test_split_ratio_if_flat, data_augmentation=data_augmentation,
-            force_flat_for_fixed_cv=force_flat_for_fixed_cv, lr=lr, max_epochs=max_epochs,
-            batch_size=batch_size, patience=patience,
-            optimizer__weight_decay=optimizer__weight_decay, module__dropout_rate=module__dropout_rate
-        )
-
-        # --- Configure Logger ---
-        log_file_name_base = f"experiment_run_{conceptual_experiment_run_name}.log"  # conceptual_experiment_run_name from earlier
+        # --- 2. Configure Logger NOW ---
+        log_file_name_base = f"experiment_run_{conceptual_experiment_run_name}.log"
         log_dir_for_file_setup: Optional[Path] = None
+        self.log_file_local_path: Optional[Path] = None  # Initialize attribute
+        self.temp_log_dir: Optional[Path] = None  # Initialize attribute
 
         if isinstance(artifact_repository, LocalFileSystemRepository):
+            # For local repo, log file goes into the experiment's specific local folder
             log_dir_for_file_setup = Path(artifact_repository.base_path) / current_experiment_run_key_prefix
             log_dir_for_file_setup.mkdir(parents=True, exist_ok=True)
             self.log_file_local_path = log_dir_for_file_setup / log_file_name_base
         elif artifact_repository:  # MinIO or other non-local repo
-            # Log to a temporary local file first
-            import tempfile
+            import tempfile  # Keep import local if only used here
             self.temp_log_dir = Path(tempfile.mkdtemp(prefix="pipeline_run_logs_"))
             self.log_file_local_path = self.temp_log_dir / log_file_name_base
             log_dir_for_file_setup = self.temp_log_dir
-            logger.info(f"Logging temporarily to {self.log_file_local_path} for later S3 upload.")
+            # Initial logger info will go to console if file handler not set yet or if this is first setup
+            # logger.info(f"Logging temporarily to {self.log_file_local_path} for later S3 upload.")
         else:  # No repo, console only
             self.log_file_local_path = None
 
+        # The global 'logger' instance from logger_utils is (re)configured here.
+        # This setup_logger call effectively makes 'logger' usable by all modules that import it.
         setup_logger(
             name=logger_name_global,
-            log_dir=log_dir_for_file_setup,  # This is now always a local Path or None
+            log_dir=log_dir_for_file_setup,
             log_filename=log_file_name_base if log_dir_for_file_setup else "console_only.log",
-            # Only use base if dir exists
-            level=logging.DEBUG,
+            level=logging.DEBUG,  # Or your desired default level
             use_colors=True
         )
+        # --- Logger is now configured ---
 
+        # Now log executor-level information
         if not artifact_repository:
             logger.info("No Artifact Repository provided. Outputs will not be saved persistently by the repository.")
-            logger.info("Logging will be directed to console only.")
+            logger.info("Logging will be directed to console only for file output (if not already).")
         else:
             logger.info(f"--- Starting Experiment Run (ID: {conceptual_experiment_run_name}) ---")
             logger.info(
                 f"Executor initialized for model '{_model_type_enum.value}' on dataset '{dataset_name_for_path}'")
             if isinstance(artifact_repository, LocalFileSystemRepository):
                 logger.info(f"Local artifact storage base: {artifact_repository.base_path}")
-            elif hasattr(artifact_repository, 'bucket_name'):  # MinIO or similar
+            elif hasattr(artifact_repository, 'bucket_name'):
                 logger.info(
                     f"Artifact repository: {type(artifact_repository).__name__} targeting bucket '{artifact_repository.bucket_name}'")
             logger.info(f"Base key/prefix for this run's artifacts: {current_experiment_run_key_prefix}")
+        if self.log_file_local_path and self.log_file_local_path.exists():
+            logger.info(f"Local log file for this run (might be temporary): {self.log_file_local_path}")
+
+        # --- 3. Initialize Pipeline (it can now use the configured logger) ---
+        self.pipeline = ClassificationPipeline(
+            dataset_path=dataset_path, model_type=_model_type_enum, model_load_path=model_load_path,
+            artifact_repository=artifact_repository,
+            experiment_base_key_prefix=current_experiment_run_key_prefix,
+            results_detail_level=results_detail_level, plot_level=plot_level,
+            img_size=img_size, val_split_ratio=val_split_ratio,
+            test_split_ratio_if_flat=test_split_ratio_if_flat,
+            augmentation_strategy=augmentation_strategy,  # Pass it down
+            show_first_batch_augmentation_default=show_first_batch_augmentation_default,  # Pass it down
+            force_flat_for_fixed_cv=force_flat_for_fixed_cv, lr=lr, max_epochs=max_epochs,
+            batch_size=batch_size, patience=patience,
+            optimizer__weight_decay=optimizer__weight_decay, module__dropout_rate=module__dropout_rate
+        )
 
         self.methods_to_run = methods if methods is not None else []
         self.all_results: Dict[str, Any] = {}
-        # ... (rest of __init__: _validate_methods, logging methods_to_run) ...
         try:
             self._validate_methods()
         except ValueError as e:
-            logger.error(f"Method validation failed: {e}"); raise
+            logger.error(f"Method validation failed: {e}")
+            raise
         if self.methods_to_run:
-            method_names = [m[0] for m in self.methods_to_run]; logger.info(
-                f"Executor configured to run methods: {', '.join(method_names)}")
+            method_names = [m[0] for m in self.methods_to_run]
+            logger.info(f"Executor configured to run methods: {', '.join(method_names)}")
         else:
             logger.info("Executor configured with no methods to run.")
 
-    # ... (_validate_methods, _get_previous_result, run - these remain largely the same,
-    #      as they operate on the pipeline instance which now internally uses the repo) ...
     def _validate_methods(self) -> None:  # ... (unchanged)
         valid_method_names = ['non_nested_grid_search', 'nested_grid_search', 'cv_model_evaluation', 'single_train',
                               'single_eval', 'load_model', 'predict_images', ];

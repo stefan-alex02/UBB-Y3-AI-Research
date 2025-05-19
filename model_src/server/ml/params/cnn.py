@@ -4,7 +4,7 @@
 
 cnn_fixed_params = {
     # Skorch params
-    'max_epochs': 15,
+    'max_epochs': 10,
     'lr': 0.001,
     'batch_size': 32,
     'optimizer__weight_decay': 0.01

@@ -7,7 +7,7 @@ from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused
 from server.ml.params.scratch_vit import fixed_params_vit_scratch, param_grid_vit_from_scratch
 from server.ml import ModelType
 from server.ml import PipelineExecutor
-from server.ml.config import DATASET_DICT
+from server.ml.config import DATASET_DICT, AugmentationStrategy
 from server.ml.params import (debug_fixed_params, cnn_fixed_params, pretrained_vit_fixed_params_option1,
                               diffusion_param_grid, param_grid_pretrained_vit_conditional)
 from server.ml.params import debug_param_grid, cnn_param_grid
@@ -21,7 +21,7 @@ if __name__ == "__main__":
     local_repo_base_path = str(script_dir)
 
     # --- Load Artifact Repository ---
-    repo_option = "minio"  # "local", "minio", or "none"
+    repo_option = "local"  # "local", "minio", or "none"
 
     # --- Base Prefix/Directory for this set of experiments ---
     # This will be further structured by dataset/model/timestamp by the PipelineExecutor
@@ -33,10 +33,10 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "mGCDf"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "pvit"  # 'cnn', 'pvit', 'svit', 'diff'
+    model_type = "cnn"  # 'cnn', 'pvit', 'svit', 'diff'
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 7  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -57,7 +57,7 @@ if __name__ == "__main__":
     force_flat = True
 
     # Flag for overriding parameters:
-    enable_debug_params = False # Set to True to use the override params for any model type
+    enable_debug_params = True # Set to True to use the override params for any model type
 
     # Trained model path for loading
     # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
@@ -115,6 +115,15 @@ if __name__ == "__main__":
     else:
         logger.error(f"Model type '{model_type}' not recognized. Supported: {[m.value for m in ModelType]}")
         exit()
+
+    # --- Define Augmentation Strategy ---
+    # Choose the augmentation strategy based on the dataset
+    if selected_dataset in ['mGCD', 'mGCDf', 'GCD', 'swimcat']:
+        augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
+    elif selected_dataset == 'ccsn':
+        augmentation_strategy = AugmentationStrategy.GROUND_AWARE_NO_ROTATION
+    else:
+        augmentation_strategy = AugmentationStrategy.DEFAULT_STANDARD
 
     # --- Define Method Sequence ---
     # Example 1: Single Train and Eval
@@ -232,6 +241,8 @@ if __name__ == "__main__":
             experiment_base_key_prefix=experiment_base_prefix_for_repo,
             methods=chosen_sequence,
             force_flat_for_fixed_cv=force_flat, # Pass the flag
+            augmentation_strategy=augmentation_strategy,
+            show_first_batch_augmentation_default=True,
 
             # Pipeline default parameters (can be overridden by methods)
             img_size=img_size,
