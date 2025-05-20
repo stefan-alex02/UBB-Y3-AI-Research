@@ -1,3 +1,4 @@
+import traceback
 from pathlib import Path
 
 import numpy as np
@@ -276,4 +277,6 @@ if __name__ == "__main__":
     except (FileNotFoundError, ValueError, RuntimeError) as e:
          logger.error(f"Pipeline initialization or execution failed: {e}", exc_info=True)
     except Exception as e:
-         logger.critical(f"An unexpected error occurred: {e}", exc_info=True)
+         stack_trace = traceback.format_exc()
+         logger.critical(f"An unexpected error occurred: {e}")
+         logger.critical(f"Stack trace: {stack_trace}")

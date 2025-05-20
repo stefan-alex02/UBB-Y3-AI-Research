@@ -264,32 +264,49 @@ class PipelineExecutor:
                 else:
                     logger.error(f"Failed to upload log file {self.log_file_local_path} via repository.")
 
-            # Clean up temporary log directory if it was created for non-local repos
-            if hasattr(self, 'temp_log_dir') and self.temp_log_dir.exists():
-                try:
-                    import shutil
-                    # Add a small delay and retry loop for Windows file lock issues
-                    for _ in range(3):  # Retry up to 3 times
-                        try:
-                            shutil.rmtree(self.temp_log_dir)
-                            logger.info(f"Cleaned up temporary log directory: {self.temp_log_dir}")
-                            break  # Success
-                        except PermissionError as pe:
-                            logger.warning(f"PermissionError cleaning temp log dir (will retry): {pe}")
+        # --- Clean up temporary log directory if it was created ---
+        # Check if temp_log_dir attribute exists AND is not None AND the path it points to exists
+        if hasattr(self, 'temp_log_dir') and self.temp_log_dir is not None and self.temp_log_dir.exists():
+            try:
+                import shutil
+                logger.info(f"Attempting to clean up temporary log directory: {self.temp_log_dir}")
+                # Add a small delay and retry loop for Windows file lock issues
+                for i_retry in range(3):  # Retry up to 3 times
+                    try:
+                        shutil.rmtree(self.temp_log_dir)
+                        logger.info(f"Cleaned up temporary log directory: {self.temp_log_dir}")
+                        break  # Success
+                    except PermissionError as pe:
+                        logger.warning(
+                            f"PermissionError cleaning temp log dir (attempt {i_retry + 1}/3): {pe}")
+                        if i_retry < 2:  # Don't sleep on the last attempt
                             time.sleep(0.5)  # Wait a bit
-                        except Exception as e_rm:  # Catch other potential errors during rmtree
-                            logger.error(f"Error during shutil.rmtree of {self.temp_log_dir}: {e_rm}")
-                            break  # Don't retry on other errors
-                    else:  # If loop completed without break (all retries failed)
-                        logger.error(
-                            f"Failed to clean up temporary log directory {self.temp_log_dir} after multiple retries.")
+                        else:
+                            logger.error(
+                                f"Failed to clean up temporary log directory {self.temp_log_dir} due to persistent PermissionError.")
+                    except Exception as e_rm:
+                        logger.error(f"Error during shutil.rmtree of {self.temp_log_dir}: {e_rm}")
+                        break  # Don't retry on other errors
+                else:  # If loop completed without break (all retries failed with PermissionError)
+                    logger.error(
+                        f"Failed to clean up temporary log directory {self.temp_log_dir} after multiple retries.")
+            except ImportError:
+                logger.warning("shutil module not found, cannot clean up temporary log directory.")
+            except Exception as e_clean:
+                logger.warning(f"Could not clean up temp log dir {self.temp_log_dir}: {e_clean}")
+        elif hasattr(self,
+                     'temp_log_dir') and self.temp_log_dir is not None and not self.temp_log_dir.exists():
+            logger.debug(
+                f"Temporary log directory {self.temp_log_dir} was defined but does not exist (already cleaned or error in creation).")
+        # If self.temp_log_dir was never set (e.g. for LocalFileSystemRepository), this block is skipped.
 
-                except Exception as e_clean:  # Catch errors from initial shutil.rmtree attempt or import
-                    logger.warning(f"Could not clean up temp log dir {self.temp_log_dir}: {e_clean}")
-
-        elif self.log_file_local_path and self.log_file_local_path.exists():
-            logger.info(f"Final log file (local): {self.log_file_local_path}")
-        elif not self.log_file_local_path:  # This case means log_dir_for_file_setup was None
+        # Log message about final log file location (if it's not temporary)
+        if self.log_file_local_path and \
+                (not hasattr(self,
+                             'temp_log_dir') or self.temp_log_dir is None or not self.log_file_local_path.is_relative_to(
+                    self.temp_log_dir)):
+            logger.info(f"Final log file available at: {self.log_file_local_path}")
+        elif not self.log_file_local_path:
             logger.info("No log file was configured for saving (console only or repo setup issue).")
 
         return self.all_results

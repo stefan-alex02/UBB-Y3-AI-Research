@@ -296,25 +296,6 @@ class ImageDatasetHandler:
                  return DatasetStructure.FLAT
         return DatasetStructure.FLAT
 
-
-    # TODO: Add customized transforms for different datasets
-    def _setup_train_transform(self) -> transforms.Compose:
-        return transforms.Compose([
-            transforms.Resize(self.img_size),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(10), # Reduced rotation
-            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.2, hue=0.1),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
-
-    def _setup_eval_transform(self) -> transforms.Compose:
-        return transforms.Compose([
-            transforms.Resize(self.img_size),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
-
     @staticmethod
     def _scan_dir_for_paths_labels(target_dir: Path) -> Tuple[List[Path], List[int], List[str], Dict[str, int]]:
         """Scans a directory (like ImageFolder) for image paths and labels."""

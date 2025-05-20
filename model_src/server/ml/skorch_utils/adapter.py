@@ -189,7 +189,7 @@ class SkorchModelAdapter(NeuralNetClassifier):
         @staticmethod
         def _plot_batch(images_tensor_to_plot: torch.Tensor, title: str):  # Changed param name for clarity
             try:
-                from model_src.plotter import ResultsPlotter  # Adjust path as per your structure
+                from ..plotter import ResultsPlotter  # Adjust path as per your structure
 
                 ResultsPlotter.plot_image_batch(
                     images_tensor_to_plot.detach().clone(),  # <<< USE THE PARAMETER NAME
@@ -207,106 +207,129 @@ class SkorchModelAdapter(NeuralNetClassifier):
             return len(self.base_dataloader)
 
     def get_iterator(self, dataset, training=False):
-        actual_dataset_to_use: PyTorchDataset
-
-        current_transform = self.train_transform if training else self.valid_transform
+        """
+        Override to ensure PathImageDataset with correct transform is used,
+        and DataLoader is configured correctly with batch_size and collate_fn.
+        Optionally wraps the iterator to plot the first batch for debugging.
+        """
+        current_dataset: Optional[torch.utils.data.Dataset] = None
 
         if isinstance(dataset, PathImageDataset):
-            if dataset.transform != current_transform:
-                logger.debug(f"get_iterator: Updating transform for existing PathImageDataset (training={training}).")
-                actual_dataset_to_use = PathImageDataset(paths=dataset.paths, labels=dataset.labels,
-                                                         transform=current_transform)
-            else:
-                actual_dataset_to_use = dataset
-        elif hasattr(dataset, 'X') and hasattr(dataset, 'y') and \
-             not isinstance(dataset.X, torch.Tensor) and \
-             (isinstance(dataset.X, (list, tuple, np.ndarray)) and
-              (len(dataset.X) == 0 or isinstance(dataset.X[0], (str, Path, Image.Image, bytes)))):
-            X_data, y_data = dataset.X, dataset.y
-            # This assumes X_data will be paths for PathImageDataset.
-            # If predict_images passes InMemoryPILDataset directly, this branch might not be hit,
-            # or if InMemoryPILDataset is wrapped by skorch Dataset, X_data would be PIL images.
-            if isinstance(X_data, (list, tuple, np.ndarray)) and \
-                    (len(X_data) == 0 or isinstance(X_data[0], (str, Path))):  # Check if X_data are paths
-
-                paths_for_ds = [Path(p) for p in X_data]
-                labels_for_ds = list(y_data) if y_data is not None else None
+            current_dataset = dataset
+            # Ensure the transform is correct for the phase (training vs eval)
+            # PathImageDataset created by get_split_datasets already has the correct transform.
+            # This is more for when skorch calls get_iterator with a dataset not from get_split_datasets.
+            expected_transform = self.train_transform if training else self.valid_transform
+            if current_dataset.transform != expected_transform:
                 logger.debug(
-                    f"get_iterator: Creating PathImageDataset from X (paths), y for {'training' if training else 'eval'}.")
-                actual_dataset_to_use = PathImageDataset(paths=paths_for_ds, labels=labels_for_ds,
-                                                         transform=current_transform)
-            else:  # X_data is not paths (e.g., already tensors, or PIL images list for InMemoryPILDataset)
-                # or it's an unknown type.
-                if isinstance(dataset, TorchDataset):  # If it's already a PyTorch Dataset
-                    logger.debug(f"get_iterator: Using provided PyTorch Dataset {type(dataset).__name__} as is.")
-                    actual_dataset_to_use = dataset  # Assume it has correct transform or handles it
+                    f"get_iterator: Updating transform on existing PathImageDataset for {'training' if training else 'eval'}.")
+                current_dataset.transform = expected_transform
+
+        elif hasattr(dataset, 'X'):  # Likely a skorch.dataset.Dataset from predict/score
+            X_input = dataset.X
+            y_labels = getattr(dataset, 'y', None)  # y might not exist or be None
+
+            # Check if X_input are paths
+            is_path_data = False
+            if isinstance(X_input, (list, tuple, np.ndarray)) and len(X_input) > 0:
+                # Check first element to infer type
+                first_el = X_input[0]
+                if isinstance(X_input, np.ndarray) and X_input.ndim > 1 and X_input.shape[
+                    0] > 0:  # Handle multi-dim np array by checking first row, first element
+                    first_el = X_input[
+                        0, 0] if X_input.size > 0 else None  # Needs more robust check if X can be complex
+                if isinstance(first_el, (str, Path)):
+                    is_path_data = True
+
+            if is_path_data:
+                X_paths_list = list(X_input) if not isinstance(X_input, np.ndarray) else X_input.tolist()
+                y_labels_list = list(y_labels) if y_labels is not None and not isinstance(y_labels, np.ndarray) else (
+                    y_labels.tolist() if y_labels is not None else None)
+
+                transform_to_use = self.train_transform if training else self.valid_transform
+                logger.debug(
+                    f"get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for {'training' if training else 'eval'}.")
+                current_dataset = PathImageDataset(paths=X_paths_list, labels=y_labels_list, transform=transform_to_use)
+            else:
+                # If X is not path data, assume `dataset` is already a compatible torch.utils.data.Dataset
+                # (e.g., if user passed a TensorDataset or your InMemoryPILDataset for predict_images)
+                if isinstance(dataset, torch.utils.data.Dataset):
+                    logger.debug(f"get_iterator: Using provided Dataset of type {type(dataset)} directly.")
+                    current_dataset = dataset
                 else:
                     logger.warning(
-                        f"get_iterator: X in dataset is not paths. Falling back to super().get_iterator(). Type of X: {type(X_data[0]) if X_data else 'Empty'}")
-                    # Fallback to skorch's default iterator creation if dataset.X is not paths.
-                    # This might happen if skorch is passed already-loaded tensors.
-                    # Our plotting wrapper won't apply if super().get_iterator() is used unless super calls this again.
-                    return super().get_iterator(dataset, training=training)
-        elif isinstance(dataset, TorchDataset):  # It's some other PyTorch dataset (e.g. InMemoryPILDataset)
-            logger.debug(f"get_iterator: Using provided PyTorch Dataset {type(dataset).__name__} directly.")
-            actual_dataset_to_use = dataset
+                        f"get_iterator received skorch Dataset with non-path X data. Falling back to super().get_iterator().")
+                    base_iterator = super().get_iterator(dataset, training=training)
+                    if self.show_first_batch_augmentation:
+                        return self._BatchPlottingIterator(base_iterator, is_train_iterator=training, adapter_ref=self)
+                    return base_iterator
+        elif isinstance(dataset, torch.utils.data.Dataset):  # It's already a torch Dataset
+            current_dataset = dataset
         else:
-            logger.error(f"get_iterator: Unsupported dataset type: {type(dataset)}. Fallback to super().")
-            return super().get_iterator(dataset, training=training)
+            logger.warning(
+                f"get_iterator received unexpected dataset type {type(dataset)}. Falling back to super().get_iterator().")
+            base_iterator = super().get_iterator(dataset, training=training)
+            if self.show_first_batch_augmentation:
+                return self._BatchPlottingIterator(base_iterator, is_train_iterator=training, adapter_ref=self)
+            return base_iterator
 
-        # --- DataLoader Configuration ---
-        collate_fn_to_use = getattr(actual_dataset_to_use, 'collate_fn', None)
-        if collate_fn_to_use is None:
-            if hasattr(PathImageDataset, 'collate_fn'):  # Good default if dataset has no specific one
-                collate_fn_to_use = PathImageDataset.collate_fn
-                logger.debug(f"Using PathImageDataset.collate_fn for {type(actual_dataset_to_use).__name__}.")
-            else:  # Absolute fallback
-                collate_fn_to_use = torch.utils.data.dataloader.default_collate
-                logger.warning("Using torch default collate_fn.")
+        if current_dataset is None:  # Should have been handled by fallbacks above
+            raise RuntimeError("get_iterator: Could not determine a valid torch Dataset.")
+
+        # --- DataLoader Configuration using current_dataset ---
+        # Always use PathImageDataset.collate_fn if the dataset is one of ours or compatible
+        collate_fn_to_use = PathImageDataset.collate_fn
+        if hasattr(current_dataset,
+                   'collate_fn') and current_dataset.collate_fn is not None:  # If dataset has its own specific collate
+            collate_fn_to_use = current_dataset.collate_fn
+        elif not isinstance(current_dataset, PathImageDataset) and not hasattr(current_dataset, 'paths'):
+            # If it's some other torch.utils.data.Dataset that isn't our PathImageDataset
+            # and doesn't have a collate_fn, use default torch collate.
+            collate_fn_to_use = torch.utils.data.dataloader.default_collate
+            logger.debug(f"Using default torch collate_fn for dataset type: {type(current_dataset)}")
 
         shuffle = self.iterator_train__shuffle if training else False
-        batch_size_to_use = self.batch_size
+        batch_size = self.batch_size
 
-        loader_kwargs = {
-            'num_workers': getattr(self, 'iterator__num_workers', 0),
-            'pin_memory': getattr(self, 'iterator__pin_memory', False)
-        }
-        # Ensure num_workers is 0 if on Windows and not in __main__ for multiprocessing safety with DataLoader
-        import sys
-        if sys.platform == "win32" and loader_kwargs['num_workers'] > 0:
-            # This check is tricky for library code. Best to set num_workers=0 by default.
-            # logger.debug("Setting num_workers to 0 for Windows platform in DataLoader.")
-            # loader_kwargs['num_workers'] = 0
-            pass  # Assume user has configured NUM_WORKERS appropriately at pipeline level
+        loader_kwargs = {}
+        iterator_params = self.get_params()  # Skorch way to get settable params
+        num_workers_key = 'iterator_train__num_workers' if training else 'iterator_valid__num_workers'
+        pin_memory_key = 'iterator_train__pin_memory' if training else 'iterator_valid__pin_memory'
+
+        # Use configured num_workers if available, else try direct attribute, else default to 0
+        loader_kwargs['num_workers'] = iterator_params.get(num_workers_key, getattr(self, 'iterator__num_workers', 0))
+        loader_kwargs['pin_memory'] = iterator_params.get(pin_memory_key, getattr(self, 'iterator__pin_memory', False))
+        loader_kwargs = {k: v for k, v in loader_kwargs.items() if v is not None}
 
         logger.debug(
-            f"Creating DataLoader for {type(actual_dataset_to_use).__name__}: "
-            f"size={len(actual_dataset_to_use) if hasattr(actual_dataset_to_use, '__len__') else 'unknown'}, "
-            f"batch_size={batch_size_to_use}, shuffle={shuffle}, "
-            f"collate_fn_type='{getattr(collate_fn_to_use, '__name__', str(type(collate_fn_to_use)))}', other_kwargs={loader_kwargs}"
+            f"Creating DataLoader: dataset_len={len(current_dataset)}, batch_size={batch_size}, shuffle={shuffle}, "
+            f"collate_fn={'Custom (PathImageDataset style)' if collate_fn_to_use == PathImageDataset.collate_fn else ('Dataset Specific' if hasattr(current_dataset, 'collate_fn') else 'Torch Default')}, "
+            f"loader_kwargs={loader_kwargs}"
         )
 
-        base_dataloader = DataLoader(
-            actual_dataset_to_use,
-            batch_size=batch_size_to_use,
+        actual_dataloader = DataLoader(
+            current_dataset,
+            batch_size=batch_size,
             shuffle=shuffle,
             collate_fn=collate_fn_to_use,
             **loader_kwargs
         )
 
-        # --- Optionally wrap the DataLoader for plotting ---
-        if self.show_first_batch_augmentation and hasattr(self, '_BatchPlottingIterator'):
+        if self.show_first_batch_augmentation:
             logger.debug(
-                f"Wrapping DataLoader with _BatchPlottingIterator for {'training' if training else 'validation'}.")
-            return self._BatchPlottingIterator(base_dataloader, is_train_iterator=training, adapter_ref=self)
-        else:
-            return base_dataloader
+                f"Wrapping DataLoader with _BatchPlottingIterator for {'training' if training else 'validation/evaluation'}.")
+            return self._BatchPlottingIterator(
+                actual_dataloader,
+                is_train_iterator=training,
+                adapter_ref=self
+            )
+
+        return actual_dataloader
 
     # --- train_step_single / validation_step handle batches from PathImageDataset ---
     def train_step_single(self, batch, **fit_params):
         self.module_.train()
         Xi, yi = batch  # Already transformed tensors
-        # TODO: add optional visualisation of the batch
         yi = yi.to(dtype=torch.long)
         y_pred = self.infer(Xi, **fit_params)
         loss = self.get_loss(y_pred, yi, X=Xi, training=True)
