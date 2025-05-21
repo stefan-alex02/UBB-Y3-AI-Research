@@ -1995,6 +1995,7 @@ class ClassificationPipeline:
                 lime_data_for_output = {'error': 'LIME generation failed or skipped.'}
                 try:
                     img_np_for_lime = np.array(pil_image_for_lime_and_plot)
+                    # TODO investigate LIME explainability (full surface area + show negative features)
                     explanation = lime_explainer.explain_instance(
                         image=img_np_for_lime, classifier_fn=lime_predict_fn, top_labels=1, hide_color=0,
                         num_features=lime_num_features, num_samples=lime_num_samples, random_seed=RANDOM_SEED
