@@ -198,6 +198,7 @@ class ResultsPlotter:
                 plt.close(fig)
             return None
 
+    # TODO generate csv instead of table
     @staticmethod
     def _generate_metrics_table(metrics_data: Dict[str, Any], output_path: Optional[Path], repository: Optional[Any]=None, s3_key: Optional[str]=None):
         # ... (Same implementation, but uses repository.save_text_file if repo and s3_key given) ...
@@ -218,6 +219,7 @@ class ResultsPlotter:
             return table_str
         except Exception as e: logger.error(f"Error generating metrics table: {e}"); return None
 
+    # TODO generate csv instead of table
     @staticmethod
     def _generate_aggregated_metrics_table(aggregated_metrics: Dict[str, Dict[str, float]], output_path: Optional[Path], repository: Optional[Any]=None, s3_key: Optional[str]=None):
         if not TABULATE_AVAILABLE or not aggregated_metrics: return None
@@ -404,6 +406,7 @@ class ResultsPlotter:
         except Exception as e:
             logger.error(f"Error plotting CV aggregated metrics for '{title}': {e}", exc_info=True); return None
 
+    # TODO generate csv instead of table
     @staticmethod
     def _generate_grid_search_table(cv_results: Dict[str, Any],
                                     output_path: Optional[Path] = None,  # For local saving if no repo
@@ -452,6 +455,7 @@ class ResultsPlotter:
         except Exception as e:
             logger.error(f"Error generating or saving grid search table: {e}"); return None
 
+    # TODO generate csv instead of table
     @staticmethod
     def _generate_nested_cv_param_table(best_params_list: List[Optional[Dict]],
                                         best_scores_list: List[Optional[float]],
