@@ -130,12 +130,13 @@ if __name__ == "__main__":
     # Example 1: Single Train and Eval
     methods_seq_1 = [
         ('single_train', {
-            **chosen_fixed_params, # Fixed hyperparams
+            'params': chosen_fixed_params, # Fixed hyperparams
             'save_model': True,
             'val_split_ratio': 0.2, # Explicit val split
             'results_detail_level': 2,
         }),
         ('single_eval', {
+            'plot_level': 1
         }),
     ]
 

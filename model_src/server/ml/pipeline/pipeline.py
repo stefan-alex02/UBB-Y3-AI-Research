@@ -25,6 +25,7 @@ from sklearn.model_selection import (
 )
 from skorch.callbacks import EarlyStopping, LRScheduler
 from skorch.dataset import ValidSplit
+from torch.optim import AdamW, Adam, SGD
 
 from ..architectures import ModelType
 from ..config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE, AugmentationStrategy
@@ -52,7 +53,6 @@ except ImportError:
     mark_boundaries = None
 
 
-# --- Classification Pipeline ---
 class ClassificationPipeline:
     """
     Manages image classification: data loading (paths), model selection,
@@ -66,19 +66,21 @@ class ClassificationPipeline:
                  img_size: Tuple[int, int] = DEFAULT_IMG_SIZE,
                  artifact_repository: Optional[ArtifactRepository] = None,
                  experiment_base_key_prefix: Optional[str] = "experiments",
-                 results_detail_level: int = 1, # Flag for detailed results
+                 results_detail_level: int = 1,
                  plot_level: int = 0,
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2,
                  augmentation_strategy: Union[str, AugmentationStrategy, Callable, None] = AugmentationStrategy.DEFAULT_STANDARD,
                  show_first_batch_augmentation_default: bool = False,
                  force_flat_for_fixed_cv: bool = False,
+                 optimizer: Union[str, Type[torch.optim.Optimizer]] = AdamW,
                  lr: float = 0.001,
                  max_epochs: int = 20,
                  batch_size: int = 32,
                  patience: int = 10,
-                 optimizer__weight_decay: float = 0.01,
-                 module__dropout_rate: Optional[float] = None
+                 module__dropout_rate: Optional[float] = None,
+                 # --- Catch-all for other skorch/optimizer/module params ---
+                 **kwargs  # <<< Will capture optimizer__weight_decay, optimizer__momentum, etc.
                  ):
         """
             Initializes the Classification Pipeline.
@@ -137,7 +139,6 @@ class ClassificationPipeline:
                 max_epochs: Default maximum number of training epochs.
                 batch_size: Default batch size for training and evaluation.
                 patience: Default patience for EarlyStopping callback.
-                optimizer__weight_decay: Default weight decay for the AdamW optimizer.
                 module__dropout_rate: Optional default dropout rate for model modules
                                       (if the model architecture supports it via __init__).
         """
@@ -193,6 +194,29 @@ class ClassificationPipeline:
         else:  # No repo
             logger.info("  Artifact repository not configured. File outputs will be disabled.")
 
+        self.optimizer_type_config = optimizer # Store the configured optimizer (string or Type)
+        self.lr_config = lr # Store configured lr
+
+        # Resolve optimizer string to type if needed
+        actual_optimizer_type: Type[torch.optim.Optimizer]
+        if isinstance(optimizer, str):
+            opt_lower = optimizer.lower()
+            if opt_lower == "adamw":
+                actual_optimizer_type = AdamW
+            elif opt_lower == "adam":
+                actual_optimizer_type = Adam
+            elif opt_lower == "sgd":
+                actual_optimizer_type = SGD
+            # Add more optimizers here
+            else:
+                raise ValueError(f"Unsupported optimizer string: '{optimizer}'. Choose from 'adamw', 'adam', 'sgd'.")
+        elif issubclass(optimizer, torch.optim.Optimizer):  # Check if it's a torch.optim.Optimizer subclass
+            actual_optimizer_type = optimizer
+        else:
+            raise TypeError(f"Optimizer must be a string or a torch.optim.Optimizer type, got {type(optimizer)}")
+
+        logger.info(f"  Using Optimizer: {actual_optimizer_type.__name__}")
+
         model_class = self._get_model_class(self.model_type)
 
         intended_callbacks_setting = 'default'
@@ -207,10 +231,12 @@ class ClassificationPipeline:
 
         module_params = {}
         if module__dropout_rate is not None: module_params['module__dropout_rate'] = module__dropout_rate
+        module_params["module__num_classes"] = self.dataset_handler.num_classes
 
         self.model_adapter_config = {
-            'module': model_class, 'module__num_classes': self.dataset_handler.num_classes,
-            'criterion': nn.CrossEntropyLoss, 'optimizer': torch.optim.AdamW, # TODO: Add support for other optimizers
+            'module': model_class,
+            'criterion': nn.CrossEntropyLoss,
+            'optimizer': actual_optimizer_type,
             'lr': lr, 'max_epochs': max_epochs, 'batch_size': batch_size, 'device': DEVICE,
             'callbacks': initial_callbacks_list,
             'patience_cfg': patience, 'monitor_cfg': 'valid_loss',
@@ -220,9 +246,12 @@ class ClassificationPipeline:
             'show_first_batch_augmentation': self.show_first_batch_augmentation_default,
             'classes': np.arange(self.dataset_handler.num_classes),
             'verbose': 0, # Default verbosity for adapter itself
-            'optimizer__weight_decay': optimizer__weight_decay,
             **module_params
         }
+
+        # Add any other kwargs (like optimizer__weight_decay, optimizer__momentum)
+        # These are passed directly to SkorchModelAdapter which passes them to torch.optim.Optimizer
+        self.model_adapter_config.update(kwargs) # TODO - refactor this to accept only known kwargs
 
         init_config_for_adapter = self.model_adapter_config.copy()
         init_config_for_adapter.pop('patience_cfg', None); init_config_for_adapter.pop('monitor_cfg', None)
@@ -603,7 +632,7 @@ class ClassificationPipeline:
         adapter_config['verbose'] = 0 # Show epoch table
 
         # Remove config keys not needed by SkorchModelAdapter init
-        adapter_config.pop('patience_cfg', None)
+        adapter_config.pop('patience_cfg', None) # TODO remove these 4 params entirely from all methods
         adapter_config.pop('monitor_cfg', None)
         adapter_config.pop('lr_policy_cfg', None)
         adapter_config.pop('lr_patience_cfg', None)
@@ -1423,12 +1452,13 @@ class ClassificationPipeline:
         return results
 
     def single_train(self,
-                     max_epochs: Optional[int] = None,
-                     lr: Optional[float] = None,
-                     batch_size: Optional[int] = None,
+                     params: Optional[Dict[str, Any]] = None, # <<< General params override
+                     # max_epochs: Optional[int] = None,
+                     # lr: Optional[float] = None,
+                     # batch_size: Optional[int] = None,
                      # Add other tunable params like weight_decay, dropout_rate here if needed
-                     optimizer__weight_decay: Optional[float] = None,
-                     module__dropout_rate: Optional[float] = None,
+                     # optimizer__weight_decay: Optional[float] = None,
+                     # module__dropout_rate: Optional[float] = None,
                      val_split_ratio: Optional[float] = None,  # Override handler's default split
                      save_model: bool = True,
                      results_detail_level: Optional[int] = None,
@@ -1495,12 +1525,30 @@ class ClassificationPipeline:
 
         # --- Configure Model Adapter ---
         adapter_config = self.model_adapter_config.copy()
+
+        # Apply overrides from 'params' argument
+        if params:
+            # Resolve optimizer string to type if 'optimizer' is in params
+            if 'optimizer' in params and isinstance(params['optimizer'], str):
+                opt_str = params['optimizer'].lower()
+                if opt_str == "adamw":
+                    params['optimizer'] = AdamW
+                elif opt_str == "adam":
+                    params['optimizer'] = Adam
+                elif opt_str == "sgd":
+                    params['optimizer'] = SGD
+                else:
+                    raise ValueError(f"Unsupported optimizer string in params: {params['optimizer']}")
+
+            adapter_config.update(params)  # Overwrite base config with provided params
+            # TODO: use params to override specific keys in adapter_config
+
         # Override params for this run
-        if max_epochs is not None: adapter_config['max_epochs'] = max_epochs
-        if lr is not None: adapter_config['lr'] = lr
-        if batch_size is not None: adapter_config['batch_size'] = batch_size
-        if optimizer__weight_decay is not None: adapter_config['optimizer__weight_decay'] = optimizer__weight_decay
-        if module__dropout_rate is not None: adapter_config['module__dropout_rate'] = module__dropout_rate
+        # if max_epochs is not None: adapter_config['max_epochs'] = max_epochs
+        # if lr is not None: adapter_config['lr'] = lr
+        # if batch_size is not None: adapter_config['batch_size'] = batch_size
+        # if optimizer__weight_decay is not None: adapter_config['optimizer__weight_decay'] = optimizer__weight_decay
+        # if module__dropout_rate is not None: adapter_config['module__dropout_rate'] = module__dropout_rate
         # Set the train split strategy (None or PredefinedSplit via ValidSplit)
         adapter_config['train_split'] = train_split_config
 

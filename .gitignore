@@ -4,3 +4,6 @@ model_src/GCD.zip
 model_src/data/GCD.zip
 /model_src/data/GCD/
 *.pt
+
+# all pycache files (from all packages)
+**/__pycache__/

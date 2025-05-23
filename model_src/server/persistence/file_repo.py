@@ -66,14 +66,17 @@ class LocalFileSystemRepository(ArtifactRepository):
             return str(full_path)
         except Exception as e: logger.error(f"Failed to save plot locally to {full_path}: {e}"); return None
 
-    def save_text_file(self, content: str, key: str) -> Optional[str]:
+    def save_text_file(self, content: str, key: str, content_type: str = 'text/plain') -> Optional[str]:
         full_path = self._get_full_path(key)
         try:
             full_path.parent.mkdir(parents=True, exist_ok=True)
-            with open(full_path, 'w', encoding='utf-8') as f: f.write(content)
-            logger.info(f"Text file saved locally: {full_path}")
+            with open(full_path, 'w', encoding='utf-8') as f:
+                f.write(content)
+            logger.info(f"Text file ({content_type}) saved locally: {full_path}")
             return str(full_path)
-        except Exception as e: logger.error(f"Failed to save text file locally to {full_path}: {e}"); return None
+        except Exception as e:
+            logger.error(f"Failed to save text file locally to {full_path}: {e}")
+            return None
 
     def load_json(self, key: str) -> Optional[Dict]:
         full_path = self._get_full_path(key)

@@ -104,12 +104,15 @@ class MinIORepository(ArtifactRepository):
             return f"s3://{self.bucket_name}/{key}"
         except Exception as e: logger.error(f"Failed to save plot to S3 (s3://{self.bucket_name}/{key}): {e}"); return None
 
-    def save_text_file(self, content: str, key: str) -> Optional[str]:
+    def save_text_file(self, content: str, key: str, content_type: str = 'text/plain') -> Optional[str]:
         try:
-            self.client.put_object(Bucket=self.bucket_name, Key=key, Body=content.encode('utf-8'), ContentType='text/plain')
-            logger.info(f"Text file saved to S3: s3://{self.bucket_name}/{key}")
-            return f"s3://{self.bucket_name}/{key}"
-        except Exception as e: logger.error(f"Failed to save text file to S3 (s3://{self.bucket_name}/{key}): {e}"); return None
+            self.client.put_object(Bucket=self.bucket_name, Key=key, Body=content.encode('utf-8'), ContentType=content_type)
+            s3_identifier = f"s3://{self.bucket_name}/{key}"
+            logger.info(f"Text file ({content_type}) saved to S3: {s3_identifier}")
+            return s3_identifier
+        except Exception as e:
+            logger.error(f"Failed to save text file to S3 (s3://{self.bucket_name}/{key}): {e}")
+            return None
 
     def download_file_to_memory(self, object_key: str) -> Optional[bytes]: # bucket_name is instance member
         """Downloads a file from MinIO into memory (bytes)."""

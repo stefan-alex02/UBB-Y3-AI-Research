@@ -5,19 +5,12 @@
 debug_fixed_params = {
     # Skorch/Training Loop Params (Fast Execution)
     'max_epochs': 4,        # Run only for 1 epoch
-    'batch_size': 8,        # Small batch size
-    'lr': 1e-4,             # A reasonably small LR unlikely to explode immediately
-
-    # Optimizer Params (Common Default)
-    'optimizer__weight_decay': 0.01,
-
-    # Callbacks (using pipeline defaults, but could potentially disable for speed if needed)
-    # Note: EarlyStopping might trigger immediately if validation loss increases on epoch 1.
-
-    # --- NO module__ specific parameters here ---
-    # This ensures compatibility. FlexibleViT, SimpleCNN, DiffusionClassifier
-    # will use their defaults for dropout, unfreezing, etc., as set in
-    # ClassificationPipeline.__init__'s use of model_adapter_config.
+    'lr': 0.01,
+    'batch_size': 32,
+    'optimizer': 'sgd', # Override the pipeline's default optimizer
+    'optimizer__momentum': 0.9,
+    'optimizer__weight_decay': 1e-4,
+    'module__dropout_rate': 0.3 # Example module param
 }
 
 # --- Parameter Space Definitions ---

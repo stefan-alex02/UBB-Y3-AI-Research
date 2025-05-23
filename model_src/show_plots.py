@@ -1,17 +1,32 @@
 from pathlib import Path
 
 from model_src.server.ml import ImageDatasetHandler
-from model_src.server.ml import logger
-from model_src.server.ml import ResultsPlotter
+from model_src.server.ml.logger_utils import logger
+from model_src.server.ml.plotter import ResultsPlotter
+from model_src.server.persistence import load_file_repository, load_minio_repository
 
 # --- Configuration ---
 # IMPORTANT: Replace these paths with your actual paths
-# json_file_path_str = "./results/Swimcat-extend/vit/20250507_054532_seed42/cv_model_evaluation_test_064434_189526/cv_model_evaluation_results_20250507_064434.json"
-json_file_path_str = "./results/mini-GCD-flat/cnn/20250515_154721_seed42/cv_model_evaluation_full_154721_089844/cv_model_evaluation_results.json"
+json_file_path_str = "./experiments/mini-GCD-flat/cnn/20250524_000109_seed42/single_eval_000136/single_eval_results.json"
 
 # dataset_root_for_classes_str = "data/mini-GCD" # Path to the dataset root to get classes
 dataset_root_for_classes_str = "data/mini-GCD-flat" # Path to the dataset root to get classes
 # dataset_root_for_classes_str = "data/Swimcat-extend" # Path to the dataset root to get classes
+
+repo_option = "local"  # "local", "minio", or "none"
+
+# --- Repository Configuration ---
+script_dir = Path(__file__).resolve().parent
+minio_bucket_name = "ml-experiment-artifacts"
+local_repo_base_path = str(script_dir)
+
+# --- Load the repository ---
+if repo_option == "local":
+    repo = load_file_repository(logger, repo_base_path=local_repo_base_path)
+elif repo_option == "minio":
+    repo = load_minio_repository(logger, bucket_name=minio_bucket_name)
+elif repo_option == "none":
+    repo = None
 
 json_file_path = Path(json_file_path_str)
 dataset_root_for_classes = Path(dataset_root_for_classes_str)
@@ -51,19 +66,24 @@ try:
 
     if method_name_in_file == "single_eval":
         if class_names:
-            ResultsPlotter.plot_single_eval_results(plot_artifact_base_key_or_path=json_file_path, class_names=class_names, show_plots=True)
+            ResultsPlotter.plot_single_eval_results(results_input=json_file_path, class_names=class_names, show_plots=True, repository_for_plots=repo,
+                                                    plot_artifact_base_key_or_path=json_file_path.parent)
         else:
             logger.error("Cannot plot single_eval results: Class names are required but could not be loaded.")
     elif method_name_in_file.startswith("single_train"): # Handle potential random suffix
-        ResultsPlotter.plot_single_train_results(plot_artifact_base_key_or_path=json_file_path, show_plots=True)
+        ResultsPlotter.plot_single_train_results(results_input=json_file_path, show_plots=True, repository_for_plots=repo,
+                                                    plot_save_dir_base=json_file_path.parent)
     elif method_name_in_file.startswith("non_nested"): # Handle potential grid/random suffix
-        ResultsPlotter.plot_non_nested_cv_results(json_file_path, show_plots=True)
+        ResultsPlotter.plot_non_nested_cv_results(results_input=json_file_path, show_plots=True, repository_for_plots=repo,
+                                                    plot_save_dir_base=json_file_path.parent)
     elif method_name_in_file.startswith("nested"): # Handle potential grid/random suffix
-        ResultsPlotter.plot_nested_cv_results(json_file_path, show_plots=True)
+        ResultsPlotter.plot_nested_cv_results(results_input=json_file_path, show_plots=True, repository_for_plots=repo,
+                                                    plot_save_dir_base=json_file_path.parent)
     elif method_name_in_file.startswith("cv_model_evaluation"): # Handle potential random suffix
         if class_names:
              ResultsPlotter.plot_cv_model_evaluation_results(results_input=json_file_path, class_names=class_names,
-                                                             show_plots=True, plot_save_dir_base=json_file_path.parent)
+                                                             show_plots=True, repository_for_plots=repo,
+                                                             plot_save_dir_base=json_file_path.parent)
         else:
             logger.error("Cannot plot cv_model_evaluation results: Class names are required but could not be loaded.")
     else:

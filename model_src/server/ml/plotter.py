@@ -198,51 +198,119 @@ class ResultsPlotter:
                 plt.close(fig)
             return None
 
-    # TODO generate csv instead of table
     @staticmethod
-    def _generate_metrics_table(metrics_data: Dict[str, Any], output_path: Optional[Path], repository: Optional[Any]=None, s3_key: Optional[str]=None):
-        # ... (Same implementation, but uses repository.save_text_file if repo and s3_key given) ...
-        if not TABULATE_AVAILABLE: return None
-        per_class_metrics = metrics_data.get('per_class'); macro_metrics = metrics_data.get('macro_avg'); overall_acc = metrics_data.get('overall_accuracy')
-        if not per_class_metrics or not macro_metrics: logger.warning("Cannot generate metrics table: 'per_class' or 'macro_avg' data missing."); return None
-        headers = ["Metric"] + list(per_class_metrics.keys()) + ["Macro Avg"]; table_data = []
-        metric_keys = ['precision', 'recall', 'specificity', 'f1', 'roc_auc', 'pr_auc']
-        for key_m in metric_keys:
-            row = [key_m.replace('_', ' ').title()]
-            for class_name in per_class_metrics.keys(): class_val = per_class_metrics[class_name].get(key_m, np.nan); row.append(f"{class_val:.4f}" if not np.isnan(class_val) else "N/A")
-            macro_val = macro_metrics.get(key_m, np.nan); row.append(f"{macro_val:.4f}" if not np.isnan(macro_val) else "N/A"); table_data.append(row)
-        acc_row = ["Overall Acc"] + ["-"] * len(per_class_metrics) + [f"{overall_acc:.4f}" if overall_acc is not None else "N/A"]; table_data.append(acc_row)
-        try:
-            table_str = tabulate.tabulate(table_data, headers=headers, tablefmt="fancy_grid", floatfmt=".4f", stralign="center")
-            if repository and s3_key: repository.save_text_file(table_str, s3_key)
-            elif output_path: Path(output_path).parent.mkdir(parents=True, exist_ok=True); Path(output_path).write_text(table_str, encoding='utf-8'); logger.info(f"Metrics table saved to: {output_path}")
-            return table_str
-        except Exception as e: logger.error(f"Error generating metrics table: {e}"); return None
+    def _generate_metrics_table(metrics_data: Dict[str, Any],
+                                output_path: Optional[Path] = None,
+                                repository: Optional[Any] = None,
+                                s3_key: Optional[str] = None
+                                ) -> Optional[str]:  # Returns CSV string or None
+        """Generates a CSV string of per-class and macro metrics."""
+        per_class_metrics = metrics_data.get('per_class')
+        macro_metrics = metrics_data.get('macro_avg')
+        overall_acc = metrics_data.get('overall_accuracy')
 
-    # TODO generate csv instead of table
+        if not per_class_metrics or not macro_metrics:
+            logger.warning("Cannot generate metrics CSV: 'per_class' or 'macro_avg' data missing.")
+            return None
+
+        # Prepare data for DataFrame
+        data_for_df = []
+        metric_keys = ['precision', 'recall', 'specificity', 'f1', 'roc_auc', 'pr_auc']
+        class_names_sorted = sorted(list(per_class_metrics.keys()))
+
+        for key_m in metric_keys:
+            row_dict = {'Metric': key_m.replace('_', ' ').title()}
+            for cn in class_names_sorted:
+                val = per_class_metrics[cn].get(key_m, np.nan)
+                row_dict[cn] = f"{val:.4f}" if not np.isnan(val) else "N/A"
+            macro_val = macro_metrics.get(key_m, np.nan)
+            row_dict['Macro Avg'] = f"{macro_val:.4f}" if not np.isnan(macro_val) else "N/A"
+            data_for_df.append(row_dict)
+
+        # Add overall accuracy
+        acc_dict = {'Metric': "Overall Acc"}
+        for cn in class_names_sorted: acc_dict[cn] = "-"
+        acc_dict[
+            'Macro Avg'] = f"{overall_acc:.4f}" if overall_acc is not None else "N/A"  # Overall acc is a macro concept here
+        data_for_df.append(acc_dict)
+
+        df = pd.DataFrame(data_for_df)
+        # Set Metric as index for better CSV readability if desired, or keep as column
+        # df = df.set_index('Metric')
+
+        try:
+            csv_string = df.to_csv(index=False, lineterminator='\n')
+
+            if repository and s3_key:
+                if repository.save_text_file(csv_string, s3_key, content_type='text/csv'):
+                    logger.info(f"Metrics CSV saved via repository to: {s3_key}")
+                else:
+                    logger.error(f"Failed to save metrics CSV via repository to: {s3_key}")
+            elif output_path:
+                output_p = Path(output_path)
+                output_p.parent.mkdir(parents=True, exist_ok=True)
+                output_p.write_text(csv_string, encoding='utf-8')
+                logger.info(f"Metrics CSV saved locally to: {output_p}")
+            else:
+                logger.debug("Metrics CSV generated but not saved (no path/repo or key).")
+            return csv_string
+        except Exception as e:
+            logger.error(f"Error generating or saving metrics CSV: {e}")
+            return None
+
     @staticmethod
-    def _generate_aggregated_metrics_table(aggregated_metrics: Dict[str, Dict[str, float]], output_path: Optional[Path], repository: Optional[Any]=None, s3_key: Optional[str]=None):
-        if not TABULATE_AVAILABLE or not aggregated_metrics: return None
-        # ... (rest of table generation) ...
-        headers = ["Metric", "Mean", "Std Dev", "SEM", "CI Margin", "CI Lower", "CI Upper"]; table_data = []; metric_keys_ordered = ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro', 'specificity_macro', 'roc_auc_macro', 'pr_auc_macro']
+    def _generate_aggregated_metrics_table(aggregated_metrics: Dict[str, Dict[str, float]],
+                                           output_path: Optional[Path] = None,
+                                           repository: Optional[Any] = None,
+                                           s3_key: Optional[str] = None
+                                           ) -> Optional[str]:
+        """Generates a CSV string of aggregated CV metrics including CIs."""
+        if not aggregated_metrics: return None
+
+        data_for_df = []
+        metric_keys_ordered = ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro', 'specificity_macro',
+                               'roc_auc_macro', 'pr_auc_macro']
+
         for key_m in metric_keys_ordered:
             stats = aggregated_metrics.get(key_m)
             if stats and isinstance(stats, dict):
-                row = [key_m.replace('_', ' ').title()];
-                row.append(f"{stats.get('mean', np.nan):.4f}" if not np.isnan(stats.get('mean', np.nan)) else "N/A");
-                row.append(f"{stats.get('std_dev', np.nan):.4f}" if not np.isnan(stats.get('std_dev', np.nan)) else "N/A");
-                row.append(f"{stats.get('sem', np.nan):.4f}" if not np.isnan(stats.get('sem', np.nan)) else "N/A");
-                row.append(f"{stats.get('margin_of_error', np.nan):.4f}" if stats.get('margin_of_error') is not None and not np.isnan(stats.get('margin_of_error', np.nan)) else "N/A");
-                row.append(f"{stats.get('ci_lower', np.nan):.4f}" if stats.get('ci_lower') is not None and not np.isnan(stats.get('ci_lower', np.nan)) else "N/A");
-                row.append(f"{stats.get('ci_upper', np.nan):.4f}" if stats.get('ci_upper') is not None and not np.isnan(stats.get('ci_upper', np.nan)) else "N/A");
-                table_data.append(row)
-        if not table_data: logger.warning("No data to generate aggregated metrics table."); return None
+                row_dict = {'Metric': key_m.replace('_', ' ').title()}
+                row_dict['Mean'] = f"{stats.get('mean', np.nan):.4f}" if not np.isnan(
+                    stats.get('mean', np.nan)) else "N/A"
+                row_dict['Std Dev'] = f"{stats.get('std_dev', np.nan):.4f}" if not np.isnan(
+                    stats.get('std_dev', np.nan)) else "N/A"
+                row_dict['SEM'] = f"{stats.get('sem', np.nan):.4f}" if not np.isnan(stats.get('sem', np.nan)) else "N/A"
+                row_dict['CI Margin'] = f"{stats.get('margin_of_error', np.nan):.4f}" if stats.get(
+                    'margin_of_error') is not None and not np.isnan(stats.get('margin_of_error', np.nan)) else "N/A"
+                row_dict['CI Lower'] = f"{stats.get('ci_lower', np.nan):.4f}" if stats.get(
+                    'ci_lower') is not None and not np.isnan(stats.get('ci_lower', np.nan)) else "N/A"
+                row_dict['CI Upper'] = f"{stats.get('ci_upper', np.nan):.4f}" if stats.get(
+                    'ci_upper') is not None and not np.isnan(stats.get('ci_upper', np.nan)) else "N/A"
+                data_for_df.append(row_dict)
+
+        if not data_for_df:
+            logger.warning("No data to generate aggregated metrics CSV.")
+            return None
+
+        df = pd.DataFrame(data_for_df)
         try:
-            table_str = tabulate.tabulate(table_data, headers=headers, tablefmt="fancy_grid", floatfmt=".4f", stralign="center")
-            if repository and s3_key: repository.save_text_file(table_str, s3_key)
-            elif output_path: Path(output_path).parent.mkdir(parents=True, exist_ok=True); Path(output_path).write_text(table_str, encoding='utf-8'); logger.info(f"Aggregated metrics table saved to: {output_path}")
-            return table_str
-        except Exception as e: logger.error(f"Error generating aggregated metrics table: {e}"); return None
+            csv_string = df.to_csv(index=False, lineterminator='\n')
+
+            if repository and s3_key:
+                if repository.save_text_file(csv_string, s3_key, content_type='text/csv'):
+                    logger.info(f"Aggregated metrics CSV saved via repository to: {s3_key}")
+                else:
+                    logger.error(f"Failed to save aggregated metrics CSV via repository to: {s3_key}")
+            elif output_path:
+                output_p = Path(output_path);
+                output_p.parent.mkdir(parents=True, exist_ok=True)
+                output_p.write_text(csv_string, encoding='utf-8');
+                logger.info(f"Aggregated metrics CSV saved locally to: {output_p}")
+            else:
+                logger.debug("Aggregated metrics CSV generated but not saved.")
+            return csv_string
+        except Exception as e:
+            logger.error(f"Error generating or saving aggregated metrics CSV: {e}"); return None
 
     @staticmethod
     def _plot_confusion_matrix(y_true: List, y_pred: List, classes: List[str], title: str,
@@ -406,100 +474,124 @@ class ResultsPlotter:
         except Exception as e:
             logger.error(f"Error plotting CV aggregated metrics for '{title}': {e}", exc_info=True); return None
 
-    # TODO generate csv instead of table
     @staticmethod
     def _generate_grid_search_table(cv_results: Dict[str, Any],
-                                    output_path: Optional[Path] = None,  # For local saving if no repo
-                                    repository: Optional[Any] = None,  # ArtifactRepository instance
-                                    s3_key: Optional[str] = None,  # S3 object key if using repo
+                                    output_path: Optional[Path] = None,
+                                    repository: Optional[Any] = None,
+                                    s3_key: Optional[str] = None,
                                     top_n: int = 15):
-        if not TABULATE_AVAILABLE or not cv_results: return None
+        """Generates a CSV string summary of GridSearchCV results."""
+        if not cv_results: logger.warning("No cv_results data for grid search CSV."); return None
         if not isinstance(cv_results, dict): logger.warning(
-            "Cannot generate grid search table: cv_results is not a dictionary."); return None
+            "Cannot generate grid search CSV: cv_results is not a dictionary."); return None
         try:
             df = pd.DataFrame(cv_results)
+
+            # Select relevant columns, ensure they exist
             param_cols = [col for col in df.columns if col.startswith('param_')]
             score_cols = ['rank_test_score', 'mean_test_score', 'std_test_score', 'mean_train_score', 'std_train_score']
             time_cols = ['mean_fit_time', 'mean_score_time']
-            cols_to_show = score_cols + time_cols + param_cols
-            cols_to_show = [col for col in cols_to_show if col in df.columns]
 
-            if not cols_to_show: logger.warning("No relevant columns in cv_results for grid search table."); return None
+            # Start with rank if it exists
+            cols_to_show = []
+            if 'rank_test_score' in df.columns:
+                cols_to_show.append('rank_test_score')
+
+            cols_to_show.extend([col for col in score_cols if col in df.columns and col != 'rank_test_score'])
+            cols_to_show.extend([col for col in time_cols if col in df.columns])
+            cols_to_show.extend(param_cols)  # Add all param_ columns
+
+            if not cols_to_show: logger.warning("No relevant columns in cv_results for grid search CSV."); return None
+
+            df_filtered = df[cols_to_show]  # Create a DataFrame with only the columns to show
 
             df_top: pd.DataFrame
-            if 'rank_test_score' in df.columns:
-                df_top = df.nsmallest(top_n, 'rank_test_score')[cols_to_show]
+            if 'rank_test_score' in df_filtered.columns:
+                df_top = df_filtered.nsmallest(top_n, 'rank_test_score')
             else:
                 logger.warning("Cannot rank grid search results: 'rank_test_score' missing. Showing first N rows.")
-                df_top = df[cols_to_show].head(top_n)
+                df_top = df_filtered.head(top_n)
 
-            if df_top.empty: logger.warning("Grid search DataFrame is empty after filtering columns."); return None
+            if df_top.empty: logger.warning("Grid search DataFrame is empty after filtering/ranking."); return None
 
-            df_top.columns = [col.replace('param_', '') if col.startswith('param_') else col for col in df_top.columns]
-            table_str = tabulate.tabulate(df_top, headers='keys', tablefmt='fancy_grid', showindex=False,
-                                          floatfmt=".4f")
+            # Simplify param column names for CSV header
+            df_top_renamed = df_top.copy()
+            df_top_renamed.columns = [col.replace('param_', '') if col.startswith('param_') else col for col in
+                                      df_top.columns]
+
+            csv_string = df_top_renamed.to_csv(index=False, lineterminator='\n')
 
             if repository and s3_key:
-                if repository.save_text_file(table_str, s3_key):
-                    logger.info(f"Grid search summary table saved via repository to: {s3_key}")
+                if repository.save_text_file(csv_string, s3_key, content_type='text/csv'):
+                    logger.info(f"Grid search summary CSV saved via repository to: {s3_key}")
                 else:
-                    logger.error(f"Failed to save grid search table via repository to: {s3_key}")
+                    logger.error(f"Failed to save grid search CSV via repository to: {s3_key}")
             elif output_path:
                 output_p = Path(output_path);
                 output_p.parent.mkdir(parents=True, exist_ok=True)
-                output_p.write_text(table_str, encoding='utf-8')
-                logger.info(f"Grid search summary table saved locally to: {output_p}")
+                output_p.write_text(csv_string, encoding='utf-8')
+                logger.info(f"Grid search summary CSV saved locally to: {output_p}")
             else:
-                logger.debug("Grid search table generated but not saved.")
-            return table_str
+                logger.debug("Grid search CSV generated but not saved.")
+            return csv_string
         except Exception as e:
-            logger.error(f"Error generating or saving grid search table: {e}"); return None
+            logger.error(f"Error generating or saving grid search CSV: {e}"); return None
 
-    # TODO generate csv instead of table
     @staticmethod
     def _generate_nested_cv_param_table(best_params_list: List[Optional[Dict]],
                                         best_scores_list: List[Optional[float]],
-                                        output_path: Optional[Path] = None,  # For local saving
-                                        repository: Optional[Any] = None,  # ArtifactRepository
-                                        s3_key: Optional[str] = None  # S3 object key
+                                        output_path: Optional[Path] = None,
+                                        repository: Optional[Any] = None,
+                                        s3_key: Optional[str] = None
                                         ):
-        if not TABULATE_AVAILABLE or not best_params_list or not best_scores_list: return None
+        """Generates a CSV string for best params and scores per outer fold of nested CV."""
+        if not best_params_list or not best_scores_list: logger.warning(
+            "Missing data for nested CV params CSV."); return None
         if len(best_params_list) != len(best_scores_list): logger.warning(
-            "Mismatch in lengths for nested CV param table."); return None
+            "Mismatch in lengths for nested CV param CSV."); return None
+
         try:
-            table_data = [];
-            all_param_keys = set()
-            for params in best_params_list:
-                if isinstance(params, dict): all_param_keys.update(params.keys())
-            sorted_param_keys = sorted([key.replace('module__', '') for key in all_param_keys])
-            headers = ["Outer Fold", "Inner Best Score"] + sorted_param_keys
+            data_for_df = []
+            # Collect all unique parameter keys and shorten them for headers
+            all_param_keys_original = set()
+            for params_dict in best_params_list:
+                if isinstance(params_dict, dict):
+                    all_param_keys_original.update(params_dict.keys())
+
+            # Create a mapping from shortened key to original key for data extraction
+            param_key_map = {key.replace('module__', ''): key for key in all_param_keys_original}
+            sorted_short_param_keys = sorted(list(param_key_map.keys()))
+
             for i, (params, score) in enumerate(zip(best_params_list, best_scores_list)):
-                row = [f"Fold {i + 1}"];
-                row.append(f"{score:.4f}" if score is not None and not np.isnan(score) else "N/A")
+                row_dict = {"Outer Fold": f"Fold {i + 1}"}
+                row_dict["Inner Best Score"] = f"{score:.4f}" if score is not None and not np.isnan(score) else "N/A"
                 if isinstance(params, dict):
-                    for short_key in sorted_param_keys:
-                        original_key = 'module__' + short_key if 'module__' + short_key in params else short_key
-                        row.append(params.get(original_key, "N/A"))
-                else:
-                    row.extend(["N/A"] * len(sorted_param_keys))
-                table_data.append(row)
-            table_str = tabulate.tabulate(table_data, headers=headers, tablefmt="fancy_grid", floatfmt=".4f")
+                    for short_key in sorted_short_param_keys:
+                        original_key = param_key_map[short_key]
+                        row_dict[short_key] = params.get(original_key, "N/A")
+                else:  # If params is None for a fold
+                    for short_key in sorted_short_param_keys:
+                        row_dict[short_key] = "N/A"
+                data_for_df.append(row_dict)
+
+            df = pd.DataFrame(data_for_df)
+            csv_string = df.to_csv(index=False, lineterminator='\n')
 
             if repository and s3_key:
-                if repository.save_text_file(table_str, s3_key):
-                    logger.info(f"Nested CV best params table saved via repository to: {s3_key}")
+                if repository.save_text_file(csv_string, s3_key, content_type='text/csv'):
+                    logger.info(f"Nested CV best params CSV saved via repository to: {s3_key}")
                 else:
-                    logger.error(f"Failed to save nested CV params table via repository to: {s3_key}")
+                    logger.error(f"Failed to save nested CV params CSV via repository to: {s3_key}")
             elif output_path:
                 output_p = Path(output_path);
                 output_p.parent.mkdir(parents=True, exist_ok=True)
-                output_p.write_text(table_str, encoding='utf-8')
-                logger.info(f"Nested CV best params table saved locally to: {output_p}")
+                output_p.write_text(csv_string, encoding='utf-8')
+                logger.info(f"Nested CV best params CSV saved locally to: {output_p}")
             else:
-                logger.debug("Nested CV params table generated but not saved.")
-            return table_str
+                logger.debug("Nested CV params CSV generated but not saved.")
+            return csv_string
         except Exception as e:
-            logger.error(f"Error generating or saving nested CV params table: {e}"); return None
+            logger.error(f"Error generating or saving nested CV params CSV: {e}"); return None
 
     @staticmethod
     def _plot_macro_roc_point(macro_metrics: Dict[str, float], title: str) -> Optional[plt.Figure]:
@@ -611,7 +703,7 @@ class ResultsPlotter:
 
             if TABULATE_AVAILABLE:
                 table_key = str(
-                    (PurePath(plot_subdir_key_or_path) / "metrics_table.txt").as_posix()) if plot_subdir_key_or_path else None
+                    (PurePath(plot_subdir_key_or_path) / "metrics_table.csv").as_posix()) if plot_subdir_key_or_path else None
                 ResultsPlotter._generate_metrics_table(results_data, output_path=None, repository=repository_for_plots,
                                                        s3_key=table_key)
 
@@ -684,7 +776,7 @@ class ResultsPlotter:
             # Grid Search Table
             cv_results_data = results_data.get('cv_results')
             if cv_results_data and TABULATE_AVAILABLE:
-                key_table = str((PurePath(plot_save_dir_base) / f"{method_name}_plots" / "grid_search_summary.txt").as_posix()) if plot_save_dir_base else None
+                key_table = str((PurePath(plot_save_dir_base) / f"{method_name}_plots" / "grid_search_summary.csv").as_posix()) if plot_save_dir_base else None
                 ResultsPlotter._generate_grid_search_table(cv_results_data, output_path=None, repository=repository_for_plots, s3_key=key_table, top_n=20)
             elif not cv_results_data: logger.warning("No 'cv_results' data for grid search table.")
             logger.info(f"Finished plotting for non_nested_cv: {run_id}")
@@ -732,7 +824,7 @@ class ResultsPlotter:
             # Table of best params per fold
             best_params_per_fold = results_data.get('outer_fold_best_params_found'); inner_scores_per_fold = results_data.get('outer_fold_inner_cv_best_score')
             if best_params_per_fold and inner_scores_per_fold and TABULATE_AVAILABLE:
-                key_table_params = str((PurePath(plot_save_dir_base) / f"{method_name}_plots" / "nested_cv_best_params_per_fold.txt").as_posix()) if plot_save_dir_base else None
+                key_table_params = str((PurePath(plot_save_dir_base) / f"{method_name}_plots" / "nested_cv_best_params_per_fold.csv").as_posix()) if plot_save_dir_base else None
                 ResultsPlotter._generate_nested_cv_param_table(best_params_list=best_params_per_fold, best_scores_list=inner_scores_per_fold, output_path=None, repository=repository_for_plots, s3_key=key_table_params)
             logger.info(f"Finished plotting for nested_cv: {run_id}")
         except Exception as e: logger.error(f"Failed to plot nested_cv for {run_id}: {e}", exc_info=True)
@@ -772,7 +864,7 @@ class ResultsPlotter:
                     _save_figure_or_show(fig_agg, repository_for_plots, key_agg_plot, show_plots)
                 if TABULATE_AVAILABLE:
                     key_agg_table = str((PurePath(
-                        plot_base_for_artifacts) / "aggregated_metrics_table.txt").as_posix()) if plot_base_for_artifacts else None
+                        plot_base_for_artifacts) / "aggregated_metrics_table.csv").as_posix()) if plot_base_for_artifacts else None
                     ResultsPlotter._generate_aggregated_metrics_table(aggregated_metrics, output_path=None,
                                                                       repository=repository_for_plots,
                                                                       s3_key=key_agg_table)
@@ -961,7 +1053,7 @@ class ResultsPlotter:
                     for i, fold_data_table in enumerate(fold_details):
                         if isinstance(fold_data_table, dict) and fold_data_table.get('per_class'):
                             key_table_fold = str((PurePath(
-                                plot_base_for_artifacts) / f"fold_{i + 1}_metrics_table.txt").as_posix()) if plot_base_for_artifacts else None
+                                plot_base_for_artifacts) / f"fold_{i + 1}_metrics_table.csv").as_posix()) if plot_base_for_artifacts else None
                             ResultsPlotter._generate_metrics_table(fold_data_table, output_path=None,
                                                                    repository=repository_for_plots,
                                                                    s3_key=key_table_fold)

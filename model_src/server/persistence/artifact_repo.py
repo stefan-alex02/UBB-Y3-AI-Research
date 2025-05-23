@@ -17,7 +17,7 @@ class ArtifactRepository(ABC):
         pass
 
     @abstractmethod
-    def save_text_file(self, content: str, key: str) -> Optional[str]:
+    def save_text_file(self, content: str, key: str, content_type: str = 'text/plain') -> Optional[str]:
         pass
 
     @abstractmethod
