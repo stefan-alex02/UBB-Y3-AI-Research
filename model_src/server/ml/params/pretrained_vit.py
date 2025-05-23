@@ -189,3 +189,115 @@ param_grid_pretrained_vit_focused = [
         'max_epochs': [70],
     }
 ]
+
+
+
+
+
+# --- Revised params with custom optimzier (SGD) ---
+
+import torch # For torch.optim types
+
+# --- Configuration 1 (Based on Rank 1 from your CSV) ---
+params_config_1_adamw = {
+    'optimizer': ['sgd'],
+    'optimizer__momentum': [0.9],
+    'optimizer__weight_decay': [5e-4], # Common weight decay for SGD
+    'optimizer__nesterov': [True],     # Often helps
+
+    'lr': [5e-5],
+    'batch_size': [16],
+    'max_epochs': [70], # Or a smaller value if using effective early stopping
+
+    'module__vit_model_variant': ['vit_b_16'],
+    'module__pretrained': [True],
+    'module__unfreeze_strategy': ['encoder_tail'],
+    'module__num_transformer_blocks_to_unfreeze': [4], # From CSV (was 4.0)
+    'module__unfreeze_cls_token': [True],
+    'module__unfreeze_pos_embedding': [True],
+    'module__unfreeze_patch_embedding': [False],
+    'module__unfreeze_encoder_layernorm': [True],
+    'module__custom_head_hidden_dims': [None],
+    'module__head_dropout_rate': [0.0],
+}
+
+# --- Configuration 2 (Based on Rank 2 from your CSV, different LR) ---
+params_config_2_adamw = {
+    'optimizer': ['sgd'],
+    'optimizer__momentum': [0.9],
+    'optimizer__weight_decay': [5e-4], # Common weight decay for SGD
+    'optimizer__nesterov': [True],     # Often helps
+
+    'lr': [3e-5], # Different LR
+    'batch_size': [16],
+    'max_epochs': [70],
+
+    'module__vit_model_variant': ['vit_b_16'],
+    'module__pretrained': [True],
+    'module__unfreeze_strategy': ['encoder_tail'],
+    'module__num_transformer_blocks_to_unfreeze': [4],
+    'module__unfreeze_cls_token': [True],
+    'module__unfreeze_pos_embedding': [True],
+    'module__unfreeze_patch_embedding': [False],
+    'module__unfreeze_encoder_layernorm': [True],
+    'module__custom_head_hidden_dims': [None],
+    'module__head_dropout_rate': [0.0],
+}
+
+# --- Configuration 3 (Based on Rank 4 from your CSV, different unfreeze blocks & LR) ---
+# Rank 3 is similar to Rank 1 but with different weight_decay, let's pick Rank 4 for more variety.
+params_config_3_adamw = {
+    'optimizer': ['sgd'],
+    'optimizer__momentum': [0.9],
+    'optimizer__weight_decay': [5e-4], # Common weight decay for SGD
+    'optimizer__nesterov': [True],     # Often helps
+
+    'lr': [3e-5],
+    'batch_size': [16],
+    'max_epochs': [70],
+
+    'module__vit_model_variant': ['vit_b_16'],
+    'module__pretrained': [True],
+    'module__unfreeze_strategy': ['encoder_tail'],
+    'module__num_transformer_blocks_to_unfreeze': [2], # Different number of blocks
+    'module__unfreeze_cls_token': [True],
+    'module__unfreeze_pos_embedding': [True],
+    'module__unfreeze_patch_embedding': [False],
+    'module__unfreeze_encoder_layernorm': [True],
+    'module__custom_head_hidden_dims': [None],
+    'module__head_dropout_rate': [0.0],
+}
+
+# --- Configuration 4: SGD (New Strategy) ---
+# SGD often requires different LR, more epochs, and momentum.
+# These are example starting points for SGD with ViT fine-tuning.
+params_config_4_sgd = {
+    'optimizer': ['sgd'],
+    'optimizer__momentum': [0.9],
+    'optimizer__weight_decay': [5e-4], # Common weight decay for SGD
+    'optimizer__nesterov': [True],     # Often helps
+
+    'lr': [0.001], # SGD typically needs a larger LR than AdamW for fine-tuning, but schedule is key
+    'batch_size': [16], # Keep consistent with others for this grid
+    'max_epochs': [70], # SGD might need more, but for a fixed grid comparison...
+
+    'module__vit_model_variant': ['vit_b_16'],
+    'module__pretrained': [True],
+    'module__unfreeze_strategy': ['encoder_tail'],      # A common strategy
+    'module__num_transformer_blocks_to_unfreeze': [2],  # Fine-tune a few blocks
+    'module__unfreeze_cls_token': [True],
+    'module__unfreeze_pos_embedding': [True],
+    'module__unfreeze_patch_embedding': [False],
+    'module__unfreeze_encoder_layernorm': [True],
+    'module__custom_head_hidden_dims': [None],
+    'module__head_dropout_rate': [0.0], # Start simple
+}
+
+# --- Combine into the list of dictionaries for GridSearchCV ---
+# This grid will result in exactly 4 configurations being tested by GridSearchCV.
+fixed_grid_for_vit_top_plus_sgd = [
+    params_config_1_adamw,
+    params_config_2_adamw,
+    params_config_3_adamw,
+    params_config_4_sgd,
+]

@@ -610,6 +610,41 @@ class ClassificationPipeline:
         if method_lower == 'random' and n_iter is None: raise ValueError("n_iter required for random search.")
         if method_lower not in ['grid', 'random']: raise ValueError(f"Unsupported search method: {method}.")
 
+        # --- Convert optimizer strings in param_grid to optimizer types ---
+        processed_param_grid: Union[Dict[str, list], List[Dict[str, list]]]
+
+        optimizer_map = {
+            "adamw": torch.optim.AdamW,
+            "adam": torch.optim.Adam,
+            "sgd": torch.optim.SGD
+            # Add more optimizers as needed
+        }
+
+        def resolve_optimizers_in_dict(pg_dict: Dict[str, list]) -> Dict[str, list]:
+            resolved_dict = pg_dict.copy()
+            if 'optimizer' in resolved_dict and isinstance(resolved_dict['optimizer'], list):
+                resolved_optimizers = []
+                for opt_val in resolved_dict['optimizer']:
+                    if isinstance(opt_val, str):
+                        opt_type = optimizer_map.get(opt_val.lower())
+                        if opt_type is None:
+                            raise ValueError(f"Unsupported optimizer string in param_grid: '{opt_val}'")
+                        resolved_optimizers.append(opt_type)
+                    elif isinstance(opt_val, type) and issubclass(opt_val, torch.optim.Optimizer):
+                        resolved_optimizers.append(opt_val)  # Already a type
+                    else:
+                        raise TypeError(f"Invalid optimizer value in param_grid: {opt_val}")
+                resolved_dict['optimizer'] = resolved_optimizers
+            return resolved_dict
+
+        if isinstance(param_grid, dict):
+            param_grid = resolve_optimizers_in_dict(param_grid)
+        elif isinstance(param_grid, list):
+            param_grid = [resolve_optimizers_in_dict(pg_d) for pg_d in param_grid]
+        else:
+            raise TypeError("param_grid must be a dictionary or a list of dictionaries.")
+        # --- End Optimizer String Conversion ---
+
         # --- Get Data (Paths/Labels) ---
         # Only need trainval data for fitting the search
         X_trainval, y_trainval = self.dataset_handler.get_train_val_paths_labels()
@@ -885,6 +920,36 @@ class ClassificationPipeline:
         logger.info(f"  Outer CV folds: {outer_cv}, Inner CV folds: {inner_cv}")
         logger.info(f"  Parameter Grid/Dist for inner search:\n{json.dumps(param_grid, indent=2)}")
         logger.info(f"  Scoring Metric: {scoring}")
+
+        # --- Convert optimizer strings in param_grid to optimizer types ---
+        # (optimizer_map and resolve_optimizers_in_dict function can be defined here or be helper)
+        optimizer_map = {
+            "adamw": torch.optim.AdamW, "adam": torch.optim.Adam, "sgd": torch.optim.SGD
+        }
+
+        def resolve_optimizers_in_dict(pg_dict: Dict[str, list]) -> Dict[str, list]:
+            # ... (same implementation as in non_nested_grid_search) ...
+            resolved_dict = pg_dict.copy()
+            if 'optimizer' in resolved_dict and isinstance(resolved_dict['optimizer'], list):
+                resolved_optimizers = []
+                for opt_val in resolved_dict['optimizer']:
+                    if isinstance(opt_val, str): opt_type = optimizer_map.get(opt_val.lower());
+                    if opt_type is None:
+                        raise ValueError(f"Unsupported optimizer string: '{opt_val}'"); resolved_optimizers.append(opt_type)
+                    elif isinstance(opt_val, type) and issubclass(opt_val, torch.optim.Optimizer):
+                        resolved_optimizers.append(opt_val)
+                    else:
+                        raise TypeError(f"Invalid optimizer value: {opt_val}")
+                resolved_dict['optimizer'] = resolved_optimizers
+            return resolved_dict
+
+        if isinstance(param_grid, dict):
+            param_grid = resolve_optimizers_in_dict(param_grid)
+        elif isinstance(param_grid, list):
+            param_grid = [resolve_optimizers_in_dict(pg_d) for pg_d in param_grid]
+        else:
+            raise TypeError("param_grid must be a dict or list of dicts.")
+        # --- End Optimizer String Conversion ---
 
         # --- Check Compatibility ---
         if self.dataset_handler.structure == DatasetStructure.FIXED and not self.force_flat_for_fixed_cv:
@@ -1176,8 +1241,31 @@ class ClassificationPipeline:
         # --- Hyperparameters for this evaluation ---
         eval_params = self.model_adapter_config.copy()
         if params:
+            params_to_use = params.copy()
+
+            # <<< START OF FIX: Resolve optimizer string to type if present in override params >>>
+            if 'optimizer' in params_to_use and isinstance(params_to_use['optimizer'], str):
+                optimizer_str = params_to_use['optimizer'].lower()
+                optimizer_type: Optional[Type[torch.optim.Optimizer]] = None
+                if optimizer_str == "adamw":
+                    optimizer_type = torch.optim.AdamW
+                elif optimizer_str == "adam":
+                    optimizer_type = torch.optim.Adam
+                elif optimizer_str == "sgd":
+                    optimizer_type = torch.optim.SGD
+                # Add more optimizers as needed
+
+                if optimizer_type:
+                    params_to_use['optimizer'] = optimizer_type  # Replace string with type
+                    logger.info(
+                        f"Resolved optimizer string '{optimizer_str}' to type {optimizer_type.__name__} for CV evaluation.")
+                else:
+                    raise ValueError(
+                        f"Unsupported optimizer string '{optimizer_str}' in 'params' for cv_model_evaluation.")
+            # <<< END OF FIX >>>
+
             logger.info(f"Using provided parameters for CV evaluation: {params}")
-            eval_params.update(params)
+            eval_params.update(params_to_use)
         else:
             logger.info(f"Using pipeline_v1 default parameters for CV evaluation.")
         module_dropout_rate = eval_params.pop('module__dropout_rate', None)

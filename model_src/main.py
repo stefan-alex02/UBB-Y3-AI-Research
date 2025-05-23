@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 from server.ml.logger_utils import logger
-from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused
+from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused, fixed_grid_for_vit_top_plus_sgd
 from server.ml.params.scratch_vit import fixed_params_vit_scratch, param_grid_vit_from_scratch
 from server.ml import ModelType
 from server.ml import PipelineExecutor
@@ -34,10 +34,10 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "mGCDf"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "cnn"  # 'cnn', 'pvit', 'svit', 'diff'
+    model_type = "pvit"  # 'cnn', 'pvit', 'svit', 'diff'
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -47,7 +47,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 2  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -55,10 +55,10 @@ if __name__ == "__main__":
     # Flag for CV methods on FIXED datasets:
     # Set to True to allow nested_grid_search and cv_model_evaluation on FIXED datasets
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
-    force_flat = True
+    force_flat = False
 
     # Flag for overriding parameters:
-    enable_debug_params = True # Set to True to use the override params for any model type
+    enable_debug_params = False # Set to True to use the override params for any model type
 
     # Trained model path for loading
     # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
@@ -103,7 +103,8 @@ if __name__ == "__main__":
 
     elif model_type == ModelType.PRETRAINED_VIT:
         chosen_fixed_params = pretrained_vit_fixed_params_option1
-        chosen_param_grid = param_grid_pretrained_vit_focused
+        # chosen_param_grid = param_grid_pretrained_vit_focused
+        chosen_param_grid = fixed_grid_for_vit_top_plus_sgd
 
     elif model_type == ModelType.SCRATCH_VIT:
         chosen_fixed_params = fixed_params_vit_scratch
@@ -144,7 +145,7 @@ if __name__ == "__main__":
     methods_seq_2 = [
         ('non_nested_grid_search', {
             'param_grid': chosen_param_grid,
-            'cv': 2,
+            'cv': 5,
             # 'method': 'grid',
             'method': 'random',
             'n_iter': 2,
@@ -172,7 +173,7 @@ if __name__ == "__main__":
     methods_seq_4 = [
          ('cv_model_evaluation', {
              'params': chosen_fixed_params, # Pass fixed hyperparams
-             'cv': 5,
+             'cv': 2,
              'evaluate_on': 'full', # Explicitly state (or rely on default)
              'results_detail_level': 3,
         })

@@ -1,4 +1,5 @@
 # This file contains the parameters used for debugging the pipeline.
+import torch
 
 # --- Fixed Parameter Sets ---
 
@@ -6,11 +7,14 @@ debug_fixed_params = {
     # Skorch/Training Loop Params (Fast Execution)
     'max_epochs': 4,        # Run only for 1 epoch
     'lr': 0.01,
-    'batch_size': 32,
-    'optimizer': 'sgd', # Override the pipeline's default optimizer
+    'optimizer': 'sgd',
     'optimizer__momentum': 0.9,
-    'optimizer__weight_decay': 1e-4,
-    'module__dropout_rate': 0.3 # Example module param
+    'optimizer__weight_decay': 5e-4,
+    'optimizer__nesterov': True,
+    'batch_size': 32,
+
+    # 'module__dropout_rate': 0.3 # For CNNs
+    'module__head_dropout_rate': 0.3 # For ViTs
 }
 
 # --- Parameter Space Definitions ---
