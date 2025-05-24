@@ -1,9 +1,11 @@
 import logging
 from numbers import Number
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 
+import torch
 from skorch.callbacks import Callback
 from skorch.callbacks import EarlyStopping, LRScheduler, EpochScoring
+from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, StepLR
 
 from ..config import logger_name_global
 from ..logger_utils import logger
@@ -152,20 +154,61 @@ class FileLogTable(Callback):
             self.logger_instance.info(raw_log)
 
 
-def get_default_callbacks(patience: int = 10,
-                          monitor: str = 'valid_loss',
-                          lr_policy: str = 'ReduceLROnPlateau',
-                          lr_patience: int = 5) -> List[Tuple[str, Callback]]:
-    """Generates the default list of skorch callbacks."""
-    is_loss = monitor.endswith('_loss')
+# TODO use a custom sampler for grid search to allow interval sampling
+# or make the adapter use the params to create a customized LR scheduler
+def get_default_callbacks(
+    early_stopping_monitor: str = 'valid_loss',
+    early_stopping_patience: int = 10,
+    lr_scheduler_policy: str = 'ReduceLROnPlateau', # Default policy from Pipeline __init__
+    lr_scheduler_monitor: Optional[str] = 'valid_loss',
+    # **lr_scheduler_constructor_kwargs: Any # These are kwargs passed from Pipeline.__init__ for the default scheduler
+    **kwargs # Renaming for clarity, these are constructor args for the PyTorch scheduler
+) -> List[Tuple[str, Callback]]:
+    is_loss_metric = early_stopping_monitor.endswith('_loss')
+
+    # These kwargs are for the underlying torch.optim.lr_scheduler.* constructor
+    # If not provided by the caller (ClassificationPipeline.__init__),
+    # we can set some sensible internal defaults here for the *default policy*.
+    scheduler_kwargs_to_use = kwargs.copy() # Start with what's passed
+
+    if lr_scheduler_policy == 'ReduceLROnPlateau':
+        scheduler_kwargs_to_use.setdefault('mode', 'min' if lr_scheduler_monitor and lr_scheduler_monitor.endswith('_loss') else 'max')
+        scheduler_kwargs_to_use.setdefault('factor', 0.1)
+        scheduler_kwargs_to_use.setdefault('patience', 5)
+        scheduler_kwargs_to_use.setdefault('min_lr', 1e-6)
+        scheduler_kwargs_to_use.setdefault('verbose', False)
+    elif lr_scheduler_policy == 'StepLR':
+        scheduler_kwargs_to_use.setdefault('step_size', 10)
+        scheduler_kwargs_to_use.setdefault('gamma', 0.1)
+        scheduler_kwargs_to_use.setdefault('verbose', False)
+    elif lr_scheduler_policy == 'CosineAnnealingLR':
+        # T_max is critical and often context-dependent (e.g., max_epochs).
+        # If not in scheduler_kwargs_to_use, LRScheduler might infer it or error.
+        scheduler_kwargs_to_use.setdefault('eta_min', 0)
+        scheduler_kwargs_to_use.setdefault('verbose', False)
+        if 'T_max' not in scheduler_kwargs_to_use:
+            logger.warning(f"CosineAnnealingLR selected as default policy, but T_max not in default_scheduler_fn_kwargs. "
+                           f"Ensure T_max is set via 'callbacks__default_lr_scheduler__T_max' or it might default to max_epochs.")
+    # Add other policies and their sensible base defaults if not overridden by kwargs
+
+    lr_scheduler_instance = LRScheduler(
+        policy=lr_scheduler_policy,
+        monitor=lr_scheduler_monitor if lr_scheduler_policy == 'ReduceLROnPlateau' else None,
+        **scheduler_kwargs_to_use # Pass the final composed kwargs
+    )
+    logger.debug(f"Default LRScheduler callback instance created with policy: {lr_scheduler_policy}, "
+                 f"kwargs: {scheduler_kwargs_to_use}, "
+                 f"monitor: {lr_scheduler_monitor if lr_scheduler_policy == 'ReduceLROnPlateau' else 'N/A'}")
+
     callbacks_list = [
         ('default_early_stopping', EarlyStopping(
-            monitor=monitor, patience=patience, load_best=True, lower_is_better=is_loss)),
-        ('default_lr_scheduler', LRScheduler(
-            policy=lr_policy, monitor=monitor, mode='min' if is_loss else 'max', patience=lr_patience, factor=0.1)),
-        ('default_train_acc_scorer', EpochScoring( # Renamed to avoid conflict
-            scoring='accuracy', lower_is_better=False, on_train=True, name='train_acc')),
-        ('file_log_table_cb', FileLogTable()) # <<< ENSURE THIS IS PRESENT
+            monitor=early_stopping_monitor, patience=early_stopping_patience,
+            load_best=True, lower_is_better=is_loss_metric
+        )),
+        ('default_lr_scheduler', lr_scheduler_instance),
+        ('default_train_acc_scorer', EpochScoring(
+            scoring='accuracy', lower_is_better=False, on_train=True, name='train_acc'
+        )),
+        ('file_log_table_cb', FileLogTable())
     ]
-    logger.debug(f"_get_default_callbacks generated: {[name for name, _ in callbacks_list]}")
     return callbacks_list

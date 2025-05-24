@@ -1,14 +1,34 @@
 # This file contains the parameters used for the ViT model in the ML pipeline.
+import torch
+from skorch.callbacks import LRScheduler
 
 # --- Fixed Parameter Sets ---
 
 # --- Option 1: A common fine-tuning setup (similar to your old SimpleViT's intent) ---
 pretrained_vit_fixed_params_option1 = {
-    # Skorch/Training Loop Params
-    'max_epochs': 25,
-    'lr': 5e-5, # Common starting LR for ViT fine-tuning
-    'batch_size': 16, # Adjust based on GPU memory and model variant
-    'optimizer__weight_decay': 0.01,
+    # Skorch/Training Loop Params to override pipeline defaults
+    'max_epochs': 50,
+    'lr': 0.01,  # Initial LR for SGD
+    'batch_size': 32,
+
+    # Optimizer override
+    'optimizer': torch.optim.SGD,  # Override default optimizer for this run
+
+    # Optimizer-specific parameters for SGD
+    'optimizer__momentum': 0.9,
+    'optimizer__weight_decay': 5e-4,
+    'optimizer__nesterov': True,
+
+    # LR Scheduler override (replace the entire default_lr_scheduler callback)
+    # Note: The name 'default_lr_scheduler' must match the name used in get_default_callbacks
+    # 'callbacks__default_lr_scheduler': LRScheduler(
+    #     policy='StepLR',
+    #     step_size=15,  # Decay LR every 15 epochs
+    #     gamma=0.1,  # Decay by a factor of 0.1
+    #     verbose=False  # Verbosity for the PyTorch scheduler itself
+    # ),
+    # You might also want to override other callbacks, e.g., EarlyStopping patience for this run
+    # 'callbacks__default_early_stopping__patience': 15,
 
     # PretrainedViT Module Params (prefixed with 'module__')
     'module__vit_model_variant': 'vit_b_16',
@@ -195,43 +215,26 @@ param_grid_pretrained_vit_focused = [
 
 
 # --- Revised params with custom optimzier (SGD) ---
-
-import torch # For torch.optim types
-
-# --- Configuration 1 (Based on Rank 1 from your CSV) ---
-params_config_1_adamw = {
-    'optimizer': ['sgd'],
+# Configuration 1: SGD with a fairly standard StepLR
+params_config_1_sgd_step = {
+    'optimizer': [torch.optim.SGD],
+    'lr': [0.01], # Common starting LR for SGD
     'optimizer__momentum': [0.9],
-    'optimizer__weight_decay': [5e-4], # Common weight decay for SGD
-    'optimizer__nesterov': [True],     # Often helps
-
-    'lr': [5e-5],
+    'optimizer__weight_decay': [5e-4], # Typical for SGD
+    'optimizer__nesterov': [True],
     'batch_size': [16],
-    'max_epochs': [70], # Or a smaller value if using effective early stopping
+    'max_epochs': [80],
 
-    'module__vit_model_variant': ['vit_b_16'],
-    'module__pretrained': [True],
-    'module__unfreeze_strategy': ['encoder_tail'],
-    'module__num_transformer_blocks_to_unfreeze': [4], # From CSV (was 4.0)
-    'module__unfreeze_cls_token': [True],
-    'module__unfreeze_pos_embedding': [True],
-    'module__unfreeze_patch_embedding': [False],
-    'module__unfreeze_encoder_layernorm': [True],
-    'module__custom_head_hidden_dims': [None],
-    'module__head_dropout_rate': [0.0],
-}
+    'callbacks__default_lr_scheduler': [
+        LRScheduler(
+            policy='StepLR',
+            step_size=25, # Decay every 25 epochs
+            gamma=0.1,    # Decay by factor of 0.1
+            verbose=False
+        )
+    ],
 
-# --- Configuration 2 (Based on Rank 2 from your CSV, different LR) ---
-params_config_2_adamw = {
-    'optimizer': ['sgd'],
-    'optimizer__momentum': [0.9],
-    'optimizer__weight_decay': [5e-4], # Common weight decay for SGD
-    'optimizer__nesterov': [True],     # Often helps
-
-    'lr': [3e-5], # Different LR
-    'batch_size': [16],
-    'max_epochs': [70],
-
+    # Module Params (from your original config 1)
     'module__vit_model_variant': ['vit_b_16'],
     'module__pretrained': [True],
     'module__unfreeze_strategy': ['encoder_tail'],
@@ -244,60 +247,99 @@ params_config_2_adamw = {
     'module__head_dropout_rate': [0.0],
 }
 
-# --- Configuration 3 (Based on Rank 4 from your CSV, different unfreeze blocks & LR) ---
-# Rank 3 is similar to Rank 1 but with different weight_decay, let's pick Rank 4 for more variety.
-params_config_3_adamw = {
-    'optimizer': ['sgd'],
+# Configuration 2: SGD with CosineAnnealingLR
+params_config_2_sgd_cosine = {
+    'optimizer': [torch.optim.SGD],
+    'lr': [0.005], # Could be slightly lower for cosine if T_max is long
     'optimizer__momentum': [0.9],
-    'optimizer__weight_decay': [5e-4], # Common weight decay for SGD
-    'optimizer__nesterov': [True],     # Often helps
-
-    'lr': [3e-5],
+    'optimizer__weight_decay': [5e-4],
+    'optimizer__nesterov': [True],
     'batch_size': [16],
-    'max_epochs': [70],
+    'max_epochs': [80], # This will be T_max
 
+    'callbacks__default_lr_scheduler': [
+        LRScheduler(
+            policy='CosineAnnealingLR',
+            T_max=80, # Match max_epochs for a full cycle
+            eta_min=1e-6, # End with a very small LR
+            verbose=False
+        )
+    ],
+
+    # Module Params (from your original config 2)
     'module__vit_model_variant': ['vit_b_16'],
-    'module__pretrained': [True],
-    'module__unfreeze_strategy': ['encoder_tail'],
-    'module__num_transformer_blocks_to_unfreeze': [2], # Different number of blocks
-    'module__unfreeze_cls_token': [True],
-    'module__unfreeze_pos_embedding': [True],
-    'module__unfreeze_patch_embedding': [False],
-    'module__unfreeze_encoder_layernorm': [True],
-    'module__custom_head_hidden_dims': [None],
+    'module__pretrained': [True], 'module__unfreeze_strategy': ['encoder_tail'],
+    'module__num_transformer_blocks_to_unfreeze': [4], 'module__unfreeze_cls_token': [True],
+    'module__unfreeze_pos_embedding': [True], 'module__unfreeze_patch_embedding': [False],
+    'module__unfreeze_encoder_layernorm': [True], 'module__custom_head_hidden_dims': [None],
     'module__head_dropout_rate': [0.0],
 }
 
-# --- Configuration 4: SGD (New Strategy) ---
-# SGD often requires different LR, more epochs, and momentum.
-# These are example starting points for SGD with ViT fine-tuning.
-params_config_4_sgd = {
-    'optimizer': ['sgd'],
+# Configuration 3: SGD with ReduceLROnPlateau (more adaptive)
+params_config_3_sgd_reduce = {
+    'optimizer': [torch.optim.SGD],
+    'lr': [0.01], # Higher initial LR, let ReduceLROnPlateau manage it
     'optimizer__momentum': [0.9],
-    'optimizer__weight_decay': [5e-4], # Common weight decay for SGD
-    'optimizer__nesterov': [True],     # Often helps
+    'optimizer__weight_decay': [1e-4], # Can vary weight decay
+    'optimizer__nesterov': [True],
+    'batch_size': [16],
+    'max_epochs': [80],
 
-    'lr': [0.001], # SGD typically needs a larger LR than AdamW for fine-tuning, but schedule is key
-    'batch_size': [16], # Keep consistent with others for this grid
-    'max_epochs': [70], # SGD might need more, but for a fixed grid comparison...
+    'callbacks__default_lr_scheduler': [
+        LRScheduler(
+            policy='ReduceLROnPlateau',
+            monitor='valid_loss', # Crucial for this scheduler
+            factor=0.2,
+            patience=7,
+            min_lr=1e-6,
+            mode='min',
+            verbose=False
+        )
+    ],
 
+    # Module Params (from your original config 3)
     'module__vit_model_variant': ['vit_b_16'],
-    'module__pretrained': [True],
-    'module__unfreeze_strategy': ['encoder_tail'],      # A common strategy
-    'module__num_transformer_blocks_to_unfreeze': [2],  # Fine-tune a few blocks
+    'module__pretrained': [True], 'module__unfreeze_strategy': ['encoder_tail'],
+    'module__num_transformer_blocks_to_unfreeze': [2], # Fewer unfrozen blocks
     'module__unfreeze_cls_token': [True],
     'module__unfreeze_pos_embedding': [True],
     'module__unfreeze_patch_embedding': [False],
-    'module__unfreeze_encoder_layernorm': [True],
-    'module__custom_head_hidden_dims': [None],
-    'module__head_dropout_rate': [0.0], # Start simple
+    'module__unfreeze_encoder_layernorm': [True], 'module__custom_head_hidden_dims': [None],
+    'module__head_dropout_rate': [0.0],
+}
+
+# Configuration 4: SGD with a more aggressive StepLR or MultiStepLR
+params_config_4_sgd_multistep = {
+    'optimizer': [torch.optim.SGD],
+    'lr': [0.005],
+    'optimizer__momentum': [0.9],
+    'optimizer__weight_decay': [5e-4],
+    'optimizer__nesterov': [True],
+    'batch_size': [16],
+    'max_epochs': [80],
+
+    'callbacks__default_lr_scheduler': [
+        LRScheduler(
+            policy='MultiStepLR',
+            milestones=[30, 55], # Decay at epoch 30 and 55
+            gamma=0.1,
+            verbose=False
+        )
+    ],
+
+    # Module Params (same as your original config 4)
+    'module__vit_model_variant': ['vit_b_16'],
+    'module__pretrained': [True], 'module__unfreeze_strategy': ['encoder_tail'],
+    'module__num_transformer_blocks_to_unfreeze': [2], 'module__unfreeze_cls_token': [True],
+    'module__unfreeze_pos_embedding': [True], 'module__unfreeze_patch_embedding': [False],
+    'module__unfreeze_encoder_layernorm': [True], 'module__custom_head_hidden_dims': [None],
+    'module__head_dropout_rate': [0.0],
 }
 
 # --- Combine into the list of dictionaries for GridSearchCV ---
-# This grid will result in exactly 4 configurations being tested by GridSearchCV.
-fixed_grid_for_vit_top_plus_sgd = [
-    params_config_1_adamw,
-    params_config_2_adamw,
-    params_config_3_adamw,
-    params_config_4_sgd,
+fixed_grid_all_sgd_vit = [
+    params_config_1_sgd_step,
+    params_config_2_sgd_cosine,
+    params_config_3_sgd_reduce,
+    params_config_4_sgd_multistep,
 ]

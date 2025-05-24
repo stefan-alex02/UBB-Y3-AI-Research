@@ -149,7 +149,8 @@ def get_ground_aware_no_rotation_augmentations(img_size: Tuple[int, int]) -> tra
         transforms.RandomHorizontalFlip(p=0.5),
         # No RandomVerticalFlip
         # transforms.RandomRotation(degrees=15),  # <<< Limited rotation
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
+        # transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02), # TODO revert back to this
+        transforms.ColorJitter(brightness=0.9, contrast=0.9, saturation=0.9, hue=0.49),
         # Could add minor affine transforms for shear/translation if desired
         # transforms.RandomAffine(degrees=0, translate=(0.05, 0.05), shear=5),
         transforms.ToTensor(),

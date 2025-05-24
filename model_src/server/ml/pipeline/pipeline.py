@@ -79,6 +79,10 @@ class ClassificationPipeline:
                  batch_size: int = 32,
                  patience: int = 10,
                  module__dropout_rate: Optional[float] = None,
+
+                 # --- LR Scheduler Default Configuration ---
+                 lr_scheduler_policy_default: str = 'ReduceLROnPlateau',
+
                  # --- Catch-all for other skorch/optimizer/module params ---
                  **kwargs  # <<< Will capture optimizer__weight_decay, optimizer__momentum, etc.
                  ):
@@ -219,15 +223,13 @@ class ClassificationPipeline:
 
         model_class = self._get_model_class(self.model_type)
 
-        intended_callbacks_setting = 'default'
-        initial_callbacks_list = None
-        if intended_callbacks_setting == 'default':
-            initial_callbacks_list = get_default_callbacks(
-                patience=patience, monitor='valid_loss',
-                lr_policy='ReduceLROnPlateau', lr_patience=5
-            )
-        elif isinstance(intended_callbacks_setting, list):
-            initial_callbacks_list = intended_callbacks_setting
+        self.patience_default = patience
+        self.lr_scheduler_policy_default = lr_scheduler_policy_default
+        default_callbacks = get_default_callbacks(
+            early_stopping_patience=self.patience_default,  # patience is from __init__ arg
+            lr_scheduler_policy=self.lr_scheduler_policy_default,
+            patience=2,  # Default patience for LR scheduler
+        )
 
         module_params = {}
         if module__dropout_rate is not None: module_params['module__dropout_rate'] = module__dropout_rate
@@ -238,7 +240,7 @@ class ClassificationPipeline:
             'criterion': nn.CrossEntropyLoss,
             'optimizer': actual_optimizer_type,
             'lr': lr, 'max_epochs': max_epochs, 'batch_size': batch_size, 'device': DEVICE,
-            'callbacks': initial_callbacks_list,
+            'callbacks': default_callbacks,
             'patience_cfg': patience, 'monitor_cfg': 'valid_loss',
             'lr_policy_cfg': 'ReduceLROnPlateau', 'lr_patience_cfg': 5,
             'train_transform': self.dataset_handler.get_train_transform(),
@@ -604,43 +606,44 @@ class ClassificationPipeline:
         run_id = f"non_nested_{method_lower}_{datetime.now().strftime('%H%M%S')}"
         search_type = "GridSearchCV" if method_lower == 'grid' else "RandomizedSearchCV"
         logger.info(f"Performing non-nested {search_type} with {cv}-fold CV.")
-        logger.info(f"Parameter Grid/Dist:\n{json.dumps(param_grid, indent=2)}") # Log the potentially complex grid
+        logger.info(f"Parameter Grid/Dist:\n{json.dumps(param_grid, indent=2, default=str)}") # Log the potentially complex grid
         logger.info(f"Scoring Metric: {scoring}")
 
         if method_lower == 'random' and n_iter is None: raise ValueError("n_iter required for random search.")
         if method_lower not in ['grid', 'random']: raise ValueError(f"Unsupported search method: {method}.")
 
         # --- Convert optimizer strings in param_grid to optimizer types ---
-        processed_param_grid: Union[Dict[str, list], List[Dict[str, list]]]
-
-        optimizer_map = {
+        processed_param_grid_for_skorch: Union[Dict[str, list], List[Dict[str, Any]]] # Note: value can be Any
+        optimizer_type_map = {
             "adamw": torch.optim.AdamW,
             "adam": torch.optim.Adam,
             "sgd": torch.optim.SGD
-            # Add more optimizers as needed
         }
 
-        def resolve_optimizers_in_dict(pg_dict: Dict[str, list]) -> Dict[str, list]:
+        def resolve_optimizer_value(opt_val_or_list: Any) -> Any:
+            if isinstance(opt_val_or_list, list): # If grid intends to search over optimizers
+                return [optimizer_type_map.get(opt.lower(), opt) if isinstance(opt, str) else opt for opt in opt_val_or_list]
+            elif isinstance(opt_val_or_list, str): # Single optimizer string
+                return optimizer_type_map.get(opt_val_or_list.lower(), opt_val_or_list)
+            return opt_val_or_list # Already a type or other value
+
+        def process_grid_dict_for_skorch(pg_dict: Dict[str, Any]) -> Dict[str, Any]:
             resolved_dict = pg_dict.copy()
-            if 'optimizer' in resolved_dict and isinstance(resolved_dict['optimizer'], list):
-                resolved_optimizers = []
-                for opt_val in resolved_dict['optimizer']:
-                    if isinstance(opt_val, str):
-                        opt_type = optimizer_map.get(opt_val.lower())
-                        if opt_type is None:
-                            raise ValueError(f"Unsupported optimizer string in param_grid: '{opt_val}'")
-                        resolved_optimizers.append(opt_type)
-                    elif isinstance(opt_val, type) and issubclass(opt_val, torch.optim.Optimizer):
-                        resolved_optimizers.append(opt_val)  # Already a type
-                    else:
-                        raise TypeError(f"Invalid optimizer value in param_grid: {opt_val}")
-                resolved_dict['optimizer'] = resolved_optimizers
+            if 'optimizer' in resolved_dict:
+                resolved_dict['optimizer'] = resolve_optimizer_value(resolved_dict['optimizer'])
+            # For GridSearchCV, if a parameter in pg_dict is a single value (not a list),
+            # it should remain a single value. If it's meant to be iterated, it should be a list.
+            # Your current fixed_grid... has single values in lists, e.g. 'lr': [5e-5].
+            # For a list of dicts passed to GridSearchCV, each dict represents one point.
+            # So, the lists of single items are correct for *that* interpretation.
+            # Let's try ensuring that IF a list has one item, we extract it for GridSearchCV's list-of-dicts mode.
+            # NO, scikit-learn's ParameterGrid expects iterables. So ['value'] is correct.
             return resolved_dict
 
         if isinstance(param_grid, dict):
-            param_grid = resolve_optimizers_in_dict(param_grid)
+            param_grid = process_grid_dict_for_skorch(param_grid)
         elif isinstance(param_grid, list):
-            param_grid = [resolve_optimizers_in_dict(pg_d) for pg_d in param_grid]
+            param_grid = [process_grid_dict_for_skorch(pg_d) for pg_d in param_grid]
         else:
             raise TypeError("param_grid must be a dictionary or a list of dictionaries.")
         # --- End Optimizer String Conversion ---
@@ -922,25 +925,35 @@ class ClassificationPipeline:
         logger.info(f"  Scoring Metric: {scoring}")
 
         # --- Convert optimizer strings in param_grid to optimizer types ---
-        # (optimizer_map and resolve_optimizers_in_dict function can be defined here or be helper)
         optimizer_map = {
-            "adamw": torch.optim.AdamW, "adam": torch.optim.Adam, "sgd": torch.optim.SGD
+            "adamw": torch.optim.AdamW,
+            "adam": torch.optim.Adam,
+            "sgd": torch.optim.SGD
         }
 
-        def resolve_optimizers_in_dict(pg_dict: Dict[str, list]) -> Dict[str, list]:
-            # ... (same implementation as in non_nested_grid_search) ...
+        def resolve_optimizers_in_dict(pg_dict: Dict[str, Any]) -> Dict[str, Any]:  # Value can be list or single item
             resolved_dict = pg_dict.copy()
-            if 'optimizer' in resolved_dict and isinstance(resolved_dict['optimizer'], list):
-                resolved_optimizers = []
-                for opt_val in resolved_dict['optimizer']:
-                    if isinstance(opt_val, str): opt_type = optimizer_map.get(opt_val.lower());
-                    if opt_type is None:
-                        raise ValueError(f"Unsupported optimizer string: '{opt_val}'"); resolved_optimizers.append(opt_type)
-                    elif isinstance(opt_val, type) and issubclass(opt_val, torch.optim.Optimizer):
-                        resolved_optimizers.append(opt_val)
-                    else:
-                        raise TypeError(f"Invalid optimizer value: {opt_val}")
-                resolved_dict['optimizer'] = resolved_optimizers
+            if 'optimizer' in resolved_dict:
+                opt_val_or_list = resolved_dict['optimizer']
+                if isinstance(opt_val_or_list, list):  # If it's a list of optimizers to try
+                    resolved_optimizers = []
+                    for opt_val in opt_val_or_list:
+                        if isinstance(opt_val, str):
+                            opt_type = optimizer_map.get(opt_val.lower())
+                            if opt_type is None: raise ValueError(f"Unsupported optimizer string: '{opt_val}'")
+                            resolved_optimizers.append(opt_type)
+                        elif isinstance(opt_val, type) and issubclass(opt_val, torch.optim.Optimizer):
+                            resolved_optimizers.append(opt_val)
+                        else:
+                            raise TypeError(f"Invalid optimizer value in list: {opt_val}")
+                    resolved_dict['optimizer'] = resolved_optimizers
+                elif isinstance(opt_val_or_list, str):  # If it's a single optimizer string
+                    opt_type = optimizer_map.get(opt_val_or_list.lower())
+                    if opt_type is None: raise ValueError(f"Unsupported optimizer string: '{opt_val_or_list}'")
+                    resolved_dict['optimizer'] = opt_type  # Replace string with type
+                elif not (isinstance(opt_val_or_list, type) and issubclass(opt_val_or_list, torch.optim.Optimizer)):
+                    # If it's not a list, not a string, and not an Optimizer type, it's an error
+                    raise TypeError(f"Invalid optimizer value: {opt_val_or_list}")
             return resolved_dict
 
         if isinstance(param_grid, dict):

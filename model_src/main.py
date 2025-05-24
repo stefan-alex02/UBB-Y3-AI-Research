@@ -4,7 +4,8 @@ from pathlib import Path
 import numpy as np
 
 from server.ml.logger_utils import logger
-from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused, fixed_grid_for_vit_top_plus_sgd
+from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused, \
+    fixed_grid_all_sgd_vit
 from server.ml.params.scratch_vit import fixed_params_vit_scratch, param_grid_vit_from_scratch
 from server.ml import ModelType
 from server.ml import PipelineExecutor
@@ -104,7 +105,7 @@ if __name__ == "__main__":
     elif model_type == ModelType.PRETRAINED_VIT:
         chosen_fixed_params = pretrained_vit_fixed_params_option1
         # chosen_param_grid = param_grid_pretrained_vit_focused
-        chosen_param_grid = fixed_grid_for_vit_top_plus_sgd
+        chosen_param_grid = fixed_grid_all_sgd_vit
 
     elif model_type == ModelType.SCRATCH_VIT:
         chosen_fixed_params = fixed_params_vit_scratch
@@ -146,9 +147,9 @@ if __name__ == "__main__":
         ('non_nested_grid_search', {
             'param_grid': chosen_param_grid,
             'cv': 5,
-            # 'method': 'grid',
-            'method': 'random',
-            'n_iter': 2,
+            'method': 'grid',
+            # 'method': 'random',
+            # 'n_iter': 2,
             'internal_val_split_ratio': 0.2,
             'scoring': 'accuracy',
             'save_best_model': True,
