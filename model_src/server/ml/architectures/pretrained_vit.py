@@ -1,11 +1,10 @@
-import logging
 from typing import Optional, List
 
 import torch
 import torch.nn as nn
 from torchvision import models
 
-logger = logging.getLogger(__name__)
+from ..logger_utils import logger
 
 
 class PretrainedViT(nn.Module):
@@ -146,17 +145,24 @@ class PretrainedViT(nn.Module):
         # --- Replace or customize the classification head ---
         # (Head in_features detection logic - unchanged from previous version)
         original_head_in_features: int
-        if hasattr(vit_model.heads, 'head') and isinstance(vit_model.heads.head, nn.Linear): original_head_in_features = vit_model.heads.head.in_features
-        elif isinstance(vit_model.heads, nn.Linear): original_head_in_features = vit_model.heads.in_features
+        if hasattr(vit_model.heads, 'head') and isinstance(vit_model.heads.head, nn.Linear):
+            original_head_in_features = vit_model.heads.head.in_features
+        elif isinstance(vit_model.heads, nn.Linear):
+            original_head_in_features = vit_model.heads.in_features
         else:
             try:
                 final_linear_layer = None
                 if isinstance(vit_model.heads, nn.Sequential):
                     for layer in reversed(list(vit_model.heads.children())):
-                        if isinstance(layer, nn.Linear): final_linear_layer = layer; break
-                if final_linear_layer: original_head_in_features = final_linear_layer.in_features
-                elif hasattr(vit_model, 'hidden_dim'): original_head_in_features = vit_model.hidden_dim
-                else: logger.warning("Could not reliably determine head in_features, defaulting based on vit_b_16."); original_head_in_features = 768
+                        if isinstance(layer, nn.Linear):
+                            final_linear_layer = layer; break
+                if final_linear_layer:
+                    original_head_in_features = final_linear_layer.in_features
+                elif hasattr(vit_model, 'hidden_dim'):
+                    original_head_in_features = vit_model.hidden_dim
+                else:
+                    logger.warning("Could not reliably determine head in_features, defaulting based on vit_b_16.")
+                    original_head_in_features = 768
             except Exception as e_head: logger.error(f"Error determining ViT head in_features: {e_head}. Defaulting to 768."); original_head_in_features = 768
 
         # (Custom head creation logic - unchanged from previous version)

@@ -6,37 +6,30 @@ from skorch.callbacks import LRScheduler
 
 # --- Option 1: A common fine-tuning setup (similar to your old SimpleViT's intent) ---
 pretrained_vit_fixed_params = {
-    # Skorch/Training Loop Params
-    'max_epochs': 70,
-    'lr': 5e-5, # 0.00005
+    'max_epochs': 70, # Allow more room for early stopping if LR changes are slower
+    # 'lr': 3e-5,
+    'lr': 3e-7,
     'batch_size': 16,
-
-    # Optimizer Configuration (string name, parse_fixed_hyperparameters will resolve it)
-    'optimizer': 'AdamW', # Assuming AdamW was used, as weight_decay is present
+    'optimizer': 'AdamW',
     'optimizer__weight_decay': 0.05,
 
-    # --- LR Scheduler Configuration ---
-    # Assuming ReduceLROnPlateau was the intended or a good default scheduler for this AdamW config.
-    # If your actual run used a different scheduler, adjust these accordingly.
-    'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau', # String for the policy
-    'callbacks__default_lr_scheduler__monitor': 'valid_loss',    # Monitor for ReduceLROnPlateau
-    'callbacks__default_lr_scheduler__factor': 0.1,             # Default factor
-    'callbacks__default_lr_scheduler__patience': 5,             # Default patience for LR reduction
-    'callbacks__default_lr_scheduler__min_lr': 1e-7,            # Default min_lr
-    'callbacks__default_lr_scheduler__mode': 'min',             # For loss monitoring
-    # 'callbacks__default_lr_scheduler__verbose': False,        # Optional
+    'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
+    'callbacks__default_lr_scheduler__T_max': 50, # Should match max_epochs
+    'callbacks__default_lr_scheduler__eta_min': 1e-7,
 
-    # PretrainedViT Module Parameters
-    'module__vit_model_variant': 'vit_b_16',
+    # 'module__vit_model_variant': 'vit_b_16',
+    'module__vit_model_variant': 'vit_l_16',
     'module__pretrained': True,
     'module__unfreeze_strategy': 'encoder_tail',
-    'module__num_transformer_blocks_to_unfreeze': 4, # From CSV
+    # 'module__num_transformer_blocks_to_unfreeze': 1, # <<< SIGNIFICANTLY REDUCED
+    'module__num_transformer_blocks_to_unfreeze': 2,
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
     'module__unfreeze_patch_embedding': False,
-    'module__unfreeze_encoder_layernorm': True,
-    'module__custom_head_hidden_dims': None,   # Empty string in CSV implies simple linear head
-    'module__head_dropout_rate': 0.0,
+    'module__unfreeze_encoder_layernorm': True,     # Unfreeze if unfreezing end blocks
+    'module__custom_head_hidden_dims': None,        # Simplest head
+    # 'module__head_dropout_rate': 0.25,              # <<< ADDED SOME DROPOUT
+    'module__head_dropout_rate': 0.55,
 }
 
 # --- Parameter Space Definitions ---
@@ -189,91 +182,39 @@ param_grid_pretrained_vit_focused = [
 
 
 
-
-
-# --- Revised params with custom optimzier (SGD) ---
-# Configuration 1: SGD with a fairly standard StepLR
-comprehensive_param_grid_list_vit = [
-    # --- Scenario 1: Focus on AdamW with ReduceLROnPlateau, varying unfreezing ---
-    # {
-    #     'optimizer': ['adamw'], # String, expander will resolve to type
-    #     'lr': [3e-5, 5e-5],
-    #     'optimizer__weight_decay': [0.01, 0.05],
-    #     'batch_size': [16],
-    #     'max_epochs': [6],
-    #
-    #     'callbacks__default_lr_scheduler__policy': ['ReduceLROnPlateau'], # Must be single policy for this sub-grid
-    #     'callbacks__default_lr_scheduler__monitor': ['valid_loss'],
-    #     'callbacks__default_lr_scheduler__factor': [0.1, 0.2], # Tuned
-    #     'callbacks__default_lr_scheduler__patience': [5, 8],    # Tuned
-    #     'callbacks__default_lr_scheduler__min_lr': [1e-7],
-    #     'callbacks__default_lr_scheduler__mode': ['min'],
-    #
-    #     'module__vit_model_variant': ['vit_b_16'],
-    #     'module__pretrained': [True],
-    #     'module__unfreeze_strategy': ['encoder_tail'],
-    #     'module__num_transformer_blocks_to_unfreeze': [2, 4, 6], # Tune number of blocks
-    #     'module__unfreeze_cls_token': [True],
-    #     'module__unfreeze_pos_embedding': [True],
-    #     'module__unfreeze_patch_embedding': [False],
-    #     'module__unfreeze_encoder_layernorm': [True],
-    #     'module__custom_head_hidden_dims': [None, [512]],
-    #     'module__head_dropout_rate': [0.0, 0.25],
-    # },
-    #
-    # # --- Scenario 2: Focus on AdamW with CosineAnnealingLR, head variations ---
-    # {
-    #     'optimizer': ['adamw'],
-    #     'lr': [1e-5, 3e-5], # Different LRs for Cosine
-    #     'optimizer__weight_decay': [0.01],
-    #     'batch_size': [16, 32], # Try different batch size
-    #     'max_epochs': [7],     # T_max will be based on this
-    #
-    #     'callbacks__default_lr_scheduler__policy': ['CosineAnnealingLR'],
-    #     # T_max for CosineAnnealingLR is often set to max_epochs.
-    #     # If max_epochs is also in the grid, expand_hyperparameter_grid would need to handle this,
-    #     # or you fix T_max here if max_epochs is fixed for this scenario.
-    #     # For simplicity, assume expand_hyperparameter_grid sets T_max based on the 'max_epochs' value for that combo.
-    #     # Alternatively, list T_max values matching max_epochs values:
-    #     'callbacks__default_lr_scheduler__T_max': [70], # Match max_epochs
-    #     'callbacks__default_lr_scheduler__eta_min': [0, 1e-7],
-    #
-    #     'module__vit_model_variant': ['vit_b_16'],
-    #     'module__pretrained': [True],
-    #     'module__unfreeze_strategy': ['encoder_tail'],
-    #     'module__num_transformer_blocks_to_unfreeze': [3], # Fixed unfreeze depth for this scenario
-    #     'module__unfreeze_cls_token': [True],
-    #     'module__unfreeze_pos_embedding': [True],
-    #     'module__unfreeze_patch_embedding': [False],
-    #     'module__unfreeze_encoder_layernorm': [True],
-    #     'module__custom_head_hidden_dims': [None, [256], [512, 256]], # Tune head structure
-    #     'module__head_dropout_rate': [0.1, 0.3],
-    # },
-
-    # --- Scenario 3: Focus on SGD with StepLR, different unfreeze amounts ---
+best_config_as_grid_vit = [ # Outer list for GridSearchCV's param_grid
     {
-        'optimizer': ['sgd'],
-        'lr': [0.01, 0.005], # Typical SGD LRs
-        'optimizer__momentum': [0.9],
-        'optimizer__weight_decay': [1e-4, 5e-4],
-        'optimizer__nesterov': [True],
-        'batch_size': [32],
-        'max_epochs': [8], # SGD might need more
+        # Skorch/Training Loop Params
+        'max_epochs': [70],
+        'lr': [5e-5],
+        'batch_size': [16],
 
-        'callbacks__default_lr_scheduler__policy': ['StepLR'],
-        'callbacks__default_lr_scheduler__step_size': [2, 4],
-        'callbacks__default_lr_scheduler__gamma': [0.1, 0.2],
+        # Optimizer Configuration (string name for the expander)
+        'optimizer': ['AdamW'], # Expander will convert "AdamW" to torch.optim.AdamW
+        'optimizer__weight_decay': [0.05],
 
+        # LR Scheduler Configuration (using strings and individual params for the expander)
+        # Assuming ReduceLROnPlateau was used or is a good choice for these best params.
+        'callbacks__default_lr_scheduler__policy': ['ReduceLROnPlateau'],
+        'callbacks__default_lr_scheduler__monitor': ['valid_loss'],
+        'callbacks__default_lr_scheduler__factor': [0.1],
+        'callbacks__default_lr_scheduler__patience': [5],
+        'callbacks__default_lr_scheduler__min_lr': [1e-7],
+        'callbacks__default_lr_scheduler__mode': ['min'],
+        # 'callbacks__default_lr_scheduler__verbose': [False], # Optional
+
+        # PretrainedViT Module Parameters
         'module__vit_model_variant': ['vit_b_16'],
         'module__pretrained': [True],
-        'module__unfreeze_strategy': ['encoder_tail', 'none'], # Try head-only style too
-        'module__num_transformer_blocks_to_unfreeze': [1, 2], # For 'encoder_tail'
+        'module__unfreeze_strategy': ['encoder_tail'],
+        'module__num_transformer_blocks_to_unfreeze': [4], # From CSV
         'module__unfreeze_cls_token': [True],
         'module__unfreeze_pos_embedding': [True],
         'module__unfreeze_patch_embedding': [False],
-        'module__unfreeze_encoder_layernorm': [True], # If 'encoder_tail'
-        'module__custom_head_hidden_dims': [None],
-        'module__head_dropout_rate': [0.0, 0.1],
+        'module__unfreeze_encoder_layernorm': [True],
+        'module__custom_head_hidden_dims': [None], # [None] represents a single choice: None
+        'module__head_dropout_rate': [0.0],
     }
 ]
+
 

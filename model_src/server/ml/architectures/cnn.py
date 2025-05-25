@@ -1,11 +1,8 @@
-import logging
-
 import torch
 import torch.nn as nn
 
 from ..config import DEFAULT_IMG_SIZE
-
-logger = logging.getLogger(__name__)
+from ..logger_utils import logger
 
 
 class SimpleCNN(nn.Module):

@@ -9,6 +9,8 @@ model_src/data/GCD.zip
 # IDE specific
 .idea/ # For JetBrains IDEs
 .vscode/ # For VS Code
+/model_src/.idea/
+/model_src/.vscode/
 
 # Environments
 .env

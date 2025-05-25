@@ -1,10 +1,8 @@
-import logging
-
 import torch
 import torch.nn as nn
 from torchvision import models
 
-logger = logging.getLogger(__name__)
+from ..logger_utils import logger
 
 
 class DiffusionClassifier(nn.Module):

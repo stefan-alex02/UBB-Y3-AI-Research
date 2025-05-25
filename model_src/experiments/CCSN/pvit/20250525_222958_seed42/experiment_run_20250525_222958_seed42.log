@@ -1,0 +1,283 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-05-25 22:29:58 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\pvit\20250525_222958_seed42\experiment_run_20250525_222958_seed42.log
+2025-05-25 22:29:58 | INFO     | [executor  :__init__          : 100] | ℹ️ --- Starting Experiment Run (ID: 20250525_222958_seed42) ---
+2025-05-25 22:29:58 | INFO     | [executor  :__init__          : 101] | ℹ️ Executor initialized for model 'pvit' on dataset 'CCSN'
+2025-05-25 22:29:58 | INFO     | [executor  :__init__          : 104] | ℹ️ Local artifact storage base: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-05-25 22:29:58 | INFO     | [executor  :__init__          : 108] | ℹ️ Base key/prefix for this run's artifacts: experiments/CCSN/pvit/20250525_222958_seed42
+2025-05-25 22:29:58 | INFO     | [executor  :__init__          : 110] | ℹ️ Local log file for this run (might be temporary): C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\pvit\20250525_222958_seed42\experiment_run_20250525_222958_seed42.log
+2025-05-25 22:29:58 | INFO     | [pipeline  :__init__          : 173] | ℹ️ Initializing Classification Pipeline:
+2025-05-25 22:29:58 | INFO     | [pipeline  :__init__          : 174] | ℹ️   Dataset Path: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN
+2025-05-25 22:29:58 | INFO     | [pipeline  :__init__          : 175] | ℹ️   Model Type: pvit
+2025-05-25 22:29:58 | INFO     | [pipeline  :__init__          : 178] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/pvit/20250525_222958_seed42 (using LocalFileSystemRepository)
+2025-05-25 22:29:58 | INFO     | [pipeline  :__init__          : 182] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-05-25 22:29:58 | INFO     | [pipeline  :__init__          : 183] | ℹ️   Default Show First Batch Aug: True
+2025-05-25 22:29:58 | INFO     | [dataset...:__init__          : 227] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-05-25 22:29:58 | INFO     | [dataset...:__init__          : 248] | ℹ️ Detected dataset structure: flat
+2025-05-25 22:29:58 | INFO     | [dataset...:_load_paths_and...: 323] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN...
+2025-05-25 22:29:58 | INFO     | [dataset...:__init__          : 268] | ℹ️ Found 11 classes: Ac, As, Cb, Cc, Ci, Cs, Ct, Cu, Ns, Sc, St
+2025-05-25 22:29:58 | INFO     | [dataset...:__init__          : 271] | ℹ️ Dataset sizes: 2034 train+val, 509 test. Total: 2543
+2025-05-25 22:29:58 | INFO     | [pipeline  :__init__          : 192] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/pvit/20250525_222958_seed42 (using LocalFileSystemRepository)
+2025-05-25 22:29:58 | INFO     | [pipeline  :__init__          : 223] | ℹ️   Using Optimizer: AdamW
+2025-05-25 22:29:58 | DEBUG    | [callbacks :get_default_cal...: 199] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-05-25 22:29:58 | INFO     | [pipeline  :__init__          : 266] | ℹ️   Model Adapter: Initialized with PretrainedViT
+2025-05-25 22:29:58 | DEBUG    | [executor  :_validate_methods : 152] | 🐞 Basic method validation successful.
+2025-05-25 22:29:58 | INFO     | [executor  :__init__          : 136] | ℹ️ Executor configured to run methods: non_nested_grid_search, single_eval
+2025-05-25 22:29:58 | INFO     | [executor  :run               : 162] | ℹ️ Starting execution of pipeline methods...
+2025-05-25 22:29:58 | INFO     | [executor  :run               : 166] | ℹ️ --- Running Method 1/2: non_nested_grid_search (non_nested_grid_search_0) ---
+2025-05-25 22:29:58 | DEBUG    | [executor  :run               : 191] | 🐞 Running with effective parameters: {'param_grid': [{'max_epochs': [70], 'lr': [5e-05], 'batch_size': [16], 'optimizer': ['AdamW'], 'optimizer__weight_decay': [0.05], 'callbacks__default_lr_scheduler__policy': ['ReduceLROnPlateau'], 'callbacks__default_lr_scheduler__monitor': ['valid_loss'], 'callbacks__default_lr_scheduler__factor': [0.1], 'callbacks__default_lr_scheduler__patience': [5], 'callbacks__default_lr_scheduler__min_lr': [1e-07], 'callbacks__default_lr_scheduler__mode': ['min'], 'module__vit_model_variant': ['vit_b_16'], 'module__pretrained': [True], 'module__unfreeze_strategy': ['encoder_tail'], 'module__num_transformer_blocks_to_unfreeze': [4], 'module__unfreeze_cls_token': [True], 'module__unfreeze_pos_embedding': [True], 'module__unfreeze_patch_embedding': [False], 'module__unfreeze_encoder_layernorm': [True], 'module__custom_head_hidden_dims': [None], 'module__head_dropout_rate': [0.0]}], 'cv': 5, 'method': 'grid', 'internal_val_split_ratio': 0.2, 'scoring': 'accuracy', 'save_best_model': True, 'results_detail_level': 2}
+2025-05-25 22:29:58 | INFO     | [pipeline  :non_nested_grid...: 609] | ℹ️ Performing non-nested GridSearchCV with 5-fold CV.
+2025-05-25 22:29:58 | INFO     | [pipeline  :non_nested_grid...: 610] | ℹ️ Scoring Metric: accuracy
+2025-05-25 22:29:58 | INFO     | [pipeline  :non_nested_grid...: 623] | ℹ️ Expanded Parameter Grid/Dist (for GridSearchCV):
+[
+  {
+    "max_epochs": [
+      70
+    ],
+    "lr": [
+      5e-05
+    ],
+    "batch_size": [
+      16
+    ],
+    "optimizer": [
+      "<class 'torch.optim.adamw.AdamW'>"
+    ],
+    "optimizer__weight_decay": [
+      0.05
+    ],
+    "module__vit_model_variant": [
+      "vit_b_16"
+    ],
+    "module__pretrained": [
+      true
+    ],
+    "module__unfreeze_strategy": [
+      "encoder_tail"
+    ],
+    "module__num_transformer_blocks_to_unfreeze": [
+      4
+    ],
+    "module__unfreeze_cls_token": [
+      true
+    ],
+    "module__unfreeze_pos_embedding": [
+      true
+    ],
+    "module__unfreeze_patch_embedding": [
+      false
+    ],
+    "module__unfreeze_encoder_layernorm": [
+      true
+    ],
+    "module__custom_head_hidden_dims": [
+      null
+    ],
+    "module__head_dropout_rate": [
+      0.0
+    ],
+    "callbacks__default_lr_scheduler": [
+      "<skorch.callbacks.lr_scheduler.LRScheduler object at 0x000001B7FE1858D0>"
+    ]
+  }
+]
+2025-05-25 22:29:58 | INFO     | [pipeline  :non_nested_grid...: 630] | ℹ️ Using 2034 samples for Train+Validation in GridSearchCV.
+2025-05-25 22:29:58 | INFO     | [pipeline  :non_nested_grid...: 638] | ℹ️ Skorch internal validation split configured: 20.0% of each CV fold's training data.
+2025-05-25 22:29:58 | INFO     | [pipeline  :non_nested_grid...: 672] | ℹ️ Fitting GridSearchCV on train+validation data (search verbose=3)...
+2025-05-25 22:29:58 | INFO     | [pipeline  :non_nested_grid...: 683] | ℹ️ Total combinations to search (GridSearchCV): 1
+2025-05-25 22:29:59 | DEBUG    | [adapter   :get_split_datasets: 131] | 🐞 Split created: 1301 train, 326 validation.
+2025-05-25 22:29:59 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1301, batch_size=16, shuffle=True, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:29:59 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for training.
+2025-05-25 22:29:59 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=326, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:29:59 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:30:28 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-25 22:30:28 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-25 22:30:28 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       1     ▲ 0.3497      ▼ 1.9149     ▲ 0.4632      ▼ 1.5928        5e-05  28.7143
+2025-05-25 22:30:49 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       2     ▲ 0.5196      ▼ 1.4166       0.4571      ▼ 1.5307        5e-05  21.279
+2025-05-25 22:31:11 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       3     ▲ 0.6095      ▼ 1.1715     ▲ 0.4724      ▼ 1.4852        5e-05  21.6919
+2025-05-25 22:31:33 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       4     ▲ 0.6649      ▼ 1.0077     ▲ 0.5092      ▼ 1.4341        5e-05  21.6289
+2025-05-25 22:31:54 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       5     ▲ 0.7210      ▼ 0.8254       0.4785        1.4467        5e-05  20.7101
+2025-05-25 22:32:15 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       6     ▲ 0.7633      ▼ 0.7130       0.4632        1.5547        5e-05  21.8115
+2025-05-25 22:32:36 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       7     ▲ 0.8178      ▼ 0.5681       0.4969        1.5181        5e-05  20.532
+2025-05-25 22:32:58 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       8     ▲ 0.8570      ▼ 0.4339          0.5        1.5441        5e-05  22.0803
+2025-05-25 22:33:19 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       9     ▲ 0.8832      ▼ 0.3675       0.5031        1.7511        5e-05  21.3451
+2025-05-25 22:33:39 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      10     ▲ 0.8839      ▼ 0.3596       0.4847        1.7276        5e-06  20.0427
+2025-05-25 22:34:01 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      11     ▲ 0.9393      ▼ 0.2179       0.4847        1.6865        5e-06  21.4997
+2025-05-25 22:34:23 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      12     ▲ 0.9447      ▼ 0.1914       0.4724        1.7396        5e-06  21.7416
+2025-05-25 22:34:44 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      13     ▲ 0.9531      ▼ 0.1723       0.4816        1.7289        5e-06  20.9744
+2025-05-25 22:35:05 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:35:05 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=407, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:35:05 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:35:07 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:35:07 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1627, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:35:07 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:35:18 | DEBUG    | [adapter   :get_split_datasets: 131] | 🐞 Split created: 1301 train, 326 validation.
+2025-05-25 22:35:18 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1301, batch_size=16, shuffle=True, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:35:18 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for training.
+2025-05-25 22:35:18 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=326, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:35:18 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:35:42 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-25 22:35:42 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-25 22:35:42 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       1     ▲ 0.3374      ▼ 1.9051     ▲ 0.4816      ▼ 1.5927        5e-05  23.2627
+2025-05-25 22:36:03 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       2     ▲ 0.5181      ▼ 1.4065       0.4233      ▼ 1.5551        5e-05  21.2319
+2025-05-25 22:36:24 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       3     ▲ 0.5949      ▼ 1.1975     ▲ 0.5000      ▼ 1.4455        5e-05  21.5094
+2025-05-25 22:36:46 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       4     ▲ 0.6587      ▼ 0.9914     ▲ 0.5000      ▼ 1.4422        5e-05  21.0306
+2025-05-25 22:37:07 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       5     ▲ 0.7187      ▼ 0.8154     ▲ 0.5031         1.525        5e-05  20.9569
+2025-05-25 22:37:27 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       6     ▲ 0.7571      ▼ 0.7296       0.4969      ▼ 1.4195        5e-05  20.8984
+2025-05-25 22:37:48 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       7     ▲ 0.7948      ▼ 0.6207       0.4755        1.5039        5e-05  20.9512
+2025-05-25 22:38:09 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       8     ▲ 0.8447      ▼ 0.4739       0.4693        1.6686        5e-05  20.5415
+2025-05-25 22:38:30 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       9     ▲ 0.8732      ▼ 0.3991       0.4816        1.6242        5e-05  21.3302
+2025-05-25 22:38:51 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      10     ▲ 0.8832      ▼ 0.3418       0.4724        1.7462        5e-05  20.2675
+2025-05-25 22:39:12 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      11     ▲ 0.9016      ▼ 0.2924       0.4969        1.7714        5e-05  21.1407
+2025-05-25 22:39:33 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      12       0.8939        0.3155       0.4785         1.872        5e-06  21.3283
+2025-05-25 22:39:55 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      13     ▲ 0.9439      ▼ 0.1747       0.4785         1.775        5e-06  21.6778
+2025-05-25 22:40:16 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      14     ▲ 0.9531      ▼ 0.1534       0.4847        1.7788        5e-06  21.3338
+2025-05-25 22:40:37 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      15     ▲ 0.9646      ▼ 0.1306       0.4755        1.7972        5e-06  21.2363
+2025-05-25 22:40:58 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:40:58 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=407, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:40:58 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:41:01 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:41:01 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1627, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:41:01 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:41:10 | DEBUG    | [adapter   :get_split_datasets: 131] | 🐞 Split created: 1301 train, 326 validation.
+2025-05-25 22:41:10 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1301, batch_size=16, shuffle=True, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:41:10 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for training.
+2025-05-25 22:41:10 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=326, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:41:10 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:41:34 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr     dur
+2025-05-25 22:41:34 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  ------
+2025-05-25 22:41:34 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       1     ▲ 0.3543      ▼ 1.9198     ▲ 0.4509      ▼ 1.6372        5e-05  23.323
+2025-05-25 22:41:55 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       2     ▲ 0.5158      ▼ 1.3948     ▲ 0.4509      ▼ 1.5158        5e-05  21.0661
+2025-05-25 22:42:16 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       3     ▲ 0.6111      ▼ 1.1336     ▲ 0.4755      ▼ 1.5006        5e-05  21.4744
+2025-05-25 22:42:38 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       4     ▲ 0.6695      ▼ 1.0042     ▲ 0.4908      ▼ 1.4862        5e-05  21.277
+2025-05-25 22:42:59 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       5     ▲ 0.7271      ▼ 0.8205        0.454        1.5117        5e-05  21.35
+2025-05-25 22:43:20 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       6     ▲ 0.7633      ▼ 0.7017       0.4877        1.6804        5e-05  20.9197
+2025-05-25 22:43:41 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       7     ▲ 0.8025      ▼ 0.5846       0.4816        1.6757        5e-05  21.4314
+2025-05-25 22:44:03 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       8     ▲ 0.8432      ▼ 0.4938       0.4448        1.7135        5e-05  21.2647
+2025-05-25 22:44:26 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       9     ▲ 0.8701      ▼ 0.3881       0.4877        1.7757        5e-05  22.7712
+2025-05-25 22:44:48 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      10     ▲ 0.8885      ▼ 0.3373       0.4755        1.7869        5e-06  22.7791
+2025-05-25 22:45:12 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      11     ▲ 0.9339      ▼ 0.2238       0.4755        1.7879        5e-06  23.5382
+2025-05-25 22:45:35 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      12     ▲ 0.9485      ▼ 0.1834       0.4693        1.8185        5e-06  23.2636
+2025-05-25 22:45:58 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      13     ▲ 0.9516      ▼ 0.1772       0.4847        1.8395        5e-06  22.9987
+2025-05-25 22:46:20 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:46:20 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=407, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:46:20 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:46:22 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:46:22 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1627, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:46:22 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:46:33 | DEBUG    | [adapter   :get_split_datasets: 131] | 🐞 Split created: 1301 train, 326 validation.
+2025-05-25 22:46:33 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1301, batch_size=16, shuffle=True, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:46:33 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for training.
+2025-05-25 22:46:33 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=326, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:46:33 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:46:56 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-25 22:46:56 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-25 22:46:56 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       1     ▲ 0.3513      ▼ 1.9322     ▲ 0.4387      ▼ 1.6050        5e-05  23.1959
+2025-05-25 22:47:17 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       2     ▲ 0.5150      ▼ 1.3794     ▲ 0.4693      ▼ 1.4563        5e-05  20.9434
+2025-05-25 22:47:38 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       3     ▲ 0.6049      ▼ 1.1507       0.4571      ▼ 1.4114        5e-05  20.9442
+2025-05-25 22:48:00 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       4     ▲ 0.6572      ▼ 0.9545     ▲ 0.5061        1.4172        5e-05  21.8444
+2025-05-25 22:48:21 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       5     ▲ 0.7271      ▼ 0.8031       0.4693        1.5313        5e-05  21.4847
+2025-05-25 22:48:42 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       6     ▲ 0.7733      ▼ 0.7048       0.4724        1.5422        5e-05  21.2303
+2025-05-25 22:49:04 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       7     ▲ 0.8194      ▼ 0.5448     ▲ 0.5092        1.5299        5e-05  21.6723
+2025-05-25 22:49:25 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       8     ▲ 0.8509      ▼ 0.4649       0.4755        1.6758        5e-05  20.989
+2025-05-25 22:49:46 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       9     ▲ 0.8755      ▼ 0.3810       0.4908        1.6597        5e-06  20.8647
+2025-05-25 22:50:07 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      10     ▲ 0.9385      ▼ 0.2447       0.4939        1.6388        5e-06  20.9365
+2025-05-25 22:50:28 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      11     ▲ 0.9400      ▼ 0.2131          0.5        1.6462        5e-06  20.6996
+2025-05-25 22:50:49 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      12     ▲ 0.9485      ▼ 0.2033       0.4969        1.6995        5e-06  21.5725
+2025-05-25 22:51:10 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:51:10 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=407, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:51:10 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:51:12 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:51:12 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1627, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:51:12 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:51:23 | DEBUG    | [adapter   :get_split_datasets: 131] | 🐞 Split created: 1302 train, 326 validation.
+2025-05-25 22:51:23 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1302, batch_size=16, shuffle=True, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:51:23 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for training.
+2025-05-25 22:51:23 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=326, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:51:23 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:51:46 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-25 22:51:46 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-25 22:51:46 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       1     ▲ 0.3341      ▼ 1.9672     ▲ 0.4571      ▼ 1.5841        5e-05  22.6434
+2025-05-25 22:52:07 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       2     ▲ 0.5115      ▼ 1.4042     ▲ 0.4785      ▼ 1.4807        5e-05  20.9624
+2025-05-25 22:52:28 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       3     ▲ 0.5922      ▼ 1.1661     ▲ 0.5031      ▼ 1.4144        5e-05  20.5712
+2025-05-25 22:52:50 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       4     ▲ 0.6820      ▼ 0.9362     ▲ 0.5184        1.4626        5e-05  21.9774
+2025-05-25 22:53:11 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       5     ▲ 0.7381      ▼ 0.7820       0.5061        1.4971        5e-05  20.9605
+2025-05-25 22:53:32 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       6     ▲ 0.7665      ▼ 0.6547     ▲ 0.5307        1.4495        5e-05  21.4652
+2025-05-25 22:53:53 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       7     ▲ 0.8379      ▼ 0.5009     ▲ 0.5368        1.5046        5e-05  21.2067
+2025-05-25 22:54:15 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       8     ▲ 0.8664      ▼ 0.4352       0.5337        1.6479        5e-05  21.4996
+2025-05-25 22:54:36 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       9     ▲ 0.8856      ▼ 0.3655        0.454        1.8201        5e-06  21.1775
+2025-05-25 22:54:58 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      10     ▲ 0.9393      ▼ 0.2223       0.5337        1.6662        5e-06  22.1905
+2025-05-25 22:55:20 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      11     ▲ 0.9470      ▼ 0.1879     ▲ 0.5368        1.6464        5e-06  22.1017
+2025-05-25 22:55:41 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      12     ▲ 0.9578      ▼ 0.1627     ▲ 0.5583        1.6981        5e-06  20.5172
+2025-05-25 22:56:02 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:56:02 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=406, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:56:02 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:56:04 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 22:56:04 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1628, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:56:04 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:56:16 | DEBUG    | [adapter   :get_split_datasets: 131] | 🐞 Split created: 1627 train, 407 validation.
+2025-05-25 22:56:16 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1627, batch_size=16, shuffle=True, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:56:16 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for training.
+2025-05-25 22:56:16 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=407, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 22:56:16 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 22:56:43 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp      lr      dur
+2025-05-25 22:56:43 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  -----  -------
+2025-05-25 22:56:43 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       1     ▲ 0.3669      ▼ 1.8566     ▲ 0.4595      ▼ 1.6159        5e-05  26.9983
+2025-05-25 22:57:09 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       2     ▲ 0.5360      ▼ 1.3817     ▲ 0.4595      ▼ 1.5040        5e-05  26.7853
+2025-05-25 22:57:35 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       3     ▲ 0.6189      ▼ 1.1380     ▲ 0.4693      ▼ 1.4840        5e-05  25.4601
+2025-05-25 22:58:02 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       4     ▲ 0.6724      ▼ 0.9639     ▲ 0.4840        1.5175        5e-05  26.8911
+2025-05-25 22:58:28 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       5     ▲ 0.7197      ▼ 0.8116     ▲ 0.5233        1.5162        5e-05  25.9479
+2025-05-25 22:58:55 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       6     ▲ 0.7603      ▼ 0.6988       0.4791        1.6223        5e-05  27.3087
+2025-05-25 22:59:21 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       7     ▲ 0.8230      ▼ 0.5544     ▲ 0.5233        1.6295        5e-05  26.2264
+2025-05-25 22:59:48 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       8     ▲ 0.8347      ▼ 0.4736       0.5037        1.6498        5e-05  26.6984
+2025-05-25 23:00:15 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️       9     ▲ 0.8654      ▼ 0.4029     ▲ 0.5258        1.6086        5e-06  26.4398
+2025-05-25 23:00:40 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      10     ▲ 0.9269      ▼ 0.2444       0.5135        1.6343        5e-06  25.0317
+2025-05-25 23:01:07 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      11     ▲ 0.9398      ▼ 0.2192        0.516        1.6708        5e-06  27.0007
+2025-05-25 23:01:33 | INFO     | [callbacks :on_epoch_end      : 149] | ℹ️      12       0.9361      ▼ 0.2094       0.5086        1.6863        5e-06  26.1766
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 712] | ℹ️ Search completed.
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 716] | ℹ️ --- GridSearchCV Internal CV Progress (Captured) ---
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 718] | ℹ️ [SKL_CV] Fitting 5 folds for each of 1 candidates, totalling 5 fits
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 718] | ℹ️ [SKL_CV] [CV 1/5] END batch_size=16, callbacks__default_lr_scheduler=<skorch.callbacks.lr_scheduler.LRScheduler object at 0x000001B7FE1858D0>, lr=5e-05, max_epochs=70, module__custom_head_hidden_dims=None, module__head_dropout_rate=0.0, module__num_transformer_blocks_to_unfreeze=4, module__pretrained=True, module__unfreeze_cls_token=True, module__unfreeze_encoder_layernorm=True, module__unfreeze_patch_embedding=False, module__unfreeze_pos_embedding=True, module__unfreeze_strategy=encoder_tail, module__vit_model_variant=vit_b_16, optimizer=<class 'torch.optim.adamw.AdamW'>, optimizer__weight_decay=0.05;, score=(train=0.709, test=0.514) total time= 5.1min
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 718] | ℹ️ [SKL_CV] [CV 2/5] END batch_size=16, callbacks__default_lr_scheduler=<skorch.callbacks.lr_scheduler.LRScheduler object at 0x000001B7FE1858D0>, lr=5e-05, max_epochs=70, module__custom_head_hidden_dims=None, module__head_dropout_rate=0.0, module__num_transformer_blocks_to_unfreeze=4, module__pretrained=True, module__unfreeze_cls_token=True, module__unfreeze_encoder_layernorm=True, module__unfreeze_patch_embedding=False, module__unfreeze_pos_embedding=True, module__unfreeze_strategy=encoder_tail, module__vit_model_variant=vit_b_16, optimizer=<class 'torch.optim.adamw.AdamW'>, optimizer__weight_decay=0.05;, score=(train=0.787, test=0.533) total time= 5.7min
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 718] | ℹ️ [SKL_CV] [CV 3/5] END batch_size=16, callbacks__default_lr_scheduler=<skorch.callbacks.lr_scheduler.LRScheduler object at 0x000001B7FE1858D0>, lr=5e-05, max_epochs=70, module__custom_head_hidden_dims=None, module__head_dropout_rate=0.0, module__num_transformer_blocks_to_unfreeze=4, module__pretrained=True, module__unfreeze_cls_token=True, module__unfreeze_encoder_layernorm=True, module__unfreeze_patch_embedding=False, module__unfreeze_pos_embedding=True, module__unfreeze_strategy=encoder_tail, module__vit_model_variant=vit_b_16, optimizer=<class 'torch.optim.adamw.AdamW'>, optimizer__weight_decay=0.05;, score=(train=0.711, test=0.491) total time= 5.2min
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 718] | ℹ️ [SKL_CV] [CV 4/5] END batch_size=16, callbacks__default_lr_scheduler=<skorch.callbacks.lr_scheduler.LRScheduler object at 0x000001B7FE1858D0>, lr=5e-05, max_epochs=70, module__custom_head_hidden_dims=None, module__head_dropout_rate=0.0, module__num_transformer_blocks_to_unfreeze=4, module__pretrained=True, module__unfreeze_cls_token=True, module__unfreeze_encoder_layernorm=True, module__unfreeze_patch_embedding=False, module__unfreeze_pos_embedding=True, module__unfreeze_strategy=encoder_tail, module__vit_model_variant=vit_b_16, optimizer=<class 'torch.optim.adamw.AdamW'>, optimizer__weight_decay=0.05;, score=(train=0.654, test=0.509) total time= 4.7min
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 718] | ℹ️ [SKL_CV] [CV 5/5] END batch_size=16, callbacks__default_lr_scheduler=<skorch.callbacks.lr_scheduler.LRScheduler object at 0x000001B7FE1858D0>, lr=5e-05, max_epochs=70, module__custom_head_hidden_dims=None, module__head_dropout_rate=0.0, module__num_transformer_blocks_to_unfreeze=4, module__pretrained=True, module__unfreeze_cls_token=True, module__unfreeze_encoder_layernorm=True, module__unfreeze_patch_embedding=False, module__unfreeze_pos_embedding=True, module__unfreeze_strategy=encoder_tail, module__vit_model_variant=vit_b_16, optimizer=<class 'torch.optim.adamw.AdamW'>, optimizer__weight_decay=0.05;, score=(train=0.660, test=0.483) total time= 4.7min
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 719] | ℹ️ --- End GridSearchCV Internal CV Progress ---
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 753] | ℹ️ Updating main pipeline_v1 adapter with the best model found and refit by GridSearchCV.
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 778] | ℹ️ Best refit model (on full train-val) converged at epoch: 3
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 811] | ℹ️ Best refit model state_dict saved via repository to: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\pvit\20250525_222958_seed42\non_nested_grid_222958\pvit_best_batch_size=16_default_lr_scheduler=_skorch.callbac_cv_score0p5059.pt
+2025-05-25 23:02:00 | DEBUG    | [pipeline  :_save_results     : 463] | 🐞 Results detail level overridden for this run to: 2
+2025-05-25 23:02:00 | DEBUG    | [pipeline  :_save_results     : 471] | 🐞 Saving results for non_nested_grid_222958 (detail level: 2)
+2025-05-25 23:02:00 | INFO     | [pipeline  :_save_results     : 580] | ℹ️ Results JSON saved via repository to: experiments/CCSN/pvit/20250525_222958_seed42/non_nested_grid_222958/non_nested_grid_search_results.json
+2025-05-25 23:02:00 | INFO     | [pipeline  :non_nested_grid...: 858] | ℹ️ Plotting non_nested_cv results for non_nested_grid_222958 (plot level 2).
+2025-05-25 23:02:00 | INFO     | [plotter   :plot_non_nested...: 761] | ℹ️ Plotting non_nested_cv results for: non_nested_grid_222958
+2025-05-25 23:02:01 | INFO     | [plotter   :_generate_grid_...: 526] | ℹ️ Grid search summary CSV saved via repository to: experiments/CCSN/pvit/20250525_222958_seed42/non_nested_grid_222958/non_nested_grid_search_plots/grid_search_summary.csv
+2025-05-25 23:02:01 | INFO     | [plotter   :plot_non_nested...: 782] | ℹ️ Finished plotting for non_nested_cv: non_nested_grid_222958
+2025-05-25 23:02:01 | INFO     | [pipeline  :non_nested_grid...: 873] | ℹ️ Non-nested grid search finished. Best CV score (accuracy): 0.5059
+2025-05-25 23:02:01 | INFO     | [pipeline  :non_nested_grid...: 874] | ℹ️ Best parameters found: {'batch_size': 16, 'callbacks__default_lr_scheduler': <skorch.callbacks.lr_scheduler.LRScheduler object at 0x000001B7FE1858D0>, 'lr': 5e-05, 'max_epochs': 70, 'module__custom_head_hidden_dims': None, 'module__head_dropout_rate': 0.0, 'module__num_transformer_blocks_to_unfreeze': 4, 'module__pretrained': True, 'module__unfreeze_cls_token': True, 'module__unfreeze_encoder_layernorm': True, 'module__unfreeze_patch_embedding': False, 'module__unfreeze_pos_embedding': True, 'module__unfreeze_strategy': 'encoder_tail', 'module__vit_model_variant': 'vit_b_16', 'optimizer': <class 'torch.optim.adamw.AdamW'>, 'optimizer__weight_decay': 0.05}
+2025-05-25 23:02:01 | INFO     | [pipeline  :non_nested_grid...: 875] | ℹ️ Pipeline adapter has been updated with the best model refit on train+validation data.
+2025-05-25 23:02:01 | INFO     | [executor  :run               : 198] | ℹ️ --- Method non_nested_grid_search (non_nested_grid_search_0) completed successfully in 1922.60s ---
+2025-05-25 23:02:01 | INFO     | [executor  :run               : 166] | ℹ️ --- Running Method 2/2: single_eval (single_eval_1) ---
+2025-05-25 23:02:01 | DEBUG    | [executor  :run               : 191] | 🐞 Running with effective parameters: {}
+2025-05-25 23:02:01 | INFO     | [pipeline  :single_eval       :1776] | ℹ️ Starting model evaluation on the test set...
+2025-05-25 23:02:01 | INFO     | [pipeline  :single_eval       :1790] | ℹ️ Evaluating on 509 test samples...
+2025-05-25 23:02:01 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 23:02:01 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=509, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 23:02:01 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 23:02:04 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-25 23:02:04 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=509, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-25 23:02:04 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-25 23:02:07 | DEBUG    | [pipeline  :_compute_metrics  : 443] | 🐞 Computed Metrics: Acc=0.5010, Macro F1=0.4995
+2025-05-25 23:02:07 | DEBUG    | [pipeline  :_save_results     : 465] | 🐞 Using pipeline results detail level for this run: 3
+2025-05-25 23:02:07 | DEBUG    | [pipeline  :_save_results     : 471] | 🐞 Saving results for single_eval_230201 (detail level: 3)
+2025-05-25 23:02:07 | INFO     | [pipeline  :_save_results     : 580] | ℹ️ Results JSON saved via repository to: experiments/CCSN/pvit/20250525_222958_seed42/single_eval_230201/single_eval_results.json
+2025-05-25 23:02:07 | INFO     | [pipeline  :single_eval       :1850] | ℹ️ Plotting single_eval results for single_eval_230201 (plot level 2).
+2025-05-25 23:02:07 | INFO     | [plotter   :plot_single_eva...: 697] | ℹ️ Plotting single_eval results for: single_eval_230201
+2025-05-25 23:02:07 | INFO     | [plotter   :_generate_metri...: 246] | ℹ️ Metrics CSV saved via repository to: experiments/CCSN/pvit/20250525_222958_seed42/single_eval_230201/single_eval_plots/metrics_table.csv
+2025-05-25 23:02:09 | INFO     | [plotter   :plot_single_eva...: 745] | ℹ️ Finished plotting for single_eval: single_eval_230201
+2025-05-25 23:02:09 | INFO     | [executor  :run               : 198] | ℹ️ --- Method single_eval (single_eval_1) completed successfully in 7.89s ---
+2025-05-25 23:02:09 | INFO     | [executor  :run               : 212] | ℹ️ Pipeline execution finished in 1930.49s.
+2025-05-25 23:02:09 | INFO     | [executor  :run               : 308] | ℹ️ Final log file available at: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\pvit\20250525_222958_seed42\experiment_run_20250525_222958_seed42.log
+2025-05-25 23:02:09 | INFO     | [main      :<module>          : 265] | ℹ️ --- Final Execution Results Summary ---
+2025-05-25 23:02:09 | INFO     | [main      :<module>          : 274] | ℹ️ Method non_nested_grid_search_0: Completed. (Acc: nan, F1: nan, BestScore: 0.5059)
+2025-05-25 23:02:09 | INFO     | [main      :<module>          : 274] | ℹ️ Method single_eval_1: Completed. (Acc: nan, F1: 0.4995, BestScore: nan)
