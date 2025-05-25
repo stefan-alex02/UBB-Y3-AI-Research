@@ -5,5 +5,21 @@ model_src/data/GCD.zip
 /model_src/data/GCD/
 *.pt
 
-# all pycache files (from all packages)
-**/__pycache__/
+
+# IDE specific
+.idea/ # For JetBrains IDEs
+.vscode/ # For VS Code
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class$

@@ -27,6 +27,7 @@ from skorch.callbacks import EarlyStopping, LRScheduler
 from skorch.dataset import ValidSplit
 from torch.optim import AdamW, Adam, SGD
 
+from .param_grid_utils import expand_hyperparameter_grid, parse_fixed_hyperparameters, DEFAULT_LR_SCHEDULER_NAME
 from ..architectures import ModelType
 from ..config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE, AugmentationStrategy
 from ..dataset_utils import ImageDatasetHandler, DatasetStructure, PathImageDataset
@@ -606,47 +607,21 @@ class ClassificationPipeline:
         run_id = f"non_nested_{method_lower}_{datetime.now().strftime('%H%M%S')}"
         search_type = "GridSearchCV" if method_lower == 'grid' else "RandomizedSearchCV"
         logger.info(f"Performing non-nested {search_type} with {cv}-fold CV.")
-        logger.info(f"Parameter Grid/Dist:\n{json.dumps(param_grid, indent=2, default=str)}") # Log the potentially complex grid
         logger.info(f"Scoring Metric: {scoring}")
 
         if method_lower == 'random' and n_iter is None: raise ValueError("n_iter required for random search.")
         if method_lower not in ['grid', 'random']: raise ValueError(f"Unsupported search method: {method}.")
 
-        # --- Convert optimizer strings in param_grid to optimizer types ---
-        processed_param_grid_for_skorch: Union[Dict[str, list], List[Dict[str, Any]]] # Note: value can be Any
-        optimizer_type_map = {
-            "adamw": torch.optim.AdamW,
-            "adam": torch.optim.Adam,
-            "sgd": torch.optim.SGD
-        }
-
-        def resolve_optimizer_value(opt_val_or_list: Any) -> Any:
-            if isinstance(opt_val_or_list, list): # If grid intends to search over optimizers
-                return [optimizer_type_map.get(opt.lower(), opt) if isinstance(opt, str) else opt for opt in opt_val_or_list]
-            elif isinstance(opt_val_or_list, str): # Single optimizer string
-                return optimizer_type_map.get(opt_val_or_list.lower(), opt_val_or_list)
-            return opt_val_or_list # Already a type or other value
-
-        def process_grid_dict_for_skorch(pg_dict: Dict[str, Any]) -> Dict[str, Any]:
-            resolved_dict = pg_dict.copy()
-            if 'optimizer' in resolved_dict:
-                resolved_dict['optimizer'] = resolve_optimizer_value(resolved_dict['optimizer'])
-            # For GridSearchCV, if a parameter in pg_dict is a single value (not a list),
-            # it should remain a single value. If it's meant to be iterated, it should be a list.
-            # Your current fixed_grid... has single values in lists, e.g. 'lr': [5e-5].
-            # For a list of dicts passed to GridSearchCV, each dict represents one point.
-            # So, the lists of single items are correct for *that* interpretation.
-            # Let's try ensuring that IF a list has one item, we extract it for GridSearchCV's list-of-dicts mode.
-            # NO, scikit-learn's ParameterGrid expects iterables. So ['value'] is correct.
-            return resolved_dict
-
-        if isinstance(param_grid, dict):
-            param_grid = process_grid_dict_for_skorch(param_grid)
-        elif isinstance(param_grid, list):
-            param_grid = [process_grid_dict_for_skorch(pg_d) for pg_d in param_grid]
+        # --- Expand the grid (handles optimizers and LRSchedulers) ---
+        if isinstance(param_grid, dict):  # Single grid dictionary
+            expanded_param_grid_for_search = expand_hyperparameter_grid(param_grid)
+        elif isinstance(param_grid, list):  # List of grid dictionaries (for separate scenarios)
+            expanded_param_grid_for_search = [expand_hyperparameter_grid(pg_dict) for pg_dict in param_grid]
         else:
-            raise TypeError("param_grid must be a dictionary or a list of dictionaries.")
-        # --- End Optimizer String Conversion ---
+            raise TypeError("param_grid must be a dictionary or list of dictionaries.")
+
+        logger.info(
+            f"Expanded Parameter Grid/Dist (for GridSearchCV):\n{json.dumps(expanded_param_grid_for_search, indent=2, default=str)}")
 
         # --- Get Data (Paths/Labels) ---
         # Only need trainval data for fitting the search
@@ -687,9 +662,9 @@ class ClassificationPipeline:
         }
 
         if method_lower == 'grid':
-            search_kwargs['param_grid'] = param_grid
+            search_kwargs['param_grid'] = expanded_param_grid_for_search
         else:
-            search_kwargs['param_distributions'] = param_grid
+            search_kwargs['param_distributions'] = expanded_param_grid_for_search
             search_kwargs['n_iter'] = n_iter
             search_kwargs['random_state'] = RANDOM_SEED
         search = SearchClass(**search_kwargs)
@@ -924,45 +899,16 @@ class ClassificationPipeline:
         logger.info(f"  Parameter Grid/Dist for inner search:\n{json.dumps(param_grid, indent=2)}")
         logger.info(f"  Scoring Metric: {scoring}")
 
-        # --- Convert optimizer strings in param_grid to optimizer types ---
-        optimizer_map = {
-            "adamw": torch.optim.AdamW,
-            "adam": torch.optim.Adam,
-            "sgd": torch.optim.SGD
-        }
-
-        def resolve_optimizers_in_dict(pg_dict: Dict[str, Any]) -> Dict[str, Any]:  # Value can be list or single item
-            resolved_dict = pg_dict.copy()
-            if 'optimizer' in resolved_dict:
-                opt_val_or_list = resolved_dict['optimizer']
-                if isinstance(opt_val_or_list, list):  # If it's a list of optimizers to try
-                    resolved_optimizers = []
-                    for opt_val in opt_val_or_list:
-                        if isinstance(opt_val, str):
-                            opt_type = optimizer_map.get(opt_val.lower())
-                            if opt_type is None: raise ValueError(f"Unsupported optimizer string: '{opt_val}'")
-                            resolved_optimizers.append(opt_type)
-                        elif isinstance(opt_val, type) and issubclass(opt_val, torch.optim.Optimizer):
-                            resolved_optimizers.append(opt_val)
-                        else:
-                            raise TypeError(f"Invalid optimizer value in list: {opt_val}")
-                    resolved_dict['optimizer'] = resolved_optimizers
-                elif isinstance(opt_val_or_list, str):  # If it's a single optimizer string
-                    opt_type = optimizer_map.get(opt_val_or_list.lower())
-                    if opt_type is None: raise ValueError(f"Unsupported optimizer string: '{opt_val_or_list}'")
-                    resolved_dict['optimizer'] = opt_type  # Replace string with type
-                elif not (isinstance(opt_val_or_list, type) and issubclass(opt_val_or_list, torch.optim.Optimizer)):
-                    # If it's not a list, not a string, and not an Optimizer type, it's an error
-                    raise TypeError(f"Invalid optimizer value: {opt_val_or_list}")
-            return resolved_dict
-
+        # --- Expand the param_grid for the INNER search ---
         if isinstance(param_grid, dict):
-            param_grid = resolve_optimizers_in_dict(param_grid)
+            expanded_param_grid_for_inner_search = expand_hyperparameter_grid(param_grid)
         elif isinstance(param_grid, list):
-            param_grid = [resolve_optimizers_in_dict(pg_d) for pg_d in param_grid]
+            expanded_param_grid_for_inner_search = [expand_hyperparameter_grid(pg_dict) for pg_dict in param_grid]
         else:
-            raise TypeError("param_grid must be a dict or list of dicts.")
-        # --- End Optimizer String Conversion ---
+            raise TypeError("param_grid for inner search must be a dictionary or list of dictionaries.")
+
+        logger.debug(
+            f"Expanded Parameter Grid/Dist for INNER search (for GridSearchCV):\n{json.dumps(expanded_param_grid_for_inner_search, indent=2, default=str)}")
 
         # --- Check Compatibility ---
         if self.dataset_handler.structure == DatasetStructure.FIXED and not self.force_flat_for_fixed_cv:
@@ -1013,9 +959,9 @@ class ClassificationPipeline:
             'n_jobs': 1, 'verbose': 3, 'refit': True, 'error_score': 'raise'
         }
 
-        if method_lower == 'grid': inner_search_kwargs['param_grid'] = param_grid
+        if method_lower == 'grid': inner_search_kwargs['param_grid'] = expanded_param_grid_for_inner_search
         else:
-            inner_search_kwargs['param_distributions'] = param_grid
+            inner_search_kwargs['param_distributions'] = expanded_param_grid_for_inner_search
             inner_search_kwargs['n_iter'] = n_iter
             inner_search_kwargs['random_state'] = RANDOM_SEED
         inner_search = InnerSearchClass(**inner_search_kwargs)
@@ -1254,37 +1200,21 @@ class ClassificationPipeline:
         # --- Hyperparameters for this evaluation ---
         eval_params = self.model_adapter_config.copy()
         if params:
-            params_to_use = params.copy()
-
-            # <<< START OF FIX: Resolve optimizer string to type if present in override params >>>
-            if 'optimizer' in params_to_use and isinstance(params_to_use['optimizer'], str):
-                optimizer_str = params_to_use['optimizer'].lower()
-                optimizer_type: Optional[Type[torch.optim.Optimizer]] = None
-                if optimizer_str == "adamw":
-                    optimizer_type = torch.optim.AdamW
-                elif optimizer_str == "adam":
-                    optimizer_type = torch.optim.Adam
-                elif optimizer_str == "sgd":
-                    optimizer_type = torch.optim.SGD
-                # Add more optimizers as needed
-
-                if optimizer_type:
-                    params_to_use['optimizer'] = optimizer_type  # Replace string with type
-                    logger.info(
-                        f"Resolved optimizer string '{optimizer_str}' to type {optimizer_type.__name__} for CV evaluation.")
-                else:
-                    raise ValueError(
-                        f"Unsupported optimizer string '{optimizer_str}' in 'params' for cv_model_evaluation.")
-            # <<< END OF FIX >>>
-
             logger.info(f"Using provided parameters for CV evaluation: {params}")
-            eval_params.update(params_to_use)
-        else:
-            logger.info(f"Using pipeline_v1 default parameters for CV evaluation.")
-        module_dropout_rate = eval_params.pop('module__dropout_rate', None)
-        eval_params.setdefault('module', self._get_model_class(self.model_type))
-        eval_params.setdefault('module__num_classes', self.dataset_handler.num_classes)
-        if module_dropout_rate is not None: eval_params['module__dropout_rate'] = module_dropout_rate
+            # Parse the provided params to resolve optimizer and create LRScheduler object
+            parsed_params_for_cv = parse_fixed_hyperparameters(
+                params,
+                default_max_epochs_for_cosine=eval_params.get('max_epochs')
+            )
+            eval_params.update(parsed_params_for_cv)
+
+        # Ensure critical module params
+        eval_params['module'] = self._get_model_class(self.model_type)
+        eval_params['module__num_classes'] = self.dataset_handler.num_classes
+        eval_params['classes'] = np.arange(self.dataset_handler.num_classes) # Add if missing
+        eval_params['train_transform'] = self.dataset_handler.get_train_transform() # Ensure these are not lost
+        eval_params['valid_transform'] = self.dataset_handler.get_eval_transform()
+        eval_params.setdefault('show_first_batch_augmentation', self.show_first_batch_augmentation_default)
 
         # --- Determine & Validate Internal Validation Split ---
         default_internal_val_fallback = 0.15
@@ -1629,19 +1559,14 @@ class ClassificationPipeline:
 
         # Apply overrides from 'params' argument
         if params:
-            # Resolve optimizer string to type if 'optimizer' is in params
-            if 'optimizer' in params and isinstance(params['optimizer'], str):
-                opt_str = params['optimizer'].lower()
-                if opt_str == "adamw":
-                    params['optimizer'] = AdamW
-                elif opt_str == "adam":
-                    params['optimizer'] = Adam
-                elif opt_str == "sgd":
-                    params['optimizer'] = SGD
-                else:
-                    raise ValueError(f"Unsupported optimizer string in params: {params['optimizer']}")
-
-            adapter_config.update(params)  # Overwrite base config with provided params
+            logger.info(f"Applying custom parameters for this single_train run: {params}")
+            # Parse the provided params to resolve optimizer strings and create LRScheduler object
+            # Pass max_epochs from adapter_config_run as it might be needed for T_max default
+            parsed_params = parse_fixed_hyperparameters(
+                params,
+                default_max_epochs_for_cosine=adapter_config.get('max_epochs')
+            )
+            adapter_config.update(parsed_params)
             # TODO: use params to override specific keys in adapter_config
 
         # Override params for this run
@@ -1655,21 +1580,33 @@ class ClassificationPipeline:
 
         # --- Handle Callbacks based on validation ---
         # Start with the base callbacks list/None from the config
-        current_callbacks = adapter_config.get('callbacks', [])
-        if not isinstance(current_callbacks, list):  # Handle None case
-            current_callbacks = []
+        final_callbacks = adapter_config.get('callbacks', []) # Get current callbacks
+        if isinstance(final_callbacks, list): # Ensure it's a list
+             # If parse_fixed_hyperparameters put a full LRScheduler object under 'callbacks__default_lr_scheduler'
+             if 'callbacks__default_lr_scheduler' in adapter_config and isinstance(adapter_config['callbacks__default_lr_scheduler'], LRScheduler):
+                 new_lr_scheduler_instance = adapter_config.pop('callbacks__default_lr_scheduler') # Get and remove temp key
+                 # Find and replace or add the LRScheduler in the list
+                 found_lr_scheduler = False
+                 for i, (name, cb) in enumerate(final_callbacks):
+                     if name == DEFAULT_LR_SCHEDULER_NAME:
+                         final_callbacks[i] = (name, new_lr_scheduler_instance)
+                         found_lr_scheduler = True
+                         break
+                 if not found_lr_scheduler: # Should not happen if get_default_callbacks includes it
+                     final_callbacks.append((DEFAULT_LR_SCHEDULER_NAME, new_lr_scheduler_instance))
+                 adapter_config['callbacks'] = final_callbacks
 
         if train_split_config is None:
             logger.warning(
                 "No validation set. Callbacks monitoring validation metrics (EarlyStopping, LRScheduler) may be removed or ineffective.")
             # Filter out callbacks that depend on validation
             adapter_config['callbacks'] = [
-                (name, cb) for name, cb in current_callbacks
+                (name, cb) for name, cb in final_callbacks
                 if not isinstance(cb, (EarlyStopping, LRScheduler))  # Keep others
             ]
         else:
             # Keep all callbacks from base config when validation exists
-            adapter_config['callbacks'] = current_callbacks
+            adapter_config['callbacks'] = final_callbacks
         # --- End Callback Handling ---
 
         adapter_config['verbose'] = 0  # Show epoch table with train_acc
