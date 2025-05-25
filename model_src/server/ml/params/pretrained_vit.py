@@ -6,44 +6,37 @@ from skorch.callbacks import LRScheduler
 
 # --- Option 1: A common fine-tuning setup (similar to your old SimpleViT's intent) ---
 pretrained_vit_fixed_params = {
-    # Skorch/Training Loop General Params
-    'max_epochs': 4,
+    # Skorch/Training Loop Params
+    'max_epochs': 70,
+    'lr': 5e-5, # 0.00005
     'batch_size': 16,
-    'lr': 3e-5, # Initial learning rate
 
-    # Optimizer Configuration (string name)
-    'optimizer': 'AdamW', # Will be resolved to torch.optim.AdamW
+    # Optimizer Configuration (string name, parse_fixed_hyperparameters will resolve it)
+    'optimizer': 'AdamW', # Assuming AdamW was used, as weight_decay is present
     'optimizer__weight_decay': 0.05,
-    # 'optimizer__betas': (0.9, 0.999), # AdamW/Adam specific, usually default is fine
 
-    # LR Scheduler Configuration (using strings and individual params)
-    # This example uses ReduceLROnPlateau
-    'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau',
-    'callbacks__default_lr_scheduler__monitor': 'valid_loss', # Specific to ReduceLROnPlateau
-    'callbacks__default_lr_scheduler__factor': 0.2,         # Specific to ReduceLROnPlateau
-    'callbacks__default_lr_scheduler__patience': 7,         # Specific to ReduceLROnPlateau
-    'callbacks__default_lr_scheduler__min_lr': 1e-7,        # Specific to ReduceLROnPlateau
-    'callbacks__default_lr_scheduler__mode': 'min',         # Specific to ReduceLROnPlateau
-    # 'callbacks__default_lr_scheduler__verbose': False, # Passed to PyTorch scheduler
-
-    # Example of configuring EarlyStopping patience for this specific run
-    # 'callbacks__default_early_stopping__patience': 15,
+    # --- LR Scheduler Configuration ---
+    # Assuming ReduceLROnPlateau was the intended or a good default scheduler for this AdamW config.
+    # If your actual run used a different scheduler, adjust these accordingly.
+    'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau', # String for the policy
+    'callbacks__default_lr_scheduler__monitor': 'valid_loss',    # Monitor for ReduceLROnPlateau
+    'callbacks__default_lr_scheduler__factor': 0.1,             # Default factor
+    'callbacks__default_lr_scheduler__patience': 5,             # Default patience for LR reduction
+    'callbacks__default_lr_scheduler__min_lr': 1e-7,            # Default min_lr
+    'callbacks__default_lr_scheduler__mode': 'min',             # For loss monitoring
+    # 'callbacks__default_lr_scheduler__verbose': False,        # Optional
 
     # PretrainedViT Module Parameters
     'module__vit_model_variant': 'vit_b_16',
     'module__pretrained': True,
     'module__unfreeze_strategy': 'encoder_tail',
-    'module__num_transformer_blocks_to_unfreeze': 3,
+    'module__num_transformer_blocks_to_unfreeze': 4, # From CSV
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
     'module__unfreeze_patch_embedding': False,
     'module__unfreeze_encoder_layernorm': True,
-    'module__custom_head_hidden_dims': [512], # One hidden layer in the head
-    'module__head_dropout_rate': 0.25,
-
-    # Other Skorch parameters (if needed to override pipeline defaults)
-    # 'iterator_train__num_workers': 2,
-    # 'show_first_batch_augmentation': True, # If you want to override pipeline default
+    'module__custom_head_hidden_dims': None,   # Empty string in CSV implies simple linear head
+    'module__head_dropout_rate': 0.0,
 }
 
 # --- Parameter Space Definitions ---
