@@ -7,6 +7,7 @@ pretrained_vit_fixed_params = {
     'lr': 3e-5,
     'batch_size': 16,
     'optimizer': 'AdamW',
+    # 'optimizer__weight_decay': 0.05,
     'optimizer__weight_decay': 0.05,
 
     'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
