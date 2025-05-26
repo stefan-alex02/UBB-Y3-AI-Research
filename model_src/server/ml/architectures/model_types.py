@@ -2,12 +2,14 @@ from enum import Enum
 
 from .cnn import SimpleCNN
 from .diffusion_classifier import DiffusionClassifier
+from .pretrained_swin import PretrainedSwinTransf
 from .pretrained_vit import PretrainedViT
 from .scratch_vit import ScratchViT
 
 model_mapping = {
     "cnn": SimpleCNN,
     "pvit": PretrainedViT,
+    "swin": PretrainedSwinTransf,
     "svit": ScratchViT,
     "diff": DiffusionClassifier,
 }

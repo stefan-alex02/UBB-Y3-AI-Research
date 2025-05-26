@@ -1,24 +1,20 @@
-# This file contains the parameters used for the ViT model in the ML pipeline.
-import torch
-from skorch.callbacks import LRScheduler
-
 # --- Fixed Parameter Sets ---
 
 # --- Option 1: A common fine-tuning setup (similar to your old SimpleViT's intent) ---
 pretrained_vit_fixed_params = {
-    'max_epochs': 70, # Allow more room for early stopping if LR changes are slower
+    'max_epochs': 70,
     # 'lr': 3e-5,
-    'lr': 3e-7,
+    'lr': 3e-5,
     'batch_size': 16,
     'optimizer': 'AdamW',
     'optimizer__weight_decay': 0.05,
 
     'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
-    'callbacks__default_lr_scheduler__T_max': 50, # Should match max_epochs
+    'callbacks__default_lr_scheduler__T_max': 70, # Should match max_epochs
     'callbacks__default_lr_scheduler__eta_min': 1e-7,
 
-    # 'module__vit_model_variant': 'vit_b_16',
-    'module__vit_model_variant': 'vit_l_16',
+    'module__vit_model_variant': 'vit_b_16',
+    # 'module__vit_model_variant': 'vit_l_16',
     'module__pretrained': True,
     'module__unfreeze_strategy': 'encoder_tail',
     # 'module__num_transformer_blocks_to_unfreeze': 1, # <<< SIGNIFICANTLY REDUCED

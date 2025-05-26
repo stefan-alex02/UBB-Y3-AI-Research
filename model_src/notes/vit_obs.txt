@@ -1,0 +1,35 @@
+Top test accuracies for different params. Modifications were performed in the order they are listed below.
+
+Initial params:
+{
+    'max_epochs': 70,
+    'lr': 3e-07,
+    'batch_size': 16,
+
+    'optimizer': 'AdamW',
+    'optimizer__weight_decay': 0.05,
+
+    'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
+    'callbacks__default_lr_scheduler__T_max': 50,
+    'callbacks__default_lr_scheduler__eta_min': 1e-07,
+
+    'module__vit_model_variant': 'vit_l_16',
+    'module__pretrained': True,
+    'module__unfreeze_strategy': 'encoder_tail',
+    'module__num_transformer_blocks_to_unfreeze': 2,
+    'module__unfreeze_cls_token': True,
+    'module__unfreeze_pos_embedding': True,
+    'module__unfreeze_patch_embedding': False,
+    'module__unfreeze_encoder_layernorm': True,
+    'module__custom_head_hidden_dims': None,
+    'module__head_dropout_rate': 0.55
+}
+
+module__vit_model_variant: vit_l_16 (0.1597)
+module__vit_model_variant: vit_l_16 -> vit_b_16 (0.2948)
+
+lr: 3e-07 -> 3e-2 (0.3587) very random and risky
+lr: -> 3e-4 (0.5061) overfitting from epoch 2
+
+(changed callbacks__default_lr_scheduler__T_max from 50 to 70, shouldn't have much of an impact)
+

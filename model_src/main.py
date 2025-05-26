@@ -37,7 +37,7 @@ if __name__ == "__main__":
     selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "pvit"  # 'cnn', 'pvit', 'svit', 'diff'
+    model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff'
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
