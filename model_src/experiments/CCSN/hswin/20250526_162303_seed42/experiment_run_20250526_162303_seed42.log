@@ -1,0 +1,59 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-05-26 16:23:03 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\hswin\20250526_162303_seed42\experiment_run_20250526_162303_seed42.log
+2025-05-26 16:23:03 | INFO     | [executor  :__init__          : 100] | ℹ️ --- Starting Experiment Run (ID: 20250526_162303_seed42) ---
+2025-05-26 16:23:03 | INFO     | [executor  :__init__          : 101] | ℹ️ Executor initialized for model 'hswin' on dataset 'CCSN'
+2025-05-26 16:23:03 | INFO     | [executor  :__init__          : 104] | ℹ️ Local artifact storage base: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-05-26 16:23:03 | INFO     | [executor  :__init__          : 108] | ℹ️ Base key/prefix for this run's artifacts: experiments/CCSN/hswin/20250526_162303_seed42
+2025-05-26 16:23:03 | INFO     | [executor  :__init__          : 110] | ℹ️ Local log file for this run (might be temporary): C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\hswin\20250526_162303_seed42\experiment_run_20250526_162303_seed42.log
+2025-05-26 16:23:03 | INFO     | [pipeline  :__init__          : 173] | ℹ️ Initializing Classification Pipeline:
+2025-05-26 16:23:03 | INFO     | [pipeline  :__init__          : 174] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN
+2025-05-26 16:23:03 | INFO     | [pipeline  :__init__          : 175] | ℹ️   Model Type: hswin
+2025-05-26 16:23:03 | INFO     | [pipeline  :__init__          : 178] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/hswin/20250526_162303_seed42 (using LocalFileSystemRepository)
+2025-05-26 16:23:03 | INFO     | [pipeline  :__init__          : 182] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.GROUND_AWARE_NO_ROTATION
+2025-05-26 16:23:03 | INFO     | [pipeline  :__init__          : 183] | ℹ️   Default Show First Batch Aug: True
+2025-05-26 16:23:03 | INFO     | [dataset...:__init__          : 242] | ℹ️ Using augmentation strategy: AugmentationStrategy.GROUND_AWARE_NO_ROTATION
+2025-05-26 16:23:03 | INFO     | [dataset...:__init__          : 263] | ℹ️ Detected dataset structure: flat
+2025-05-26 16:23:03 | INFO     | [dataset...:_load_paths_and...: 338] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN...
+2025-05-26 16:23:03 | INFO     | [dataset...:__init__          : 283] | ℹ️ Found 11 classes: Ac, As, Cb, Cc, Ci, Cs, Ct, Cu, Ns, Sc, St
+2025-05-26 16:23:03 | INFO     | [dataset...:__init__          : 286] | ℹ️ Dataset sizes: 2034 train+val, 509 test. Total: 2543
+2025-05-26 16:23:03 | INFO     | [pipeline  :__init__          : 192] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/hswin/20250526_162303_seed42 (using LocalFileSystemRepository)
+2025-05-26 16:23:03 | INFO     | [pipeline  :__init__          : 223] | ℹ️   Using Optimizer: AdamW
+2025-05-26 16:23:03 | DEBUG    | [callbacks :get_default_cal...: 199] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-05-26 16:23:03 | INFO     | [pipeline  :__init__          : 266] | ℹ️   Model Adapter: Initialized with HybridCNNRSModel
+2025-05-26 16:23:03 | DEBUG    | [executor  :_validate_methods : 152] | 🐞 Basic method validation successful.
+2025-05-26 16:23:03 | INFO     | [executor  :__init__          : 136] | ℹ️ Executor configured to run methods: single_train, single_eval
+2025-05-26 16:23:03 | INFO     | [executor  :run               : 162] | ℹ️ Starting execution of pipeline methods...
+2025-05-26 16:23:03 | INFO     | [executor  :run               : 166] | ℹ️ --- Running Method 1/2: single_train (single_train_0) ---
+2025-05-26 16:23:03 | DEBUG    | [executor  :run               : 191] | 🐞 Running with effective parameters: {'params': {'max_epochs': 100, 'lr': 0.0016, 'batch_size': 16, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.01, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 100, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 15, 'callbacks__default_early_stopping__monitor': 'valid_loss', 'module__swin_model_variant': 'swin_t', 'module__swin_pretrained': True, 'module__swin_num_stages_to_unfreeze': 2, 'module__swin_head_dropout_rate': 0.0}, 'save_model': False, 'val_split_ratio': 0.2, 'results_detail_level': 2}
+2025-05-26 16:23:03 | INFO     | [pipeline  :single_train      :1502] | ℹ️ Starting single training run...
+2025-05-26 16:23:03 | INFO     | [pipeline  :single_train      :1555] | ℹ️ Using split: 1627 train / 407 validation samples.
+2025-05-26 16:23:03 | INFO     | [pipeline  :single_train      :1562] | ℹ️ Applying custom parameters for this single_train run: {'max_epochs': 100, 'lr': 0.0016, 'batch_size': 16, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.01, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 100, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 15, 'callbacks__default_early_stopping__monitor': 'valid_loss', 'module__swin_model_variant': 'swin_t', 'module__swin_pretrained': True, 'module__swin_num_stages_to_unfreeze': 2, 'module__swin_head_dropout_rate': 0.0}
+2025-05-26 16:23:03 | WARNING  | [pipeline  :single_train      :1615] | ⚠️ TEMPORARY DEBUG: Using minimal callbacks (ProgressBar only).
+2025-05-26 16:23:03 | INFO     | [pipeline  :single_train      :1630] | ℹ️ Fitting model (run_id: single_train_162303)...
+2025-05-26 16:23:03 | INFO     | [hybrid_...:__init__          : 124] | ℹ️ PaperCNNFeatureExtractor initialized. Output channels: 48
+2025-05-26 16:23:03 | DEBUG    | [pretrai...:__init__          :  48] | 🐞 Initializing PretrainedSwinTransformer:
+2025-05-26 16:23:03 | DEBUG    | [pretrai...:__init__          :  49] | 🐞   Model Variant: swin_t, Pretrained: True
+2025-05-26 16:23:03 | DEBUG    | [pretrai...:__init__          :  50] | 🐞   Num Stages to Unfreeze: 2
+2025-05-26 16:23:03 | DEBUG    | [pretrai...:__init__          :  51] | 🐞   Head Dropout: 0.0
+2025-05-26 16:23:03 | DEBUG    | [pretrai...:__init__          :  53] | 🐞   Input Mode: Feature Map (Channels: 48)
+2025-05-26 16:23:03 | DEBUG    | [pretrai...:__init__          :  79] | 🐞 Loaded swin_t from torchvision.
+2025-05-26 16:23:03 | DEBUG    | [pretrai...:__init__          : 107] | 🐞 Original PatchEmbed used LayerNorm. Will include in new FeatureMapEmbed.
+2025-05-26 16:23:03 | INFO     | [pretrai...:__init__          : 109] | ℹ️ Adapting Swin model for feature map input: 48 channels -> 96 channels for sequence.
+2025-05-26 16:23:03 | INFO     | [pretrai...:__init__          : 119] | ℹ️ Replaced Swin PatchEmbed (Sequential) with custom FeatureMapEmbed.
+2025-05-26 16:23:03 | DEBUG    | [pretrai...:__init__          : 141] | 🐞 Unfroze final LayerNorm (swin_model.norm).
+2025-05-26 16:23:03 | INFO     | [pretrai...:__init__          : 160] | ℹ️ Unfroze approximately last 2 Swin stages (and associated patch merging/embedding layers starting from Swin's internal feature index 4).
+2025-05-26 16:23:03 | DEBUG    | [pretrai...:__init__          : 175] | 🐞 Replaced Swin head with Linear for 11 classes.
+2025-05-26 16:23:03 | INFO     | [pretrai...:__init__          : 186] | ℹ️ PretrainedSwin: Trainable params: 26.33M / Total params: 27.53M (95.66%)
+2025-05-26 16:23:03 | INFO     | [hybrid_...:__init__          : 161] | ℹ️ HybridCNNRSModel initialized with PaperCNNFeatureExtractor and Swin-swin_t.
+2025-05-26 16:23:03 | DEBUG    | [adapter   :get_split_datasets: 131] | 🐞 Split created: 1627 train, 407 validation.
+2025-05-26 16:23:03 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1627, batch_size=16, shuffle=True, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-26 16:23:03 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for training.
+2025-05-26 16:23:03 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=407, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-26 16:23:03 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-26 16:23:07 | ERROR    | [executor  :run               : 200] | ❌ !!! Config error in 'single_train': not enough values to unpack (expected 4, got 3)
+2025-05-26 16:23:07 | ERROR    | [executor  :run               : 201] | ❌ !!! Check compatibility/params.
+2025-05-26 16:23:07 | INFO     | [executor  :run               : 217] | ℹ️ Pipeline execution finished in 4.36s.
+2025-05-26 16:23:07 | INFO     | [executor  :run               : 313] | ℹ️ Final log file available at: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\hswin\20250526_162303_seed42\experiment_run_20250526_162303_seed42.log
+2025-05-26 16:23:07 | INFO     | [main      :<module>          : 276] | ℹ️ --- Final Execution Results Summary ---
+2025-05-26 16:23:07 | ERROR    | [main      :<module>          : 279] | ❌ Method single_train_0: FAILED - not enough values to unpack (expected 4, got 3)

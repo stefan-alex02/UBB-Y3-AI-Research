@@ -1,6 +1,6 @@
 # --- Fixed Parameter Sets ---
 
-fixed_params_swin_t = {
+pretrained_swin_fixed_params = {
     'max_epochs': 70,
     'lr': 2e-5, # Swin often uses smaller LRs for fine-tuning
     'batch_size': 16, # Swin can be memory intensive
@@ -8,7 +8,7 @@ fixed_params_swin_t = {
     'optimizer__weight_decay': 0.05,
 
     'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
-    'callbacks__default_lr_scheduler__T_max': 50, # Match max_epochs
+    'callbacks__default_lr_scheduler__T_max': 70, # Match max_epochs
     'callbacks__default_lr_scheduler__eta_min': 1e-7,
 
     'module__swin_model_variant': 'swin_t',

@@ -1609,6 +1609,12 @@ class ClassificationPipeline:
             adapter_config['callbacks'] = final_callbacks
         # --- End Callback Handling ---
 
+        # --- TEMPORARY DEBUG: Minimal Callbacks ---
+        from skorch.callbacks import ProgressBar # Basic progress
+        adapter_config['callbacks'] = [('progress_bar', ProgressBar())]
+        logger.warning("TEMPORARY DEBUG: Using minimal callbacks (ProgressBar only).")
+        # --- END TEMPORARY DEBUG ---
+
         adapter_config['verbose'] = 0  # Show epoch table with train_acc
 
         # Pop config keys not needed by SkorchModelAdapter init directly

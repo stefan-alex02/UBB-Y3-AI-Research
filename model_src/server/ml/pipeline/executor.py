@@ -191,23 +191,28 @@ class PipelineExecutor:
             logger.debug(f"Running with effective parameters: {current_params}");
             start_time_method = time.time()
             try:
-                pipeline_method = getattr(self.pipeline, method_name);
-                result = pipeline_method(**current_params);
-                self.all_results[run_id] = result;
-                method_duration = time.time() - start_time_method;
+                pipeline_method = getattr(self.pipeline, method_name)
+                result = pipeline_method(**current_params)
+                self.all_results[run_id] = result
+                method_duration = time.time() - start_time_method
                 logger.info(f"--- Method {method_name} ({run_id}) completed successfully in {method_duration:.2f}s ---")
-            except ValueError as ve:
-                logger.error(f"!!! Config error in '{method_name}': {ve}", exc_info=True); logger.error(
-                    f"!!! Check compatibility/params."); self.all_results[run_id] = {"error": str(ve)}; break
+            except ValueError as ve:  # This is the one catching your current error
+                logger.error(f"!!! Config error in '{method_name}': {ve}", exc_info=True)  # exc_info=True is key
+                logger.error(f"!!! Check compatibility/params.")
+                self.all_results[run_id] = {"error": str(ve)}
+                break
             except FileNotFoundError as fnf:
-                logger.error(f"!!! File not found during '{method_name}': {fnf}", exc_info=True); self.all_results[
-                    run_id] = {"error": str(fnf)}; break
+                logger.error(f"!!! File not found during '{method_name}': {fnf}", exc_info=True)
+                self.all_results[run_id] = {"error": str(fnf)}
+                break
             except RuntimeError as rte:
-                logger.error(f"!!! Runtime error during '{method_name}': {rte}", exc_info=True); self.all_results[
-                    run_id] = {"error": str(rte)}; break
+                logger.error(f"!!! Runtime error during '{method_name}': {rte}", exc_info=True)
+                self.all_results[run_id] = {"error": str(rte)}
+
             except Exception as e:
-                logger.critical(f"!!! Unexpected critical error during '{method_name}': {e}", exc_info=True);
-                self.all_results[run_id] = {"error": str(e), "traceback": logging.traceback.format_exc()}; break
+                logger.critical(f"!!! Unexpected critical error during '{method_name}': {e}", exc_info=True)
+                self.all_results[run_id] = {"error": str(e), "traceback": logging.traceback.format_exc()}
+                break
         total_duration = time.time() - start_time_total
         logger.info(f"Pipeline execution finished in {total_duration:.2f}s.")
 

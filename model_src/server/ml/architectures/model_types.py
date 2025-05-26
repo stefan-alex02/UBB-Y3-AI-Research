@@ -2,22 +2,31 @@ from enum import Enum
 
 from .cnn import SimpleCNN
 from .diffusion_classifier import DiffusionClassifier
-from .pretrained_swin import PretrainedSwinTransf
+from .hybrid_cnn_swin import HybridCNNRSModel
+from .pretrained_swin import PretrainedSwin
 from .pretrained_vit import PretrainedViT
 from .scratch_vit import ScratchViT
 
 model_mapping = {
     "cnn": SimpleCNN,
     "pvit": PretrainedViT,
-    "swin": PretrainedSwinTransf,
     "svit": ScratchViT,
+
+    "swin": PretrainedSwin,
+    "hswin": HybridCNNRSModel,
+
     "diff": DiffusionClassifier,
 }
+
 
 class ModelType(str, Enum):  # Inheriting from str makes it directly usable as a string
     CNN = "cnn"
     PRETRAINED_VIT = "pvit"
     SCRATCH_VIT = "svit"
+
+    PRETRAINED_SWIN = "swin"
+    HYBRID_SWIN = "hswin"
+
     DIFFUSION = "diff"
 
     def get_model_class(self):

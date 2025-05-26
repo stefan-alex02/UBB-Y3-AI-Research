@@ -3,6 +3,8 @@ from pathlib import Path
 
 import numpy as np
 
+from model_src.server.ml.params.hybrid_cnn_swin import hybrid_cnn_swin_fixed_params_paper
+from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_params
 from server.ml.logger_utils import logger
 from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused, best_config_as_grid_vit
 from server.ml.params.scratch_vit import fixed_params_vit_scratch, param_grid_vit_from_scratch
@@ -37,7 +39,7 @@ if __name__ == "__main__":
     selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff'
+    model_type = "hswin"  # 'cnn', 'pvit', 'swin', 'hswin', 'svit', 'diff'
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -51,6 +53,7 @@ if __name__ == "__main__":
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
+    # img_size = (448, 448)  # Common size for CNNs and ViTs
 
     # Flag for CV methods on FIXED datasets:
     # Set to True to allow nested_grid_search and cv_model_evaluation on FIXED datasets
@@ -104,6 +107,14 @@ if __name__ == "__main__":
     elif model_type == ModelType.PRETRAINED_VIT:
         chosen_fixed_params = pretrained_vit_fixed_params
         chosen_param_grid = best_config_as_grid_vit
+
+    elif model_type == ModelType.PRETRAINED_SWIN:
+        chosen_fixed_params = pretrained_swin_fixed_params
+        chosen_param_grid = best_config_as_grid_vit # TODO: update
+
+    elif model_type == ModelType.HYBRID_SWIN:
+        chosen_fixed_params = hybrid_cnn_swin_fixed_params_paper
+        chosen_param_grid = best_config_as_grid_vit # TODO: update
 
     elif model_type == ModelType.SCRATCH_VIT:
         chosen_fixed_params = fixed_params_vit_scratch
