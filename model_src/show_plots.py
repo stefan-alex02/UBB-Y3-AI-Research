@@ -7,11 +7,12 @@ from model_src.server.persistence import load_file_repository, load_minio_reposi
 
 # --- Configuration ---
 # IMPORTANT: Replace these paths with your actual paths
-json_file_path_str = "./experiments/CCSN/pvit/20250517_131548_seed42/non_nested_random_131548/non_nested_random_search_results.json"
+json_file_path_str = "./experiments/CCSN/pvit/20250517_131548_seed42/single_eval_110832/single_eval_results.json"
 
 # dataset_root_for_classes_str = "data/mini-GCD" # Path to the dataset root to get classes
-dataset_root_for_classes_str = "data/mini-GCD-flat" # Path to the dataset root to get classes
+# dataset_root_for_classes_str = "data/mini-GCD-flat" # Path to the dataset root to get classes
 # dataset_root_for_classes_str = "data/Swimcat-extend" # Path to the dataset root to get classes
+dataset_root_for_classes_str = "data/CCSN" # Path to the dataset root to get classes
 
 repo_option = "local"  # "local", "minio", or "none"
 

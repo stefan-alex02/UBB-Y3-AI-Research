@@ -2,10 +2,9 @@ import logging
 from numbers import Number
 from typing import List, Tuple, Optional
 
-import torch
 from skorch.callbacks import Callback
 from skorch.callbacks import EarlyStopping, LRScheduler, EpochScoring
-from torch.optim.lr_scheduler import ReduceLROnPlateau, CosineAnnealingLR, StepLR
+from skorch.callbacks import ProgressBar
 
 from ..config import logger_name_global
 from ..logger_utils import logger
@@ -201,6 +200,7 @@ def get_default_callbacks(
                  f"monitor: {lr_scheduler_monitor if lr_scheduler_policy == 'ReduceLROnPlateau' else 'N/A'}")
 
     callbacks_list = [
+        ('progress_bar', ProgressBar()),
         ('default_early_stopping', EarlyStopping(
             monitor=early_stopping_monitor, patience=early_stopping_patience,
             load_best=True, lower_is_better=is_loss_metric

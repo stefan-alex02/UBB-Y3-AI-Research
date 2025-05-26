@@ -143,34 +143,54 @@ def get_sky_only_rotation_augmentations(img_size: Tuple[int, int]) -> transforms
 
 def get_ground_aware_no_rotation_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
     """Augmentations for images with ground elements; avoids vertical flips and significant rotations."""
-    # return transforms.Compose([
-    #     transforms.Resize(img_size),  # Or transforms.Resize(256) -> transforms.RandomCrop(img_size)
-    #     transforms.RandomResizedCrop(size=img_size, scale=(0.85, 1.0), ratio=(0.9, 1.1)),  # Less aggressive crop
-    #     transforms.RandomHorizontalFlip(p=0.5),
-    #     # No RandomVerticalFlip
-    #     # transforms.RandomRotation(degrees=15),  # <<< Limited rotation
-    #     transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
-    #     # Could add minor affine transforms for shear/translation if desired
-    #     # transforms.RandomAffine(degrees=0, translate=(0.05, 0.05), shear=5),
-    #     transforms.ToTensor(),
-    #     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-    # ])
+    geometric_transforms = [
+        transforms.Resize(img_size),  # Or a slightly larger size then RandomCrop
+        transforms.RandomCrop(img_size),
+        transforms.RandomHorizontalFlip(p=0.5),
+        # transforms.RandomRotation(degrees=10), # Slightly increased rotation if tolerable
+        transforms.RandomRotation(degrees=5), # Slightly increased rotation if tolerable
+    ]
 
-    # TODO suggested transforms
-    return transforms.Compose([
-            transforms.Resize(img_size), # Resize to a slightly larger image
-            transforms.RandomCrop(img_size),         # Then take a random crop of the target size
-            transforms.RandomHorizontalFlip(p=0.5),
-            # Optional: Very slight rotation if absolutely necessary, otherwise omit for ground images
-            transforms.RandomRotation(degrees=5),
-            transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
-            # Optional: Add a bit of blur sometimes
-            transforms.RandomApply([
-                transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0))
-            ], p=0.2),
-            transforms.ToTensor(),
-            transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
-        ])
+    color_intensity_transforms = [
+        # transforms.ColorJitter(
+        #     brightness=0.5,  # e.g., range [0.5, 1.5] of original brightness
+        #     contrast=0.5,    # e.g., range [0.5, 1.5] of original contrast
+        #     saturation=0.4,  # e.g., range [0.6, 1.4] of original saturation
+        #     hue=0.1          # e.g., range [-0.1, 0.1] for hue shift (max 0.5)
+        # ),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
+
+        # Randomly apply auto-contrast to maximize image contrast
+        # transforms.RandomAutocontrast(p=0.3),
+
+        # Randomly equalize the image histogram - can significantly alter appearance
+        # transforms.RandomEqualize(p=0.2),
+
+        # Randomly convert to grayscale sometimes
+        # transforms.RandomGrayscale(p=0.1),
+    ]
+
+    blur_transform = [
+        # transforms.RandomApply([
+        #     transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.5)) # Slightly increased max sigma
+        # ], p=0.3), # Increased probability of blur
+        transforms.RandomApply([
+            transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0))
+        ], p=0.2),
+    ]
+
+    # Final conversions
+    final_transforms = [
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ]
+
+    return transforms.Compose(
+        geometric_transforms +
+        color_intensity_transforms +
+        blur_transform +
+        final_transforms
+    )
 
 
 def get_default_standard_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:

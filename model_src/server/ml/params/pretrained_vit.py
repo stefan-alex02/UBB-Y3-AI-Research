@@ -4,11 +4,11 @@
 pretrained_vit_fixed_params = {
     'max_epochs': 70,
     # 'lr': 3e-5,
-    'lr': 3e-5,
+    'lr': 1e-3,
     'batch_size': 16,
     'optimizer': 'AdamW',
     # 'optimizer__weight_decay': 0.05,
-    'optimizer__weight_decay': 0.05,
+    'optimizer__weight_decay': 0.35,
 
     'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
     'callbacks__default_lr_scheduler__T_max': 70, # Should match max_epochs
