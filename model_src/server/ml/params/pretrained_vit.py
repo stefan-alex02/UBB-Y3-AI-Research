@@ -3,11 +3,9 @@
 # --- Option 1: A common fine-tuning setup (similar to your old SimpleViT's intent) ---
 pretrained_vit_fixed_params = {
     'max_epochs': 70,
-    # 'lr': 3e-5,
     'lr': 1e-3,
     'batch_size': 16,
     'optimizer': 'AdamW',
-    # 'optimizer__weight_decay': 0.05,
     'optimizer__weight_decay': 0.35,
 
     'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
@@ -18,14 +16,12 @@ pretrained_vit_fixed_params = {
     # 'module__vit_model_variant': 'vit_l_16',
     'module__pretrained': True,
     'module__unfreeze_strategy': 'encoder_tail',
-    # 'module__num_transformer_blocks_to_unfreeze': 1, # <<< SIGNIFICANTLY REDUCED
     'module__num_transformer_blocks_to_unfreeze': 2,
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
     'module__unfreeze_patch_embedding': False,
     'module__unfreeze_encoder_layernorm': True,     # Unfreeze if unfreezing end blocks
-    'module__custom_head_hidden_dims': None,        # Simplest head
-    # 'module__head_dropout_rate': 0.25,              # <<< ADDED SOME DROPOUT
+    'module__custom_head_hidden_dims': [256],
     'module__head_dropout_rate': 0.55,
 }
 
