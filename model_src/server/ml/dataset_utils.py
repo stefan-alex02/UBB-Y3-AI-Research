@@ -147,17 +147,10 @@ def get_ground_aware_no_rotation_augmentations(img_size: Tuple[int, int]) -> tra
         transforms.Resize(img_size),  # Or a slightly larger size then RandomCrop
         transforms.RandomCrop(img_size),
         transforms.RandomHorizontalFlip(p=0.5),
-        # transforms.RandomRotation(degrees=10), # Slightly increased rotation if tolerable
-        transforms.RandomRotation(degrees=5), # Slightly increased rotation if tolerable
+        transforms.RandomRotation(degrees=5),
     ]
 
     color_intensity_transforms = [
-        # transforms.ColorJitter(
-        #     brightness=0.5,  # e.g., range [0.5, 1.5] of original brightness
-        #     contrast=0.5,    # e.g., range [0.5, 1.5] of original contrast
-        #     saturation=0.4,  # e.g., range [0.6, 1.4] of original saturation
-        #     hue=0.1          # e.g., range [-0.1, 0.1] for hue shift (max 0.5)
-        # ),
         transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
 
         # Randomly apply auto-contrast to maximize image contrast
@@ -171,9 +164,6 @@ def get_ground_aware_no_rotation_augmentations(img_size: Tuple[int, int]) -> tra
     ]
 
     blur_transform = [
-        # transforms.RandomApply([
-        #     transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.5)) # Slightly increased max sigma
-        # ], p=0.3), # Increased probability of blur
         transforms.RandomApply([
             transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0))
         ], p=0.2),

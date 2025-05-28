@@ -19,7 +19,7 @@ pretrained_vit_fixed_params = {
 
     'callbacks__default_lr_scheduler__eta_min': 1e-06,
 
-    'callbacks__default_early_stopping__patience': 20,
+    'callbacks__default_early_stopping__patience': 15,
 
     'module__vit_model_variant': 'vit_b_16',
     'module__pretrained': True,

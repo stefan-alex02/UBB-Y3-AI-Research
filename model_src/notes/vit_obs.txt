@@ -116,4 +116,79 @@ pretrained_vit_fixed_params = {
 
 callbacks__default_lr_scheduler__eta_min: 1e-07 -> 8e-07 (1.5254)
 
-changed back to previous params
+changed back to previous params (1.4357, test acc: 0.4774)
+
+optimizer__weight_decay: 0.05 -> 0.45 (1.4467, test acc: 0.4892)
+
+callbacks__default_lr_scheduler__eta_min: 1e-07 -> 1e-05 (1.4539, test acc: 0.4912)
+
+Augmentation modifications. Current:
+
+    geometric_transforms = [
+        transforms.Resize(img_size),  # Or a slightly larger size then RandomCrop
+        transforms.RandomCrop(img_size),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomRotation(degrees=5), # Slightly increased rotation if tolerable
+    ]
+
+    color_intensity_transforms = [
+        # transforms.ColorJitter(
+        #     brightness=0.5,  # e.g., range [0.5, 1.5] of original brightness
+        #     contrast=0.5,    # e.g., range [0.5, 1.5] of original contrast
+        #     saturation=0.4,  # e.g., range [0.6, 1.4] of original saturation
+        #     hue=0.1          # e.g., range [-0.1, 0.1] for hue shift (max 0.5)
+        # ),
+        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
+
+        # Randomly apply auto-contrast to maximize image contrast
+        # transforms.RandomAutocontrast(p=0.3),
+
+        # Randomly equalize the image histogram - can significantly alter appearance
+        # transforms.RandomEqualize(p=0.2),
+
+        # Randomly convert to grayscale sometimes
+        # transforms.RandomGrayscale(p=0.1),
+    ]
+
+    blur_transform = [
+        # transforms.RandomApply([
+        #     transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.5)) # Slightly increased max sigma
+        # ], p=0.3), # Increased probability of blur
+        transforms.RandomApply([
+            transforms.GaussianBlur(kernel_size=3, sigma=(0.1, 1.0))
+        ], p=0.2),
+    ]
+
+    # Final conversions
+    final_transforms = [
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ]
+
+    return transforms.Compose(
+        geometric_transforms +
+        color_intensity_transforms +
+        blur_transform +
+        final_transforms
+    )
+
+RandomRotation.degrees: 0 (v loss: 1.6086, ts acc: 0.4440) | 5 | 10 (v loss: 1.4778, ts acc:0.4715 ) | 15 (v loss: 1.5070, ts acc: 0.4872) | 45 (v loss: 1.4486, ts acc: 0.4892) | 90 (v loss: 1.4873, ts acc: 0.4617) | 180 (v loss: 1.5016, ts acc: 0.4990)
+kept 5
+
+use more aggressive color jittering: (v loss: 1.4830, ts acc: 0.4892)
+more aggressive color jittering: (v loss: 1.4871, ts acc: 0.4951)
+moderate color jittering: (v loss: 1.4638, ts acc: 0.5029)
+more moderate color jittering (less aggressive than initial): (v loss: 1.4874, ts acc: 0.4735)
+no color jittering: (v loss: 1.4874, ts acc: 0.5029)
+kept initial color jittering
+
+added random autocontrast: (v loss: 1.4707, ts acc: 0.5128)
+removed random autocontrast
+
+added random equalize: (v loss: 1.5214, ts acc: 0.4715)
+removed random equalize
+
+added random grayscale: (v loss: 1.4884, ts acc: 0.5167)
+removed random grayscale
+
+use enhanced random blur: (v loss: 1.4603, ts acc: 0.5029)

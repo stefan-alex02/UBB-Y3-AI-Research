@@ -4,7 +4,6 @@ from pathlib import Path
 import numpy as np
 
 from model_src.server.ml.params.feature_extractors import paper_cnn_standalone_fixed_params
-from model_src.server.ml.params.hybrid_cnn_swin import hybrid_cnn_swin_fixed_params_paper
 from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params_paper_cnn_scratch
 from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_params
 from server.ml.logger_utils import logger
@@ -119,8 +118,8 @@ if __name__ == "__main__":
         chosen_param_grid = best_config_as_grid_vit # TODO: update
 
     elif model_type == ModelType.HYBRID_SWIN:
-        chosen_fixed_params = hybrid_cnn_swin_fixed_params_paper
-        chosen_param_grid = best_config_as_grid_vit # TODO: update
+        chosen_fixed_params = None # TODO: update
+        chosen_param_grid = None # TODO: update
 
     elif model_type == ModelType.CNN_FEAT:
         chosen_fixed_params = paper_cnn_standalone_fixed_params
