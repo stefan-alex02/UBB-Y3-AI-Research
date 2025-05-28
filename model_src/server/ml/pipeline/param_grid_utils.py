@@ -1,3 +1,5 @@
+import importlib
+
 import torch
 import itertools
 from typing import Dict, List, Any, Union, Type, Optional
@@ -24,6 +26,36 @@ def _resolve_optimizer(opt_val_or_list: Any) -> Any:
         return OPTIMIZER_MAP.get(opt_val_or_list.lower(), opt_val_or_list)
     return opt_val_or_list
 
+def _resolve_scheduler_policy_class(policy_name_or_class: Union[str, Type]) -> Type:
+    """
+    Resolves a scheduler policy string (e.g., "torch.optim.lr_scheduler.CosineAnnealingWarmRestarts")
+    or a class to the actual class type.
+    """
+    if isinstance(policy_name_or_class, str):
+        if '.' in policy_name_or_class: # Fully qualified path
+            try:
+                module_path, class_name = policy_name_or_class.rsplit('.', 1)
+                module = importlib.import_module(module_path)
+                return getattr(module, class_name)
+            except (ImportError, AttributeError) as e:
+                raise ValueError(
+                    f"Could not import scheduler class '{policy_name_or_class}': {e}"
+                )
+        else: # Simple name, assume it's a torch.optim.lr_scheduler
+            try:
+                return getattr(torch.optim.lr_scheduler, policy_name_or_class)
+            except AttributeError:
+                raise ValueError(
+                    f"Scheduler policy string '{policy_name_or_class}' not found in torch.optim.lr_scheduler "
+                    f"and not a fully qualified path."
+                )
+    elif isinstance(policy_name_or_class, type) and issubclass(policy_name_or_class, torch.optim.lr_scheduler._LRScheduler):
+        return policy_name_or_class
+    else:
+        raise TypeError(
+            f"Scheduler policy must be a string (name or full path) or a _LRScheduler subclass, got {type(policy_name_or_class)}"
+        )
+
 
 def parse_fixed_hyperparameters(
         fixed_params: Dict[str, Any],
@@ -46,7 +78,6 @@ def parse_fixed_hyperparameters(
     """
     processed_params = fixed_params.copy()
 
-    # 1. Resolve Optimizer
     if 'optimizer' in processed_params:
         opt_val = processed_params['optimizer']
         if isinstance(opt_val, str):
@@ -57,35 +88,42 @@ def parse_fixed_hyperparameters(
         elif not (isinstance(opt_val, type) and issubclass(opt_val, torch.optim.Optimizer)):
             raise TypeError(f"Optimizer in fixed_params must be a string or Optimizer type, got {type(opt_val)}")
 
-    # 2. Construct LRScheduler Callback Object if specified
     scheduler_key_prefix = f'callbacks__{DEFAULT_LR_SCHEDULER_NAME}__'
     policy_key = f'{scheduler_key_prefix}policy'
 
     if policy_key in processed_params:
-        policy_name_or_type = processed_params.pop(policy_key)
-        policy_str = policy_name_or_type if isinstance(policy_name_or_type, str) else policy_name_or_type.__name__
+        policy_name_or_class_from_params = processed_params.pop(policy_key)
+
+        # --- MODIFICATION START ---
+        # Resolve the policy to an actual class type if it's a string
+        try:
+            actual_scheduler_class = _resolve_scheduler_policy_class(policy_name_or_class_from_params)
+        except ValueError as e:
+            logger.error(f"Error resolving scheduler policy: {e}")
+            # Decide how to handle: raise error, or skip scheduler, or use a default
+            # For now, let's re-raise as it's a configuration issue.
+            raise
+        # --- MODIFICATION END ---
 
         scheduler_constructor_kwargs: Dict[str, Any] = {}
-        direct_lr_scheduler_args: Dict[str, Any] = {}  # For LRScheduler's own params like 'monitor'
+        direct_lr_scheduler_args: Dict[str, Any] = {}
 
-        # Collect all params for this scheduler
         param_keys_for_this_scheduler = [
-            k for k in processed_params if k.startswith(scheduler_key_prefix)
+            k for k in list(processed_params.keys()) if k.startswith(scheduler_key_prefix)  # Iterate over copy
         ]
 
         for key in param_keys_for_this_scheduler:
             param_name = key.split('__')[-1]
-            # Check if it's a direct LRScheduler argument or for the torch scheduler
-            if param_name in ['monitor', 'event_name', 'step_every']:  # Direct LRScheduler args
+            if param_name in ['monitor', 'event_name', 'step_every']:
                 direct_lr_scheduler_args[param_name] = processed_params.pop(key)
-            else:  # Kwarg for the torch.optim.lr_scheduler
+            else:
                 scheduler_constructor_kwargs[param_name] = processed_params.pop(key)
 
-        # Handle T_max for CosineAnnealingLR specifically if not provided
-        if policy_str == 'CosineAnnealingLR' and 'T_max' not in scheduler_constructor_kwargs:
+        # Special handling for CosineAnnealingLR T_max (if not specified)
+        if actual_scheduler_class == torch.optim.lr_scheduler.CosineAnnealingLR and 'T_max' not in scheduler_constructor_kwargs:
             if default_max_epochs_for_cosine:
                 scheduler_constructor_kwargs['T_max'] = default_max_epochs_for_cosine
-            else:  # Try to get from fixed_params if available, else warning
+            else:
                 max_epochs_from_params = fixed_params.get('max_epochs')
                 if max_epochs_from_params:
                     scheduler_constructor_kwargs['T_max'] = max_epochs_from_params
@@ -93,151 +131,111 @@ def parse_fixed_hyperparameters(
                     logger.warning("CosineAnnealingLR policy specified but T_max is not set and "
                                    "cannot be inferred from max_epochs. Scheduler might fail or use skorch default.")
 
-        # Instantiate the LRScheduler object
-        # Note: get_default_callbacks also has logic for setting verbose=False etc.
-        # For simplicity here, if verbose is not in scheduler_constructor_kwargs, it will use torch default.
-        # You could merge with defaults from get_default_callbacks's internal logic if desired.
+        # Remove 'monitor' if the scheduler class doesn't use it (e.g., CosineAnnealingWarmRestarts)
+        # Most schedulers that step per epoch don't use 'monitor'. ReduceLROnPlateau does.
+        if actual_scheduler_class != torch.optim.lr_scheduler.ReduceLROnPlateau and 'monitor' in direct_lr_scheduler_args:
+            logger.debug(
+                f"Scheduler {actual_scheduler_class.__name__} does not use 'monitor'. Removing it from LRScheduler args.")
+            direct_lr_scheduler_args.pop('monitor')
+
+        # --- MODIFICATION START ---
+        # Instantiate LRScheduler with the actual_scheduler_class
         lr_scheduler_instance = LRScheduler(
-            policy=policy_str,
-            **direct_lr_scheduler_args,  # monitor, etc.
-            **scheduler_constructor_kwargs  # factor, patience, T_max, step_size, etc.
+            policy=actual_scheduler_class,  # PASS THE CLASS DIRECTLY
+            **direct_lr_scheduler_args,
+            **scheduler_constructor_kwargs
         )
+        # --- MODIFICATION END ---
 
-        # Replace the individual scheduler params with the actual LRScheduler object
-        # The key for the callback object itself is 'callbacks__<name>'
         processed_params[scheduler_key_prefix.strip('_')] = lr_scheduler_instance
-
-    # Process other callbacks if needed (e.g., EarlyStopping patience)
-    # Example:
-    # if 'callbacks__default_early_stopping__patience' in processed_params:
-    #     # This is fine, Skorch will handle it directly if it's a simple attribute.
-    #     # If EarlyStopping itself needed to be replaced with a custom instance,
-    #     # similar logic to LRScheduler would apply.
-    #     pass
+        logger.debug(f"Created LRScheduler instance: policy={actual_scheduler_class.__name__}, "
+                     f"direct_args={direct_lr_scheduler_args}, constructor_kwargs={scheduler_constructor_kwargs}")
 
     return processed_params
 
 
 def expand_hyperparameter_grid(input_grid: Dict[str, List[Any]]) -> Dict[str, List[Any]]:
-    """
-    Expands a user-friendly hyperparameter grid to one directly usable by
-    GridSearchCV with Skorch, especially for LRSchedulers.
-
-    Args:
-        input_grid: A dictionary where keys are parameter names and values are lists
-                    of options to try.
-                    - 'optimizer' can be a list of optimizer name strings.
-                    - 'callbacks__<name>__policy' can be a list of scheduler policy strings.
-                    - Other 'callbacks__<name>__<scheduler_param>' are parameters for those policies.
-
-    Returns:
-        A new grid dictionary where optimizer strings are resolved to types, and
-        LR scheduler configurations are expanded into a list of LRScheduler objects
-        for the 'callbacks__<name>' key.
-    """
     processed_grid = input_grid.copy()
 
-    # 1. Resolve Optimizer strings to types
     if 'optimizer' in processed_grid:
         processed_grid['optimizer'] = _resolve_optimizer(processed_grid['optimizer'])
 
-    # 2. Handle LR Scheduler expansion
     scheduler_key_prefix = f'callbacks__{DEFAULT_LR_SCHEDULER_NAME}__'
     policy_key = f'{scheduler_key_prefix}policy'
 
     if policy_key in processed_grid:
-        scheduler_policies = processed_grid.pop(policy_key)  # Remove policy key
-        if not isinstance(scheduler_policies, list):
-            scheduler_policies = [scheduler_policies]
+        scheduler_policies_from_grid = processed_grid.pop(policy_key)
+        if not isinstance(scheduler_policies_from_grid, list):
+            scheduler_policies_from_grid = [scheduler_policies_from_grid]
 
-        # Collect all other parameters for this scheduler
-        scheduler_specific_param_grid: Dict[str, List[Any]] = {}
-        keys_to_remove_from_main_grid = []
-
-        # Direct LRScheduler parameters (like 'monitor')
-        direct_lr_scheduler_params = {}
-        for key in list(processed_grid.keys()):  # Iterate over copy of keys
-            if key.startswith(scheduler_key_prefix) and not key.startswith(f'{scheduler_key_prefix}fn_kwargs__'):
-                # This is a direct param for LRScheduler itself (e.g., monitor)
-                # or a param for the underlying torch scheduler if not 'policy'
-                param_name = key.split('__')[-1]
-                if param_name != 'policy':  # policy already handled
-                    direct_lr_scheduler_params[param_name] = processed_grid.pop(key)
-                    keys_to_remove_from_main_grid.append(key)
-
-        # Parameters for the PyTorch scheduler (previously under fn_kwargs)
-        # Now we expect them directly like 'callbacks__default_lr_scheduler__factor'
-        # These will be collected and passed as **kwargs to LRScheduler
+        direct_lr_scheduler_params_grid: Dict[str, List[Any]] = {}
         pytorch_scheduler_param_grid: Dict[str, List[Any]] = {}
+
         for key in list(processed_grid.keys()):
             if key.startswith(scheduler_key_prefix):
-                # If it was not a direct LRScheduler param (like monitor), it's for the torch scheduler
-                if key.split('__')[-1] not in ['monitor', 'event_name', 'step_every',
-                                               'policy']:  # Known LRScheduler direct params
-                    param_name = key.split('__')[-1]
-                    pytorch_scheduler_param_grid[param_name] = processed_grid.pop(key)
-                    keys_to_remove_from_main_grid.append(key)
+                param_name = key.split('__')[-1]
+                if param_name != 'policy':
+                    if param_name in ['monitor', 'event_name', 'step_every']:
+                        direct_lr_scheduler_params_grid[param_name] = processed_grid.pop(key)
+                    else:
+                        pytorch_scheduler_param_grid[param_name] = processed_grid.pop(key)
 
         generated_lr_schedulers = []
-        for policy_name_or_type in scheduler_policies:
-            policy_str = policy_name_or_type if isinstance(policy_name_or_type, str) else policy_name_or_type.__name__
 
-            # Create combinations of this policy's specific parameters
+        for policy_name_or_class_item in scheduler_policies_from_grid:
+            # --- MODIFICATION START ---
+            try:
+                actual_scheduler_class_for_grid = _resolve_scheduler_policy_class(policy_name_or_class_item)
+            except ValueError as e:
+                logger.error(
+                    f"Error resolving scheduler policy '{policy_name_or_class_item}' in grid: {e}. Skipping this policy.")
+                continue
+            # --- MODIFICATION END ---
+
             current_policy_params_to_combine = {}
-            # Add direct LRScheduler params if they are defined for this grid point
-            for k, v_list in direct_lr_scheduler_params.items():
-                current_policy_params_to_combine[k] = v_list
+            current_policy_params_to_combine.update(direct_lr_scheduler_params_grid)
+            current_policy_params_to_combine.update(pytorch_scheduler_param_grid)
 
-            # Add PyTorch scheduler specific params
-            for k, v_list in pytorch_scheduler_param_grid.items():
-                current_policy_params_to_combine[k] = v_list
-
-            # Generate all combinations of parameters for this specific policy
             param_names = list(current_policy_params_to_combine.keys())
             param_value_lists = [current_policy_params_to_combine[name] for name in param_names]
 
-            for specific_param_combination_values in itertools.product(*param_value_lists):
-                scheduler_instance_kwargs = dict(zip(param_names, specific_param_combination_values))
+            # Add a dummy list for policies if there are no other params to combine,
+            # so itertools.product still iterates once per policy.
+            if not param_value_lists:  # No other scheduler params in the grid for this policy
+                param_value_lists_for_product = [[]]  # Will yield one empty tuple
+                param_names_for_product = []
+            else:
+                param_value_lists_for_product = param_value_lists
+                param_names_for_product = param_names
 
-                # Separate LRScheduler direct args from torch scheduler kwargs
-                lr_scheduler_direct_args = {}
-                torch_scheduler_constructor_kwargs = {}
+            for specific_param_combination_values in itertools.product(*param_value_lists_for_product):
+                scheduler_instance_kwargs = dict(zip(param_names_for_product, specific_param_combination_values))
 
-                if 'monitor' in scheduler_instance_kwargs:
-                    lr_scheduler_direct_args['monitor'] = scheduler_instance_kwargs.pop('monitor')
-                if 'event_name' in scheduler_instance_kwargs:
-                    lr_scheduler_direct_args['event_name'] = scheduler_instance_kwargs.pop('event_name')
-                if 'step_every' in scheduler_instance_kwargs:
-                    lr_scheduler_direct_args['step_every'] = scheduler_instance_kwargs.pop('step_every')
+                lr_scheduler_direct_args_grid = {}
+                torch_scheduler_constructor_kwargs_grid = {}
 
-                # Remaining kwargs are for the torch scheduler
-                torch_scheduler_constructor_kwargs = scheduler_instance_kwargs
+                for k_arg, v_arg in scheduler_instance_kwargs.items():
+                    if k_arg in ['monitor', 'event_name', 'step_every']:
+                        lr_scheduler_direct_args_grid[k_arg] = v_arg
+                    else:
+                        torch_scheduler_constructor_kwargs_grid[k_arg] = v_arg
 
+                # Remove 'monitor' if the scheduler class doesn't use it
+                if actual_scheduler_class_for_grid != torch.optim.lr_scheduler.ReduceLROnPlateau and 'monitor' in lr_scheduler_direct_args_grid:
+                    lr_scheduler_direct_args_grid.pop('monitor')
+
+                # --- MODIFICATION START ---
                 generated_lr_schedulers.append(
-                    LRScheduler(policy=policy_str, **lr_scheduler_direct_args, **torch_scheduler_constructor_kwargs)
+                    LRScheduler(policy=actual_scheduler_class_for_grid,  # PASS THE CLASS
+                                **lr_scheduler_direct_args_grid,
+                                **torch_scheduler_constructor_kwargs_grid)
                 )
+                # --- MODIFICATION END ---
 
         if generated_lr_schedulers:
-            processed_grid[
-                scheduler_key_prefix.strip('_')] = generated_lr_schedulers  # e.g. 'callbacks__default_lr_scheduler'
-        elif direct_lr_scheduler_params or pytorch_scheduler_param_grid:  # Policy might have been a direct type with no params in grid
+            processed_grid[scheduler_key_prefix.strip('_')] = generated_lr_schedulers
+        elif direct_lr_scheduler_params_grid or pytorch_scheduler_param_grid:
             logger.warning(
-                f"LR Scheduler policy {scheduler_policies} was specified, but no valid parameter combinations generated LRScheduler objects.")
-
-    # Handle other callbacks like EarlyStopping if they are also tuned
-    early_stopping_prefix = f'callbacks__default_early_stopping__'
-    early_stopping_params_in_grid = {
-        k.replace(early_stopping_prefix, ''): v
-        for k, v in processed_grid.items() if k.startswith(early_stopping_prefix)
-    }
-    if early_stopping_params_in_grid:
-        # If tuning EarlyStopping, it also needs to be a list of objects
-        # This part gets complex quickly if multiple callbacks are tuned with multiple params each.
-        # For now, assume EarlyStopping params are direct attributes of the ES object.
-        # If 'callbacks__default_early_stopping__patience': [10, 15] is in the grid,
-        # Skorch's default set_params for callbacks should handle this.
-        # The "object replacement" strategy is mainly for when the *constructor signature*
-        # of the underlying component changes significantly (like LRScheduler with different policies).
-        pass  # Skorch should handle direct param setting for EarlyStopping
+                f"LR Scheduler policies {scheduler_policies_from_grid} were specified, but no valid parameter combinations generated LRScheduler objects.")
 
     return processed_grid

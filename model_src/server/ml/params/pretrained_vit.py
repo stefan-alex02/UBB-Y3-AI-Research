@@ -1,28 +1,36 @@
 # --- Fixed Parameter Sets ---
+import torch
 
 # --- Option 1: A common fine-tuning setup (similar to your old SimpleViT's intent) ---
 pretrained_vit_fixed_params = {
     'max_epochs': 70,
     'lr': 1e-3,
     'batch_size': 16,
+
     'optimizer': 'AdamW',
-    'optimizer__weight_decay': 0.35,
+    'optimizer__weight_decay': 0.05, # Start with original, can reduce later
 
     'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
-    'callbacks__default_lr_scheduler__T_max': 70, # Should match max_epochs
-    'callbacks__default_lr_scheduler__eta_min': 1e-7,
+    'callbacks__default_lr_scheduler__T_max': 70,
+
+    # 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingWarmRestarts',
+    # 'callbacks__default_lr_scheduler__T_0': 15,      # Epochs for the first cycle
+    # 'callbacks__default_lr_scheduler__T_mult': 1,     # Subsequent cycles are same length as T_0
+
+    'callbacks__default_lr_scheduler__eta_min': 1e-06,
+
+    'callbacks__default_early_stopping__patience': 20,
 
     'module__vit_model_variant': 'vit_b_16',
-    # 'module__vit_model_variant': 'vit_l_16',
     'module__pretrained': True,
     'module__unfreeze_strategy': 'encoder_tail',
     'module__num_transformer_blocks_to_unfreeze': 2,
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
     'module__unfreeze_patch_embedding': False,
-    'module__unfreeze_encoder_layernorm': True,     # Unfreeze if unfreezing end blocks
-    'module__custom_head_hidden_dims': [256],
-    'module__head_dropout_rate': 0.55,
+    'module__unfreeze_encoder_layernorm': True,
+    'module__custom_head_hidden_dims': None,
+    'module__head_dropout_rate': 0.55
 }
 
 # --- Parameter Space Definitions ---

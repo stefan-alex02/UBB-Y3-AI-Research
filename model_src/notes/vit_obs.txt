@@ -43,6 +43,77 @@ module__head_dropout_rate: 0.55 -> 0.85 (0.5184) -> 0.35 (0.5086) -> 0.65 (0.511
 
 callbacks__default_lr_scheduler__eta_min: 1e-07 -> 1e-03 (0.5307)
 
-module__num_transformer_blocks_to_unfreeze: 2 -> 4 (0.5012) -> 1 (0.5160)
+module__num_transformer_blocks_to_unfreeze: 2 -> 4 (0.5012) -> 1 (0.5160) -> 2
 
-module__custom_head_hidden_dims: None -> [256] (0.5233)
+module__custom_head_hidden_dims: None -> [256] (0.5233) -> [512] (0.5184)
+
+--- Fom here on the validation loss will be considered as the main metric ---
+
+module__custom_head_hidden_dims: [512] (1.4564) -> [512, 256] (1.5797)
+
+params with best valid loss (1.4357)
+{
+    'max_epochs': 70,
+    'lr': 0.001,
+    'batch_size': 16,
+
+    'optimizer': 'AdamW',
+    'optimizer__weight_decay': 0.05,
+
+    'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
+    'callbacks__default_lr_scheduler__T_max': 70,
+    'callbacks__default_lr_scheduler__eta_min': 1e-07,
+
+    'module__vit_model_variant': 'vit_b_16',
+    'module__pretrained': True,
+    'module__unfreeze_strategy': 'encoder_tail',
+    'module__num_transformer_blocks_to_unfreeze': 2,
+    'module__unfreeze_cls_token': True,
+    'module__unfreeze_pos_embedding': True,
+    'module__unfreeze_patch_embedding': False,
+    'module__unfreeze_encoder_layernorm': True,
+    'module__custom_head_hidden_dims': None,
+    'module__head_dropout_rate': 0.55
+}
+
+optimizer__weight_decay: 0.05 (1.4357) | 0.10 (1.5008) | 0.15 (1.4940) | 0.25 (1.4728) | 0.45 (1.4473) | 0.55 (1.4755) | 0.85 (1.4991)
+kept 0.05
+
+lr: 1e-3 (1.4357) | 2e-4 (1.4924) | 5e-5 (1.4980) | 1e-5 (1.4882, Test acc: 0.5226) | 2e-6 (1.5762, reached 70 epochs)
+kept 2e-6
+
+using these params (new lr scheduler)
+
+pretrained_vit_fixed_params = {
+    'max_epochs': 70,
+    'lr': 2e-6,
+    'batch_size': 16,
+
+    'optimizer': 'AdamW',
+    'optimizer__weight_decay': 0.05, # Start with original, can reduce later
+
+    'callbacks__default_lr_scheduler__policy': 'CosineAnnealingWarmRestarts',
+    'callbacks__default_lr_scheduler__T_0': 15,  # Epochs for the first cycle
+    'callbacks__default_lr_scheduler__T_mult': 1,  # Subsequent cycles are same length as T_0
+
+    'callbacks__default_lr_scheduler__eta_min': 1e-07,
+
+    'callbacks__default_early_stopping__patience': 20,
+
+    'module__vit_model_variant': 'vit_b_16',
+    'module__pretrained': True,
+    'module__unfreeze_strategy': 'encoder_tail',
+    'module__num_transformer_blocks_to_unfreeze': 2,
+    'module__unfreeze_cls_token': True,
+    'module__unfreeze_pos_embedding': True,
+    'module__unfreeze_patch_embedding': False,
+    'module__unfreeze_encoder_layernorm': True,
+    'module__custom_head_hidden_dims': None,
+    'module__head_dropout_rate': 0.55
+}
+
+(1.5632, reached 70 epochs)
+
+callbacks__default_lr_scheduler__eta_min: 1e-07 -> 8e-07 (1.5254)
+
+changed back to previous params
