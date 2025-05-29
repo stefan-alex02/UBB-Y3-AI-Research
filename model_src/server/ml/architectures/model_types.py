@@ -1,7 +1,7 @@
 from enum import Enum
 
 from .feature_extractors import PaperCNNFeatureExtractor
-from .hybrid_models import HybridSwin, HybridViT
+from .hybrid_models import HybridViT
 from .cnn import SimpleCNN
 from .diffusion_classifier import DiffusionClassifier
 from .pretrained_swin import PretrainedSwin
@@ -14,12 +14,10 @@ model_mapping = {
     "svit": ScratchViT,
 
     "swin": PretrainedSwin,
-    # "hswin": HybridCNNRSModel,
 
     "diff": DiffusionClassifier,
 
-    "hybrid_vit": HybridViT,  # New entry for dedicated hybrid model
-    "hybrid_swin": HybridSwin,  # New entry for dedicated hybrid model
+    "hvit": HybridViT,  # New entry for dedicated hybrid model
     "cnn_feat": PaperCNNFeatureExtractor,  # If you want to train/test CNN extractor alone
 }
 
@@ -31,8 +29,7 @@ class ModelType(str, Enum):  # Inheriting from str makes it directly usable as a
     PRETRAINED_SWIN = "swin"
     DIFFUSION = "diff"
 
-    HYBRID_VIT = "hybrid_vit"        # New
-    HYBRID_SWIN = "hybrid_swin"      # New
+    HYBRID_VIT = "hvit"        # New
     CNN_FEAT = "cnn_feat" # New
 
     def get_model_class(self):

@@ -228,3 +228,4 @@ class PaperCNNFeatureExtractor(nn.Module):
             # Decide if you want to raise or just warn and continue with random weights
             raise
 
+

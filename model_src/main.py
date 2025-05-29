@@ -4,7 +4,7 @@ from pathlib import Path
 import numpy as np
 
 from model_src.server.ml.params.feature_extractors import paper_cnn_standalone_fixed_params
-from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params_paper_cnn_scratch
+from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params
 from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_params
 from server.ml.logger_utils import logger
 from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused, best_config_as_grid_vit
@@ -40,7 +40,7 @@ if __name__ == "__main__":
     selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "hybrid_vit"  # 'cnn', 'pvit', 'swin', 'hswin', 'svit', 'diff', 'hybrid_vit', 'cnn_feat'
+    model_type = "hvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hvit', 'cnn_feat'
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -112,7 +112,7 @@ if __name__ == "__main__":
         chosen_param_grid = best_config_as_grid_vit
 
     elif model_type == ModelType.HYBRID_VIT:
-        chosen_fixed_params = hybrid_vit_fixed_params_paper_cnn_scratch
+        chosen_fixed_params = hybrid_vit_fixed_params
         chosen_param_grid = None
 
     elif model_type == ModelType.PRETRAINED_SWIN:
