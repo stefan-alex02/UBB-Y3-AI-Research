@@ -1,0 +1,119 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-05-29 16:21:15 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\hybrid_vit\20250529_162115_seed42\experiment_run_20250529_162115_seed42.log
+2025-05-29 16:21:15 | INFO     | [executor  :__init__          : 100] | ℹ️ --- Starting Experiment Run (ID: 20250529_162115_seed42) ---
+2025-05-29 16:21:15 | INFO     | [executor  :__init__          : 101] | ℹ️ Executor initialized for model 'hybrid_vit' on dataset 'CCSN'
+2025-05-29 16:21:15 | INFO     | [executor  :__init__          : 104] | ℹ️ Local artifact storage base: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-05-29 16:21:15 | INFO     | [executor  :__init__          : 108] | ℹ️ Base key/prefix for this run's artifacts: experiments/CCSN/hybrid_vit/20250529_162115_seed42
+2025-05-29 16:21:15 | INFO     | [executor  :__init__          : 110] | ℹ️ Local log file for this run (might be temporary): C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\hybrid_vit\20250529_162115_seed42\experiment_run_20250529_162115_seed42.log
+2025-05-29 16:21:15 | INFO     | [pipeline  :__init__          : 173] | ℹ️ Initializing Classification Pipeline:
+2025-05-29 16:21:15 | INFO     | [pipeline  :__init__          : 174] | ℹ️   Dataset Path: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN
+2025-05-29 16:21:15 | INFO     | [pipeline  :__init__          : 175] | ℹ️   Model Type: hybrid_vit
+2025-05-29 16:21:15 | INFO     | [pipeline  :__init__          : 178] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/hybrid_vit/20250529_162115_seed42 (using LocalFileSystemRepository)
+2025-05-29 16:21:15 | INFO     | [pipeline  :__init__          : 182] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.GROUND_AWARE_NO_ROTATION
+2025-05-29 16:21:15 | INFO     | [pipeline  :__init__          : 183] | ℹ️   Default Show First Batch Aug: True
+2025-05-29 16:21:15 | INFO     | [dataset...:__init__          : 252] | ℹ️ Using augmentation strategy: AugmentationStrategy.GROUND_AWARE_NO_ROTATION
+2025-05-29 16:21:15 | INFO     | [dataset...:__init__          : 273] | ℹ️ Detected dataset structure: flat
+2025-05-29 16:21:15 | INFO     | [dataset...:_load_paths_and...: 348] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN...
+2025-05-29 16:21:15 | INFO     | [dataset...:__init__          : 293] | ℹ️ Found 11 classes: Ac, As, Cb, Cc, Ci, Cs, Ct, Cu, Ns, Sc, St
+2025-05-29 16:21:15 | INFO     | [dataset...:__init__          : 296] | ℹ️ Dataset sizes: 2034 train+val, 509 test. Total: 2543
+2025-05-29 16:21:15 | INFO     | [pipeline  :__init__          : 192] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/hybrid_vit/20250529_162115_seed42 (using LocalFileSystemRepository)
+2025-05-29 16:21:15 | INFO     | [pipeline  :__init__          : 223] | ℹ️   Using Optimizer: AdamW
+2025-05-29 16:21:15 | DEBUG    | [callbacks :get_default_cal...: 198] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-05-29 16:21:15 | INFO     | [pipeline  :__init__          : 266] | ℹ️   Model Adapter: Initialized with HybridViT
+2025-05-29 16:21:15 | DEBUG    | [executor  :_validate_methods : 152] | 🐞 Basic method validation successful.
+2025-05-29 16:21:15 | INFO     | [executor  :__init__          : 136] | ℹ️ Executor configured to run methods: single_train, single_eval
+2025-05-29 16:21:15 | INFO     | [executor  :run               : 162] | ℹ️ Starting execution of pipeline methods...
+2025-05-29 16:21:15 | INFO     | [executor  :run               : 166] | ℹ️ --- Running Method 1/2: single_train (single_train_0) ---
+2025-05-29 16:21:15 | DEBUG    | [executor  :run               : 191] | 🐞 Running with effective parameters: {'params': {'max_epochs': 80, 'lr': 0.001, 'batch_size': 16, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.05, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 80, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 15, 'module__cnn_extractor_name': 'paper_cnn', 'module__cnn_out_channels': 48, 'module__pretrained_cnn_path': 'experiments/CCSN/cnn_feat/20250529_154435_seed42/single_train_154435/cnn_feat_epoch30_val_valid-loss1.6400.pt', 'module__vit_model_variant': 'vit_b_16', 'module__pretrained': True, 'module__unfreeze_strategy': 'encoder_tail', 'module__num_transformer_blocks_to_unfreeze': 2, 'module__unfreeze_cls_token': True, 'module__unfreeze_pos_embedding': True, 'module__unfreeze_patch_embedding': False, 'module__unfreeze_encoder_layernorm': True, 'module__custom_head_hidden_dims': None, 'module__head_dropout_rate': 0.55, 'module__pipeline_img_h': 224, 'module__pipeline_img_w': 224}, 'save_model': True, 'val_split_ratio': 0.2, 'results_detail_level': 2}
+2025-05-29 16:21:15 | INFO     | [pipeline  :single_train      :1502] | ℹ️ Starting single training run...
+2025-05-29 16:21:15 | INFO     | [pipeline  :single_train      :1555] | ℹ️ Using split: 1627 train / 407 validation samples.
+2025-05-29 16:21:15 | INFO     | [pipeline  :single_train      :1562] | ℹ️ Applying custom parameters for this single_train run: {'max_epochs': 80, 'lr': 0.001, 'batch_size': 16, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.05, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 80, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 15, 'module__cnn_extractor_name': 'paper_cnn', 'module__cnn_out_channels': 48, 'module__pretrained_cnn_path': 'experiments/CCSN/cnn_feat/20250529_154435_seed42/single_train_154435/cnn_feat_epoch30_val_valid-loss1.6400.pt', 'module__vit_model_variant': 'vit_b_16', 'module__pretrained': True, 'module__unfreeze_strategy': 'encoder_tail', 'module__num_transformer_blocks_to_unfreeze': 2, 'module__unfreeze_cls_token': True, 'module__unfreeze_pos_embedding': True, 'module__unfreeze_patch_embedding': False, 'module__unfreeze_encoder_layernorm': True, 'module__custom_head_hidden_dims': None, 'module__head_dropout_rate': 0.55, 'module__pipeline_img_h': 224, 'module__pipeline_img_w': 224}
+2025-05-29 16:21:15 | DEBUG    | [param_g...:parse_fixed_hyp...: 151] | 🐞 Created LRScheduler instance: policy=CosineAnnealingLR, direct_args={}, constructor_kwargs={'T_max': 80, 'eta_min': 1e-06}
+2025-05-29 16:21:15 | INFO     | [pipeline  :single_train      :1624] | ℹ️ Fitting model (run_id: single_train_162115)...
+2025-05-29 16:21:15 | INFO     | [hybrid_...:__init__          :  48] | ℹ️ Loading pretrained weights for CNN extractor from: experiments/CCSN/cnn_feat/20250529_154435_seed42/single_train_154435/cnn_feat_epoch30_val_valid-loss1.6400.pt
+2025-05-29 16:21:16 | INFO     | [hybrid_...:__init__          :  70] | ℹ️ Determined CNN feature extractor output size: 14x14 for input 224x224
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          :  38] | 🐞 Initializing PretrainedViT:
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          :  39] | 🐞   Model Variant: vit_b_16, Pretrained: True
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          :  40] | 🐞   Is Hybrid Input: True
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          :  42] | 🐞   Hybrid In Channels: 48
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          :  43] | 🐞   Unfreeze Strategy (Encoder Blocks): encoder_tail
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          :  45] | 🐞   Num Transformer Blocks to Unfreeze: 2
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          :  46] | 🐞   Unfreeze CLS: True, PosEmb: True, PatchEmb: False, EncoderLN: True
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          :  48] | 🐞   Custom Head Hidden Dims: None, Head Dropout: 0.55
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          :  69] | 🐞 Loaded vit_b_16 from torchvision.
+2025-05-29 16:21:16 | INFO     | [pretrai...:__init__          : 101] | ℹ️ Adapting ViT 'vit_b_16' for hybrid input. Expected CNN feature map: 14x14.
+2025-05-29 16:21:16 | INFO     | [pretrai...:__init__          : 110] | ℹ️ Created hybrid input projection: 48 -> 768 channels.
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          : 214] | 🐞 Unfroze custom hybrid input projection layer for ViT.
+2025-05-29 16:21:16 | DEBUG    | [pretrai...:__init__          : 313] | 🐞 Created simple linear head (dropout: 0.55), in_feat=768.
+2025-05-29 16:21:16 | INFO     | [pretrai...:__init__          : 323] | ℹ️ PretrainedViT (hybrid) - Trainable: Hybrid Projection, CLS Token, Positional Embeddings, 2 Encoder Blocks, Encoder LayerNorm, Classification Head.
+2025-05-29 16:21:16 | INFO     | [pretrai...:__init__          : 348] | ℹ️ PretrainedViT (hybrid): Trainable params: 14.53M / Total params: 85.84M (16.92%)
+2025-05-29 16:21:16 | DEBUG    | [adapter   :get_split_datasets: 131] | 🐞 Split created: 1627 train, 407 validation.
+2025-05-29 16:21:16 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=1627, batch_size=16, shuffle=True, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-29 16:21:16 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for training.
+2025-05-29 16:21:16 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=407, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-29 16:21:16 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-29 16:21:56 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp           lr      dur
+2025-05-29 16:21:56 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ----------  -------
+2025-05-29 16:21:56 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️       1     ▲ 0.3245      ▼ 1.9441     ▲ 0.3759      ▼ 1.8097        0.00099961  39.5041
+2025-05-29 16:22:33 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️       2     ▲ 0.4075      ▼ 1.7132     ▲ 0.4029         1.814        0.00099846  37.4404
+2025-05-29 16:23:10 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️       3     ▲ 0.4173      ▼ 1.6662        0.344        1.8267        0.00099654  37.2555
+2025-05-29 16:23:48 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️       4     ▲ 0.4696      ▼ 1.5612       0.3833      ▼ 1.7749        0.00099385  37.1614
+2025-05-29 16:24:25 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️       5     ▲ 0.4739      ▼ 1.5079     ▲ 0.4029        1.8205        0.0009904  37.3299
+2025-05-29 16:25:02 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️       6     ▲ 0.4739      ▼ 1.5075     ▲ 0.4152        1.7942        0.0009862  37.0657
+2025-05-29 16:25:39 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️       7       0.4604        1.5448     ▲ 0.4300      ▼ 1.7256        0.00098125  37.1656
+2025-05-29 16:26:17 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️       8       0.4518         1.516       0.4029        1.7847        0.00097555  37.5701
+2025-05-29 16:26:55 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️       9     ▲ 0.4856      ▼ 1.4761       0.3956      ▼ 1.7003        0.00096913  37.7194
+2025-05-29 16:27:32 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      10     ▲ 0.5065      ▼ 1.4419       0.3857        1.8122        0.00096198  37.2908
+2025-05-29 16:28:09 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      11       0.5009        1.4641       0.4128        1.7549        0.00095412  37.4399
+2025-05-29 16:28:47 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      12     ▲ 0.5187      ▼ 1.4004     ▲ 0.4447      ▼ 1.6850        0.00094556  37.3747
+2025-05-29 16:29:24 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      13       0.5101        1.4138       0.4398      ▼ 1.6564        0.00093631  37.4451
+2025-05-29 16:30:02 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      14     ▲ 0.5317      ▼ 1.3604       0.3759        1.7589        0.00092639  37.413
+2025-05-29 16:30:39 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      15       0.5114        1.3723       0.4349        1.7058        0.00091582  37.3005
+2025-05-29 16:31:16 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      16        0.512      ▼ 1.3513       0.4029        1.8432        0.0009046  37.1985
+2025-05-29 16:31:53 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      17       0.5267        1.3596       0.4349        1.7092        0.00089277  37.3269
+2025-05-29 16:32:31 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      18     ▲ 0.5458      ▼ 1.2987       0.4349        1.7223        0.00088032  37.3886
+2025-05-29 16:33:08 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      19     ▲ 0.5569      ▼ 1.2817       0.4349        1.7878        0.00086729  37.3648
+2025-05-29 16:33:45 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      20     ▲ 0.5587      ▼ 1.2553         0.43        1.7633        0.0008537  37.2747
+2025-05-29 16:34:23 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      21       0.5519        1.2658       0.3931        1.9397        0.00083956  37.1547
+2025-05-29 16:35:00 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      22     ▲ 0.5704      ▼ 1.2403       0.4349        1.7529        0.0008249  37.2903
+2025-05-29 16:35:37 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      23     ▲ 0.5704      ▼ 1.2063       0.4152        1.7798        0.00080974  37.3562
+2025-05-29 16:36:15 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      24       0.5593        1.2227     ▲ 0.4644        1.7059        0.0007941  37.3704
+2025-05-29 16:36:52 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      25     ▲ 0.5765      ▼ 1.1958       0.4029        1.8228        0.00077801  37.3653
+2025-05-29 16:37:29 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      26     ▲ 0.5937      ▼ 1.1519       0.4177        2.0653        0.00076149  37.3891
+2025-05-29 16:38:07 | INFO     | [callbacks :on_epoch_end      : 148] | ℹ️      27     ▲ 0.6091      ▼ 1.1319       0.4103        1.9834        0.00074457  37.1408
+2025-05-29 16:38:44 | INFO     | [pipeline  :single_train      :1656] | ℹ️ Training finished. Best validation performance found at Epoch 13 (valid_loss=1.6564)
+2025-05-29 16:38:44 | INFO     | [pipeline  :single_train      :1706] | ℹ️ Model state_dict saved via repository to: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\hybrid_vit\20250529_162115_seed42\single_train_162115\hybrid_vit_epoch13_val_valid-loss1.6564.pt
+2025-05-29 16:38:44 | INFO     | [pipeline  :single_train      :1718] | ℹ️ Main pipeline model adapter updated from single_train run: single_train_162115
+2025-05-29 16:38:44 | DEBUG    | [pipeline  :_save_results     : 463] | 🐞 Results detail level overridden for this run to: 2
+2025-05-29 16:38:44 | DEBUG    | [pipeline  :_save_results     : 471] | 🐞 Saving results for single_train_162115 (detail level: 2)
+2025-05-29 16:38:44 | INFO     | [pipeline  :_save_results     : 580] | ℹ️ Results JSON saved via repository to: experiments/CCSN/hybrid_vit/20250529_162115_seed42/single_train_162115/single_train_results.json
+2025-05-29 16:38:44 | INFO     | [pipeline  :single_train      :1755] | ℹ️ Plotting single_train results for single_train_162115 (plot level 2).
+2025-05-29 16:38:44 | INFO     | [plotter   :plot_single_tra...: 662] | ℹ️ Plotting single_train results for: single_train_162115
+2025-05-29 16:38:45 | INFO     | [plotter   :plot_single_tra...: 680] | ℹ️ Finished plotting for single_train: single_train_162115
+2025-05-29 16:38:45 | INFO     | [executor  :run               : 198] | ℹ️ --- Method single_train (single_train_0) completed successfully in 1049.23s ---
+2025-05-29 16:38:45 | INFO     | [executor  :run               : 166] | ℹ️ --- Running Method 2/2: single_eval (single_eval_1) ---
+2025-05-29 16:38:45 | DEBUG    | [executor  :run               : 191] | 🐞 Running with effective parameters: {'plot_level': 2}
+2025-05-29 16:38:45 | INFO     | [pipeline  :single_eval       :1776] | ℹ️ Starting model evaluation on the test set...
+2025-05-29 16:38:45 | INFO     | [pipeline  :single_eval       :1790] | ℹ️ Evaluating on 509 test samples...
+2025-05-29 16:38:45 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-29 16:38:45 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=509, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-29 16:38:45 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-29 16:38:48 | DEBUG    | [adapter   :get_iterator      : 250] | 🐞 get_iterator: Wrapping skorch Dataset's X (paths) with PathImageDataset for eval.
+2025-05-29 16:38:48 | DEBUG    | [adapter   :get_iterator      : 304] | 🐞 Creating DataLoader: dataset_len=509, batch_size=16, shuffle=False, collate_fn=Custom (PathImageDataset style), loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-29 16:38:48 | DEBUG    | [adapter   :get_iterator      : 319] | 🐞 Wrapping DataLoader with _BatchPlottingIterator for validation/evaluation.
+2025-05-29 16:38:51 | DEBUG    | [pipeline  :single_eval       :1807] | 🐞 Plot level overridden for this run to: 2
+2025-05-29 16:38:51 | DEBUG    | [pipeline  :_compute_metrics  : 443] | 🐞 Computed Metrics: Acc=0.4479, Macro F1=0.4154
+2025-05-29 16:38:51 | DEBUG    | [pipeline  :_save_results     : 465] | 🐞 Using pipeline results detail level for this run: 3
+2025-05-29 16:38:51 | DEBUG    | [pipeline  :_save_results     : 471] | 🐞 Saving results for single_eval_163845 (detail level: 3)
+2025-05-29 16:38:51 | INFO     | [pipeline  :_save_results     : 580] | ℹ️ Results JSON saved via repository to: experiments/CCSN/hybrid_vit/20250529_162115_seed42/single_eval_163845/single_eval_results.json
+2025-05-29 16:38:51 | INFO     | [pipeline  :single_eval       :1850] | ℹ️ Plotting single_eval results for single_eval_163845 (plot level 2).
+2025-05-29 16:38:51 | INFO     | [plotter   :plot_single_eva...: 697] | ℹ️ Plotting single_eval results for: single_eval_163845
+2025-05-29 16:38:51 | INFO     | [plotter   :_generate_metri...: 246] | ℹ️ Metrics CSV saved via repository to: experiments/CCSN/hybrid_vit/20250529_162115_seed42/single_eval_163845/single_eval_plots/metrics_table.csv
+2025-05-29 16:38:52 | INFO     | [plotter   :plot_single_eva...: 745] | ℹ️ Finished plotting for single_eval: single_eval_163845
+2025-05-29 16:38:52 | INFO     | [executor  :run               : 198] | ℹ️ --- Method single_eval (single_eval_1) completed successfully in 7.52s ---
+2025-05-29 16:38:52 | INFO     | [executor  :run               : 217] | ℹ️ Pipeline execution finished in 1056.75s.
+2025-05-29 16:38:52 | INFO     | [executor  :run               : 313] | ℹ️ Final log file available at: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\hybrid_vit\20250529_162115_seed42\experiment_run_20250529_162115_seed42.log
+2025-05-29 16:38:52 | INFO     | [main      :<module>          : 287] | ℹ️ --- Final Execution Results Summary ---
+2025-05-29 16:38:52 | INFO     | [main      :<module>          : 296] | ℹ️ Method single_train_0: Completed. (Acc: 0.4398, F1: nan, BestScore: nan)
+2025-05-29 16:38:52 | INFO     | [main      :<module>          : 296] | ℹ️ Method single_eval_1: Completed. (Acc: nan, F1: 0.4154, BestScore: nan)
