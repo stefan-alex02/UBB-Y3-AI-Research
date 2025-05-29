@@ -40,7 +40,7 @@ if __name__ == "__main__":
     selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'hswin', 'svit', 'diff', 'hybrid_vit', 'cnn_feat'
+    model_type = "hybrid_vit"  # 'cnn', 'pvit', 'swin', 'hswin', 'svit', 'diff', 'hybrid_vit', 'cnn_feat'
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -60,6 +60,8 @@ if __name__ == "__main__":
     # Set to True to allow nested_grid_search and cv_model_evaluation on FIXED datasets
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
     force_flat = False
+
+    save_model = True  # Whether to save the model after training
 
     # Flag for overriding parameters:
     enable_debug_params = False # Set to True to use the override params for any model type
@@ -152,7 +154,7 @@ if __name__ == "__main__":
     methods_seq_1 = [
         ('single_train', {
             'params': chosen_fixed_params, # Fixed hyperparams
-            'save_model': False,
+            'save_model': save_model,
             'val_split_ratio': 0.2, # Explicit val split
             'results_detail_level': 2,
         }),
@@ -171,7 +173,7 @@ if __name__ == "__main__":
             # 'n_iter': 4,
             'internal_val_split_ratio': 0.2,
             'scoring': 'accuracy',
-            'save_best_model': False,
+            'save_best_model': save_model,
             'results_detail_level': 2,
         }),
         # The best model is refit and stored in pipeline.model_adapter after search
@@ -206,7 +208,7 @@ if __name__ == "__main__":
             'cv': 2,
             'method': 'grid',
             'scoring': 'accuracy',
-            'save_best_model': True
+            'save_best_model': save_model
         }),
          ('cv_model_evaluation', {
              'cv': 2,
