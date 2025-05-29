@@ -52,4 +52,6 @@ class AugmentationStrategy(str, Enum):
     SKY_ONLY_ROTATION = "sky_only_rotation" # Allows full rotation, good for GCD/Swimcat
     GROUND_AWARE_NO_ROTATION = "ground_aware_no_rotation" # For CCSN - no vertical flips/major rotations
     NO_AUGMENTATION = "no_augmentation" # Just resize, ToTensor, Normalize
+    PAPER_GCD = "paper_replication_gcd" # Specific to GCD paper replication
+    PAPER_CCSN = "paper_replication_ccsn" # Specific to CCSN paper replication
     # You can add more named strategies here

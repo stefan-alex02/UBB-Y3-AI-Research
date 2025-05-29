@@ -26,11 +26,7 @@ paper_cnn_standalone_fixed_params = {
     # 'callbacks__default_lr_scheduler__factor': 0.2, # Factor by which LR is reduced.
     # 'callbacks__default_lr_scheduler__min_lr': 1e-6,
 
-    # --- Early Stopping ---
-    # 'patience' is a top-level Executor/Pipeline param, but we can specify for callback here too.
-    # Skorch default callbacks will use pipeline's patience if not overridden here.
-    # Let's assume pipeline's default patience (e.g., 10) is fine.
-    # 'callbacks__default_early_stopping__patience': 10, # Number of epochs with no improvement before stopping.
+    'callbacks__default_early_stopping__patience': 15, # Number of epochs with no improvement before stopping.
 
     # --- Module Parameters for PaperCNNFeatureExtractor ---
     # 'module__in_channels': 3, # This is usually fixed based on image data.

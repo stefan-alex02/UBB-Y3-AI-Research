@@ -5,6 +5,7 @@ import numpy as np
 
 from model_src.server.ml.params.feature_extractors import paper_cnn_standalone_fixed_params
 from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params
+from model_src.server.ml.params.paper_xception_mobilenet import xcloud_fixed_params, mcloud_fixed_params
 from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_params
 from server.ml.logger_utils import logger
 from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused, best_config_as_grid_vit
@@ -37,10 +38,10 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "hvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hvit', 'cnn_feat'
+    model_type = "hvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hvit', 'cnn_feat', 'xcloud', 'mcloud'
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -61,10 +62,13 @@ if __name__ == "__main__":
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
     force_flat = False
 
-    save_model = True  # Whether to save the model after training
+    save_model = False  # Whether to save the model after training
 
     # Flag for overriding parameters:
     enable_debug_params = False # Set to True to use the override params for any model type
+
+    # data_augmentation_mode_override = None
+    data_augmentation_mode_override = AugmentationStrategy.PAPER_CCSN
 
     # Trained model path for loading
     # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
@@ -119,10 +123,6 @@ if __name__ == "__main__":
         chosen_fixed_params = pretrained_swin_fixed_params
         chosen_param_grid = best_config_as_grid_vit # TODO: update
 
-    elif model_type == ModelType.HYBRID_SWIN:
-        chosen_fixed_params = None # TODO: update
-        chosen_param_grid = None # TODO: update
-
     elif model_type == ModelType.CNN_FEAT:
         chosen_fixed_params = paper_cnn_standalone_fixed_params
         chosen_param_grid = None  # No grid search for standalone CNN feature extractor
@@ -135,17 +135,37 @@ if __name__ == "__main__":
         chosen_fixed_params = debug_fixed_params # Using debug fixed params for the moment (TODO: update)
         chosen_param_grid = diffusion_param_grid
 
+    elif model_type == ModelType.XCLOUD:
+        chosen_fixed_params = xcloud_fixed_params
+        chosen_param_grid = None # TODO: update
+
+    elif model_type == ModelType.MCLOUD:
+        chosen_fixed_params = mcloud_fixed_params
+        chosen_param_grid = None
+
     else:
         logger.error(f"Model type '{model_type}' not recognized. Supported: {[m.value for m in ModelType]}")
         exit()
 
+    if selected_dataset == 'ccsn':
+        # Target: 70% train, 20% val, 10% test
+        effective_test_split_ratio_if_flat = 0.1
+        effective_val_split_ratio = 0.2 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
+    elif selected_dataset == 'gcd':
+        # Target: 7000 train, 3000 val, 9000 test from 19000 total
+        effective_test_split_ratio_if_flat = 9000 / 19000
+        effective_val_split_ratio = 3000 / (19000 - 9000)  # 0.3 of the (train+val) part
+    else:
+        effective_test_split_ratio_if_flat = 0.2  # Your default
+        effective_val_split_ratio = 0.2  # Your default (applied to train_val part)
+
     # --- Define Augmentation Strategy ---
-    # Choose the augmentation strategy based on the dataset
-    if selected_dataset in ['mGCD', 'mGCDf', 'GCD', 'swimcat']:
+    if data_augmentation_mode_override is not None:
+        augmentation_strategy = data_augmentation_mode_override
+    elif selected_dataset in ['mGCD', 'mGCDf', 'GCD', 'swimcat']:
         augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
     elif selected_dataset == 'ccsn':
         augmentation_strategy = AugmentationStrategy.GROUND_AWARE_NO_ROTATION
-        # augmentation_strategy = AugmentationStrategy.DEFAULT_STANDARD
     else:
         augmentation_strategy = AugmentationStrategy.DEFAULT_STANDARD
 
@@ -155,7 +175,7 @@ if __name__ == "__main__":
         ('single_train', {
             'params': chosen_fixed_params, # Fixed hyperparams
             'save_model': save_model,
-            'val_split_ratio': 0.2, # Explicit val split
+            'val_split_ratio': effective_val_split_ratio,
             'results_detail_level': 2,
         }),
         ('single_eval', {
@@ -171,7 +191,7 @@ if __name__ == "__main__":
             'method': 'grid',
             # 'method': 'random',
             # 'n_iter': 4,
-            'internal_val_split_ratio': 0.2,
+            'internal_val_split_ratio': effective_val_split_ratio,
             'scoring': 'accuracy',
             'save_best_model': save_model,
             'results_detail_level': 2,
@@ -195,7 +215,8 @@ if __name__ == "__main__":
     methods_seq_4 = [
          ('cv_model_evaluation', {
              'params': chosen_fixed_params, # Pass fixed hyperparams
-             'cv': 2,
+             'internal_val_split_ratio': effective_val_split_ratio,
+             'cv': 5,
              'evaluate_on': 'full', # Explicitly state (or rely on default)
              'results_detail_level': 3,
         })
@@ -276,7 +297,7 @@ if __name__ == "__main__":
             patience=10,
             lr=0.001,
             optimizer__weight_decay=0.01,
-            test_split_ratio_if_flat=0.2, # For flat datasets
+            test_split_ratio_if_flat=effective_test_split_ratio_if_flat,
             # module__dropout_rate=0.5 # If applicable to model
             results_detail_level=3,
             plot_level=2,

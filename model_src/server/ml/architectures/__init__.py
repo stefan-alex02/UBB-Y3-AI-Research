@@ -6,6 +6,8 @@ from .scratch_vit import ScratchViT
 from .model_types import ModelType
 from .feature_extractors import PaperCNNFeatureExtractor
 from .hybrid_models import HybridViT
+from .paper_xception_mobilenet import XceptionBasedCloudNet, MobileNetBasedCloudNet
+
 
 __all__ = [
     "ModelType",
@@ -16,4 +18,6 @@ __all__ = [
     "DiffusionClassifier",
     "PaperCNNFeatureExtractor",
     "HybridViT",
+    "XceptionBasedCloudNet",
+    "MobileNetBasedCloudNet",
 ]

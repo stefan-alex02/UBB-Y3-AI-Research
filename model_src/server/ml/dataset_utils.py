@@ -47,11 +47,11 @@ class PathImageDataset(Dataset):
         """Helper to find image size from Resize transform, defaults to (64, 64)."""
         if isinstance(transform, transforms.Compose):
             for t in transform.transforms:
-                if isinstance(t, transforms.Resize):
+                if isinstance(t, (transforms.Resize, transforms.RandomResizedCrop)):
                     size = t.size
                     if isinstance(size, int): return size, size
                     if isinstance(size, (list, tuple)) and len(size) == 2: return tuple(size)
-        elif isinstance(transform, transforms.Resize): # Handle direct Resize
+        elif isinstance(transform, (transforms.Resize, transforms.RandomResizedCrop)): # Handle direct Resize
              size = transform.size
              if isinstance(size, int): return size, size
              if isinstance(size, (list, tuple)) and len(size) == 2: return tuple(size)
@@ -148,10 +148,11 @@ def get_ground_aware_no_rotation_augmentations(img_size: Tuple[int, int]) -> tra
         transforms.RandomCrop(img_size),
         transforms.RandomHorizontalFlip(p=0.5),
         transforms.RandomRotation(degrees=5),
+        transforms.RandomAffine(degrees=0, translate=(0.05, 0.05), shear=5)
     ]
 
     color_intensity_transforms = [
-        transforms.ColorJitter(brightness=0.2, contrast=0.2, saturation=0.1, hue=0.02),
+        transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.15, hue=0.03),
 
         # Randomly apply auto-contrast to maximize image contrast
         # transforms.RandomAutocontrast(p=0.3),
@@ -199,6 +200,30 @@ def get_no_augmentation_transform(img_size: Tuple[int, int]) -> transforms.Compo
     """Only basic preprocessing, no augmentation. Same as eval_transform."""
     return transforms.Compose([
         transforms.Resize(img_size),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+
+def get_paper_replication_augmentation_gcd(img_size: Tuple[int, int]) -> transforms.Compose:
+    return transforms.Compose([
+        transforms.RandomResizedCrop(img_size, scale=(0.8, 1.0)), # Combines zoom and crop
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomRotation(degrees=15), # Paper says "random rotations", let's pick a moderate value
+        # Paper explicitly avoided contrast jitter
+        transforms.ColorJitter(brightness=0.2, saturation=0.2, hue=0.1, contrast=0.0), # Example values, no contrast
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+
+def get_paper_replication_augmentation_ccsn(img_size: Tuple[int, int]) -> transforms.Compose:
+    return transforms.Compose([
+        transforms.RandomResizedCrop(img_size, scale=(0.8, 1.0)), # Combines zoom and crop
+        transforms.RandomHorizontalFlip(p=0.5),
+        # Paper: "random rotations to not be appropriate for this data set" for CCSN
+        # Your GROUND_AWARE_NO_ROTATION had small rotation and affine, this removes them fully for closer replication.
+        transforms.ColorJitter(brightness=0.2, saturation=0.2, hue=0.1, contrast=0.0),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
@@ -261,6 +286,10 @@ class ImageDatasetHandler:
             self.train_transform = get_sky_only_rotation_augmentations(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.GROUND_AWARE_NO_ROTATION:
             self.train_transform = get_ground_aware_no_rotation_augmentations(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.PAPER_GCD:
+            self.train_transform = get_paper_replication_augmentation_gcd(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.PAPER_CCSN:
+            self.train_transform = get_paper_replication_augmentation_ccsn(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.DEFAULT_STANDARD:
             self.train_transform = get_default_standard_augmentations(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.NO_AUGMENTATION:

@@ -1,5 +1,6 @@
 from enum import Enum
 
+from .paper_xception_mobilenet import XceptionBasedCloudNet, MobileNetBasedCloudNet
 from .feature_extractors import PaperCNNFeatureExtractor
 from .hybrid_models import HybridViT
 from .cnn import SimpleCNN
@@ -19,6 +20,9 @@ model_mapping = {
 
     "hvit": HybridViT,  # New entry for dedicated hybrid model
     "cnn_feat": PaperCNNFeatureExtractor,  # If you want to train/test CNN extractor alone
+
+    "xcloud": XceptionBasedCloudNet,
+    "mcloud": MobileNetBasedCloudNet,
 }
 
 
@@ -29,8 +33,11 @@ class ModelType(str, Enum):  # Inheriting from str makes it directly usable as a
     PRETRAINED_SWIN = "swin"
     DIFFUSION = "diff"
 
-    HYBRID_VIT = "hvit"        # New
-    CNN_FEAT = "cnn_feat" # New
+    HYBRID_VIT = "hvit"
+    CNN_FEAT = "cnn_feat"
+
+    XCLOUD = "xcloud"
+    MCLOUD = "mcloud"
 
     def get_model_class(self):
         """Returns the model class associated with the model type."""

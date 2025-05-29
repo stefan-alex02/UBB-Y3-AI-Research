@@ -1,14 +1,11 @@
-# --- Fixed Parameter Sets ---
-import torch
-
 # --- Option 1: A common fine-tuning setup (similar to your old SimpleViT's intent) ---
 pretrained_vit_fixed_params = {
     'max_epochs': 70,
-    'lr': 1e-3,
+    'lr': 5e-5,
     'batch_size': 16,
 
     'optimizer': 'AdamW',
-    'optimizer__weight_decay': 0.05, # Start with original, can reduce later
+    'optimizer__weight_decay': 0.2, # Start with original, can reduce later
 
     'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
     'callbacks__default_lr_scheduler__T_max': 70,
@@ -24,13 +21,13 @@ pretrained_vit_fixed_params = {
     'module__vit_model_variant': 'vit_b_16',
     'module__pretrained': True,
     'module__unfreeze_strategy': 'encoder_tail',
-    'module__num_transformer_blocks_to_unfreeze': 2,
+    'module__num_transformer_blocks_to_unfreeze': 1,
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
     'module__unfreeze_patch_embedding': False,
     'module__unfreeze_encoder_layernorm': True,
     'module__custom_head_hidden_dims': None,
-    'module__head_dropout_rate': 0.55
+    'module__head_dropout_rate': 0.50
 }
 
 # --- Parameter Space Definitions ---
