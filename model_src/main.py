@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "GCD"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "hvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hvit', 'cnn_feat', 'xcloud', 'mcloud'

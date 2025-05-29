@@ -41,6 +41,7 @@ class LogColors:
 
 # Dataset dictionary
 DATASET_DICT = {
+    'GCD': "data/GCD",
     'mGCD': "data/mini-GCD",
     'mGCDf': "data/mini-GCD-flat",
     'swimcat': "data/Swimcat-extend",
