@@ -226,5 +226,5 @@ class PaperCNNFeatureExtractor(nn.Module):
         except Exception as e:
             print(f"Error loading pretrained weights for PaperCNNFeatureExtractor from {path}: {e}")
             # Decide if you want to raise or just warn and continue with random weights
-            # raise
+            raise
 
