@@ -44,6 +44,12 @@ class HybridViT(nn.Module):
         else:
             raise ValueError(f"Unknown CNN extractor name: {cnn_extractor_name}")
 
+        if pretrained_cnn_path:
+            logger.info(f"Loading pretrained weights for CNN extractor from: {pretrained_cnn_path}")
+            self.feature_extractor.load_pretrained_weights(pretrained_cnn_path)
+        else:
+            logger.info("CNN feature extractor initialized with random weights.")
+
         # --- Freeze CNN extractor if specified ---
         if freeze_cnn_extractor:
             logger.info("Freezing CNN feature extractor parameters.")
@@ -71,12 +77,6 @@ class HybridViT(nn.Module):
                 cnn_output_w_feat = 14
             else: # If pipeline size changes, this fallback is risky
                 raise ValueError("Cannot determine CNN output size for non-224px input without dynamic check or better config.")
-
-        if pretrained_cnn_path:
-            logger.info(f"Loading pretrained weights for CNN extractor from: {pretrained_cnn_path}")
-            self.feature_extractor.load_pretrained_weights(pretrained_cnn_path)
-        else:
-            logger.info("CNN feature extractor initialized with random weights.")
 
         self.transformer_backend = PretrainedViT(
             num_classes=num_classes,

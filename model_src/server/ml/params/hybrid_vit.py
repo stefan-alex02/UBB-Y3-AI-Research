@@ -14,8 +14,8 @@ hybrid_vit_fixed_params_paper_cnn_scratch = {
 
     'module__cnn_extractor_name': 'paper_cnn',
     'module__cnn_out_channels': 48, # Matches PaperCNNFeatureExtractor
-    'module__pretrained_cnn_path': None, # Train CNN from scratch
-    # 'module__pretrained_cnn_path': "experiments/CCSN/cnn_feat/20250528_235706_seed42/single_train_235706/cnn_feat_epoch30_val_valid-loss1.6400.pt",
+    # 'module__pretrained_cnn_path': None, # Train CNN from scratch
+    'module__pretrained_cnn_path': "experiments/CCSN/cnn_feat/20250528_235706_seed42/single_train_235706/cnn_feat_epoch30_val_valid-loss1.6400.pt",
 
     # Then params are:
     'module__vit_model_variant': 'vit_b_16',

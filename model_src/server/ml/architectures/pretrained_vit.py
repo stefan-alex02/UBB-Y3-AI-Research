@@ -35,7 +35,7 @@ class PretrainedViT(nn.Module):
         self.is_hybrid_input = is_hybrid_input
         self.hybrid_in_channels = hybrid_in_channels
 
-        logger.debug(f"Initializing PretrainedViT (not FlexibleViT anymore):")  # Corrected class name in log
+        logger.debug(f"Initializing PretrainedViT:")  # Corrected class name in log
         logger.debug(f"  Model Variant: {vit_model_variant}, Pretrained: {pretrained}")
         logger.debug(f"  Is Hybrid Input: {self.is_hybrid_input}")
         if self.is_hybrid_input:
