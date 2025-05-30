@@ -160,7 +160,7 @@ if __name__ == "__main__":
     if selected_dataset == 'ccsn':
         # Target: 70% train, 20% val, 10% test
         effective_test_split_ratio_if_flat = 0.1
-        effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
+        effective_val_split_ratio = 0.2 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
     elif selected_dataset == 'gcd':
         # Target: 7000 train, 3000 val, 9000 test from 19000 total
         effective_test_split_ratio_if_flat = 9000 / 19000

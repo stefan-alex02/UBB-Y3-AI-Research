@@ -19,10 +19,10 @@ pretrained_vit_fixed_params = {
 
     # --- CutMix Parameters ---
     'cutmix_alpha': 1.0,
-    'cutmix_probability': 0.0,
+    'cutmix_probability': 0.9,
 
     # --- Gradient Clipping (already discussed) ---
-    'gradient_clip_value': 5.0,  # If you want to use it
+    # 'gradient_clip_value': 5.0,  # If you want to use it
 
     'module__vit_model_variant': 'vit_b_16',
     'module__pretrained': True,
