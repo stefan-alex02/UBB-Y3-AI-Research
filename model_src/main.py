@@ -175,7 +175,7 @@ if __name__ == "__main__":
     elif selected_dataset in ['mGCD', 'mGCDf', 'GCD']:
         augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
     elif selected_dataset == 'swimcat':
-        augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
+        augmentation_strategy = AugmentationStrategy.PAPER_CCSN
     elif selected_dataset == 'ccsn':
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     else:
