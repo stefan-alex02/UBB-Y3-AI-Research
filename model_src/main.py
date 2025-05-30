@@ -38,7 +38,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "GCD"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "hvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hvit', 'cnn_feat', 'xcloud', 'mcloud'
@@ -51,7 +51,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 4  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs

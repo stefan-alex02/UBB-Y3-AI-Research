@@ -1,6 +1,6 @@
 hybrid_vit_fixed_params = {
     # --- Skorch/Training Loop Parameters ---
-    'max_epochs': 60,
+    'max_epochs': 70,
     'lr': 5e-5,
     'batch_size': 32,
 
@@ -10,7 +10,7 @@ hybrid_vit_fixed_params = {
 
     # --- LR Scheduler ---
     'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
-    'callbacks__default_lr_scheduler__T_max': 60, # Match max_epochs
+    'callbacks__default_lr_scheduler__T_max': 70, # Match max_epochs
     'callbacks__default_lr_scheduler__eta_min': 1e-6,
 
     # --- Early Stopping ---
