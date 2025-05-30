@@ -7,6 +7,7 @@ from .model_types import ModelType
 from .feature_extractors import PaperCNNFeatureExtractor
 from .hybrid_models import HybridViT
 from .paper_xception_mobilenet import XceptionBasedCloudNet, MobileNetBasedCloudNet
+from .resnet import ResNet18BasedCloud
 
 
 __all__ = [
@@ -20,4 +21,5 @@ __all__ = [
     "HybridViT",
     "XceptionBasedCloudNet",
     "MobileNetBasedCloudNet",
+    "ResNet18BasedCloud",
 ]

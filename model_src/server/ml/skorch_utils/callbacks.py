@@ -26,7 +26,6 @@ class FileLogTable(Callback):
     _COLALIGN = ("right", "right", "right", "right", "right", "center", "right", "right")
     _tabulate_warning_shown = False # Class attribute for one-time warning
 
-    # Emojis for improvements
     # ASCII indicators for improvements
     _IMPROVEMENT_LOSS_BETTER = '▼ ' # Loss went down
     _IMPROVEMENT_ACC_BETTER = '▲ '  # Accuracy went up
@@ -160,7 +159,6 @@ def get_default_callbacks(
     early_stopping_patience: int = 10,
     lr_scheduler_policy: str = 'ReduceLROnPlateau', # Default policy from Pipeline __init__
     lr_scheduler_monitor: Optional[str] = 'valid_loss',
-    # **lr_scheduler_constructor_kwargs: Any # These are kwargs passed from Pipeline.__init__ for the default scheduler
     **kwargs # Renaming for clarity, these are constructor args for the PyTorch scheduler
 ) -> List[Tuple[str, Callback]]:
     is_loss_metric = early_stopping_monitor.endswith('_loss')

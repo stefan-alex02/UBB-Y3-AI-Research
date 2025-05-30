@@ -7,6 +7,8 @@ from model_src.server.ml.params.feature_extractors import paper_cnn_standalone_f
 from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params
 from model_src.server.ml.params.paper_xception_mobilenet import xcloud_fixed_params, mcloud_fixed_params
 from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_params
+from model_src.server.ml.params.resnet import resnet18_cloud_fixed_params
+from model_src.server.ml.params.standard_cnn_extractor import standard_cnn_fixed_params
 from server.ml.logger_utils import logger
 from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused, best_config_as_grid_vit
 from server.ml.params.scratch_vit import fixed_params_vit_scratch, param_grid_vit_from_scratch
@@ -38,10 +40,10 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "hvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hvit', 'cnn_feat', 'xcloud', 'mcloud'
+    model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet'
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -51,7 +53,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 4  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -119,13 +121,13 @@ if __name__ == "__main__":
         chosen_fixed_params = hybrid_vit_fixed_params
         chosen_param_grid = None
 
-    elif model_type == ModelType.PRETRAINED_SWIN:
-        chosen_fixed_params = pretrained_swin_fixed_params
-        chosen_param_grid = best_config_as_grid_vit # TODO: update
-
     elif model_type == ModelType.CNN_FEAT:
         chosen_fixed_params = paper_cnn_standalone_fixed_params
         chosen_param_grid = None  # No grid search for standalone CNN feature extractor
+
+    elif model_type == ModelType.STANDARD_FEAT:
+        chosen_fixed_params = standard_cnn_fixed_params
+        chosen_param_grid = None  # No grid search for standard CNN feature extractor
 
     elif model_type == ModelType.SCRATCH_VIT:
         chosen_fixed_params = fixed_params_vit_scratch
@@ -143,6 +145,14 @@ if __name__ == "__main__":
         chosen_fixed_params = mcloud_fixed_params
         chosen_param_grid = None
 
+    elif model_type == ModelType.RESNET18_CLOUD:
+        chosen_fixed_params = resnet18_cloud_fixed_params
+        chosen_param_grid = None  # No grid search for ResNet18 Cloud
+
+    elif model_type == ModelType.PRETRAINED_SWIN:
+        chosen_fixed_params = pretrained_swin_fixed_params
+        chosen_param_grid = best_config_as_grid_vit # TODO: update
+
     else:
         logger.error(f"Model type '{model_type}' not recognized. Supported: {[m.value for m in ModelType]}")
         exit()
@@ -150,7 +160,7 @@ if __name__ == "__main__":
     if selected_dataset == 'ccsn':
         # Target: 70% train, 20% val, 10% test
         effective_test_split_ratio_if_flat = 0.1
-        effective_val_split_ratio = 0.2 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
+        effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
     elif selected_dataset == 'gcd':
         # Target: 7000 train, 3000 val, 9000 test from 19000 total
         effective_test_split_ratio_if_flat = 9000 / 19000

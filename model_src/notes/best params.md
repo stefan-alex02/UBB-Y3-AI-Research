@@ -1,8 +1,15 @@
 Swimcat - Hybrid-ViT: 
 
-- Single train:
-  - valid acc: 1.0000, valid loss: 0.4284
-  - test acc: 
+- 5-Fold Cross-Validation
+
+        CV Evaluation Summary (on full data, 5 folds, 95% CI):
+        Accuracy            : 0.9895 +/- 0.0045
+        F1 Macro            : 0.9895 +/- 0.0045
+        Precision Macro     : 0.9897 +/- 0.0045
+        Recall Macro        : 0.9895 +/- 0.0045
+        Specificity Macro   : 0.9979 +/- 0.0009
+        Roc Auc Macro       : 0.9997 +/- 0.0003
+        Pr Auc Macro        : 0.9924 +/- 0.0021
 
 ```python
 hybrid_vit_fixed_params = {

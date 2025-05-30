@@ -1,0 +1,102 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-05-30 20:35:04 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\pvit\20250530_203504_seed42\experiment_run_20250530_203504_seed42.log
+2025-05-30 20:35:04 | INFO     | [executor  :__init__          : 100] | ℹ️ --- Starting Experiment Run (ID: 20250530_203504_seed42) ---
+2025-05-30 20:35:04 | INFO     | [executor  :__init__          : 101] | ℹ️ Executor initialized for model 'pvit' on dataset 'CCSN'
+2025-05-30 20:35:04 | INFO     | [executor  :__init__          : 104] | ℹ️ Local artifact storage base: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-05-30 20:35:04 | INFO     | [executor  :__init__          : 108] | ℹ️ Base key/prefix for this run's artifacts: experiments/CCSN/pvit/20250530_203504_seed42
+2025-05-30 20:35:04 | INFO     | [executor  :__init__          : 110] | ℹ️ Local log file for this run (might be temporary): C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\pvit\20250530_203504_seed42\experiment_run_20250530_203504_seed42.log
+2025-05-30 20:35:04 | INFO     | [pipeline  :__init__          : 173] | ℹ️ Initializing Classification Pipeline:
+2025-05-30 20:35:04 | INFO     | [pipeline  :__init__          : 174] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN
+2025-05-30 20:35:04 | INFO     | [pipeline  :__init__          : 175] | ℹ️   Model Type: pvit
+2025-05-30 20:35:04 | INFO     | [pipeline  :__init__          : 178] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/pvit/20250530_203504_seed42 (using LocalFileSystemRepository)
+2025-05-30 20:35:04 | INFO     | [pipeline  :__init__          : 182] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.CCSN_MODERATE
+2025-05-30 20:35:04 | INFO     | [pipeline  :__init__          : 183] | ℹ️   Default Show First Batch Aug: True
+2025-05-30 20:35:04 | INFO     | [dataset...:__init__          : 268] | ℹ️ Using augmentation strategy: AugmentationStrategy.CCSN_MODERATE
+2025-05-30 20:35:04 | INFO     | [dataset...:__init__          : 293] | ℹ️ Detected dataset structure: flat
+2025-05-30 20:35:04 | INFO     | [dataset...:_load_paths_and...: 368] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN...
+2025-05-30 20:35:04 | INFO     | [dataset...:__init__          : 313] | ℹ️ Found 11 classes: Ac, As, Cb, Cc, Ci, Cs, Ct, Cu, Ns, Sc, St
+2025-05-30 20:35:04 | INFO     | [dataset...:__init__          : 316] | ℹ️ Dataset sizes: 2034 train+val, 509 test. Total: 2543
+2025-05-30 20:35:04 | INFO     | [pipeline  :__init__          : 192] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/pvit/20250530_203504_seed42 (using LocalFileSystemRepository)
+2025-05-30 20:35:04 | INFO     | [pipeline  :__init__          : 223] | ℹ️   Using Optimizer: AdamW
+2025-05-30 20:35:04 | DEBUG    | [callbacks :get_default_cal...: 196] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-05-30 20:35:04 | INFO     | [pipeline  :__init__          : 266] | ℹ️   Model Adapter: Initialized with PretrainedViT
+2025-05-30 20:35:04 | DEBUG    | [executor  :_validate_methods : 152] | 🐞 Basic method validation successful.
+2025-05-30 20:35:04 | INFO     | [executor  :__init__          : 136] | ℹ️ Executor configured to run methods: single_train, single_eval
+2025-05-30 20:35:04 | INFO     | [executor  :run               : 162] | ℹ️ Starting execution of pipeline methods...
+2025-05-30 20:35:04 | INFO     | [executor  :run               : 166] | ℹ️ --- Running Method 1/2: single_train (single_train_0) ---
+2025-05-30 20:35:04 | DEBUG    | [executor  :run               : 191] | 🐞 Running with effective parameters: {'params': {'max_epochs': 70, 'lr': 5e-05, 'batch_size': 16, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.2, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 70, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 15, 'cutmix_alpha': 1.0, 'cutmix_probability': 0.0, 'module__vit_model_variant': 'vit_b_16', 'module__pretrained': True, 'module__unfreeze_strategy': 'encoder_tail', 'module__num_transformer_blocks_to_unfreeze': 1, 'module__unfreeze_cls_token': True, 'module__unfreeze_pos_embedding': True, 'module__unfreeze_patch_embedding': False, 'module__unfreeze_encoder_layernorm': True, 'module__custom_head_hidden_dims': None, 'module__head_dropout_rate': 0.5}, 'save_model': False, 'val_split_ratio': 0.2, 'results_detail_level': 2}
+2025-05-30 20:35:04 | INFO     | [pipeline  :single_train      :1502] | ℹ️ Starting single training run...
+2025-05-30 20:35:04 | INFO     | [pipeline  :single_train      :1555] | ℹ️ Using split: 1627 train / 407 validation samples.
+2025-05-30 20:35:04 | INFO     | [pipeline  :single_train      :1562] | ℹ️ Applying custom parameters for this single_train run: {'max_epochs': 70, 'lr': 5e-05, 'batch_size': 16, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.2, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 70, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 15, 'cutmix_alpha': 1.0, 'cutmix_probability': 0.0, 'module__vit_model_variant': 'vit_b_16', 'module__pretrained': True, 'module__unfreeze_strategy': 'encoder_tail', 'module__num_transformer_blocks_to_unfreeze': 1, 'module__unfreeze_cls_token': True, 'module__unfreeze_pos_embedding': True, 'module__unfreeze_patch_embedding': False, 'module__unfreeze_encoder_layernorm': True, 'module__custom_head_hidden_dims': None, 'module__head_dropout_rate': 0.5}
+2025-05-30 20:35:04 | DEBUG    | [param_g...:parse_fixed_hyp...: 151] | 🐞 Created LRScheduler instance: policy=CosineAnnealingLR, direct_args={}, constructor_kwargs={'T_max': 70, 'eta_min': 1e-06}
+2025-05-30 20:35:04 | INFO     | [pipeline  :single_train      :1624] | ℹ️ Fitting model (run_id: single_train_203504)...
+2025-05-30 20:35:04 | DEBUG    | [pretrai...:__init__          :  38] | 🐞 Initializing PretrainedViT:
+2025-05-30 20:35:04 | DEBUG    | [pretrai...:__init__          :  39] | 🐞   Model Variant: vit_b_16, Pretrained: True
+2025-05-30 20:35:04 | DEBUG    | [pretrai...:__init__          :  40] | 🐞   Is Hybrid Input: False
+2025-05-30 20:35:04 | DEBUG    | [pretrai...:__init__          :  43] | 🐞   Unfreeze Strategy (Encoder Blocks): encoder_tail
+2025-05-30 20:35:04 | DEBUG    | [pretrai...:__init__          :  45] | 🐞   Num Transformer Blocks to Unfreeze: 1
+2025-05-30 20:35:04 | DEBUG    | [pretrai...:__init__          :  46] | 🐞   Unfreeze CLS: True, PosEmb: True, PatchEmb: False, EncoderLN: True
+2025-05-30 20:35:04 | DEBUG    | [pretrai...:__init__          :  48] | 🐞   Custom Head Hidden Dims: None, Head Dropout: 0.5
+2025-05-30 20:35:05 | DEBUG    | [pretrai...:__init__          :  69] | 🐞 Loaded vit_b_16 from torchvision.
+2025-05-30 20:35:05 | DEBUG    | [pretrai...:__init__          : 313] | 🐞 Created simple linear head (dropout: 0.5), in_feat=768.
+2025-05-30 20:35:05 | INFO     | [pretrai...:__init__          : 323] | ℹ️ PretrainedViT (standard) - Trainable: CLS Token, Positional Embeddings, 1 Encoder Blocks, Encoder LayerNorm, Classification Head.
+2025-05-30 20:35:05 | INFO     | [pretrai...:__init__          : 348] | ℹ️ PretrainedViT (standard): Trainable params: 7.25M / Total params: 85.81M (8.45%)
+2025-05-30 20:35:05 | DEBUG    | [adapter   :get_split_datasets: 164] | 🐞 Split created: 1627 train, 407 validation.
+2025-05-30 20:35:05 | DEBUG    | [adapter   :get_iterator      : 275] | 🐞 Creating DataLoader for training: dataset_len=1627, batch_size=16, shuffle=True, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-30 20:35:05 | DEBUG    | [adapter   :get_iterator      : 275] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=407, batch_size=16, shuffle=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-30 20:36:08 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp           lr      dur
+2025-05-30 20:36:08 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ----------  -------
+2025-05-30 20:36:08 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       1     ▲ 0.2090      ▼ 2.2593     ▲ 0.3636      ▼ 1.9686        4.9975e-05  62.5726
+2025-05-30 20:37:08 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       2     ▲ 0.3700      ▼ 1.8578     ▲ 0.3980      ▼ 1.7621        4.9901e-05  60.183
+2025-05-30 20:38:10 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       3     ▲ 0.4407      ▼ 1.6447     ▲ 0.4472      ▼ 1.6358        4.9778e-05  61.7885
+2025-05-30 20:39:10 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       4     ▲ 0.4886      ▼ 1.4971     ▲ 0.4496      ▼ 1.5600        4.9606e-05  60.404
+2025-05-30 20:40:08 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       5     ▲ 0.5230      ▼ 1.3747     ▲ 0.4570      ▼ 1.5580        4.9386e-05  58.1206
+2025-05-30 20:41:06 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       6     ▲ 0.5562      ▼ 1.3124       0.4447        1.5753        4.9117e-05  57.1652
+2025-05-30 20:42:03 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       7     ▲ 0.5741      ▼ 1.2474     ▲ 0.4816      ▼ 1.5057        4.8801e-05  57.2492
+2025-05-30 20:43:00 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       8     ▲ 0.5907      ▼ 1.1917       0.4595        1.5145        4.8438e-05  57.1176
+2025-05-30 20:43:58 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       9     ▲ 0.6214      ▼ 1.1160       0.4668      ▼ 1.5046        4.8028e-05  58.5276
+2025-05-30 20:44:58 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      10     ▲ 0.6478      ▼ 1.0411       0.4644        1.5339        4.7574e-05  59.5722
+2025-05-30 20:45:56 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      11     ▲ 0.6503      ▼ 1.0011       0.4791        1.5079        4.7075e-05  57.5936
+2025-05-30 20:46:53 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      12     ▲ 0.6607      ▼ 0.9522     ▲ 0.4963      ▼ 1.4873        4.6532e-05  56.994
+2025-05-30 20:47:50 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      13     ▲ 0.6902      ▼ 0.8802       0.4767        1.5238        4.5947e-05  57.0089
+2025-05-30 20:48:47 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      14     ▲ 0.7246      ▼ 0.8184       0.4939        1.5324        4.5321e-05  57.0706
+2025-05-30 20:49:45 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      15     ▲ 0.7277      ▼ 0.7959     ▲ 0.4988        1.5191        4.4655e-05  58.2303
+2025-05-30 20:50:45 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      16     ▲ 0.7474      ▼ 0.7568       0.4889        1.5314        4.395e-05  59.6026
+2025-05-30 20:51:46 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      17     ▲ 0.7732      ▼ 0.6984       0.4767        1.5923        4.3208e-05  61.1364
+2025-05-30 20:52:44 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      18       0.7726      ▼ 0.6588     ▲ 0.4988        1.5736        4.2431e-05  58.4967
+2025-05-30 20:53:44 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      19     ▲ 0.7892      ▼ 0.6283       0.4816        1.5835        4.1619e-05  59.9863
+2025-05-30 20:54:44 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      20     ▲ 0.7959      ▼ 0.5885       0.4865        1.6052        4.0776e-05  59.2028
+2025-05-30 20:55:42 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      21     ▲ 0.8181      ▼ 0.5666       0.4865        1.6017        3.9901e-05  58.29
+2025-05-30 20:56:39 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      22     ▲ 0.8322      ▼ 0.5242       0.4963        1.6201        3.8997e-05  57.519
+2025-05-30 20:57:39 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      23     ▲ 0.8574      ▼ 0.4771       0.4816        1.6416        3.8066e-05  59.8105
+2025-05-30 20:58:20 | WARNING  | [pipeline  :single_train      :1679] | ⚠️ Error finding best epoch based on validation. Reporting last epoch (24) stats.
+2025-05-30 20:58:20 | INFO     | [pipeline  :single_train      :1718] | ℹ️ Main pipeline model adapter updated from single_train run: single_train_203504
+2025-05-30 20:58:20 | DEBUG    | [pipeline  :_save_results     : 463] | 🐞 Results detail level overridden for this run to: 2
+2025-05-30 20:58:20 | DEBUG    | [pipeline  :_save_results     : 471] | 🐞 Saving results for single_train_203504 (detail level: 2)
+2025-05-30 20:58:20 | INFO     | [pipeline  :_save_results     : 580] | ℹ️ Results JSON saved via repository to: experiments/CCSN/pvit/20250530_203504_seed42/single_train_203504/single_train_results.json
+2025-05-30 20:58:20 | INFO     | [pipeline  :single_train      :1755] | ℹ️ Plotting single_train results for single_train_203504 (plot level 2).
+2025-05-30 20:58:20 | INFO     | [plotter   :plot_single_tra...: 662] | ℹ️ Plotting single_train results for: single_train_203504
+2025-05-30 20:58:21 | INFO     | [plotter   :plot_single_tra...: 680] | ℹ️ Finished plotting for single_train: single_train_203504
+2025-05-30 20:58:21 | INFO     | [executor  :run               : 198] | ℹ️ --- Method single_train (single_train_0) completed successfully in 1396.50s ---
+2025-05-30 20:58:21 | INFO     | [executor  :run               : 166] | ℹ️ --- Running Method 2/2: single_eval (single_eval_1) ---
+2025-05-30 20:58:21 | DEBUG    | [executor  :run               : 191] | 🐞 Running with effective parameters: {'plot_level': 2}
+2025-05-30 20:58:21 | INFO     | [pipeline  :single_eval       :1776] | ℹ️ Starting model evaluation on the test set...
+2025-05-30 20:58:21 | INFO     | [pipeline  :single_eval       :1790] | ℹ️ Evaluating on 509 test samples...
+2025-05-30 20:58:21 | DEBUG    | [adapter   :get_iterator      : 275] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=509, batch_size=16, shuffle=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-30 20:58:26 | DEBUG    | [adapter   :get_iterator      : 275] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=509, batch_size=16, shuffle=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-05-30 20:58:31 | DEBUG    | [pipeline  :single_eval       :1807] | 🐞 Plot level overridden for this run to: 2
+2025-05-30 20:58:31 | DEBUG    | [pipeline  :_compute_metrics  : 443] | 🐞 Computed Metrics: Acc=0.5088, Macro F1=0.4934
+2025-05-30 20:58:31 | DEBUG    | [pipeline  :_save_results     : 465] | 🐞 Using pipeline results detail level for this run: 3
+2025-05-30 20:58:31 | DEBUG    | [pipeline  :_save_results     : 471] | 🐞 Saving results for single_eval_205821 (detail level: 3)
+2025-05-30 20:58:31 | INFO     | [pipeline  :_save_results     : 580] | ℹ️ Results JSON saved via repository to: experiments/CCSN/pvit/20250530_203504_seed42/single_eval_205821/single_eval_results.json
+2025-05-30 20:58:31 | INFO     | [pipeline  :single_eval       :1850] | ℹ️ Plotting single_eval results for single_eval_205821 (plot level 2).
+2025-05-30 20:58:31 | INFO     | [plotter   :plot_single_eva...: 697] | ℹ️ Plotting single_eval results for: single_eval_205821
+2025-05-30 20:58:31 | INFO     | [plotter   :_generate_metri...: 246] | ℹ️ Metrics CSV saved via repository to: experiments/CCSN/pvit/20250530_203504_seed42/single_eval_205821/single_eval_plots/metrics_table.csv
+2025-05-30 20:58:33 | INFO     | [plotter   :plot_single_eva...: 745] | ℹ️ Finished plotting for single_eval: single_eval_205821
+2025-05-30 20:58:33 | INFO     | [executor  :run               : 198] | ℹ️ --- Method single_eval (single_eval_1) completed successfully in 12.74s ---
+2025-05-30 20:58:33 | INFO     | [executor  :run               : 217] | ℹ️ Pipeline execution finished in 1409.24s.
+2025-05-30 20:58:33 | INFO     | [executor  :run               : 313] | ℹ️ Final log file available at: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\pvit\20250530_203504_seed42\experiment_run_20250530_203504_seed42.log
+2025-05-30 20:58:33 | INFO     | [main      :<module>          : 320] | ℹ️ --- Final Execution Results Summary ---
+2025-05-30 20:58:33 | INFO     | [main      :<module>          : 329] | ℹ️ Method single_train_0: Completed. (Acc: nan, F1: nan, BestScore: nan)
+2025-05-30 20:58:33 | INFO     | [main      :<module>          : 329] | ℹ️ Method single_eval_1: Completed. (Acc: nan, F1: 0.4934, BestScore: nan)
