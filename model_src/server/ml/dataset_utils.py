@@ -124,7 +124,7 @@ class PathImageDataset(Dataset):
         return images, labels
 
 
-def get_sky_only_rotation_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
+def get_pronounced_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
     """Augmentations suitable for sky/cloud images where orientation is less critical."""
     return transforms.Compose([
         transforms.Resize(img_size),  # Or transforms.Resize(256) -> transforms.RandomCrop(img_size)
@@ -141,7 +141,7 @@ def get_sky_only_rotation_augmentations(img_size: Tuple[int, int]) -> transforms
     ])
 
 
-def get_ground_aware_no_rotation_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
+def get_moderate_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
     """Augmentations for images with ground elements; avoids vertical flips and significant rotations."""
     geometric_transforms = [
         transforms.Resize(img_size),  # Or a slightly larger size then RandomCrop
@@ -153,15 +153,6 @@ def get_ground_aware_no_rotation_augmentations(img_size: Tuple[int, int]) -> tra
 
     color_intensity_transforms = [
         transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.15, hue=0.03),
-
-        # Randomly apply auto-contrast to maximize image contrast
-        # transforms.RandomAutocontrast(p=0.3),
-
-        # Randomly equalize the image histogram - can significantly alter appearance
-        # transforms.RandomEqualize(p=0.2),
-
-        # Randomly convert to grayscale sometimes
-        # transforms.RandomGrayscale(p=0.1),
     ]
 
     blur_transform = [
@@ -283,9 +274,9 @@ class ImageDatasetHandler:
         if hasattr(self, 'custom_train_transform'):
             self.train_transform = self.custom_train_transform
         elif self.augmentation_strategy_enum == AugmentationStrategy.SKY_ONLY_ROTATION:
-            self.train_transform = get_sky_only_rotation_augmentations(self.img_size)
-        elif self.augmentation_strategy_enum == AugmentationStrategy.GROUND_AWARE_NO_ROTATION:
-            self.train_transform = get_ground_aware_no_rotation_augmentations(self.img_size)
+            self.train_transform = get_pronounced_augmentations(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.CCSN_MODERATE:
+            self.train_transform = get_moderate_augmentations(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.PAPER_GCD:
             self.train_transform = get_paper_replication_augmentation_gcd(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.PAPER_CCSN:

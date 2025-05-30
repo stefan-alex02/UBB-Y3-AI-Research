@@ -67,8 +67,8 @@ if __name__ == "__main__":
     # Flag for overriding parameters:
     enable_debug_params = False # Set to True to use the override params for any model type
 
-    # data_augmentation_mode_override = None
-    data_augmentation_mode_override = AugmentationStrategy.PAPER_CCSN
+    data_augmentation_mode_override = None
+    # data_augmentation_mode_override = AugmentationStrategy.PAPER_CCSN
 
     # Trained model path for loading
     # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
@@ -162,10 +162,12 @@ if __name__ == "__main__":
     # --- Define Augmentation Strategy ---
     if data_augmentation_mode_override is not None:
         augmentation_strategy = data_augmentation_mode_override
-    elif selected_dataset in ['mGCD', 'mGCDf', 'GCD', 'swimcat']:
+    elif selected_dataset in ['mGCD', 'mGCDf', 'GCD']:
         augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
+    elif selected_dataset == 'swimcat':
+        augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset == 'ccsn':
-        augmentation_strategy = AugmentationStrategy.GROUND_AWARE_NO_ROTATION
+        augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     else:
         augmentation_strategy = AugmentationStrategy.DEFAULT_STANDARD
 
