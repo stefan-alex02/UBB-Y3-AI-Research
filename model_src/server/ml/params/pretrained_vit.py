@@ -1,7 +1,7 @@
 pretrained_vit_fixed_params = {
     'max_epochs': 70,
     'lr': 5e-5,
-    'batch_size': 16,
+    'batch_size': 32,
 
     'optimizer': 'AdamW',
     'optimizer__weight_decay': 0.2, # Start with original, can reduce later
