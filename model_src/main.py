@@ -159,14 +159,13 @@ if __name__ == "__main__":
         logger.error(f"Model type '{model_type}' not recognized. Supported: {[m.value for m in ModelType]}")
         exit()
 
-    if selected_dataset == 'ccsn':
+    if selected_dataset.lower() == 'ccsn':
         # Target: 70% train, 20% val, 10% test
         effective_test_split_ratio_if_flat = 0.1
         effective_val_split_ratio = 0.2 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
-    elif selected_dataset == 'gcd':
-        # Target: 7000 train, 3000 val, 9000 test from 19000 total
+    elif selected_dataset.lower() == 'gcd':
         effective_test_split_ratio_if_flat = 9000 / 19000
-        effective_val_split_ratio = 3000 / (19000 - 9000)  # 0.3 of the (train+val) part
+        effective_val_split_ratio = 2000 / (19000 - 9000)
     else:
         effective_test_split_ratio_if_flat = 0.2  # Your default
         effective_val_split_ratio = 0.2  # Your default (applied to train_val part)
