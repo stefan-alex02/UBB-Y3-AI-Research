@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "GCD"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet'
@@ -65,6 +65,8 @@ if __name__ == "__main__":
     force_flat = False
 
     save_model = False  # Whether to save the model after training
+
+    cv_folds = 5  # Number of folds for cross-validation
 
     # Flag for overriding parameters:
     enable_debug_params = False # Set to True to use the override params for any model type
@@ -199,7 +201,7 @@ if __name__ == "__main__":
     methods_seq_2 = [
         ('non_nested_grid_search', {
             'param_grid': chosen_param_grid,
-            'cv': 5,
+            'cv': cv_folds,
             'method': 'grid',
             # 'method': 'random',
             # 'n_iter': 4,
@@ -228,7 +230,7 @@ if __name__ == "__main__":
          ('cv_model_evaluation', {
              'params': chosen_fixed_params, # Pass fixed hyperparams
              'internal_val_split_ratio': effective_val_split_ratio,
-             'cv': 5,
+             'cv': cv_folds,
              'evaluate_on': 'full', # Explicitly state (or rely on default)
              'results_detail_level': 3,
         })
