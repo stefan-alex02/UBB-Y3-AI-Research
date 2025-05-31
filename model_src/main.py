@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "GCD"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet'
@@ -65,8 +65,6 @@ if __name__ == "__main__":
     force_flat = False
 
     save_model = False  # Whether to save the model after training
-
-    cv_folds = 5  # Number of folds for cross-validation
 
     # Flag for overriding parameters:
     enable_debug_params = False # Set to True to use the override params for any model type
@@ -160,27 +158,30 @@ if __name__ == "__main__":
         exit()
 
     if selected_dataset.lower() == 'ccsn':
-        # Target: 70% train, 20% val, 10% test
+        # Target: 80% train, 10% val, 10% test
         effective_test_split_ratio_if_flat = 0.1
-        effective_val_split_ratio = 0.2 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
-    elif selected_dataset.lower() == 'gcd':
+        effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
+        cv_folds = 10  # Number of folds for cross-validation
+        augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
+    elif selected_dataset.lower() in ['gcd', 'mgcd', 'mgcdf']:
         effective_test_split_ratio_if_flat = 9000 / 19000
-        effective_val_split_ratio = 2000 / (19000 - 9000)
+        effective_val_split_ratio = 0.1 * (19000 - 9000) / 100
+        cv_folds = 5
+        augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
+    elif selected_dataset.lower() == 'swimcat':
+        effective_test_split_ratio_if_flat = 0.2  # Your default
+        effective_val_split_ratio = 0.1  # Your default (applied to train_val part)
+        cv_folds = 5
+        augmentation_strategy = AugmentationStrategy.PAPER_CCSN
     else:
         effective_test_split_ratio_if_flat = 0.2  # Your default
-        effective_val_split_ratio = 0.2  # Your default (applied to train_val part)
+        effective_val_split_ratio = 0.1  # Your default (applied to train_val part)
+        cv_folds = 5
+        augmentation_strategy = AugmentationStrategy.DEFAULT_STANDARD
 
     # --- Define Augmentation Strategy ---
     if data_augmentation_mode_override is not None:
         augmentation_strategy = data_augmentation_mode_override
-    elif selected_dataset in ['mGCD', 'mGCDf', 'GCD']:
-        augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
-    elif selected_dataset == 'swimcat':
-        augmentation_strategy = AugmentationStrategy.PAPER_CCSN
-    elif selected_dataset == 'ccsn':
-        augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
-    else:
-        augmentation_strategy = AugmentationStrategy.DEFAULT_STANDARD
 
     # --- Define Method Sequence ---
     # Example 1: Single Train and Eval
