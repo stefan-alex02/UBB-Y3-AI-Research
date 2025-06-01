@@ -161,7 +161,7 @@ if __name__ == "__main__":
         # Target: 80% train, 10% val, 10% test
         effective_test_split_ratio_if_flat = 0.1
         effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
-        cv_folds = 5  # TODO change back to 10
+        cv_folds = 10  # TODO change back to 10
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset.lower() in ['gcd', 'mgcd', 'mgcdf']:
         effective_test_split_ratio_if_flat = 9000 / 19000
