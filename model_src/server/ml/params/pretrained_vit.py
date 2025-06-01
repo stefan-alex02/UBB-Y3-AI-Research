@@ -1,7 +1,7 @@
 pretrained_vit_fixed_params = {
     'max_epochs': 70,
     'lr': 5e-5,
-    'batch_size': 32,
+    'batch_size': 16,
 
     'optimizer': 'AdamW',
     'optimizer__weight_decay': 0.2, # Start with original, can reduce later
@@ -24,7 +24,7 @@ pretrained_vit_fixed_params = {
     # 'cutmix_probability': 0.5, # for GCD
 
     # --- Gradient Clipping (already discussed) ---
-    # 'gradient_clip_value': 5.0,  # If you want to use it
+    'gradient_clip_value': 5.0,  # If you want to use it
 
     'module__vit_model_variant': 'vit_b_16',
     'module__pretrained': True,
