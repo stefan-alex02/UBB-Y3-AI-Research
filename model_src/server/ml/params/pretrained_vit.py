@@ -20,7 +20,7 @@ pretrained_vit_fixed_params = {
     # --- CutMix Parameters ---
     'cutmix_alpha': 1.0,
     # 'cutmix_probability': 0.9, # for CCSN
-    'cutmix_probability': 0.3, # for Swimcat
+    'cutmix_probability': 0.7, # for Swimcat
     # 'cutmix_probability': 0.5, # for GCD
 
     # --- Gradient Clipping (already discussed) ---
