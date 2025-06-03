@@ -1,0 +1,50 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-06-04 01:30:31 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\Swimcat-extend\pvit\20250604_013031_seed42\experiment_run_20250604_013031_seed42.log
+2025-06-04 01:30:31 | INFO     | [executor  :__init__          : 101] | ℹ️ --- Starting Experiment Run (ID: 20250604_013031_seed42) ---
+2025-06-04 01:30:31 | INFO     | [executor  :__init__          : 102] | ℹ️ Executor initialized for model 'pvit' on dataset 'Swimcat-extend'
+2025-06-04 01:30:31 | INFO     | [executor  :__init__          : 105] | ℹ️ Local artifact storage base: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-06-04 01:30:31 | INFO     | [executor  :__init__          : 109] | ℹ️ Base key/prefix for this run's artifacts: experiments/Swimcat-extend/pvit/20250604_013031_seed42
+2025-06-04 01:30:31 | INFO     | [executor  :__init__          : 111] | ℹ️ Local log file for this run (might be temporary): C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\Swimcat-extend\pvit\20250604_013031_seed42\experiment_run_20250604_013031_seed42.log
+2025-06-04 01:30:31 | INFO     | [pipeline  :__init__          : 174] | ℹ️ Initializing Classification Pipeline:
+2025-06-04 01:30:31 | INFO     | [pipeline  :__init__          : 175] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\Swimcat-extend
+2025-06-04 01:30:31 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Model Type: pvit
+2025-06-04 01:30:31 | INFO     | [pipeline  :__init__          : 179] | ℹ️   Artifact base key prefix for this run: experiments/Swimcat-extend/pvit/20250604_013031_seed42 (using LocalFileSystemRepository)
+2025-06-04 01:30:31 | INFO     | [pipeline  :__init__          : 183] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.PAPER_CCSN
+2025-06-04 01:30:31 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Show First Batch Aug: True
+2025-06-04 01:30:31 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.PAPER_CCSN
+2025-06-04 01:30:31 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-04 01:30:31 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\Swimcat-extend...
+2025-06-04 01:30:31 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 1680 original train+val, 420 original test. Offline augmented samples loaded: 0.
+2025-06-04 01:30:31 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 6 classes: A-Clear Sky, B-Patterned Clouds, C-Thin White Clouds, D-Thick White Clouds, E-Thick Dark Clouds, F-Veil Clouds
+2025-06-04 01:30:31 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 1680 train+val, 420 test. Total: 2100
+2025-06-04 01:30:31 | INFO     | [pipeline  :__init__          : 194] | ℹ️   Artifact base key prefix for this run: experiments/Swimcat-extend/pvit/20250604_013031_seed42 (using LocalFileSystemRepository)
+2025-06-04 01:30:31 | INFO     | [pipeline  :__init__          : 225] | ℹ️   Using Optimizer: AdamW
+2025-06-04 01:30:31 | DEBUG    | [callbacks :get_default_cal...: 194] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-06-04 01:30:31 | INFO     | [pipeline  :__init__          : 270] | ℹ️   Model Adapter: Initialized with PretrainedViT
+2025-06-04 01:30:31 | DEBUG    | [executor  :_validate_methods : 154] | 🐞 Basic method validation successful.
+2025-06-04 01:30:31 | INFO     | [executor  :__init__          : 138] | ℹ️ Executor configured to run methods: load_model, predict_images
+2025-06-04 01:30:31 | INFO     | [executor  :run               : 164] | ℹ️ Starting execution of pipeline methods...
+2025-06-04 01:30:31 | INFO     | [executor  :run               : 168] | ℹ️ --- Running Method 1/2: load_model (load_model_0) ---
+2025-06-04 01:30:31 | DEBUG    | [executor  :run               : 193] | 🐞 Running with effective parameters: {'model_path_or_key': '.experiments/Swimcat-extend/pvit/20250604_012844_seed42/single_train_012844/pvit_epoch2_no_val.pt'}
+2025-06-04 01:30:31 | INFO     | [pipeline  :load_model        :2248] | ℹ️ Attempting to load model state_dict from: .experiments/Swimcat-extend/pvit/20250604_012844_seed42/single_train_012844/pvit_epoch2_no_val.pt
+2025-06-04 01:30:31 | DEBUG    | [pipeline  :load_model        :2251] | 🐞 Initializing skorch adapter before loading state_dict...
+2025-06-04 01:30:31 | DEBUG    | [pretrai...:__init__          :  38] | 🐞 Initializing PretrainedViT:
+2025-06-04 01:30:31 | DEBUG    | [pretrai...:__init__          :  39] | 🐞   Model Variant: vit_b_16, Pretrained: True
+2025-06-04 01:30:31 | DEBUG    | [pretrai...:__init__          :  40] | 🐞   Is Hybrid Input: False
+2025-06-04 01:30:31 | DEBUG    | [pretrai...:__init__          :  43] | 🐞   Unfreeze Strategy (Encoder Blocks): encoder_tail
+2025-06-04 01:30:31 | DEBUG    | [pretrai...:__init__          :  45] | 🐞   Num Transformer Blocks to Unfreeze: 2
+2025-06-04 01:30:31 | DEBUG    | [pretrai...:__init__          :  46] | 🐞   Unfreeze CLS: True, PosEmb: True, PatchEmb: False, EncoderLN: True
+2025-06-04 01:30:31 | DEBUG    | [pretrai...:__init__          :  48] | 🐞   Custom Head Hidden Dims: None, Head Dropout: 0.0
+2025-06-04 01:30:32 | DEBUG    | [pretrai...:__init__          :  69] | 🐞 Loaded vit_b_16 from torchvision.
+2025-06-04 01:30:32 | DEBUG    | [pretrai...:__init__          : 313] | 🐞 Created simple linear head (dropout: 0.0), in_feat=768.
+2025-06-04 01:30:32 | INFO     | [pretrai...:__init__          : 323] | ℹ️ PretrainedViT (standard) - Trainable: CLS Token, Positional Embeddings, 2 Encoder Blocks, Encoder LayerNorm, Classification Head.
+2025-06-04 01:30:32 | INFO     | [pretrai...:__init__          : 348] | ℹ️ PretrainedViT (standard): Trainable params: 14.33M / Total params: 85.80M (16.71%)
+2025-06-04 01:30:32 | DEBUG    | [pipeline  :load_model        :2265] | 🐞 Attempting to load model via repository: LocalFileSystemRepository
+2025-06-04 01:30:32 | WARNING  | [pipeline  :load_model        :2271] | ⚠️ Failed to load model via repository from key/path: .experiments/Swimcat-extend/pvit/20250604_012844_seed42/single_train_012844/pvit_epoch2_no_val.pt. Will attempt fallback to local filesystem if it's a path.
+2025-06-04 01:30:32 | INFO     | [pipeline  :load_model        :2278] | ℹ️ Repository load failed or not applicable for '.experiments/Swimcat-extend/pvit/20250604_012844_seed42/single_train_012844/pvit_epoch2_no_val.pt', trying as local path: .experiments\Swimcat-extend\pvit\20250604_012844_seed42\single_train_012844\pvit_epoch2_no_val.pt
+2025-06-04 01:30:32 | ERROR    | [executor  :run               : 207] | ❌ !!! File not found during 'load_model': Model could not be loaded from source: .experiments/Swimcat-extend/pvit/20250604_012844_seed42/single_train_012844/pvit_epoch2_no_val.pt. Check path/key and repository configuration.
+2025-06-04 01:30:32 | INFO     | [executor  :run               : 219] | ℹ️ Pipeline execution finished in 1.04s.
+2025-06-04 01:30:32 | INFO     | [executor  :run               : 315] | ℹ️ Final log file available at: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\Swimcat-extend\pvit\20250604_013031_seed42\experiment_run_20250604_013031_seed42.log
+2025-06-04 01:30:32 | INFO     | [main      :<module>          : 326] | ℹ️ --- Final Execution Results Summary ---
+2025-06-04 01:30:32 | ERROR    | [main      :<module>          : 329] | ❌ Method load_model_0: FAILED - Model could not be loaded from source: .experiments/Swimcat-extend/pvit/20250604_012844_seed42/single_train_012844/pvit_epoch2_no_val.pt. Check path/key and repository configuration.

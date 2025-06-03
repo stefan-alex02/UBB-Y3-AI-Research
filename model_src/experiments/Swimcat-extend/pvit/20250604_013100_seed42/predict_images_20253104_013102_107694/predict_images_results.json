@@ -1,0 +1,123 @@
+{
+    "method": "predict_images",
+    "run_id": "predict_images_20253104_013102_107694",
+    "params": {
+        "num_original_sources": 2,
+        "num_valid_loaded": 2,
+        "num_images_predicted": 2
+    },
+    "predictions": [
+        {
+            "identifier": "source_0",
+            "image_path": "in-memory/url",
+            "probabilities": [
+                0.009653751738369465,
+                0.0038176882080733776,
+                0.06370625644922256,
+                0.012284797616302967,
+                0.8423609733581543,
+                0.06817656755447388
+            ],
+            "predicted_class_idx": 4,
+            "predicted_class_name": "E-Thick Dark Clouds",
+            "confidence": 0.8423609733581543,
+            "top_k_predictions": [
+                [
+                    "E-Thick Dark Clouds",
+                    0.8423609733581543
+                ],
+                [
+                    "F-Veil Clouds",
+                    0.06817656755447388
+                ],
+                [
+                    "C-Thin White Clouds",
+                    0.06370625644922256
+                ]
+            ],
+            "lime_explanation": {
+                "explained_class_idx": 4,
+                "explained_class_name": "E-Thick Dark Clouds",
+                "feature_weights": [
+                    [
+                        9,
+                        0.0600233765000613
+                    ],
+                    [
+                        1,
+                        0.03998267008069552
+                    ],
+                    [
+                        10,
+                        0.036025677901553047
+                    ],
+                    [
+                        2,
+                        0.028539246300048265
+                    ],
+                    [
+                        4,
+                        0.025399977883300926
+                    ]
+                ],
+                "num_features_from_lime_run": 5
+            }
+        },
+        {
+            "identifier": "source_1",
+            "image_path": "in-memory/url",
+            "probabilities": [
+                0.0014010200975462794,
+                0.011273806914687157,
+                0.2048526406288147,
+                0.23324131965637207,
+                0.5389299392700195,
+                0.010301298461854458
+            ],
+            "predicted_class_idx": 4,
+            "predicted_class_name": "E-Thick Dark Clouds",
+            "confidence": 0.5389299392700195,
+            "top_k_predictions": [
+                [
+                    "E-Thick Dark Clouds",
+                    0.5389299392700195
+                ],
+                [
+                    "D-Thick White Clouds",
+                    0.23324131965637207
+                ],
+                [
+                    "C-Thin White Clouds",
+                    0.2048526406288147
+                ]
+            ],
+            "lime_explanation": {
+                "explained_class_idx": 4,
+                "explained_class_name": "E-Thick Dark Clouds",
+                "feature_weights": [
+                    [
+                        1,
+                        -0.07467511010057429
+                    ],
+                    [
+                        0,
+                        0.0497322974940021
+                    ],
+                    [
+                        11,
+                        0.04475699058834985
+                    ],
+                    [
+                        3,
+                        0.040356582753437766
+                    ],
+                    [
+                        5,
+                        -0.03621439137696606
+                    ]
+                ],
+                "num_features_from_lime_run": 5
+            }
+        }
+    ]
+}

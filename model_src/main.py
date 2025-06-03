@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 4  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 7  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -67,7 +67,7 @@ if __name__ == "__main__":
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
     force_flat = False
 
-    save_model = False  # Whether to save the model after training
+    save_model = True  # Whether to save the model after training
 
     # Flag for overriding parameters:
     enable_debug_params = False # Set to True to use the override params for any model type
@@ -78,7 +78,7 @@ if __name__ == "__main__":
     # Trained model path for loading
     # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
     # saved_model_path = "./results/Swimcat-extend/cnn/20250515_160130_seed42/single_train_20250515_160130_450999/cnn_epoch4_val_valid-loss0.3059.pt"
-    saved_model_path = "./experiments/CCSN/pvit/20250518_193300_seed42/non_nested_random_193300/pvit_best_batch_size=16_lr=3e-05_max_epochs=70_custom_head_h_cv_score0p4671.pt"
+    saved_model_path = "./experiments/Swimcat-extend/pvit/20250604_012844_seed42/single_train_012844/pvit_epoch2_no_val.pt"
 
     # New image paths for prediction
     # existing_prediction_paths = [
