@@ -170,7 +170,8 @@ if __name__ == "__main__":
         effective_test_split_ratio_if_flat = 9000 / 19000
         effective_val_split_ratio = 0.1 * (19000 - 9000) / 100
         cv_folds = 5
-        augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
+        # augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
+        augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset.lower() == 'swimcat':
         effective_test_split_ratio_if_flat = 0.2  # Your default
         effective_val_split_ratio = 0.1  # Your default (applied to train_val part)
