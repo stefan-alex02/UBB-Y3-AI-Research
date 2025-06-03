@@ -19,11 +19,9 @@ pretrained_vit_fixed_params = {
 
     # --- CutMix Parameters ---
     'cutmix_alpha': 1.0,
-    'cutmix_probability': 0.9, # for CCSN
-    # 'cutmix_probability': 0.7, # for Swimcat
+    # 'cutmix_probability': 0.9, # for CCSN
+    'cutmix_probability': 0.7, # for Swimcat
     # 'cutmix_probability': 0.5, # for GCD
-
-    'iterator_train__shuffle': True,
 
     # --- Gradient Clipping (already discussed) ---
     # 'gradient_clip_value': 5.0,  # If you want to use it
@@ -37,7 +35,9 @@ pretrained_vit_fixed_params = {
     'module__unfreeze_patch_embedding': False,
     'module__unfreeze_encoder_layernorm': True,
     'module__custom_head_hidden_dims': None,
-    'module__head_dropout_rate': 0.50
+    'module__head_dropout_rate': 0.50,
+
+    'iterator_train__shuffle': True,
 }
 
 # --- Parameter Space Definitions ---

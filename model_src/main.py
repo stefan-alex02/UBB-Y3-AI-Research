@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet'
