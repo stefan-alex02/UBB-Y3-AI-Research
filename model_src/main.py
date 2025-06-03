@@ -56,7 +56,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 7  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -170,7 +170,8 @@ if __name__ == "__main__":
         effective_test_split_ratio_if_flat = 9000 / 19000
         effective_val_split_ratio = 0.1 * (19000 - 9000) / 100
         cv_folds = 5
-        augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
+        # augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
+        augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset.lower() == 'swimcat':
         effective_test_split_ratio_if_flat = 0.2  # Your default
         effective_val_split_ratio = 0.1  # Your default (applied to train_val part)

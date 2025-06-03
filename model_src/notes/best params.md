@@ -169,3 +169,55 @@ pretrained_vit_fixed_params = {
     'module__head_dropout_rate': 0.50
 }
     ```
+
+
+GCD 
+
+- Pretrained ViT: Single train (Aggressive augmentation)
+
+        Acc=0.7707, Macro F1=0.7504
+
+
+  ```python
+pretrained_vit_fixed_params = {
+    'max_epochs': 70,
+    'lr': 5e-5,
+    'batch_size': 16,
+
+    'optimizer': 'AdamW',
+    'optimizer__weight_decay': 0.2, # Start with original, can reduce later
+
+    'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
+    'callbacks__default_lr_scheduler__T_max': 70,
+
+    # 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingWarmRestarts',
+    # 'callbacks__default_lr_scheduler__T_0': 15,      # Epochs for the first cycle
+    # 'callbacks__default_lr_scheduler__T_mult': 1,     # Subsequent cycles are same length as T_0
+
+    'callbacks__default_lr_scheduler__eta_min': 1e-06,
+
+    'callbacks__default_early_stopping__patience': 15,
+
+    # --- CutMix Parameters ---
+    # 'cutmix_alpha': 1.0,
+    # 'cutmix_probability': 0.9, # for CCSN
+    # 'cutmix_probability': 0.5, # for Swimcat
+    # 'cutmix_probability': 0.5, # for GCD
+
+    # --- Gradient Clipping (already discussed) ---
+    # 'gradient_clip_value': 5.0,  # If you want to use it
+
+    'module__vit_model_variant': 'vit_b_16',
+    'module__pretrained': True,
+    'module__unfreeze_strategy': 'encoder_tail',
+    'module__num_transformer_blocks_to_unfreeze': 1,
+    'module__unfreeze_cls_token': True,
+    'module__unfreeze_pos_embedding': True,
+    'module__unfreeze_patch_embedding': False,
+    'module__unfreeze_encoder_layernorm': True,
+    'module__custom_head_hidden_dims': None,
+    'module__head_dropout_rate': 0.50,
+
+    'iterator_train__shuffle': True,
+}
+  ```
