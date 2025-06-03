@@ -1690,32 +1690,47 @@ class ClassificationPipeline:
         # --- Save Model ---
         model_path_identifier = None  # Will store the S3 key or local path string
         if save_model:
-            if self.artifact_repo and self.experiment_run_key_prefix:
-                try:
-                    # Construct filename and then the full S3 object key or relative local path
-                    val_metric_val = results.get('best_valid_metric_value', np.nan)
-                    valid_loss_key = results.get('valid_metric_name', 'valid_loss')  # Get the actual key used
-                    val_metric_str = f"val_{valid_loss_key.replace('_', '-')}{val_metric_val:.4f}" if not np.isnan(
-                        val_metric_val) else "no_val"
-                    model_filename = f"{self.model_type.value}_epoch{results.get('best_epoch', 0)}_{val_metric_str}.pt"
+            model_artifact_key_base = self._get_s3_object_key(run_id,
+                                                              f"{self.model_type.value}_epoch{...}")  # Base name without .pt
 
-                    # Key for repository (S3 object key or relative path for local repo)
-                    model_artifact_key = self._get_s3_object_key(run_id, model_filename)
+            # 1. Save state_dict
+            model_pt_key = f"{model_artifact_key_base}.pt"
+            state_dict = adapter_for_train.module_.state_dict()
+            model_path_identifier = self.artifact_repo.save_model_state_dict(state_dict, model_pt_key)
 
-                    model_state_dict = adapter_for_train.module_.state_dict()
-                    model_path_identifier = self.artifact_repo.save_model_state_dict(model_state_dict,
-                                                                                     model_artifact_key)
+            # 2. Save architectural config
+            if model_path_identifier:  # Only if model saving was successful
+                # Get all relevant 'module__' parameters from the adapter's config
+                # This adapter_config was used to initialize the SkorchModelAdapter for this run
+                effective_adapter_config = adapter_for_train.get_params(
+                    deep=False)  # Get effective params of this instance
 
-                    if model_path_identifier:
-                        logger.info(f"Model state_dict saved via repository to: {model_path_identifier}")
-                    else:
-                        logger.error(
-                            f"Failed to save model state_dict via repository for {run_id} to key {model_artifact_key}.")
-                except Exception as e:
-                    logger.error(f"Failed to save model via repository: {e}", exc_info=True)
-            else:
-                logger.warning(
-                    f"Model saving skipped for {run_id}: no artifact repository or base key prefix configured.")
+                arch_config = {
+                    'model_type': self.model_type.value,  # Store the enum value
+                    'num_classes': self.dataset_handler.num_classes
+                }
+                for key, value in effective_adapter_config.items():
+                    if key.startswith('module__'):
+                        arch_config[key] = value
+                    # Add other direct architectural params if SkorchModelAdapter has them (e.g. is_hybrid_input IF it were a direct param of module)
+                    # For PretrainedViT, is_hybrid_input is a module__ param if you set it that way, or a constructor arg
+                    # For your HybridViT, things like cnn_model_name are module__params.
+
+                # Specifically ensure architectural params of PretrainedViT/Swin/Hybrid are captured
+                # These should be retrievable from effective_adapter_config if they were set via module__
+                # Example for PretrainedViT specific params (if they are not module__ in adapter_config
+                # but rather direct constructor args to PretrainedViT that need to be known)
+                # This part depends on how your HybridViT/PretrainedViT __init__ signatures are structured
+                # and what Skorch passes as module__
+
+                # The most reliable way is to fetch them from the actual module instance if possible,
+                # but Skorch's get_params() on the adapter should give you the 'module__xyz' values.
+                # Let's assume effective_adapter_config from skorch is sufficient here.
+
+                model_config_key = f"{model_artifact_key_base}_arch_config.json"
+                self.artifact_repo.save_json(arch_config, model_config_key)
+                logger.info(f"Model architectural config saved to: {model_config_key}")
+                results['saved_model_arch_config_path'] = model_config_key  # Store this too
         results['saved_model_path'] = model_path_identifier  # Store key/path or None
 
         self.model_adapter = adapter_for_train
@@ -2240,70 +2255,158 @@ class ClassificationPipeline:
         return predictions_output
 
     def load_model(self, model_path_or_key: Union[str, Path]) -> None:
-        """
-        Loads a state_dict into the pipeline's model adapter.
-        The model_path_or_key can be a local file system path or an S3 object key
-        if an artifact_repository is configured.
-        """
-        logger.info(f"Attempting to load model state_dict from: {model_path_or_key}")
+        logger.info(f"Attempting to load model state_dict and config from base: {model_path_or_key}")
 
-        if not self.model_adapter.initialized_:
-            logger.debug("Initializing skorch adapter before loading state_dict...")
+        # --- 1. Determine config path/key ---
+        model_pt_path = Path(model_path_or_key)
+        config_filename = f"{model_pt_path.stem}_arch_config.json"
+
+        # If model_path_or_key is a full S3 key, construct config key similarly
+        # If it's a local path, config_path is in the same directory
+        config_path_or_key: Optional[str]
+        if str(model_path_or_key).startswith("s3://") or (
+                self.artifact_repo and not isinstance(self.artifact_repo, LocalFileSystemRepository)):
+            # Assuming model_path_or_key is an S3 key like "experiments/.../model.pt"
+            # Config key would be "experiments/.../model_arch_config.json"
+            base_key_for_s3 = str(PurePath(str(model_path_or_key)).parent / config_filename)
+            config_path_or_key = base_key_for_s3
+        else:  # Local path
+            config_path_or_key = str(model_pt_path.parent / config_filename)
+
+        # --- 2. Load Architectural Config ---
+        arch_config_dict: Optional[Dict[str, Any]] = None
+        if self.artifact_repo:
+            logger.debug(f"Attempting to load arch_config via repository from: {config_path_or_key}")
+            arch_config_dict = self.artifact_repo.load_json(config_path_or_key)
+
+        if arch_config_dict is None and Path(
+                config_path_or_key).is_file():  # Fallback for local file if repo failed or no repo
+            logger.debug(f"Attempting to load arch_config from local file: {config_path_or_key}")
             try:
-                self.model_adapter.initialize()
+                with open(config_path_or_key, 'r') as f:
+                    arch_config_dict = json.load(f)
             except Exception as e:
-                raise RuntimeError("Could not initialize model adapter for loading.") from e
+                logger.error(f"Failed to load local arch_config {config_path_or_key}: {e}")
+
+        if arch_config_dict is None:
+            logger.error(
+                f"CRITICAL: Architecture config file not found or failed to load from '{config_path_or_key}'. "
+                f"Cannot reliably reconstruct model. Will attempt with default pipeline config.")
+            # Fallback: Initialize with current pipeline defaults (might lead to errors if mismatch)
+            if not self.model_adapter.initialized_:
+                logger.debug(
+                    "Initializing skorch adapter with default pipeline config before loading state_dict (arch config missing).")
+                try:
+                    self.model_adapter.initialize()
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Could not initialize model adapter for loading (arch config missing): {e}") from e
+        else:
+            logger.info(f"Successfully loaded architecture config from: {config_path_or_key}")
+            loaded_model_type_str = arch_config_dict.pop('model_type')
+            # num_classes from config should ideally match dataset, or handle discrepancy
+            loaded_num_classes = arch_config_dict.pop('num_classes')
+
+            try:
+                loaded_model_type_enum = ModelType(loaded_model_type_str)
+            except ValueError:
+                raise RuntimeError(f"Invalid model_type '{loaded_model_type_str}' in architecture config.")
+
+            LoadedModelClass = self._get_model_class(loaded_model_type_enum)
+
+            # Prepare a fresh adapter config based on pipeline defaults, then override
+            current_pipeline_defaults = self.model_adapter_config.copy()
+
+            # Override with loaded architectural params
+            current_pipeline_defaults['module'] = LoadedModelClass  # Set the correct module type
+            current_pipeline_defaults[
+                'module__num_classes'] = loaded_num_classes  # Use num_classes from saved config
+
+            for key_arch, val_arch in arch_config_dict.items():  # arch_config_dict now mainly has module__ items
+                if key_arch.startswith('module__'):
+                    current_pipeline_defaults[key_arch] = val_arch
+                # else: # If arch_config stored other direct skorch params like 'lr', 'optimizer'
+                #     current_pipeline_defaults[key_arch] = val_arch
+
+            # Clean up params not for SkorchModelAdapter __init__ directly before re-instantiating
+            current_pipeline_defaults.pop('patience_cfg', None);
+            current_pipeline_defaults.pop('monitor_cfg', None)
+            current_pipeline_defaults.pop('lr_policy_cfg', None);
+            current_pipeline_defaults.pop('lr_patience_cfg', None)
+
+            # Update dataset handler ref (important)
+            current_pipeline_defaults['dataset_handler_ref'] = self.dataset_handler
+            current_pipeline_defaults['train_transform'] = self.dataset_handler.get_train_transform()
+            current_pipeline_defaults['valid_transform'] = self.dataset_handler.get_eval_transform()
+
+            logger.info(
+                f"Re-initializing SkorchModelAdapter with loaded architecture for {LoadedModelClass.__name__} and {loaded_num_classes} classes.")
+            try:
+                self.model_adapter = SkorchModelAdapter(**current_pipeline_defaults)
+                self.model_adapter.initialize()  # This creates the nn.Module with correct params
+            except Exception as e_reinit:
+                logger.error(f"Failed to re-initialize SkorchModelAdapter with loaded arch_config: {e_reinit}",
+                             exc_info=True)
+                raise RuntimeError("SkorchModelAdapter re-initialization failed during load_model.")
 
         if not hasattr(self.model_adapter, 'module_') or not isinstance(self.model_adapter.module_, nn.Module):
-            raise RuntimeError("Adapter missing internal nn.Module ('module_'). Cannot load state_dict.")
+            raise RuntimeError(
+                "Adapter missing internal nn.Module ('module_') after initialization. Cannot load state_dict.")
 
+        # --- 3. Load State Dict into the correctly structured module ---
         state_dict: Optional[Dict] = None
-        map_location = self.model_adapter.device  # Determine map_location once
+        map_location = self.model_adapter.device
 
-        # Try loading via artifact repository if available
         if self.artifact_repo:
-            logger.debug(f"Attempting to load model via repository: {type(self.artifact_repo).__name__}")
-            # Assume model_path_or_key is the key for the repository
             state_dict = self.artifact_repo.load_model_state_dict(str(model_path_or_key), map_location=map_location)
-            if state_dict:
-                logger.info(f"Model successfully loaded via repository from key/path: {model_path_or_key}")
-            else:
-                logger.warning(f"Failed to load model via repository from key/path: {model_path_or_key}. "
-                               "Will attempt fallback to local filesystem if it's a path.")
+            if state_dict: logger.info(f"Model state_dict loaded via repository from: {model_path_or_key}")
 
-        # Fallback or direct local file load if no repo or repo load failed (and it's a path)
-        if state_dict is None:
-            local_model_path = Path(model_path_or_key)
-            if self.artifact_repo:  # If repo load failed, now try as local path.
-                logger.info(
-                    f"Repository load failed or not applicable for '{model_path_or_key}', trying as local path: {local_model_path}")
-
-            if local_model_path.is_file():
-                logger.debug(f"Attempting to load model from local filesystem path: {local_model_path}")
+        if state_dict is None:  # Fallback or direct local load
+            if Path(model_path_or_key).is_file():
                 try:
-                    state_dict = torch.load(local_model_path, map_location=map_location, weights_only=True)
-                    logger.info(f"Model successfully loaded from local filesystem: {local_model_path}")
-                except Exception as e:
-                    logger.error(f"Failed to load model from local filesystem path {local_model_path}: {e}",
-                                 exc_info=True)
-                    # No state_dict loaded, error will be raised below
-            elif not self.artifact_repo:  # No repo and not a local file
-                logger.error(f"Model file not found at local path: {local_model_path} (and no repository configured).")
-                # No state_dict loaded, error will be raised below
+                    state_dict = torch.load(model_path_or_key, map_location=map_location, weights_only=True)
+                    logger.info(f"Model state_dict loaded from local filesystem: {model_path_or_key}")
+                except Exception as e_load_local:
+                    logger.error(f"Failed to load state_dict from local {model_path_or_key}: {e_load_local}")
+            elif not self.artifact_repo:
+                logger.error(f"Model file not found at local path: {model_path_or_key} (no repo).")
 
-        # Apply state_dict if successfully loaded
         if state_dict:
+            # If state_dict came from Skorch's net.save_params(f_params=...), it might have 'module_params' etc.
+            # Or if it's net.module_.state_dict(), it's clean.
+            # Your current saving method `adapter_for_train.module_.state_dict()` is good, so state_dict is clean.
             try:
-                self.model_adapter.module_.load_state_dict(state_dict)
-                self.model_adapter.module_.eval()  # Set to eval mode
-                logger.info(
-                    f"Model state_dict loaded and applied successfully to the model adapter from: {model_path_or_key}")
-            except Exception as e:
-                logger.error(f"Failed to apply loaded state_dict to model: {e}", exc_info=True)
-                if isinstance(e, RuntimeError) and "size mismatch" in str(e):
-                    logger.error("Architecture mismatch likely. Ensure loaded weights match the current model config.")
-                raise RuntimeError(f"Error applying state_dict from '{model_path_or_key}' to model.") from e
+                # Skorch state_dicts might be prefixed with "module."
+                # If your saved state_dict is from module_.state_dict(), it's fine.
+                # If it's from skorch net.get_params(deep=True)['module_state_dict'], it might also be fine.
+                # Let's add a check for "module." prefix if direct load fails.
+                try:
+                    self.model_adapter.module_.load_state_dict(state_dict)
+                except RuntimeError as e_load_strict:
+                    if "Missing key(s) in state_dict" in str(e_load_strict) or \
+                            "Unexpected key(s) in state_dict" in str(e_load_strict):
+                        logger.warning(f"Strict state_dict loading failed: {e_load_strict}. "
+                                       "Checking for 'module.' prefix if saved from full Skorch net.")
+
+                        # Check if all keys in state_dict start with "module."
+                        all_module_prefixed = all(k.startswith("module.") for k in state_dict.keys())
+
+                        if all_module_prefixed:
+                            logger.info("Attempting to load state_dict by stripping 'module.' prefix.")
+                            stripped_state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
+                            self.model_adapter.module_.load_state_dict(stripped_state_dict)
+                        else:
+                            # If not all prefixed, or stripping didn't help, re-raise the original error.
+                            logger.error(
+                                "State_dict keys are not consistently prefixed with 'module.'. Original error applies.")
+                            raise e_load_strict
+                    else:  # Other RuntimeError
+                        raise e_load_strict
+
+                self.model_adapter.module_.eval()
+                logger.info(f"Model state_dict applied successfully from: {model_path_or_key}")
+            except Exception as e_apply:
+                logger.error(f"Failed to apply loaded state_dict to model: {e_apply}", exc_info=True)
+                raise RuntimeError(f"Error applying state_dict from '{model_path_or_key}' to model.") from e_apply
         else:
-            # This means all attempts to load failed
-            raise FileNotFoundError(f"Model could not be loaded from source: {model_path_or_key}. "
-                                    "Check path/key and repository configuration.")
+            raise FileNotFoundError(f"Model state_dict could not be loaded from source: {model_path_or_key}.")
