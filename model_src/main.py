@@ -40,10 +40,13 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet'
+
+    # Offline Augmentation:
+    offline_augmentation = False  # Whether to use pre-augmented data (if available)
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -134,12 +137,12 @@ if __name__ == "__main__":
         chosen_param_grid = param_grid_vit_from_scratch
 
     elif model_type == ModelType.DIFFUSION:
-        chosen_fixed_params = debug_fixed_params # Using debug fixed params for the moment (TODO: update)
+        chosen_fixed_params = debug_fixed_params # TODO: update
         chosen_param_grid = diffusion_param_grid
 
     elif model_type == ModelType.XCLOUD:
         chosen_fixed_params = xcloud_fixed_params
-        chosen_param_grid = None # TODO: update
+        chosen_param_grid = None
 
     elif model_type == ModelType.MCLOUD:
         chosen_fixed_params = mcloud_fixed_params
@@ -151,7 +154,7 @@ if __name__ == "__main__":
 
     elif model_type == ModelType.PRETRAINED_SWIN:
         chosen_fixed_params = pretrained_swin_fixed_params
-        chosen_param_grid = best_config_as_grid_vit # TODO: update
+        chosen_param_grid = None
 
     else:
         logger.error(f"Model type '{model_type}' not recognized. Supported: {[m.value for m in ModelType]}")
@@ -161,7 +164,7 @@ if __name__ == "__main__":
         # Target: 80% train, 10% val, 10% test
         effective_test_split_ratio_if_flat = 0.1
         effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
-        cv_folds = 10  # TODO change back to 10
+        cv_folds = 10
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset.lower() in ['gcd', 'mgcd', 'mgcdf']:
         effective_test_split_ratio_if_flat = 9000 / 19000
@@ -303,6 +306,7 @@ if __name__ == "__main__":
             force_flat_for_fixed_cv=force_flat, # Pass the flag
             augmentation_strategy=augmentation_strategy,
             show_first_batch_augmentation_default=True,
+            use_offline_augmented_data=offline_augmentation,
 
             # Pipeline default parameters (can be overridden by methods)
             img_size=img_size,

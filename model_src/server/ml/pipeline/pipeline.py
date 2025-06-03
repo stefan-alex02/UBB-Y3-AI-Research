@@ -73,6 +73,7 @@ class ClassificationPipeline:
                  test_split_ratio_if_flat: float = 0.2,
                  augmentation_strategy: Union[str, AugmentationStrategy, Callable, None] = AugmentationStrategy.DEFAULT_STANDARD,
                  show_first_batch_augmentation_default: bool = False,
+                 use_offline_augmented_data: bool = False,
                  force_flat_for_fixed_cv: bool = False,
                  optimizer: Union[str, Type[torch.optim.Optimizer]] = AdamW,
                  lr: float = 0.001,
@@ -185,7 +186,8 @@ class ClassificationPipeline:
         self.dataset_handler = ImageDatasetHandler(
             root_path=self.dataset_path, img_size=img_size,
             val_split_ratio=val_split_ratio, test_split_ratio_if_flat=test_split_ratio_if_flat,
-            augmentation_strategy=self.augmentation_strategy, force_flat_for_fixed_cv=self.force_flat_for_fixed_cv
+            augmentation_strategy=self.augmentation_strategy, use_offline_augmented_data=use_offline_augmented_data,
+            force_flat_for_fixed_cv=self.force_flat_for_fixed_cv
         )
 
         if self.artifact_repo and self.experiment_run_key_prefix:
@@ -247,6 +249,8 @@ class ClassificationPipeline:
             'train_transform': self.dataset_handler.get_train_transform(),
             'valid_transform': self.dataset_handler.get_eval_transform(),
             'show_first_batch_augmentation': self.show_first_batch_augmentation_default,
+            'use_offline_augmented_data': use_offline_augmented_data, # Pass to adapter
+            'dataset_handler_ref': self.dataset_handler,            # Pass reference to adapter
             'classes': np.arange(self.dataset_handler.num_classes),
             'verbose': 0, # Default verbosity for adapter itself
             **module_params
@@ -371,7 +375,7 @@ class ClassificationPipeline:
                 score_for_class = y_score[:, class_label]
                 if len(np.unique(true_is_class)) > 1:  # AUC/curves require both +ve/-ve samples
                     try:
-                        roc_auc = roc_auc_score(true_is_class, score_for_class) # TODO: investigate one-point roc calculation vs this approach
+                        roc_auc = roc_auc_score(true_is_class, score_for_class)
                     except ValueError:
                         pass  # Ignore if only one class present after all
                     except Exception as e:

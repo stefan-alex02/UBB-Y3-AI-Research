@@ -152,8 +152,6 @@ class FileLogTable(Callback):
             self.logger_instance.info(raw_log)
 
 
-# TODO use a custom sampler for grid search to allow interval sampling
-# or make the adapter use the params to create a customized LR scheduler
 def get_default_callbacks(
     early_stopping_monitor: str = 'valid_loss',
     early_stopping_patience: int = 10,

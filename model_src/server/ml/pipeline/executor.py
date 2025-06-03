@@ -28,6 +28,7 @@ class PipelineExecutor:
                  augmentation_strategy: Union[
                      str, AugmentationStrategy, Callable, None] = AugmentationStrategy.DEFAULT_STANDARD,
                  show_first_batch_augmentation_default: bool = False,  # Added from previous context
+                 use_offline_augmented_data: bool = False,
                  force_flat_for_fixed_cv: bool = False,
                  lr: float = 0.001,
                  max_epochs: int = 20,
@@ -119,6 +120,7 @@ class PipelineExecutor:
             test_split_ratio_if_flat=test_split_ratio_if_flat,
             augmentation_strategy=augmentation_strategy,  # Pass it down
             show_first_batch_augmentation_default=show_first_batch_augmentation_default,  # Pass it down
+            use_offline_augmented_data=use_offline_augmented_data,
             force_flat_for_fixed_cv=force_flat_for_fixed_cv, lr=lr, max_epochs=max_epochs,
             batch_size=batch_size, patience=patience,
             optimizer__weight_decay=optimizer__weight_decay, module__dropout_rate=module__dropout_rate

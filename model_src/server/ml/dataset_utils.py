@@ -1,3 +1,4 @@
+import re
 from enum import Enum
 from pathlib import Path
 from typing import Dict, List, Tuple, Callable, Optional, Union
@@ -231,6 +232,7 @@ class ImageDatasetHandler:
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2, # Ratio for test split if structure is FLAT
                  augmentation_strategy: Union[str, AugmentationStrategy, Callable, None] = AugmentationStrategy.DEFAULT_STANDARD,
+                 use_offline_augmented_data: bool = False,
                  force_flat_for_fixed_cv: bool = False): # New flag
         self.root_path = Path(root_path).resolve()
         if not self.root_path.is_dir():
@@ -244,6 +246,7 @@ class ImageDatasetHandler:
         self.val_split_ratio = val_split_ratio
         self.test_split_ratio_if_flat = test_split_ratio_if_flat
         self.force_flat_for_fixed_cv = force_flat_for_fixed_cv
+        self.use_offline_augmented_data = use_offline_augmented_data
 
         # --- Process augmentation_strategy ---
         if isinstance(augmentation_strategy, str):
@@ -301,6 +304,9 @@ class ImageDatasetHandler:
         self._all_labels: List[int] = []
         self._train_val_paths: List[Path] = []
         self._train_val_labels: List[int] = []
+        self._offline_aug_paths: List[Path] = []
+        self._offline_aug_labels: List[int] = []
+        self._offline_aug_original_basenames: List[str] = []  # <<< NEW: Store original basenames
         self._test_paths: List[Path] = []
         self._test_labels: List[int] = []
         self.classes: List[str] = []
@@ -361,6 +367,56 @@ class ImageDatasetHandler:
                     paths.append(img_path)
                     labels.append(class_idx)
         return paths, labels, class_names, class_to_idx
+
+    @staticmethod
+    def _get_original_basename(augmented_path: Path) -> Optional[str]:
+        """
+        Parses an augmented filename like 'original_image_name_augmented.png'
+        to extract 'original_image_name'.
+        Returns None if parsing fails.
+        """
+        # Define the suffix pattern more robustly
+        # It looks for "_augmented" followed by an optional dot and extension.
+        match = re.match(r"^(.*?)_generated(\..*)?$", augmented_path.name)
+        if match:
+            return match.group(1)  # The part before "_augmented"
+        # Fallback or stricter parsing if needed
+        # logger.warning(f"Could not parse original basename from augmented file: {augmented_path.name}")
+        return None
+
+    @staticmethod
+    def _scan_augmented_dir_for_paths_labels_and_originals(
+            target_dir: Path,
+            master_class_names: List[str],
+            master_class_to_idx: Dict[str, int]
+    ) -> Tuple[List[Path], List[int], List[str]]:  # Returns paths, labels, original_basenames
+        aug_paths = []
+        aug_labels = []
+        aug_original_basenames = []
+
+        target_dir = Path(target_dir)
+        if not target_dir.is_dir(): return [], [], []
+
+        found_class_subdirs = sorted([d.name for d in target_dir.iterdir() if d.is_dir()])
+
+        for class_name_in_aug in found_class_subdirs:
+            if class_name_in_aug not in master_class_to_idx:
+                logger.warning(f"Class '{class_name_in_aug}' in augmented set not in master. Skipping.")
+                continue
+
+            class_idx = master_class_to_idx[class_name_in_aug]
+            class_dir = target_dir / class_name_in_aug
+            for img_path in class_dir.glob('*.*'):
+                if img_path.suffix.lower() in ['.jpg', '.jpeg', '.png', '.bmp', '.tif', '.tiff']:
+                    original_basename = ImageDatasetHandler._get_original_basename(img_path)
+                    if original_basename:
+                        aug_paths.append(img_path)
+                        aug_labels.append(class_idx)
+                        aug_original_basenames.append(original_basename)
+                    else:
+                        logger.warning(
+                            f"Could not determine original basename for augmented file {img_path}. Skipping.")
+        return aug_paths, aug_labels, aug_original_basenames
 
     def _load_paths_and_labels(self) -> None:
         """Loads paths and labels based on detected structure."""
@@ -436,10 +492,44 @@ class ImageDatasetHandler:
                 self._all_paths = self._train_val_paths + self._test_paths
                 self._all_labels = self._train_val_labels + self._test_labels
 
+        # 2. Load OFFLINE AUGMENTED data (if requested)
+        if self.use_offline_augmented_data:
+            original_dataset_name = self.root_path.name
+            augmented_dataset_name = f"{original_dataset_name}_augmented"
+            augmented_dataset_path = self.root_path.parent / augmented_dataset_name
+
+            if augmented_dataset_path.is_dir():
+                if not self.class_to_idx:  # Should have been set by now
+                    logger.error("Cannot load augmented data: Main dataset classes not determined.")
+                else:
+                    # Use the new scanning function
+                    self._offline_aug_paths, self._offline_aug_labels, self._offline_aug_original_basenames = \
+                        self._scan_augmented_dir_for_paths_labels_and_originals(
+                            augmented_dataset_path, self.classes, self.class_to_idx
+                        )
+                    if self._offline_aug_paths:
+                        logger.info(
+                            f"Loaded {len(self._offline_aug_paths)} offline augmented samples with original name mapping.")
+                    else:
+                        logger.warning(f"Augmented dataset directory {augmented_dataset_path} is empty.")
+            else:
+                logger.warning(f"Offline augmented dataset directory not found: {augmented_dataset_path}.")
+
+        logger.info(f"Final Original Dataset sizes: "
+                    f"{len(self._train_val_paths)} original train+val, "
+                    f"{len(self._test_paths)} original test. "
+                    f"Offline augmented samples loaded: {len(self._offline_aug_paths)}.")
+
     # --- Public Accessors ---
     def get_train_val_paths_labels(self) -> Tuple[List[Path], List[int]]:
         """Returns paths and labels for the training + validation set."""
         return self._train_val_paths, self._train_val_labels
+
+    def get_offline_augmented_paths_labels_with_originals(self) -> Tuple[List[Path], List[int], List[str]]:
+        """
+        Returns paths, labels, and corresponding original basenames for the OFFLINE AUGMENTED dataset.
+        """
+        return self._offline_aug_paths, self._offline_aug_labels, self._offline_aug_original_basenames
 
     def get_test_paths_labels(self) -> Tuple[List[Path], List[int]]:
         """Returns paths and labels for the test set."""

@@ -11,7 +11,7 @@ from skorch.utils import to_numpy
 from torch.utils.data import DataLoader, Dataset as PyTorchDataset
 
 from ..config import DEVICE
-from ..dataset_utils import PathImageDataset
+from ..dataset_utils import PathImageDataset, ImageDatasetHandler
 from ..logger_utils import logger
 from .augmentations_utils import cutmix_data, rand_bbox
 
@@ -35,13 +35,14 @@ class SkorchModelAdapter(NeuralNetClassifier):
             batch_size: int = 32,
             device: str = DEVICE,
             show_first_batch_augmentation: bool = False,
-            # 'callbacks' now expects None or a list directly from the caller
             callbacks: Optional[List[Tuple[str, Callback]]] = None,
             train_transform: Optional[Callable] = None,
             valid_transform: Optional[Callable] = None,
+            use_offline_augmented_data: bool = False,
+            dataset_handler_ref: Optional[ImageDatasetHandler] = None,
             train_split: Optional[Callable] = None,
             iterator_train__shuffle: bool = True,
-            cutmix_alpha: float = 0.0,       # Corresponds to 'beta' in Kaggle script; Alpha for Beta distribution. If 0, CutMix is disabled.
+            cutmix_alpha: float = 0.0,       # Corresponds to 'beta'; Alpha for Beta distribution. If 0, CutMix is disabled.
             cutmix_probability: float = 0.0, # Probability of applying CutMix per batch. If 0, CutMix is disabled.
             gradient_clip_value: Optional[float] = None,  # For gradient clipping
             verbose: int = 1,
@@ -59,8 +60,10 @@ class SkorchModelAdapter(NeuralNetClassifier):
         self.train_transform = train_transform
         self.valid_transform = valid_transform
 
-        # Callback config args (patience etc.) should have been handled by the caller
-        # We no longer process 'default' here.
+        self.use_offline_augmented_data = use_offline_augmented_data
+        self.dataset_handler_ref = dataset_handler_ref  # Store reference
+        if self.use_offline_augmented_data and self.dataset_handler_ref is None:
+            raise ValueError("dataset_handler_ref must be provided if use_offline_augmented_data is True")
 
         # Add Collate Functions to kwargs if not provided by caller
         kwargs.setdefault('iterator_train__collate_fn', PathImageDataset.collate_fn)
@@ -103,80 +106,99 @@ class SkorchModelAdapter(NeuralNetClassifier):
         except Exception as e:
             logger.error(f"Error in _plot_debug_batch: {e}", exc_info=True)
 
-    # --- Override get_split_datasets ---
     def get_split_datasets(self, X, y=None, **fit_params):
-        """
-        Splits paths/labels using self.train_split based on indices and y,
-        then creates separate PathImageDatasets with appropriate train/valid transforms.
-        """
-        # Ensure y is available and numpy array
-        if y is None: raise ValueError("y must be provided to fit when using train_split.")
-        y_arr = to_numpy(y)
+        # X here are paths from dataset_handler.get_train_val_paths_labels_orig()
+        # y are corresponding original labels
+        if y is None: raise ValueError("y must be provided.")
+        y_arr_orig_pool = to_numpy(y)  # Labels of the current original pool (e.g., full train+val)
+        X_paths_np_orig_pool = np.asarray(X)
 
-        # Ensure X is paths and get length
-        if not isinstance(X, (list, tuple, np.ndarray)): raise TypeError(f"X must be sequence, got {type(X)}")
-        if isinstance(X, np.ndarray) and X.ndim > 1: raise ValueError("X must be 1D sequence of paths")
-        X_len = len(X)
-        if X_len == 0: logger.warning("Input X is empty."); return None, None
-        X_paths_np = np.asarray(X)  # Keep original paths safe
+        ds_train_final = None
+        ds_valid_final = None
 
-        # 1. Check if a train_split strategy is defined
         if self.train_split:
-            try:
-                # --- MODIFICATION ---
-                # Pass indices array (representing X) and the actual y array to the splitter
-                # ValidSplit(cv=float, stratified=True) uses train_test_split which works with indices.
-                # ValidSplit(cv=KFold, stratified=?) KFold split works on indices.
-                indices = np.arange(X_len)
-                ds_train_split, ds_valid_split = self.train_split(indices, y=y_arr, **fit_params)
-                # --- END MODIFICATION ---
+            indices_in_orig_pool = np.arange(len(X_paths_np_orig_pool))
+            ds_train_indices_wrapper, ds_valid_indices_wrapper = \
+                self.train_split(indices_in_orig_pool, y=y_arr_orig_pool, **fit_params)
 
-                # Extract indices from the returned split datasets
-                if hasattr(ds_train_split, 'indices'):
-                    train_indices = ds_train_split.indices
+            train_indices_for_this_fold = np.asarray(ds_train_indices_wrapper.indices)
+
+            # 1. Create VALIDATION dataset from ORIGINAL data ONLY
+            if ds_valid_indices_wrapper is not None and len(ds_valid_indices_wrapper) > 0:
+                valid_indices_for_this_fold = np.asarray(ds_valid_indices_wrapper.indices)
+                valid_paths = X_paths_np_orig_pool[valid_indices_for_this_fold].tolist()
+                valid_labels = y_arr_orig_pool[valid_indices_for_this_fold].tolist()
+                ds_valid_final = PathImageDataset(paths=valid_paths, labels=valid_labels,
+                                                  transform=self.valid_transform)
+                logger.debug(f"Validation split for fold created with {len(ds_valid_final)} original samples.")
+
+            # 2. Create TRAINING dataset
+            # Start with original images for this training fold
+            current_fold_train_paths_orig = X_paths_np_orig_pool[train_indices_for_this_fold].tolist()
+            current_fold_train_labels_orig = y_arr_orig_pool[train_indices_for_this_fold].tolist()
+
+            # Get basenames of these original training images for mapping to augmentations
+            current_fold_train_original_basenames = set()
+            for p_orig in current_fold_train_paths_orig:
+                # Assuming Path.stem gives the name without final extension, which should match original_basename
+                current_fold_train_original_basenames.add(Path(p_orig).stem)
+
+            combined_train_paths_for_fold = current_fold_train_paths_orig[:]
+            combined_train_labels_for_fold = current_fold_train_labels_orig[:]
+
+            if self.use_offline_augmented_data and self.dataset_handler_ref:
+                logger.debug("Original training set created with "
+                             f"{len(combined_train_paths_for_fold)} samples. "
+                             "Now checking for relevant offline augmentations...")
+
+                all_aug_paths, all_aug_labels, all_aug_original_basenames = \
+                    self.dataset_handler_ref.get_offline_augmented_paths_labels_with_originals()
+
+                added_aug_count = 0
+                if all_aug_paths:
+                    for aug_path, aug_label, aug_orig_basename in zip(all_aug_paths, all_aug_labels,
+                                                                      all_aug_original_basenames):
+                        if aug_orig_basename in current_fold_train_original_basenames:
+                            combined_train_paths_for_fold.append(aug_path)
+                            combined_train_labels_for_fold.append(aug_label)
+                            added_aug_count += 1
+
+                    # TODO maybe add param for force sorting
+                    # combined_train_paths_for_fold, combined_train_labels_for_fold = \
+                    #     zip(*sorted(zip(combined_train_paths_for_fold, combined_train_labels_for_fold),
+                    #                   key=lambda x: Path(x[0]).stem))
+
+                    logger.debug(
+                        f"Added {added_aug_count} relevant offline augmented samples to current training fold.")
                 else:
-                    raise TypeError(f"Could not extract indices from train split result type {type(ds_train_split)}")
-                train_indices = np.asarray(train_indices)
+                    logger.warning("No offline augmented paths found in dataset_handler_ref.")
+            else:
+                logger.debug("No offline augmentations will be applied.")
 
-                valid_indices = None
-                if ds_valid_split is not None and len(ds_valid_split) > 0:
-                    if hasattr(ds_valid_split, 'indices'):
-                        valid_indices = ds_valid_split.indices
-                        valid_indices = np.asarray(valid_indices)
-                    else:
-                        raise TypeError(
-                            f"Could not extract indices from valid split result type {type(ds_valid_split)}")
+            ds_train_final = PathImageDataset(
+                paths=combined_train_paths_for_fold,
+                labels=combined_train_labels_for_fold,
+                transform=self.train_transform
+            )
+            logger.debug(
+                f"Total training split for fold created with {len(ds_train_final)} samples.")
 
-                # Create datasets using indices on original paths/labels AND correct transforms
-                ds_train = PathImageDataset(
-                    paths=X_paths_np[train_indices].tolist(),
-                    labels=y_arr[train_indices].tolist(),
-                    transform=self.train_transform
-                )
+        else:  # No train_split (e.g., training on full X, y without validation, like during final refit of GridSearchCV)
+            logger.debug(
+                "No train_split defined by skorch. Using all provided X,y for training, plus all offline augmentations.")
+            combined_train_paths = X_paths_np_orig_pool.tolist()
+            combined_train_labels = y_arr_orig_pool.tolist()
+            if self.use_offline_augmented_data and self.dataset_handler_ref:
+                aug_paths, aug_labels, _ = self.dataset_handler_ref.get_offline_augmented_paths_labels_with_originals()
+                if aug_paths:  # Add ALL offline augmentations here because there's no val set to protect
+                    combined_train_paths.extend(aug_paths)
+                    combined_train_labels.extend(aug_labels)
+                    logger.debug(
+                        f"Added {len(aug_paths)} offline augmented samples to full training set (no validation split).")
+            ds_train_final = PathImageDataset(paths=combined_train_paths, labels=combined_train_labels,
+                                              transform=self.train_transform)
 
-                ds_valid = None
-                if len(valid_indices) > 0:
-                    ds_valid = PathImageDataset(
-                        paths=X_paths_np[valid_indices].tolist(),
-                        labels=y_arr[valid_indices].tolist(),
-                        transform=self.valid_transform
-                    )
-                    logger.debug(f"Split created: {len(ds_train)} train, {len(ds_valid)} validation.")
-                else:
-                    logger.debug(f"Split created: {len(ds_train)} train, 0 validation.")
-
-                return ds_train, ds_valid
-
-            except Exception as e:
-                logger.error(f"Error applying train_split in get_split_datasets: {e}", exc_info=True)
-                logger.warning("Falling back to using all data for training.")
-                ds_train = PathImageDataset(X_paths_np.tolist(), y_arr.tolist(), transform=self.train_transform)
-                return ds_train, None
-        else:
-            # No train_split defined
-            logger.debug(f"No train_split defined. Using all {X_len} samples for training.")
-            ds_train = PathImageDataset(X_paths_np.tolist(), y_arr.tolist(), transform=self.train_transform)
-            return ds_train, None
+        return ds_train_final, ds_valid_final
 
     def get_iterator(self, dataset, training=False):
         """
