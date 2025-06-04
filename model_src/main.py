@@ -1,10 +1,11 @@
 import traceback
-from pathlib import Path
+from pathlib import Path, PurePath
+from typing import List, Tuple, Union
 
 import numpy as np
 
 from model_src.server.ml.params.feature_extractors import paper_cnn_standalone_fixed_params
-from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params
+from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params, hybrid_vit_param_grid
 from model_src.server.ml.params.paper_xception_mobilenet import xcloud_fixed_params, mcloud_fixed_params
 from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_params
 from model_src.server.ml.params.resnet import resnet18_cloud_fixed_params
@@ -24,7 +25,7 @@ if __name__ == "__main__":
     script_dir = Path(__file__).resolve().parent
 
     # --- Repository Configuration ---
-    minio_bucket_name = "ml-experiment-artifacts"
+    minio_bucket_name = "clouds"
     local_repo_base_path = str(script_dir)
 
     # --- Load Artifact Repository ---
@@ -69,27 +70,40 @@ if __name__ == "__main__":
 
     save_model = True  # Whether to save the model after training
 
-    # Flag for overriding parameters:
-    enable_debug_params = False # Set to True to use the override params for any model type
-
     data_augmentation_mode_override = None
     # data_augmentation_mode_override = AugmentationStrategy.PAPER_CCSN
 
-    # Trained model path for loading
-    # saved_model_path = "./results/mini-GCD/cnn/20250509_021630_seed42/single_train_20250509_021630_121786/cnn_epoch4_val_valid-loss0.9061.pt"
-    # saved_model_path = "./results/Swimcat-extend/cnn/20250515_160130_seed42/single_train_20250515_160130_450999/cnn_epoch4_val_valid-loss0.3059.pt"
-    saved_model_path = "./experiments/Swimcat-extend/pvit/20250604_012844_seed42/single_train_012844/pvit_epoch2_no_val.pt"
+    # Flag for overriding parameters:
+    enable_debug_params = False # Set to True to use the override params for any model type
 
-    # New image paths for prediction
-    # existing_prediction_paths = [
-    #     "C:/Users/Stefan/Downloads/cumulonimbus-clouds-1024x641.jpeg",
-    #     "C:/Users/Stefan/Downloads/heavy-downpours-cumulonimbus.webp",
-    #     "C:/Users/Stefan/Downloads/cumulonimbus-at-night-cschoeps.jpg",
-    # ]
+    # Save run log file:
+    save_run_log_file = True  # Whether to save the main log file
+
+    # --- MODEL TO LOAD ---
+    # Path to the .pt file RELATIVE TO THE 'experiments/' prefix if using S3/MinIO,
+    # or full/relative path if local.
+    # The load_model method will prepend "experiments/" if needed for S3.
+    saved_model_dataset = "Swimcat-extend" # Dataset the model was trained on
+    saved_model_type_folder = "hyvit"      # Model type folder for that experiment
+    # saved_model_experiment_run_id = "20250604_022700_seed42" # The RUN_ID of the experiment that saved the model
+    saved_model_experiment_run_id = "20250605_021526_seed42" # The RUN_ID of the experiment that saved the model
+    # saved_model_relative_path = "single_train_022700\\hyvit_epochEllipsis.pt" # Actual .pt filename
+    saved_model_relative_path = "non_nested_grid_021526\\hyvit_gridcv_cvscp60_021526.pt" # Actual .pt filename
+
+    # Construct the path that load_model expects
+    # For S3/MinIO, load_model internally adds "experiments/" if not present.
+    # So, provide the path starting from after "experiments/".
+    model_path = str(
+        PurePath(saved_model_dataset) / saved_model_type_folder / saved_model_experiment_run_id / saved_model_relative_path
+    )
+    # Example: "Swimcat-extend/hyvit/20250604_022700_seed42/hyvit_epochEllipsis.pt"
+
     # iterate over the images in the directory (first 10)
-    existing_prediction_paths = [
-        str(p) for p in Path("./data/Swimcat-extend/E-Thick Dark Clouds").glob("*.png")
-    ][:2]
+    images_to_predict_info: List[Tuple[Union[int, str], str]] = [
+        (145, "jpg"),
+        ('D_img11', "png"),
+        ("D_img27", "png")
+    ]
 
     # --- Check if the dataset path exists ---
     dataset_path = script_dir / DATASET_DICT[selected_dataset]  # Path to the dataset
@@ -122,7 +136,7 @@ if __name__ == "__main__":
 
     elif model_type == ModelType.HYBRID_VIT:
         chosen_fixed_params = hybrid_vit_fixed_params
-        chosen_param_grid = None
+        chosen_param_grid = hybrid_vit_param_grid
 
     elif model_type == ModelType.CNN_FEAT:
         chosen_fixed_params = paper_cnn_standalone_fixed_params
@@ -176,6 +190,7 @@ if __name__ == "__main__":
         effective_test_split_ratio_if_flat = 0.2  # Your default
         effective_val_split_ratio = 0.1  # Your default (applied to train_val part)
         cv_folds = 5
+        cv_folds = 2
         augmentation_strategy = AugmentationStrategy.PAPER_CCSN
     else:
         effective_test_split_ratio_if_flat = 0.2  # Your default
@@ -261,7 +276,7 @@ if __name__ == "__main__":
 
     # Example 6: Load Pre-trained and Evaluate
     methods_seq_6 = [
-        ('load_model', {'model_path_or_key': saved_model_path}),
+        ('load_model', {'model_path_or_key': model_path}),
         ('single_eval', {
             'plot_level': 2  # Save AND show plots after single_eval
         }),
@@ -270,13 +285,16 @@ if __name__ == "__main__":
     # Example 7: Load Pre-trained and Predict on New Images
     methods_seq_7 = [
         ('load_model', {
-            'model_path_or_key': saved_model_path
+            'model_path_or_key': model_path
         }),
         ('predict_images', {
-            'image_sources': existing_prediction_paths,  # Use the list of image paths
+            'image_id_format_pairs': images_to_predict_info,
+            'experiment_run_id_of_model': saved_model_experiment_run_id,  # Used for saving prediction outputs
             'generate_lime_explanations': True,
-            'results_detail_level': 3,  # Save a basic JSON of predictions
-            'plot_level': 2  # Save and show prediction plots
+            'lime_num_features_to_show_plot': 5,
+            'lime_num_samples_for_explainer': 100,  # Reduce for faster testing if needed
+            'results_detail_level': 3,
+            'plot_level': 2  # Generate and save LIME & probability plots
         })
     ]
 
@@ -302,6 +320,7 @@ if __name__ == "__main__":
             dataset_path=dataset_path,
             model_type=model_type,
             artifact_repository=repo,
+            save_main_log_file=save_run_log_file,
             experiment_base_key_prefix=experiment_base_prefix_for_repo,
             methods=chosen_sequence,
             force_flat_for_fixed_cv=force_flat, # Pass the flag

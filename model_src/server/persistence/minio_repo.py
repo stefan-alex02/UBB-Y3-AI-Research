@@ -4,7 +4,7 @@ import logging
 import os
 from datetime import datetime  # For JSON serializer
 from pathlib import Path
-from typing import Optional, Dict, Union, Callable  # Add List if not already there
+from typing import Optional, Dict, Union, Callable, List  # Add List if not already there
 
 import boto3
 import numpy as np  # For JSON serializer
@@ -16,7 +16,7 @@ from torch import nn
 
 from .artifact_repo import ArtifactRepository
 
-logger = logging.getLogger(__name__)
+from ..ml.logger_utils import logger
 
 
 class MinIORepository(ArtifactRepository):
@@ -183,3 +183,54 @@ class MinIORepository(ArtifactRepository):
         except Exception as e:
             logger.error(f"Failed to save image object to S3 (s3://{self.bucket_name}/{key}): {e}")
             return None
+
+    def list_objects_in_prefix(self, prefix: str, delimiter: str = '/') -> Dict[str, List[str]]:
+        """
+        Lists objects and common prefixes (subfolders) under a given prefix.
+
+        Args:
+            prefix: The prefix (simulated folder path) to list objects from.
+                    Ensure it ends with a '/' if you want to list contents *inside* that "folder".
+                    If it doesn't end with '/', it will list objects *starting with* that prefix.
+            delimiter: Character to group objects by, typically '/'. This helps simulate folders.
+
+        Returns:
+            A dictionary with two keys:
+            - 'objects': A list of full object keys (files).
+            - 'subfolders': A list of common prefixes (simulated subfolders).
+        """
+        if not prefix.endswith('/') and prefix != "":  # Add trailing slash if it's a folder prefix and not empty
+            prefix_to_list = prefix + '/'
+        else:
+            prefix_to_list = prefix
+
+        objects = []
+        subfolders = []
+
+        try:
+            paginator = self.client.get_paginator('list_objects_v2')
+            page_iterator = paginator.paginate(
+                Bucket=self.bucket_name,
+                Prefix=prefix_to_list,
+                Delimiter=delimiter
+            )
+
+            for page in page_iterator:
+                if 'Contents' in page:
+                    for obj in page['Contents']:
+                        objects.append(obj['Key'])
+                if 'CommonPrefixes' in page:  # These are your "subfolders"
+                    for common_prefix in page['CommonPrefixes']:
+                        subfolders.append(common_prefix['Prefix'])
+
+            logger.info(f"Listed contents for prefix 's3://{self.bucket_name}/{prefix_to_list}': "
+                        f"{len(objects)} objects, {len(subfolders)} subfolders.")
+            return {'objects': objects, 'subfolders': subfolders}
+
+        except ClientError as e:
+            logger.error(
+                f"S3 ClientError listing objects in prefix '{prefix_to_list}' of bucket '{self.bucket_name}': {e}")
+        except Exception as e:
+            logger.error(f"Failed to list objects in prefix '{prefix_to_list}' of bucket '{self.bucket_name}': {e}")
+
+        return {'objects': [], 'subfolders': []}  # Return empty on error

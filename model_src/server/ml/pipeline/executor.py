@@ -1,5 +1,8 @@
 import logging
+import shutil
+import tempfile
 import time
+import traceback
 from datetime import datetime
 from pathlib import Path, PurePath
 from typing import Dict, List, Tuple, Any, Optional, Union, Callable
@@ -18,25 +21,32 @@ class PipelineExecutor:
                  model_type: Union[str, ModelType] = ModelType.CNN,
                  model_load_path: Optional[Union[str, Path]] = None,
                  artifact_repository: Optional[ArtifactRepository] = None,
-                 experiment_base_key_prefix: str = "experiments",
+                 experiment_base_key_prefix: str = "experiments",  # e.g., "experiments"
                  results_detail_level: int = 1,
                  plot_level: int = 0,
+                 save_main_log_file: bool = True,  # <<< NEW PARAMETER
                  methods: Optional[List[Tuple[str, Dict[str, Any]]]] = None,
                  img_size: Tuple[int, int] = DEFAULT_IMG_SIZE,
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2,
+                 # --- Pass-through to ClassificationPipeline ---
                  augmentation_strategy: Union[
                      str, AugmentationStrategy, Callable, None] = AugmentationStrategy.DEFAULT_STANDARD,
-                 show_first_batch_augmentation_default: bool = False,  # Added from previous context
-                 use_offline_augmented_data: bool = False,
+                 show_first_batch_augmentation_default: bool = False,
+                 use_offline_augmented_data: bool = False,  # Will be passed to Pipeline
                  force_flat_for_fixed_cv: bool = False,
+                 # --- Pass-through Skorch/Module defaults to ClassificationPipeline ---
                  lr: float = 0.001,
                  max_epochs: int = 20,
                  batch_size: int = 32,
                  patience: int = 10,
                  optimizer__weight_decay: float = 0.01,
-                 module__dropout_rate: Optional[float] = None
+                 module__dropout_rate: Optional[float] = None,
+                 # --- Allow other kwargs to be passed to ClassificationPipeline for Skorch ---
+                 **kwargs
                  ):
+
+        self.save_main_log_file = save_main_log_file  # Store the flag
 
         # --- 1. Determine key identifiers and paths FIRST ---
         _model_type_enum: ModelType
@@ -52,268 +62,245 @@ class PipelineExecutor:
 
         dataset_name_for_path = Path(dataset_path).name
         timestamp_init_for_path = datetime.now().strftime('%Y%m%d_%H%M%S')
-        conceptual_experiment_run_name = f"{timestamp_init_for_path}_seed{RANDOM_SEED}"
+        self.conceptual_experiment_run_name = f"{timestamp_init_for_path}_seed{RANDOM_SEED}"
 
-        current_experiment_run_key_prefix = str(PurePath(
-            experiment_base_key_prefix,
+        # This is the top-level directory/prefix for *all* artifacts of this specific executor run
+        # e.g., "experiments/CCSN/pvit/20250605_120000_seed42"
+        self.current_executor_run_artifacts_prefix = str(PurePath(
+            experiment_base_key_prefix,  # Should be "experiments"
             dataset_name_for_path,
             _model_type_enum.value,
-            conceptual_experiment_run_name
+            self.conceptual_experiment_run_name
         ).as_posix())
 
-        # --- 2. Configure Logger NOW ---
-        log_file_name_base = f"experiment_run_{conceptual_experiment_run_name}.log"
+        # --- 2. Configure Logger ---
+        log_file_name_base = f"executor_run_{self.conceptual_experiment_run_name}.log"  # Renamed for clarity
         log_dir_for_file_setup: Optional[Path] = None
-        self.log_file_local_path: Optional[Path] = None  # Initialize attribute
-        self.temp_log_dir: Optional[Path] = None  # Initialize attribute
+        self.log_file_local_path: Optional[Path] = None
+        self.temp_log_dir: Optional[Path] = None
 
-        if isinstance(artifact_repository, LocalFileSystemRepository):
-            # For local repo, log file goes into the experiment's specific local folder
-            log_dir_for_file_setup = Path(artifact_repository.base_path) / current_experiment_run_key_prefix
-            log_dir_for_file_setup.mkdir(parents=True, exist_ok=True)
-            self.log_file_local_path = log_dir_for_file_setup / log_file_name_base
-        elif artifact_repository:  # MinIO or other non-local repo
-            import tempfile  # Keep import local if only used here
-            self.temp_log_dir = Path(tempfile.mkdtemp(prefix="pipeline_run_logs_"))
-            self.log_file_local_path = self.temp_log_dir / log_file_name_base
-            log_dir_for_file_setup = self.temp_log_dir
-            # Initial logger info will go to console if file handler not set yet or if this is first setup
-            # logger.info(f"Logging temporarily to {self.log_file_local_path} for later S3 upload.")
-        else:  # No repo, console only
-            self.log_file_local_path = None
+        if self.save_main_log_file:
+            if isinstance(artifact_repository, LocalFileSystemRepository):
+                # Log file goes directly into the experiment's specific local folder
+                log_dir_for_file_setup = Path(
+                    artifact_repository.base_path) / self.current_executor_run_artifacts_prefix
+                log_dir_for_file_setup.mkdir(parents=True, exist_ok=True)
+                self.log_file_local_path = log_dir_for_file_setup / log_file_name_base
+            elif artifact_repository:  # MinIO or other non-local repo
+                self.temp_log_dir = Path(tempfile.mkdtemp(prefix="pipeline_run_logs_"))
+                self.log_file_local_path = self.temp_log_dir / log_file_name_base
+                log_dir_for_file_setup = self.temp_log_dir
+            # If no repo, log_dir_for_file_setup remains None -> console only for file part of logger
 
-        # The global 'logger' instance from logger_utils is (re)configured here.
-        # This setup_logger call effectively makes 'logger' usable by all modules that import it.
         setup_logger(
             name=logger_name_global,
-            log_dir=log_dir_for_file_setup,
+            log_dir=log_dir_for_file_setup,  # Will be None if not saving to file
             log_filename=log_file_name_base if log_dir_for_file_setup else "console_only.log",
-            level=logging.DEBUG,  # Or your desired default level
+            level=logging.DEBUG,  # Or your desired global level
             use_colors=True
         )
-        # --- Logger is now configured ---
 
-        # Now log executor-level information
-        if not artifact_repository:
-            logger.info("No Artifact Repository provided. Outputs will not be saved persistently by the repository.")
-            logger.info("Logging will be directed to console only for file output (if not already).")
-        else:
-            logger.info(f"--- Starting Experiment Run (ID: {conceptual_experiment_run_name}) ---")
-            logger.info(
-                f"Executor initialized for model '{_model_type_enum.value}' on dataset '{dataset_name_for_path}'")
+        if not self.save_main_log_file:
+            logger.info("Main executor log file saving is DISABLED for this run.")
+        elif self.log_file_local_path and self.log_file_local_path.exists():
+            logger.info(f"Local main executor log file for this run (may be temporary): {self.log_file_local_path}")
+        elif self.save_main_log_file and not log_dir_for_file_setup:
+            logger.warning(
+                "Main executor log file saving intended, but no suitable directory/repo context for file. Logging to console only.")
+
+        logger.info(f"--- Starting Executor Run (ID: {self.conceptual_experiment_run_name}) ---")
+        logger.info(f"Executor initialized for model '{_model_type_enum.value}' on dataset '{dataset_name_for_path}'")
+        if artifact_repository:
             if isinstance(artifact_repository, LocalFileSystemRepository):
                 logger.info(f"Local artifact storage base: {artifact_repository.base_path}")
             elif hasattr(artifact_repository, 'bucket_name'):
                 logger.info(
-                    f"Artifact repository: {type(artifact_repository).__name__} targeting bucket '{artifact_repository.bucket_name}'")
-            logger.info(f"Base key/prefix for this run's artifacts: {current_experiment_run_key_prefix}")
-        if self.log_file_local_path and self.log_file_local_path.exists():
-            logger.info(f"Local log file for this run (might be temporary): {self.log_file_local_path}")
+                    f"Artifact repository: {type(artifact_repository).__name__} targeting bucket '{getattr(artifact_repository, 'bucket_name')}'")
+            logger.info(
+                f"Base key/prefix for this executor run's artifacts: {self.current_executor_run_artifacts_prefix}")
+        else:
+            logger.info("No Artifact Repository provided. Outputs will not be saved persistently by repository.")
 
-        # --- 3. Initialize Pipeline (it can now use the configured logger) ---
-        self.pipeline = ClassificationPipeline(
-            dataset_path=dataset_path, model_type=_model_type_enum, model_load_path=model_load_path,
-            artifact_repository=artifact_repository,
-            experiment_base_key_prefix=current_experiment_run_key_prefix,
-            results_detail_level=results_detail_level, plot_level=plot_level,
-            img_size=img_size, val_split_ratio=val_split_ratio,
-            test_split_ratio_if_flat=test_split_ratio_if_flat,
-            augmentation_strategy=augmentation_strategy,  # Pass it down
-            show_first_batch_augmentation_default=show_first_batch_augmentation_default,  # Pass it down
-            use_offline_augmented_data=use_offline_augmented_data,
-            force_flat_for_fixed_cv=force_flat_for_fixed_cv, lr=lr, max_epochs=max_epochs,
-            batch_size=batch_size, patience=patience,
-            optimizer__weight_decay=optimizer__weight_decay, module__dropout_rate=module__dropout_rate
-        )
+        # --- 3. Initialize Pipeline ---
+        # Combine direct params and kwargs for ClassificationPipeline
+        pipeline_init_kwargs = {
+            "dataset_path": dataset_path, "model_type": _model_type_enum,
+            "model_load_path": model_load_path, "artifact_repository": artifact_repository,
+            "experiment_base_key_prefix": self.current_executor_run_artifacts_prefix,
+            # Pipeline uses this to create sub-folders for its methods
+            "results_detail_level": results_detail_level, "plot_level": plot_level,
+            "img_size": img_size, "val_split_ratio": val_split_ratio,
+            "test_split_ratio_if_flat": test_split_ratio_if_flat,
+            "augmentation_strategy": augmentation_strategy,
+            "show_first_batch_augmentation_default": show_first_batch_augmentation_default,
+            "use_offline_augmented_data": use_offline_augmented_data,
+            "force_flat_for_fixed_cv": force_flat_for_fixed_cv,
+            "lr": lr, "max_epochs": max_epochs, "batch_size": batch_size, "patience": patience,
+            "optimizer__weight_decay": optimizer__weight_decay,
+            "module__dropout_rate": module__dropout_rate
+        }
+        pipeline_init_kwargs.update(kwargs)  # Add any other explicit kwargs for pipeline
+
+        self.pipeline = ClassificationPipeline(**pipeline_init_kwargs)
 
         self.methods_to_run = methods if methods is not None else []
-        self.all_results: Dict[str, Any] = {}
+        self.all_results: Dict[str, Any] = {}  # Will be populated in run()
         try:
             self._validate_methods()
         except ValueError as e:
-            logger.error(f"Method validation failed: {e}")
+            logger.error(f"Method validation failed: {e}", exc_info=True)  # Log with exc_info
             raise
         if self.methods_to_run:
-            method_names = [m[0] for m in self.methods_to_run]
-            logger.info(f"Executor configured to run methods: {', '.join(method_names)}")
+            logger.info(f"Executor configured to run methods: {', '.join(m[0] for m in self.methods_to_run)}")
         else:
             logger.info("Executor configured with no methods to run.")
 
-    def _validate_methods(self) -> None:  # ... (unchanged)
+    def _validate_methods(self) -> None:
         valid_method_names = ['non_nested_grid_search', 'nested_grid_search', 'cv_model_evaluation', 'single_train',
-                              'single_eval', 'load_model', 'predict_images', ];
+                              'single_eval', 'load_model', 'predict_images']
         for i, (method_name, params) in enumerate(self.methods_to_run):
-            if not isinstance(method_name, str) or method_name not in valid_method_names: raise ValueError(
-                f"Invalid method name '{method_name}' at index {i}. Valid: {valid_method_names}")
-            if not isinstance(params, dict): raise ValueError(
-                f"Parameters for method '{method_name}' at index {i} must be a dict.")
-            if 'search' in method_name and 'param_grid' not in params: raise ValueError(
-                f"Method '{method_name}' requires 'param_grid'.")
-            if method_name == 'load_model' and 'model_path_or_key' not in params: raise ValueError(
-                f"Method 'load_model' requires 'model_path_or_key'.")
+            if not isinstance(method_name, str) or method_name not in valid_method_names:
+                raise ValueError(f"Invalid method name '{method_name}' at index {i}. Valid: {valid_method_names}")
+            if not isinstance(params, dict):
+                raise ValueError(f"Parameters for method '{method_name}' at index {i} must be a dict.")
+            # Specific checks (can be expanded)
+            if 'search' in method_name and 'param_grid' not in params:
+                raise ValueError(f"Method '{method_name}' requires 'param_grid'.")
+            if method_name == 'load_model' and 'model_path_or_key' not in params:
+                raise ValueError(f"Method 'load_model' requires 'model_path_or_key'.")
+            if method_name == 'predict_images' and not (
+                    'image_id_format_pairs' in params and 'experiment_run_id_of_model' in params):
+                raise ValueError(
+                    f"Method 'predict_images' requires 'image_id_format_pairs' and 'experiment_run_id_of_model'.")
         logger.debug("Basic method validation successful.")
 
-    def _get_previous_result(self, step_index: int) -> Optional[Dict[str, Any]]:  # ... (unchanged)
+    def _get_previous_result(self, step_index: int, method_operation_id_key: str) -> Optional[Dict[str, Any]]:
+        # This helper is less used now as logic is in run()
+        # But if used, it needs the correct key
         if step_index < 0 or step_index >= len(self.methods_to_run): return None
-        prev_method_name, _ = self.methods_to_run[step_index];
-        run_id = f"{prev_method_name}_{step_index}";
-        return self.all_results.get(run_id)
+        # prev_method_name, _ = self.methods_to_run[step_index];
+        # run_id_key_for_results = f"{prev_method_name}_{step_index}"; # This was the old key
+        return self.all_results.get(method_operation_id_key)
 
-    def run(self) -> Dict[str, Any]:  # ... (unchanged logic, calls pipeline methods)
-        self.all_results = {};
-        logger.info("Starting execution of pipeline methods...");
+    def run(self) -> Dict[str, Any]:
+        self.all_results: dict = {'executor_run_id': self.conceptual_experiment_run_name}
+        logger.info(f"Starting execution of methods for Executor Run ID: {self.conceptual_experiment_run_name}")
         start_time_total = time.time()
+
         for i, (method_name, params) in enumerate(self.methods_to_run):
-            run_id = f"{method_name}_{i}";
-            logger.info(f"--- Running Method {i + 1}/{len(self.methods_to_run)}: {method_name} ({run_id}) ---")
-            current_params = params.copy();
+            method_operation_id = f"{method_name}_{i}"
+            logger.info(
+                f"--- Running Method {i + 1}/{len(self.methods_to_run)}: {method_name} (Op ID: {method_operation_id}) ---")
+            current_params = params.copy()
             use_best_params_key = 'use_best_params_from_step'
+
             if use_best_params_key in current_params:
                 prev_step_index = current_params.pop(use_best_params_key)
-                if not isinstance(prev_step_index, int) or prev_step_index >= i: logger.error(
-                    f"Invalid prev step index '{prev_step_index}' for '{method_name}'."); self.all_results[run_id] = {
-                    "error": f"Invalid '{use_best_params_key}' value."}; break
+                if not isinstance(prev_step_index, int) or prev_step_index < 0 or prev_step_index >= i:
+                    err_msg = f"Invalid prev_step_index '{prev_step_index}' for '{method_name}'. Must be 0 <= index < current_step_index ({i})."
+                    logger.error(err_msg)
+                    self.all_results[method_operation_id] = {"error": err_msg}
+                    break
+
+                prev_method_op_id_key = f"{self.methods_to_run[prev_step_index][0]}_{prev_step_index}"
                 logger.info(
-                    f"Injecting 'best_params' from step {prev_step_index} ({self.methods_to_run[prev_step_index][0]}) into params for '{method_name}'.")
-                prev_result = self._get_previous_result(prev_step_index)
+                    f"Injecting 'best_params' from step {prev_step_index} (Op ID: {prev_method_op_id_key}) into params for '{method_name}'.")
+                prev_result = self.all_results.get(prev_method_op_id_key)
+
                 if prev_result and isinstance(prev_result, dict) and 'best_params' in prev_result and isinstance(
                         prev_result['best_params'], dict):
-                    best_params = prev_result['best_params'];
-                    logger.info(f"  Injecting best params: {best_params}")
-                    if 'params' not in current_params: current_params['params'] = {}
-                    if isinstance(current_params['params'], dict):
-                        final_nested_params = best_params.copy(); final_nested_params.update(current_params['params']);
-                        current_params['params'] = final_nested_params
-                    else:
-                        logger.error(f"'params' key for step {i} not dict."); self.all_results[run_id] = {
-                            "error": "'params' key not dict."}; break
+                    best_params_from_prev = prev_result['best_params']
+                    logger.info(f"  Injecting best params: {best_params_from_prev}")
+                    final_merged_params_for_method = best_params_from_prev.copy()
+                    if 'params' in current_params and isinstance(current_params['params'], dict):
+                        final_merged_params_for_method.update(current_params['params'])
+                    current_params['params'] = final_merged_params_for_method
                 else:
-                    logger.error(f"No 'best_params' in results of step {prev_step_index}."); self.all_results[
-                        run_id] = {"error": f"Missing 'best_params' in step {prev_step_index}."}; break
-            logger.debug(f"Running with effective parameters: {current_params}");
+                    err_msg = f"No 'best_params' dict found in results of step {prev_step_index} (Op ID: {prev_method_op_id_key})."
+                    logger.error(err_msg)
+                    self.all_results[method_operation_id] = {"error": err_msg}
+                    break
+
+            logger.debug(f"Running method '{method_name}' with effective parameters: {current_params}")
             start_time_method = time.time()
             try:
                 pipeline_method = getattr(self.pipeline, method_name)
                 result = pipeline_method(**current_params)
-                self.all_results[run_id] = result
+                self.all_results[method_operation_id] = result
                 method_duration = time.time() - start_time_method
-                logger.info(f"--- Method {method_name} ({run_id}) completed successfully in {method_duration:.2f}s ---")
-            except ValueError as ve:  # This is the one catching your current error
-                logger.error(f"!!! Config error in '{method_name}': {ve}", exc_info=True)  # exc_info=True is key
-                logger.error(f"!!! Check compatibility/params.")
-                self.all_results[run_id] = {"error": str(ve)}
-                break
-            except FileNotFoundError as fnf:
-                logger.error(f"!!! File not found during '{method_name}': {fnf}", exc_info=True)
-                self.all_results[run_id] = {"error": str(fnf)}
-                break
-            except RuntimeError as rte:
-                logger.error(f"!!! Runtime error during '{method_name}': {rte}", exc_info=True)
-                self.all_results[run_id] = {"error": str(rte)}
-
-            except Exception as e:
-                logger.critical(f"!!! Unexpected critical error during '{method_name}': {e}", exc_info=True)
-                self.all_results[run_id] = {"error": str(e), "traceback": logging.traceback.format_exc()}
-                break
-        total_duration = time.time() - start_time_total
-        logger.info(f"Pipeline execution finished in {total_duration:.2f}s.")
-
-        # --- Upload log file if MinIO/S3 repo was used and temp log exists ---
-        # Check if artifact_repo exists and if log_file_local_path was set and exists
-        if self.pipeline.artifact_repo and \
-                hasattr(self, 'log_file_local_path') and self.log_file_local_path and \
-                self.log_file_local_path.exists() and \
-                self.pipeline.experiment_run_key_prefix:
-
-            # Only try to upload if it's not a LocalFileSystemRepository (which already wrote it to final place)
-            # and if it's indeed a MinIORepository (or similar S3-like repo)
-            if isinstance(self.pipeline.artifact_repo, MinIORepository):  # More specific check
-                log_artifact_key = str(
-                    (PurePath(self.pipeline.experiment_run_key_prefix) / self.log_file_local_path.name).as_posix())
-
                 logger.info(
-                    f"Attempting to upload log file {self.log_file_local_path} to artifact key: {log_artifact_key}")
+                    f"--- Method {method_name} (Op ID: {method_operation_id}) completed successfully in {method_duration:.2f}s ---")
+            except (ValueError, TypeError, AttributeError) as config_err:  # AttributeError also often config-related
+                logger.error(
+                    f"!!! Configuration/Usage error in '{method_name}' (Op ID: {method_operation_id}): {config_err}",
+                    exc_info=True)
+                self.all_results[method_operation_id] = {"error": str(config_err), "traceback": traceback.format_exc()}
+                break
+            except FileNotFoundError as fnf_err:
+                logger.error(f"!!! File not found during '{method_name}' (Op ID: {method_operation_id}): {fnf_err}",
+                             exc_info=True)
+                self.all_results[method_operation_id] = {"error": str(fnf_err), "traceback": traceback.format_exc()}
+                break
+            except RuntimeError as rt_err:
+                logger.error(f"!!! Runtime error during '{method_name}' (Op ID: {method_operation_id}): {rt_err}",
+                             exc_info=True)
+                self.all_results[method_operation_id] = {"error": str(rt_err), "traceback": traceback.format_exc()}
+                break
+            except Exception as e:
+                logger.critical(
+                    f"!!! Unexpected critical error during '{method_name}' (Op ID: {method_operation_id}): {e}",
+                    exc_info=True)
+                self.all_results[method_operation_id] = {"error": str(e), "traceback": traceback.format_exc()}
+                break
 
-                # --- CRUCIAL: Ensure all handlers are flushed and closed, then remove them ---
+        total_duration = time.time() - start_time_total
+        logger.info(
+            f"Pipeline execution finished in {total_duration:.2f}s for Executor Run ID: {self.conceptual_experiment_run_name}.")
+
+        if self.save_main_log_file and \
+                self.pipeline.artifact_repo and \
+                self.log_file_local_path and \
+                self.log_file_local_path.exists():
+
+            if isinstance(self.pipeline.artifact_repo, MinIORepository):
+                # Log is uploaded under current_executor_run_artifacts_prefix
+                log_artifact_key = str(
+                    (PurePath(self.current_executor_run_artifacts_prefix) / self.log_file_local_path.name).as_posix())
+                logger.info(
+                    f"Attempting to upload main executor log {self.log_file_local_path} to S3 key: {log_artifact_key}")
+
                 active_logger = logging.getLogger(logger_name_global)
-                handlers_to_remove = []
-                for handler in active_logger.handlers:
-                    if isinstance(handler, logging.FileHandler):
-                        # Check if baseFilename matches the one we want to upload
-                        try:
-                            # handler.baseFilename might be None if not configured or already closed
-                            if handler.baseFilename and Path(
-                                    handler.baseFilename).resolve() == self.log_file_local_path.resolve():
-                                logger.debug(f"Flushing and closing log handler for: {handler.baseFilename}")
-                                handler.flush()
-                                handler.close()
-                                handlers_to_remove.append(handler)
-                        except Exception as e_handler:
-                            logger.warning(f"Error processing handler {handler}: {e_handler}")
+                handler_to_remove_for_upload = None
+                for handler in active_logger.handlers[:]:
+                    if isinstance(handler, logging.FileHandler) and \
+                            handler.baseFilename and \
+                            Path(handler.baseFilename).resolve() == self.log_file_local_path.resolve():
+                        logger.debug(f"Flushing and closing log handler for: {handler.baseFilename}")
+                        handler.flush()
+                        handler.close()
+                        handler_to_remove_for_upload = handler
+                        break
+                if handler_to_remove_for_upload: active_logger.removeHandler(handler_to_remove_for_upload)
 
-                for handler in handlers_to_remove:
-                    logger.debug(f"Removing handler: {handler}")
-                    active_logger.removeHandler(handler)
-
-                # As a final measure, call logging.shutdown() - this flushes and closes all handlers
-                # registered by the logging module. This is usually safe at the very end of a script/process.
-                logging.shutdown()
-                # --- End Handler Management ---
-
-                # Now attempt upload
-                saved_log_identifier = self.pipeline.artifact_repo.upload_file(
-                    self.log_file_local_path,
-                    log_artifact_key
-                )
-
-                if saved_log_identifier:
-                    logger.info(f"Log file uploaded via repository to: {saved_log_identifier}")
+                saved_log_id = self.pipeline.artifact_repo.upload_file(self.log_file_local_path, log_artifact_key)
+                if saved_log_id:
+                    logger.info(f"Main executor log uploaded to: {saved_log_id}")
                 else:
-                    logger.error(f"Failed to upload log file {self.log_file_local_path} via repository.")
+                    logger.error(f"Failed to upload main executor log: {self.log_file_local_path}")
 
-        # --- Clean up temporary log directory if it was created ---
-        # Check if temp_log_dir attribute exists AND is not None AND the path it points to exists
-        if hasattr(self, 'temp_log_dir') and self.temp_log_dir is not None and self.temp_log_dir.exists():
-            try:
-                import shutil
-                logger.info(f"Attempting to clean up temporary log directory: {self.temp_log_dir}")
-                # Add a small delay and retry loop for Windows file lock issues
-                for i_retry in range(3):  # Retry up to 3 times
-                    try:
-                        shutil.rmtree(self.temp_log_dir)
-                        logger.info(f"Cleaned up temporary log directory: {self.temp_log_dir}")
-                        break  # Success
-                    except PermissionError as pe:
-                        logger.warning(
-                            f"PermissionError cleaning temp log dir (attempt {i_retry + 1}/3): {pe}")
-                        if i_retry < 2:  # Don't sleep on the last attempt
-                            time.sleep(0.5)  # Wait a bit
-                        else:
-                            logger.error(
-                                f"Failed to clean up temporary log directory {self.temp_log_dir} due to persistent PermissionError.")
-                    except Exception as e_rm:
-                        logger.error(f"Error during shutil.rmtree of {self.temp_log_dir}: {e_rm}")
-                        break  # Don't retry on other errors
-                else:  # If loop completed without break (all retries failed with PermissionError)
-                    logger.error(
-                        f"Failed to clean up temporary log directory {self.temp_log_dir} after multiple retries.")
-            except ImportError:
-                logger.warning("shutil module not found, cannot clean up temporary log directory.")
-            except Exception as e_clean:
-                logger.warning(f"Could not clean up temp log dir {self.temp_log_dir}: {e_clean}")
-        elif hasattr(self,
-                     'temp_log_dir') and self.temp_log_dir is not None and not self.temp_log_dir.exists():
-            logger.debug(
-                f"Temporary log directory {self.temp_log_dir} was defined but does not exist (already cleaned or error in creation).")
-        # If self.temp_log_dir was never set (e.g. for LocalFileSystemRepository), this block is skipped.
+            if self.temp_log_dir and self.temp_log_dir.exists():  # temp_log_dir only created for MinIO
+                logger.info(f"Cleaning up temporary log directory: {self.temp_log_dir}")
+                try:
+                    shutil.rmtree(self.temp_log_dir); self.temp_log_dir = None
+                except Exception as e:
+                    logger.warning(f"Could not cleanup temp log dir {self.temp_log_dir}: {e}")
 
-        # Log message about final log file location (if it's not temporary)
-        if self.log_file_local_path and \
-                (not hasattr(self,
-                             'temp_log_dir') or self.temp_log_dir is None or not self.log_file_local_path.is_relative_to(
-                    self.temp_log_dir)):
-            logger.info(f"Final log file available at: {self.log_file_local_path}")
-        elif not self.log_file_local_path:
-            logger.info("No log file was configured for saving (console only or repo setup issue).")
+        if self.save_main_log_file:
+            if isinstance(self.pipeline.artifact_repo, LocalFileSystemRepository) and self.log_file_local_path:
+                logger.info(f"Main executor log file available at: {self.log_file_local_path}")
+            elif not self.log_file_local_path:
+                logger.warning("Main executor log file saving intended, but no local path configured.")
+        else:
+            logger.info("Main executor log file saving was disabled.")
 
         return self.all_results

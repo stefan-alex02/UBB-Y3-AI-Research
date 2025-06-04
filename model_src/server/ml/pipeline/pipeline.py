@@ -32,9 +32,10 @@ from ..architectures import ModelType
 from ..config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE, AugmentationStrategy
 from ..dataset_utils import ImageDatasetHandler, DatasetStructure, PathImageDataset
 from ..logger_utils import logger
+from ..plotter import _save_figure_or_show, ResultsPlotter
 from ..skorch_utils import SkorchModelAdapter
 from ..skorch_utils import get_default_callbacks
-from ...persistence import MinIORepository
+from ...persistence import MinIORepository, LocalFileSystemRepository
 from ...persistence.artifact_repo import ArtifactRepository
 
 try:
@@ -798,40 +799,122 @@ class ClassificationPipeline:
 
         # --- Save Model (if requested and available) ---
         model_path_identifier = None
+        arch_config_path_identifier = None  # For the new arch_config.json
+
         if save_best_model and best_estimator_refit is not None:
             if self.artifact_repo and self.experiment_run_key_prefix:
                 try:
-                    score_str = f"cv_score{results.get('best_score', 0.0):.4f}".replace('.', 'p')
-                    params_str_simple = "_".join(
-                        [f"{k.split('__')[-1]}={v}" for k, v in sorted(results.get('best_params', {}).items())])
-                    params_str_simple = re.sub(r'[<>:"/\\|?*]', '_', params_str_simple)[:50]
-                    model_filename = f"{self.model_type.value}_best_{params_str_simple}_{score_str}.pt"
-                    model_object_key = self._get_s3_object_key(run_id, model_filename)
+                    # --- NEW FILENAME LOGIC ---
+                    model_type_short = self.model_type.value
+                    run_type_short = "gridcv"
+                    run_id_timestamp_part = run_id.split('_')[-1]  # From "non_nested_grid_TIMESTAMP"
 
+                    best_cv_score = results.get('best_score', 0.0)
+                    # Format to 2 decimal places, replace dot, remove leading zero
+                    score_str = f"cvsc{best_cv_score:.2f}".replace('.', 'p').replace("0p", "p")
+
+                    # Simplified param string (optional, can make filename long)
+                    # best_params_short_list = []
+                    # for k, v_param in sorted(results.get('best_params', {}).items())[:2]: # Max 2 params in name
+                    #     k_short = k.split('__')[-1][:5] # Shorten key
+                    #     v_str = str(v_param)[:5] # Shorten value
+                    #     best_params_short_list.append(f"{k_short}{v_str}")
+                    # params_filename_part = "_".join(best_params_short_list)
+                    # params_filename_part = re.sub(r'[^\w_.-]', '', params_filename_part)
+                    # model_filename_base = f"{model_type_short}_{run_type_short}_{params_filename_part}_{score_str}_{run_id_timestamp_part}"
+                    # For simplicity, let's omit complex params from filename for grid search best model:
+                    model_filename_base = f"{model_type_short}_{run_type_short}_{score_str}_{run_id_timestamp_part}"
+                    # --- END NEW FILENAME LOGIC ---
+
+                    model_pt_filename = f"{model_filename_base}.pt"
+                    model_config_filename = f"{model_filename_base}_arch_config.json"
+
+                    model_pt_object_key = self._get_s3_object_key(run_id, model_pt_filename)
+                    model_config_object_key = self._get_s3_object_key(run_id, model_config_filename)
+
+                    # 2. Save Model State Dictionary
                     model_state_dict = best_estimator_refit.module_.state_dict()
-                    model_path_identifier = self.artifact_repo.save_model_state_dict(model_state_dict, model_object_key)
-
+                    model_path_identifier = self.artifact_repo.save_model_state_dict(
+                        model_state_dict, model_pt_object_key
+                    )
                     if model_path_identifier:
                         logger.info(f"Best refit model state_dict saved via repository to: {model_path_identifier}")
+                        results['saved_model_path'] = model_path_identifier  # Update results dict
                     else:
                         logger.error(
-                            f"Failed to save best refit model via repository for {run_id} to key {model_object_key}.")
+                            f"Failed to save best refit model state_dict for {run_id} to key {model_pt_object_key}.")
+                        results['saved_model_path'] = None
+
+                    # 3. Save Architectural Configuration
+                    if model_path_identifier:  # Proceed only if .pt was saved
+                        # The 'best_estimator_refit' is a SkorchModelAdapter instance.
+                        # Its internal nn.Module is best_estimator_refit.module_
+                        # The parameters used to *create* this specific module instance came from search.best_params_
+                        # and the fixed parts of the adapter_config used to initialize the 'estimator' for GridSearchCV.
+
+                        arch_config_to_save = {
+                            'model_type': self.model_type.value,
+                            'num_classes': self.dataset_handler.num_classes
+                            # Add all 'module__' parameters from best_estimator_refit.get_params()
+                            # These were the ones that resulted in the best model.
+                        }
+
+                        # Get effective parameters of the best refit estimator
+                        # These include the 'module__xyz' parameters that defined its architecture
+                        best_estimator_params = best_estimator_refit.get_params(deep=False)
+
+                        for key, value in best_estimator_params.items():
+                            if key.startswith('module__'):
+                                # Special handling for types that are not JSON serializable by default
+                                if isinstance(value, type):
+                                    arch_config_to_save[
+                                        key] = f"<class '{value.__module__}.{value.__name__}'>"  # Store as string
+                                elif callable(value) and not isinstance(value, (nn.Module, torch.optim.Optimizer)):
+                                    # For other callables like transform functions from dataset_handler,
+                                    # it might be better to store a placeholder or a descriptive name.
+                                    # For now, let's skip non-module/non-optimizer callables from module__
+                                    # or convert them to string if simple.
+                                    # However, 'module__' params should primarily be for nn.Module's __init__ args.
+                                    # Transform functions are usually direct skorch params like 'train_transform'.
+                                    pass
+                                else:
+                                    arch_config_to_save[key] = value
+                            # Consider also saving key top-level skorch params if they define architecture,
+                            # e.g., 'optimizer' if it was tuned and is a type rather than string.
+                            # For now, focusing on module__ params.
+                            # For HybridViT, for example, module__cnn_model_name, module__vit_model_variant etc.
+                            # are critical.
+
+                        arch_config_path_identifier = self.artifact_repo.save_json(
+                            arch_config_to_save, model_config_object_key
+                        )
+                        if arch_config_path_identifier:
+                            logger.info(
+                                f"Architectural config for best model saved to: {arch_config_path_identifier}")
+                            results['saved_model_arch_config_path'] = arch_config_path_identifier
+                        else:
+                            logger.error(
+                                f"Failed to save architectural config for {run_id} to {model_config_object_key}.")
+                            results['saved_model_arch_config_path'] = None
+
                 except Exception as e:
-                    logger.error(f"Failed to save best refit model via repository: {e}", exc_info=True)
+                    logger.error(f"Failed to save best refit model or its config via repository: {e}",
+                                 exc_info=True)
+                    results['saved_model_path'] = None
+                    results['saved_model_arch_config_path'] = None
             else:
                 logger.warning(
                     f"Model saving skipped for {run_id}: no artifact repository or base key prefix configured.")
         elif save_best_model and best_estimator_refit is None:
             logger.warning(f"save_best_model=True for {run_id} but no best estimator was found/refit.")
-        results['saved_model_path'] = model_path_identifier
-        # --- End Save Model ---
+            results['saved_model_path'] = None  # Ensure these keys exist even if saving fails
+            results['saved_model_arch_config_path'] = None
 
-        # --- Save Results ---
-        # The decision to save is now based on results_detail_level_override
-        # If results_detail_level_override is explicitly 0, _save_results will skip JSON.
-        # If None, it uses self.results_detail_level.
-        # If self.results_detail_level is 0, it also skips JSON.
-        # The summary CSV is always attempted by _save_results unless you add logic there to skip it for level 0.
+        # If not saving, ensure keys are present but None
+        if not save_best_model:
+            results['saved_model_path'] = None
+            results['saved_model_arch_config_path'] = None
+        # --- End Save Model ---
 
         # --- Save Results JSON ---
         summary_params = results.get('params', {}).copy() # Get the method's specific params
@@ -1690,13 +1773,32 @@ class ClassificationPipeline:
         # --- Save Model ---
         model_path_identifier = None  # Will store the S3 key or local path string
         if save_model:
-            model_artifact_key_base = self._get_s3_object_key(run_id,
-                                                              f"{self.model_type.value}_epoch{...}")  # Base name without .pt
+            # --- NEW FILENAME LOGIC ---
+            model_type_short = self.model_type.value  # e.g., "pvit", "hyvit"
+            run_type_short = "sngl"
+            # Use part of the existing run_id (which contains a timestamp)
+            run_id_timestamp_part = run_id.split('_')[-1]  # Assumes run_id format like "single_train_TIMESTAMP"
 
-            # 1. Save state_dict
-            model_pt_key = f"{model_artifact_key_base}.pt"
+            val_metric_val = results.get('best_valid_metric_value', np.nan)
+            metric_name_short = "val_loss"  # Or adapt if you monitor other things like 'val_acc'
+            if not np.isnan(val_metric_val):
+                # Format to 2 decimal places, replace dot, remove leading zero if < 1
+                metric_str = f"{metric_name_short}{val_metric_val:.2f}".replace('.', 'p').replace("0p", "p")
+            else:
+                metric_str = "no_val"
+
+            epoch_num = results.get('best_epoch', 0)
+            model_filename_base = f"{model_type_short}_{run_type_short}_ep{epoch_num}_{metric_str}_{run_id_timestamp_part}"
+            # --- END NEW FILENAME LOGIC ---
+
+            model_pt_filename = f"{model_filename_base}.pt"
+            model_config_filename = f"{model_filename_base}_arch_config.json"
+
+            model_pt_object_key = self._get_s3_object_key(run_id, model_pt_filename)  # run_id is still the folder name
+            model_config_object_key = self._get_s3_object_key(run_id, model_config_filename)
+
             state_dict = adapter_for_train.module_.state_dict()
-            model_path_identifier = self.artifact_repo.save_model_state_dict(state_dict, model_pt_key)
+            model_path_identifier = self.artifact_repo.save_model_state_dict(state_dict, model_pt_object_key)
 
             # 2. Save architectural config
             if model_path_identifier:  # Only if model saving was successful
@@ -1727,10 +1829,9 @@ class ClassificationPipeline:
                 # but Skorch's get_params() on the adapter should give you the 'module__xyz' values.
                 # Let's assume effective_adapter_config from skorch is sufficient here.
 
-                model_config_key = f"{model_artifact_key_base}_arch_config.json"
-                self.artifact_repo.save_json(arch_config, model_config_key)
-                logger.info(f"Model architectural config saved to: {model_config_key}")
-                results['saved_model_arch_config_path'] = model_config_key  # Store this too
+                arch_config_path_identifier = self.artifact_repo.save_json(arch_config, model_config_object_key)
+                logger.info(f"Model architectural config saved to: {model_config_object_key}")
+                results['saved_model_arch_config_path'] = arch_config_path_identifier
         results['saved_model_path'] = model_path_identifier  # Store key/path or None
 
         self.model_adapter = adapter_for_train
@@ -1884,168 +1985,32 @@ class ClassificationPipeline:
         return results
 
     def predict_images(self,
-                       image_sources: List[Union[str, Path, Image.Image, bytes]],
-                       original_identifiers: Optional[List[str]] = None,
+                       image_id_format_pairs: List[Tuple[Union[int, str], str]],
+                       experiment_run_id_of_model: str,
+                       username: str = "anonymous", # Default username for artifact storage
                        persist_prediction_artifacts: bool = True,
                        results_detail_level: Optional[int] = None,
+                       # Still used for other things, just not LIME segments in JSON
                        plot_level: int = 0,
                        generate_lime_explanations: bool = False,
-                       lime_num_features: int = 5,
-                       lime_num_samples: int = 1000,
-                       prediction_plot_max_cols: int = 4
+                       lime_num_features_to_show_plot: int = 5,
+                       lime_num_samples_for_explainer: int = 1000,
+                       prob_plot_top_k: int = -1
                        ) -> List[Dict[str, Any]]:
-        run_id = f"predict_images_{datetime.now().strftime('%Y%M%d_%H%M%S_%f')}"
-        logger.info(f"Starting prediction ({run_id}) for {len(image_sources)} image sources...")
-        if not persist_prediction_artifacts:
-            logger.info(f"Prediction run {run_id}: Artifact persistence is DISABLED.")
 
-        if not self.model_adapter.initialized_:
-            raise RuntimeError("Model adapter not initialized. Train or load a model first.")
-        if not image_sources:
-            logger.warning("No image sources provided for prediction.")
-            return []
+        predict_op_run_id = f"predict_op_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
+        logger.info(f"Op {predict_op_run_id}: Starting prediction for {len(image_id_format_pairs)} images "
+                    f"by user '{username}', using model from experiment '{experiment_run_id_of_model}'.")
 
-        if original_identifiers and len(original_identifiers) != len(image_sources):
-            logger.warning(
-                "Mismatch: len(image_sources) != len(original_identifiers). Identifiers will be auto-generated.")
-            original_identifiers = None  # Fallback to auto-generated
-
-        if generate_lime_explanations and not LIME_AVAILABLE:
-            logger.warning("LIME requested but library not available. Skipping LIME.")
-            generate_lime_explanations = False
-        elif generate_lime_explanations:
-            logger.info(
-                f"LIME explanations will be generated (num_features={lime_num_features}, num_samples={lime_num_samples}). This may take extra time per image.")
-
-        pil_images_for_processing: List[Tuple[Optional[Image.Image], str]] = []  # (PIL_Image or None, identifier)
-
-        for i, source in enumerate(image_sources):
-            identifier = original_identifiers[i] if original_identifiers else f"source_{i}"
-            pil_image: Optional[Image.Image] = None
-            try:
-                if isinstance(source, (str, Path)):
-                    source_path = Path(source)
-                    if str(source).startswith(('http://', 'https://')):
-                        logger.debug(f"Downloading image from URL: {source}")
-                        response = requests.get(str(source), timeout=10)
-                        response.raise_for_status()
-                        pil_image = Image.open(io.BytesIO(response.content)).convert('RGB')
-                    elif source_path.exists() and source_path.is_file():
-                        pil_image = Image.open(source_path).convert('RGB')
-                    else:
-                        logger.warning(f"Image path does not exist or is not a file: {source_path}")
-                elif isinstance(source, Image.Image):
-                    pil_image = source.convert('RGB') if source.mode != 'RGB' else source
-                elif isinstance(source, bytes):
-                    pil_image = Image.open(io.BytesIO(source)).convert('RGB')
-                else:
-                    logger.warning(f"Unsupported image source type: {type(source)} for identifier: {identifier}")
-            except Exception as e:
-                logger.error(
-                    f"Failed to load image for identifier '{identifier}' from source '{str(source)[:100]}...': {e}")
-
-            pil_images_for_processing.append((pil_image, identifier))
-
-        valid_pil_images: List[Image.Image] = []
-        valid_identifiers: List[str] = []
-
-        for img, ident in pil_images_for_processing:
-            if img is not None:
-                valid_pil_images.append(img)
-                valid_identifiers.append(ident)
-
-        if not valid_pil_images:
-            logger.error("No valid images could be loaded for prediction.")
-            return []
-
-        logger.info(f"Successfully loaded {len(valid_pil_images)} images for processing.")
-
-        # --- Create a custom in-memory dataset for PIL images ---
-        class InMemoryPILDataset(torch.utils.data.Dataset):
-            def __init__(self, pil_images: List[Image.Image], identifiers: List[str], transform: Callable):
-                self.pil_images = pil_images
-                self.identifiers = identifiers  # Store identifiers to potentially pass them if needed
-                self.transform = transform
-
-            def __len__(self):
-                return len(self.pil_images)
-
-            def __getitem__(self, idx):
-                img = self.pil_images[idx]
-                identifier = self.identifiers[idx]  # Get corresponding identifier
-                label_tensor = torch.tensor(-1, dtype=torch.long)  # Dummy label tensor
-                try:
-                    transformed_img = self.transform(img)
-                    # Optionally, return identifier if collate_fn is adapted
-                    return transformed_img, label_tensor  # , identifier
-                except Exception as e:
-                    logger.warning(f"Transform failed for image '{identifier}' (index {idx}): {e}")
-                    return None, label_tensor  # , identifier
-
-        eval_transform = self.dataset_handler.get_eval_transform()
-        prediction_dataset = InMemoryPILDataset(
-            pil_images=valid_pil_images,
-            identifiers=valid_identifiers,  # Pass identifiers
-            transform=eval_transform
-        )
-
-        dataloader = torch.utils.data.DataLoader(
-            prediction_dataset,
-            batch_size=self.model_adapter_config.get('batch_size', 32),
-            shuffle=False,
-            num_workers=0,
-            collate_fn=PathImageDataset.collate_fn  # This collate_fn filters Nones
-        )
-
-        all_probabilities_np: List[np.ndarray] = []
-        # To map back results if collate_fn filters items, we need to know which items passed
-        # This is complex if collate_fn is generic. Alternative: dataset returns (img, label, original_idx_or_id)
-        # For now, assume collate_fn filters, and we map back based on order of non-None items.
-        # This requires that the order of 'valid_identifiers' matches the order of items *before* collation filtering.
-
-        # Let's create a list of identifiers that correspond to the images *after* potential transform failures
-        # that would lead to `None` images being passed to collate_fn.
-        # The `dataloader` will only yield batches from successfully transformed images.
-
-        # Create a temporary list of indices for images that are successfully transformed and batched
-        successful_indices_after_transform_and_collation = []
-        temp_dataloader_for_indices = torch.utils.data.DataLoader(
-            InMemoryPILDataset(pil_images=valid_pil_images, identifiers=valid_identifiers, transform=eval_transform),
-            batch_size=self.model_adapter_config.get('batch_size', 32),
-            shuffle=False, num_workers=0,
-            collate_fn=lambda batch: [item[0] is not None for item in batch]  # just check if image is not None
-        )
-
-        temp_idx_counter = 0
-        for batch_success_flags in temp_dataloader_for_indices:
-            for success in batch_success_flags:
-                if success:
-                    successful_indices_after_transform_and_collation.append(temp_idx_counter)
-                temp_idx_counter += 1
-        # Now successful_indices_after_transform_and_collation contains indices relative to valid_pil_images
-
-        self.model_adapter.module_.eval()
-        with torch.no_grad():
-            for batch_images, _ in dataloader:  # This dataloader uses the filtering collate_fn
-                if batch_images is None or len(batch_images) == 0:
-                    # This should ideally not happen if collate_fn returns empty tensors for empty batches
-                    continue
-                batch_images = batch_images.to(self.model_adapter.device)
-                logits = self.model_adapter.module_(batch_images)
-                probabilities = torch.softmax(logits, dim=1)
-                all_probabilities_np.extend(probabilities.cpu().numpy())
-
-        predictions_output = []  # This will be returned
-        class_names = self.dataset_handler.classes
-        num_classes_total = self.dataset_handler.num_classes
-
+        if not self.model_adapter.initialized_: logger.error(
+            f"Op {predict_op_run_id}: Model adapter not initialized."); raise RuntimeError(
+            "Model adapter not initialized.")
+        if not image_id_format_pairs: logger.warning(f"Op {predict_op_run_id}: No image_id_format_pairs."); return []
         lime_explainer = None
         if generate_lime_explanations and LIME_AVAILABLE:
             lime_explainer = LimeImageExplainer(random_state=RANDOM_SEED)
 
-            # Define lime_predict_fn locally (needs self)
             def lime_predict_fn(numpy_images_batch_lime):
-                # ... (lime_predict_fn implementation) ...
                 processed_images_lime = []
                 for img_np_lime in numpy_images_batch_lime:
                     if img_np_lime.dtype == np.double or img_np_lime.dtype == np.float64 or img_np_lime.dtype == np.float32:
@@ -2065,348 +2030,329 @@ class ClassificationPipeline:
                     logits_lime = self.model_adapter.module_(batch_tensor_lime); probs_lime = torch.softmax(logits_lime,
                                                                                                             dim=1)
                 return probs_lime.cpu().numpy()
+        elif generate_lime_explanations:
+            logger.warning(f"Op {predict_op_run_id}: LIME requested but not available.")
+        pil_images_for_processing: List[Tuple[Optional[Image.Image], Union[int, str]]] = []
+        for image_id, img_format in image_id_format_pairs:
+            pil_image: Optional[Image.Image] = None;
+            img_filename = f"{image_id}.{img_format.lower().replace('.', '')}"
+            image_key_or_path: str
+            if self.artifact_repo and not isinstance(self.artifact_repo, LocalFileSystemRepository):
+                image_key_or_path = str((PurePath("images") / username / img_filename).as_posix())
+                try:
+                    img_bytes = self.artifact_repo.download_file_to_memory(image_key_or_path)
+                    if img_bytes:
+                        pil_image = Image.open(io.BytesIO(img_bytes)).convert('RGB')
+                    else:
+                        logger.warning(f"Image not found/empty S3: {image_key_or_path}")
+                except Exception as e:
+                    logger.error(f"Failed to load S3 image {image_key_or_path}: {e}")
+            else:
+                local_base = Path(self.artifact_repo.base_path if self.artifact_repo else ".");
+                image_key_or_path = local_base / "images" / username / img_filename
+                if image_key_or_path.is_file():
+                    try:
+                        pil_image = Image.open(image_key_or_path).convert('RGB')
+                    except Exception as e:
+                        logger.error(f"Failed to load local image {image_key_or_path}: {e}")
+                else:
+                    logger.warning(f"Image not found local: {image_key_or_path}")
+            pil_images_for_processing.append((pil_image, image_id))
+        valid_pil_images = [img for img, _ in pil_images_for_processing if img is not None]
+        valid_image_ids = [img_id for img, img_id in pil_images_for_processing if img is not None]
+        if not valid_pil_images: logger.error(f"Op {predict_op_run_id}: No valid images loaded."); return []
+        logger.info(f"Op {predict_op_run_id}: Loaded {len(valid_pil_images)} images.")
 
-        # Build prediction output and generate LIME data if needed
-        min_len = len(all_probabilities_np)  # Assume mapping logic from previous step is correct
-        for i in range(min_len):
-            original_valid_idx = successful_indices_after_transform_and_collation[i]
-            current_identifier = valid_identifiers[original_valid_idx]
-            pil_image_for_lime_and_plot = valid_pil_images[original_valid_idx]  # The actual PIL image
+        class InMemoryPILDataset(torch.utils.data.Dataset):
+            def __init__(self, pil_images: List[Image.Image], identifiers: List[Union[int, str]], transform: Callable):
+                self.pil_images = pil_images; self.identifiers = identifiers; self.transform = transform
+
+            def __len__(self):
+                return len(self.pil_images)
+
+            def __getitem__(self, idx):
+                img = self.pil_images[idx];
+                identifier = self.identifiers[idx];
+                label_tensor = torch.tensor(-1, dtype=torch.long)
+                try:
+                    transformed_img = self.transform(img); return transformed_img, label_tensor
+                except Exception as e:
+                    logger.warning(
+                        f"Transform failed for image '{identifier}' (idx {idx}): {e}"); return None, label_tensor
+
+        eval_transform = self.dataset_handler.get_eval_transform()
+        prediction_dataset = InMemoryPILDataset(pil_images=valid_pil_images, identifiers=valid_image_ids,
+                                                transform=eval_transform)
+        dataloader = torch.utils.data.DataLoader(prediction_dataset,
+                                                 batch_size=self.model_adapter_config.get('batch_size', 32),
+                                                 shuffle=False, num_workers=0, collate_fn=PathImageDataset.collate_fn)
+        all_probabilities_np: List[np.ndarray] = []
+        self.model_adapter.module_.eval()
+        with torch.no_grad():
+            for batch_images, _ in dataloader:
+                if batch_images is None or len(batch_images) == 0: continue
+                batch_images = batch_images.to(self.model_adapter.device)
+                logits = self.model_adapter.module_(batch_images)
+                probabilities = torch.softmax(logits, dim=1)
+                all_probabilities_np.extend(probabilities.cpu().numpy())
+        if len(all_probabilities_np) != len(valid_image_ids):
+            logger.error(
+                f"Op {predict_op_run_id}: Mismatch: predictions ({len(all_probabilities_np)}) vs valid images ({len(valid_image_ids)}).")
+
+        predictions_to_return_for_api = []
+        # effective_results_detail_level is still used by _save_results for general verbosity control
+        # but we will explicitly exclude LIME segments from the JSON saved by _save_results.
+        effective_results_detail_level = self.results_detail_level if results_detail_level is None else results_detail_level
+
+        for i, image_id in enumerate(valid_image_ids):
+            if i >= len(all_probabilities_np): continue
+
             probs_np = all_probabilities_np[i]
             predicted_idx = int(np.argmax(probs_np))
-            predicted_name = class_names[predicted_idx] if class_names and 0 <= predicted_idx < len(
-                class_names) else f"Class_{predicted_idx}"
-            # ... (top-k prediction logic) ...
-            top_k_val = min(3, num_classes_total);
-            top_k_indices = np.argsort(probs_np)[-top_k_val:][::-1];
-            top_k_preds_list = []
-            for k_idx in top_k_indices: k_name = class_names[k_idx] if class_names and 0 <= k_idx < len(
-                class_names) else f"Class_{k_idx}"; top_k_preds_list.append((k_name, float(probs_np[k_idx])))
+            predicted_name = self.dataset_handler.classes[predicted_idx]
+            confidence = float(probs_np[predicted_idx])
+            top_k_val = min(prob_plot_top_k if prob_plot_top_k > 0 else self.dataset_handler.num_classes,
+                            self.dataset_handler.num_classes)
+            top_k_indices = np.argsort(probs_np)[-top_k_val:][::-1]
+            top_k_preds_list = [(self.dataset_handler.classes[k_idx], float(probs_np[k_idx])) for k_idx in
+                                top_k_indices]
 
-            pred_item = {
-                'identifier': current_identifier,
-                'image_path': str(current_identifier) if isinstance(current_identifier, (str, Path)) and Path(
-                    current_identifier).is_file() else "in-memory/url",
-                'probabilities': probs_np.tolist(),
-                'predicted_class_idx': predicted_idx,
-                'predicted_class_name': predicted_name,
-                'confidence': float(probs_np[predicted_idx]),
-                'top_k_predictions': top_k_preds_list,
-                'lime_explanation': None  # Initialize
-            }
+            # This dictionary is what will be passed to the LIME plotter
+            # It will contain segments if LIME runs successfully.
+            lime_data_for_plotter = None
 
-            if generate_lime_explanations and lime_explainer is not None:
-                logger.debug(f"Generating LIME explanation for: {current_identifier} (Predicted: {predicted_name})")
-                lime_data_for_output = {'error': 'LIME generation failed or skipped.'}
+            # This dictionary is what will be written to the JSON file.
+            # It will NOT contain segments.
+            lime_data_for_json_file = None
+
+            if generate_lime_explanations and lime_explainer:
+                pil_image_for_lime = valid_pil_images[i]
+                logger.debug(
+                    f"Op {predict_op_run_id}: Generating LIME for image_id: {image_id} (Pred: {predicted_name})")
                 try:
-                    img_np_for_lime = np.array(pil_image_for_lime_and_plot)
-                    # TODO investigate LIME explainability (full surface area + show negative features)
                     explanation = lime_explainer.explain_instance(
-                        image=img_np_for_lime, classifier_fn=lime_predict_fn, top_labels=1, hide_color=0,
-                        num_features=lime_num_features, num_samples=lime_num_samples, random_seed=RANDOM_SEED
+                        np.array(pil_image_for_lime), lime_predict_fn,
+                        top_labels=1, hide_color=0, num_features=lime_num_features_to_show_plot,
+                        num_samples=lime_num_samples_for_explainer, random_seed=RANDOM_SEED
                     )
                     lime_weights = explanation.local_exp.get(predicted_idx, [])
-                    lime_data_for_output = {
+
+                    # Populate data for the plotter (always include segments if LIME ran)
+                    lime_data_for_plotter = {
                         'explained_class_idx': predicted_idx,
                         'explained_class_name': predicted_name,
                         'feature_weights': lime_weights,
-                        # We need segments for the server/plotter to render the LIME image.
-                        # This will be part of the returned data, but NOT necessarily saved to JSON by default.
-                        'segments_for_render': explanation.segments.tolist(),
-                        'num_features_from_lime_run': lime_num_features
+                        'segments_for_render': explanation.segments.tolist(),  # For plotter
+                        'num_features_from_lime_run': lime_num_features_to_show_plot
                     }
 
-                    # --- Generate and Store LIME Image if MinIO Repo is used and persistence is on ---
-                    if persist_prediction_artifacts and isinstance(self.artifact_repo, MinIORepository) and \
-                            self.experiment_run_key_prefix and SKIMAGE_AVAILABLE and mark_boundaries:
-                        logger.debug(f"Generating LIME image for S3 storage for {current_identifier}")
-                        temp_lime_mask = np.zeros(explanation.segments.shape, dtype=bool)
-                        positive_features_lime = sorted([(seg_id, w) for seg_id, w in lime_weights if w > 0],
-                                                        key=lambda x: x[1], reverse=True)
-                        feats_shown_count = 0
-                        for seg_id, weight in positive_features_lime:
-                            if feats_shown_count < lime_num_features:
-                                temp_lime_mask[explanation.segments == seg_id] = True; feats_shown_count += 1
-                            else:
-                                break
-
-                        if np.any(temp_lime_mask):
-                            img_norm_lime = img_np_for_lime.astype(
-                                float) / 255.0 if img_np_for_lime.max() > 1.0 else img_np_for_lime.astype(float)
-                            lime_viz_np = mark_boundaries(img_norm_lime, temp_lime_mask, color=(1, 0, 0), mode='thick',
-                                                          outline_color=(1, 0, 0))
-                            lime_viz_pil = Image.fromarray((lime_viz_np * 255).astype(np.uint8))
-
-                            lime_img_buffer = io.BytesIO()
-                            lime_viz_pil.save(lime_img_buffer, format="PNG")
-                            lime_img_buffer.seek(0)
-
-                            # Construct S3 key for this LIME image.
-                            # Example: <experiment_run_key_prefix>/<predict_run_id>/lime_explanations/<identifier_clean>.png
-                            # The identifier might have slashes if it's a path, clean it.
-                            safe_identifier_fname = re.sub(r'[\\/*?:"<>|]', "_",
-                                                           str(pred_item['identifier']))  # Sanitize
-                            if len(safe_identifier_fname) > 100: safe_identifier_fname = safe_identifier_fname[
-                                                                                         -100:]  # Truncate
-
-                            lime_img_s3_key = str((PurePath(
-                                self.experiment_run_key_prefix) / run_id / "lime_visualizations" / f"{safe_identifier_fname}_lime.png").as_posix())
-
-                            saved_lime_path = self.artifact_repo.save_image_object(
-                                lime_img_buffer.getvalue(),
-                                # self.artifact_repo.bucket_name, # Repo method should know its bucket
-                                lime_img_s3_key,
-                                content_type='image/png'
-                            )
-                            if saved_lime_path:
-                                lime_data_for_output['s3_lime_image_key'] = saved_lime_path  # Store S3 path
-                                logger.info(f"LIME visualization for {current_identifier} saved to: {saved_lime_path}")
-                            else:
-                                logger.error(f"Failed to save LIME visualization for {current_identifier} to S3.")
-                        else:
-                            logger.debug(
-                                f"LIME: No positive features to highlight for {current_identifier}, not saving LIME image to S3.")
-
+                    # Populate data for the JSON file (exclude segments)
+                    lime_data_for_json_file = {
+                        'explained_class_idx': predicted_idx,
+                        'explained_class_name': predicted_name,
+                        'feature_weights': lime_weights,
+                        'num_features_from_lime_run': lime_num_features_to_show_plot
+                        # 'segments_for_render' is intentionally omitted here
+                    }
 
                 except Exception as lime_e:
-                    logger.error(f"LIME explanation processing failed for {current_identifier}: {lime_e}",
-                                 exc_info=False)
-                    lime_data_for_output = {'error': str(lime_e)}
-                pred_item['lime_explanation'] = lime_data_for_output
+                    logger.error(f"Op {predict_op_run_id}: LIME failed for {image_id}: {lime_e}", exc_info=False)
+                    lime_data_for_json_file = {'error': str(lime_e)}  # Also set plotter data to this error
+                    lime_data_for_plotter = lime_data_for_json_file
 
-            predictions_output.append(pred_item)
+                    # Prepare the full content for the individual prediction JSON file
+            single_prediction_json_content = {
+                "image_id": image_id,
+                "experiment_run_id_of_model": experiment_run_id_of_model,
+                "image_user_source_path": f"images/{username}/{image_id}.{dict(image_id_format_pairs).get(image_id, 'unknown_fmt')}",
+                "probabilities": probs_np.tolist(),
+                "predicted_class_idx": predicted_idx,
+                "predicted_class_name": predicted_name,
+                "confidence": confidence,
+                "top_k_predictions_for_plot": top_k_preds_list,
+                "lime_explanation": lime_data_for_json_file  # Use the version without segments
+            }
 
-        logger.info(f"Successfully generated predictions for {len(predictions_output)} images.")
+            predictions_to_return_for_api.append({
+                "image_id": image_id, "experiment_id": experiment_run_id_of_model,
+                "predicted_class": predicted_name, "confidence": confidence,
+            })
 
-        # --- Optionally Save Prediction Results (JSON) ---
-        if persist_prediction_artifacts:
-            effective_save_detail_level = self.results_detail_level
-            if results_detail_level is not None:
-                effective_save_detail_level = results_detail_level
+            prediction_artifact_base_path = PurePath("predictions") / username / str(
+                image_id) / experiment_run_id_of_model
 
-            if effective_save_detail_level > 0:
-                logger.info(
-                    f"Saving prediction results JSON ({run_id}) with detail level {effective_save_detail_level}...")
+            # Save individual prediction JSON
+            if persist_prediction_artifacts and self.artifact_repo and effective_results_detail_level > 0:
+                pred_json_key = str((prediction_artifact_base_path / "prediction_details.json").as_posix())
+                # Pass the content that EXCLUDES segments
+                self.artifact_repo.save_json(single_prediction_json_content, pred_json_key)
+                logger.info(f"Op {predict_op_run_id}: Prediction JSON for image {image_id} saved to: {pred_json_key}")
 
-                # Create a copy of predictions_output for JSON, excluding 'segments_for_render'
-                # if we want to keep the JSON smaller, as it's mainly for the plotter's immediate use.
-                predictions_for_json = []
-                for item in predictions_output:
-                    item_copy = item.copy()
-                    if 'lime_explanation' in item_copy and isinstance(item_copy['lime_explanation'], dict):
-                        item_copy['lime_explanation'] = {k: v for k, v in item_copy['lime_explanation'].items() if
-                                                         k != 'segments_for_render'}
-                    predictions_for_json.append(item_copy)
-
-                results_for_json = {
-                    'method': 'predict_images', 'run_id': run_id,
-                    'params': {'num_original_sources': len(image_sources), 'num_valid_loaded': len(valid_pil_images),
-                               'num_images_predicted': len(predictions_output)},
-                    'predictions': predictions_for_json  # Save the version without segments
-                }
-                self._save_results(  # This method uses self.artifact_repo internally
-                    results_data=results_for_json, method_name="predict_images", run_id=run_id,
-                    method_params=results_for_json['params'],
-                    results_detail_level=effective_save_detail_level
-                )
-            else:
-                logger.info(f"JSON results for {run_id} not saved (detail level 0).")
-        else:
-            logger.info(f"JSON results for {run_id} not saved (persist_prediction_artifacts is False).")
-
-        # --- Plotting (Optional) ---
-        current_plot_level = self.plot_level
-        if plot_level is not None: current_plot_level = plot_level
-
-        if current_plot_level > 0 and predictions_output:
-            plot_save_location_base_for_run: Optional[str] = None
-            # Only define a save location if persistence is enabled AND repo is configured
-            if persist_prediction_artifacts and self.artifact_repo and self.experiment_run_key_prefix:
-                plot_save_location_base_for_run = str((PurePath(self.experiment_run_key_prefix) / run_id).as_posix())
-
-            can_save_plots = (current_plot_level >= 1 and plot_save_location_base_for_run is not None)
-            should_show_plots_flag = (current_plot_level == 2)
-
-            if not can_save_plots and current_plot_level == 1:
-                logger.warning(f"Plot saving for predictions {run_id} skipped: plot_level 1 but no save location.")
-
-            if can_save_plots or should_show_plots_flag:
-                logger.info(f"Plotting prediction results for {run_id} (plot level {current_plot_level}).")
-                try:
-                    from ..plotter import ResultsPlotter
-                    identifier_to_pil_map = {ident: img for ident, img in zip(valid_identifiers, valid_pil_images)}
-                    ResultsPlotter.plot_predictions(
-                        predictions_output=predictions_output,  # Contains LIME data including segments_for_render
-                        image_pil_map=identifier_to_pil_map,
-                        plot_save_dir_base=plot_save_location_base_for_run,
-                        repository_for_plots=self.artifact_repo if can_save_plots else None,
-                        show_plots=should_show_plots_flag,
-                        max_cols=prediction_plot_max_cols,
-                        generate_lime_plots=generate_lime_explanations,  # This tells plotter to look for LIME data
-                        lime_num_features_to_display=lime_num_features  # Use the one from predict_images
+            # Generate and Save LIME Plot (if enabled and data available)
+            if generate_lime_explanations and lime_data_for_plotter and 'error' not in lime_data_for_plotter:
+                if persist_prediction_artifacts and self.artifact_repo and plot_level > 0:
+                    lime_plot_key = str((prediction_artifact_base_path / "plots" / "lime_explanation.png").as_posix())
+                    ResultsPlotter.plot_lime_explanation_image(
+                        original_pil_image=valid_pil_images[i],  # Pass the correct PIL image
+                        lime_explanation_data=lime_data_for_plotter,  # Pass data WITH segments
+                        lime_num_features_to_display=lime_num_features_to_show_plot,
+                        output_path=lime_plot_key,
+                        repository_for_plots=self.artifact_repo,
+                        show_plots=(plot_level == 2),
+                        image_identifier=str(image_id)
                     )
-                except ImportError:
-                    logger.error("Plotting skipped: ResultsPlotter/LIME class not found or libraries missing.")
-                except Exception as plot_err:
-                    logger.error(f"Prediction plotting failed for {run_id}: {plot_err}", exc_info=True)
-        elif current_plot_level > 0 and not predictions_output:
-            logger.warning(f"Plotting skipped for predictions run {run_id}: No prediction outputs.")
+            elif generate_lime_explanations and (not lime_data_for_plotter or 'error' in lime_data_for_plotter):
+                logger.warning(
+                    f"Op {predict_op_run_id}: LIME plot generation skipped for image {image_id} due to missing LIME data or LIME error.")
 
-        return predictions_output
+            # Probability Distribution Plot (as before)
+            if persist_prediction_artifacts and self.artifact_repo and plot_level > 0:
+                prob_plot_key = str(
+                    (prediction_artifact_base_path / "plots" / "probability_distribution.png").as_posix())
+                ResultsPlotter.plot_single_prediction_probabilities(
+                    probabilities=probs_np, class_names=self.dataset_handler.classes,
+                    image_identifier=str(image_id), output_path=prob_plot_key,
+                    repository_for_plots=self.artifact_repo, show_plots=(plot_level == 2),
+                    top_n=prob_plot_top_k
+                )
+
+        logger.info(f"Op {predict_op_run_id}: Finished predictions for {len(valid_image_ids)} images.")
+        return predictions_to_return_for_api
 
     def load_model(self, model_path_or_key: Union[str, Path]) -> None:
-        logger.info(f"Attempting to load model state_dict and config from base: {model_path_or_key}")
+        """
+        Loads a state_dict and its architectural config into the pipeline's model adapter.
+        - model_path_or_key: Path to the .pt file.
+          - For S3/MinIO: Relative path within the 'experiments/' prefix (e.g., "dataset/model/run_id/model.pt").
+          - For Local: Can be absolute or relative.
+        """
+        run_id_for_log = f"load_model_op_{datetime.now().strftime('%H%M%S')}"
+        logger.info(f"Operation {run_id_for_log}: Attempting to load model from: {model_path_or_key}")
 
-        # --- 1. Determine config path/key ---
-        model_pt_path = Path(model_path_or_key)
-        config_filename = f"{model_pt_path.stem}_arch_config.json"
+        # Construct full paths/keys for model and its config
+        # The experiment_run_id_of_model is part of model_path_or_key
 
-        # If model_path_or_key is a full S3 key, construct config key similarly
-        # If it's a local path, config_path is in the same directory
-        config_path_or_key: Optional[str]
-        if str(model_path_or_key).startswith("s3://") or (
-                self.artifact_repo and not isinstance(self.artifact_repo, LocalFileSystemRepository)):
-            # Assuming model_path_or_key is an S3 key like "experiments/.../model.pt"
-            # Config key would be "experiments/.../model_arch_config.json"
-            base_key_for_s3 = str(PurePath(str(model_path_or_key)).parent / config_filename)
-            config_path_or_key = base_key_for_s3
-        else:  # Local path
-            config_path_or_key = str(model_pt_path.parent / config_filename)
+        base_model_path_str = str(model_path_or_key)
 
-        # --- 2. Load Architectural Config ---
+        # For S3/MinIO, ensure the path is prefixed with 'experiments/' if not already
+        # For local repo, this prefixing isn't strictly necessary if paths are absolute or correctly relative.
+        full_model_pt_key_or_path = base_model_path_str
+        if self.artifact_repo and not isinstance(self.artifact_repo, LocalFileSystemRepository):
+            if not base_model_path_str.startswith("experiments/"):
+                full_model_pt_key_or_path = str((PurePath("experiments") / base_model_path_str).as_posix())
+
+        config_filename = f"{Path(base_model_path_str).stem}_arch_config.json"
+        full_arch_config_key_or_path: str
+        if self.artifact_repo and not isinstance(self.artifact_repo, LocalFileSystemRepository):
+            full_arch_config_key_or_path = str((PurePath(full_model_pt_key_or_path).parent / config_filename).as_posix())
+        else:
+            full_arch_config_key_or_path = str(Path(full_model_pt_key_or_path).parent / config_filename)
+
+        logger.debug(f"Op {run_id_for_log}: Effective model artifact path/key: {full_model_pt_key_or_path}")
+        logger.debug(f"Op {run_id_for_log}: Effective arch_config path/key: {full_arch_config_key_or_path}")
+
+        # --- 1. Load Architectural Config ---
         arch_config_dict: Optional[Dict[str, Any]] = None
         if self.artifact_repo:
-            logger.debug(f"Attempting to load arch_config via repository from: {config_path_or_key}")
-            arch_config_dict = self.artifact_repo.load_json(config_path_or_key)
+            arch_config_dict = self.artifact_repo.load_json(full_arch_config_key_or_path)
 
-        if arch_config_dict is None and Path(
-                config_path_or_key).is_file():  # Fallback for local file if repo failed or no repo
-            logger.debug(f"Attempting to load arch_config from local file: {config_path_or_key}")
+        if arch_config_dict is None and Path(full_arch_config_key_or_path).is_file():  # Fallback
+            logger.info(
+                f"Op {run_id_for_log}: Arch config not found via repo or no repo, trying local: {full_arch_config_key_or_path}")
             try:
-                with open(config_path_or_key, 'r') as f:
+                with open(full_arch_config_key_or_path, 'r') as f:
                     arch_config_dict = json.load(f)
             except Exception as e:
-                logger.error(f"Failed to load local arch_config {config_path_or_key}: {e}")
+                logger.error(f"Op {run_id_for_log}: Failed to load local arch_config: {e}")
 
         if arch_config_dict is None:
             logger.error(
-                f"CRITICAL: Architecture config file not found or failed to load from '{config_path_or_key}'. "
-                f"Cannot reliably reconstruct model. Will attempt with default pipeline config.")
-            # Fallback: Initialize with current pipeline defaults (might lead to errors if mismatch)
+                f"Op {run_id_for_log}: CRITICAL: Architecture config not found. Attempting load with current pipeline defaults.")
+            # Fallback to current pipeline defaults if arch_config is missing
             if not self.model_adapter.initialized_:
-                logger.debug(
-                    "Initializing skorch adapter with default pipeline config before loading state_dict (arch config missing).")
                 try:
                     self.model_adapter.initialize()
                 except Exception as e:
-                    raise RuntimeError(
-                        f"Could not initialize model adapter for loading (arch config missing): {e}") from e
+                    raise RuntimeError(f"Op {run_id_for_log}: Default init failed (arch_config missing): {e}") from e
         else:
-            logger.info(f"Successfully loaded architecture config from: {config_path_or_key}")
+            logger.info(f"Op {run_id_for_log}: Loaded architecture config from: {full_arch_config_key_or_path}")
+            # Re-initialize SkorchModelAdapter with loaded architecture
             loaded_model_type_str = arch_config_dict.pop('model_type')
-            # num_classes from config should ideally match dataset, or handle discrepancy
             loaded_num_classes = arch_config_dict.pop('num_classes')
-
             try:
                 loaded_model_type_enum = ModelType(loaded_model_type_str)
             except ValueError:
-                raise RuntimeError(f"Invalid model_type '{loaded_model_type_str}' in architecture config.")
+                raise RuntimeError(f"Op {run_id_for_log}: Invalid model_type '{loaded_model_type_str}' in arch config.")
 
             LoadedModelClass = self._get_model_class(loaded_model_type_enum)
-
-            # Prepare a fresh adapter config based on pipeline defaults, then override
             current_pipeline_defaults = self.model_adapter_config.copy()
+            current_pipeline_defaults['module'] = LoadedModelClass
+            current_pipeline_defaults['module__num_classes'] = loaded_num_classes
 
-            # Override with loaded architectural params
-            current_pipeline_defaults['module'] = LoadedModelClass  # Set the correct module type
-            current_pipeline_defaults[
-                'module__num_classes'] = loaded_num_classes  # Use num_classes from saved config
+            for key_arch, val_arch in arch_config_dict.items():
+                current_pipeline_defaults[key_arch] = val_arch
 
-            for key_arch, val_arch in arch_config_dict.items():  # arch_config_dict now mainly has module__ items
-                if key_arch.startswith('module__'):
-                    current_pipeline_defaults[key_arch] = val_arch
-                # else: # If arch_config stored other direct skorch params like 'lr', 'optimizer'
-                #     current_pipeline_defaults[key_arch] = val_arch
-
-            # Clean up params not for SkorchModelAdapter __init__ directly before re-instantiating
-            current_pipeline_defaults.pop('patience_cfg', None);
-            current_pipeline_defaults.pop('monitor_cfg', None)
-            current_pipeline_defaults.pop('lr_policy_cfg', None);
-            current_pipeline_defaults.pop('lr_patience_cfg', None)
-
-            # Update dataset handler ref (important)
+            # Clean up non-init keys & ensure necessary refs are passed
+            for k_pop in ['patience_cfg', 'monitor_cfg', 'lr_policy_cfg', 'lr_patience_cfg']:
+                current_pipeline_defaults.pop(k_pop, None)
             current_pipeline_defaults['dataset_handler_ref'] = self.dataset_handler
             current_pipeline_defaults['train_transform'] = self.dataset_handler.get_train_transform()
             current_pipeline_defaults['valid_transform'] = self.dataset_handler.get_eval_transform()
+            # Ensure 'classes' is set for skorch compatibility during prediction
+            current_pipeline_defaults['classes'] = np.arange(loaded_num_classes)
 
             logger.info(
-                f"Re-initializing SkorchModelAdapter with loaded architecture for {LoadedModelClass.__name__} and {loaded_num_classes} classes.")
+                f"Op {run_id_for_log}: Re-initializing SkorchModelAdapter for {LoadedModelClass.__name__} with {loaded_num_classes} classes.")
             try:
                 self.model_adapter = SkorchModelAdapter(**current_pipeline_defaults)
-                self.model_adapter.initialize()  # This creates the nn.Module with correct params
+                self.model_adapter.initialize()
             except Exception as e_reinit:
-                logger.error(f"Failed to re-initialize SkorchModelAdapter with loaded arch_config: {e_reinit}",
-                             exc_info=True)
-                raise RuntimeError("SkorchModelAdapter re-initialization failed during load_model.")
+                logger.error(f"Op {run_id_for_log}: Failed to re-init SkorchModelAdapter: {e_reinit}", exc_info=True)
+                raise RuntimeError("Adapter re-initialization failed.")
 
-        if not hasattr(self.model_adapter, 'module_') or not isinstance(self.model_adapter.module_, nn.Module):
-            raise RuntimeError(
-                "Adapter missing internal nn.Module ('module_') after initialization. Cannot load state_dict.")
+        if not self.model_adapter.module_ or not isinstance(self.model_adapter.module_, nn.Module):
+            raise RuntimeError("Op {run_id_for_log}: Adapter's nn.Module not found after initialization.")
 
-        # --- 3. Load State Dict into the correctly structured module ---
+        # --- 2. Load State Dict ---
         state_dict: Optional[Dict] = None
         map_location = self.model_adapter.device
 
         if self.artifact_repo:
-            state_dict = self.artifact_repo.load_model_state_dict(str(model_path_or_key), map_location=map_location)
-            if state_dict: logger.info(f"Model state_dict loaded via repository from: {model_path_or_key}")
+            state_dict = self.artifact_repo.load_model_state_dict(str(full_model_pt_key_or_path),
+                                                                  map_location=map_location)
+            if state_dict: logger.info(
+                f"Op {run_id_for_log}: Model state_dict loaded via repo from: {full_model_pt_key_or_path}")
 
-        if state_dict is None:  # Fallback or direct local load
-            if Path(model_path_or_key).is_file():
+        if state_dict is None:  # Fallback
+            local_pt_path = Path(full_model_pt_key_or_path)  # This might be an absolute path if local repo
+            if not self.artifact_repo and not local_pt_path.is_file():  # No repo and not a file, something is wrong with path
+                local_pt_path = Path(model_path_or_key)  # Try original path if prefixing was wrong for local
+
+            if local_pt_path.is_file():
+                logger.info(f"Op {run_id_for_log}: Trying local load for state_dict: {local_pt_path}")
                 try:
-                    state_dict = torch.load(model_path_or_key, map_location=map_location, weights_only=True)
-                    logger.info(f"Model state_dict loaded from local filesystem: {model_path_or_key}")
+                    state_dict = torch.load(local_pt_path, map_location=map_location, weights_only=True)
+                    logger.info(f"Op {run_id_for_log}: Model state_dict loaded from local: {local_pt_path}")
                 except Exception as e_load_local:
-                    logger.error(f"Failed to load state_dict from local {model_path_or_key}: {e_load_local}")
+                    logger.error(f"Op {run_id_for_log}: Failed to load local state_dict: {e_load_local}")
             elif not self.artifact_repo:
-                logger.error(f"Model file not found at local path: {model_path_or_key} (no repo).")
+                logger.error(f"Op {run_id_for_log}: Model file not found locally: {local_pt_path} (no repo).")
 
         if state_dict:
-            # If state_dict came from Skorch's net.save_params(f_params=...), it might have 'module_params' etc.
-            # Or if it's net.module_.state_dict(), it's clean.
-            # Your current saving method `adapter_for_train.module_.state_dict()` is good, so state_dict is clean.
             try:
-                # Skorch state_dicts might be prefixed with "module."
-                # If your saved state_dict is from module_.state_dict(), it's fine.
-                # If it's from skorch net.get_params(deep=True)['module_state_dict'], it might also be fine.
-                # Let's add a check for "module." prefix if direct load fails.
-                try:
-                    self.model_adapter.module_.load_state_dict(state_dict)
-                except RuntimeError as e_load_strict:
-                    if "Missing key(s) in state_dict" in str(e_load_strict) or \
-                            "Unexpected key(s) in state_dict" in str(e_load_strict):
-                        logger.warning(f"Strict state_dict loading failed: {e_load_strict}. "
-                                       "Checking for 'module.' prefix if saved from full Skorch net.")
+                # Handle Skorch "module." prefix if present
+                is_skorch_module_prefixed = all(k.startswith("module.") for k in state_dict.keys())
+                if is_skorch_module_prefixed and hasattr(self.model_adapter, 'module_') and isinstance(
+                        self.model_adapter.module_, nn.Module):
+                    logger.debug("Op {run_id_for_log}: Stripping 'module.' prefix from state_dict keys.")
+                    state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
 
-                        # Check if all keys in state_dict start with "module."
-                        all_module_prefixed = all(k.startswith("module.") for k in state_dict.keys())
-
-                        if all_module_prefixed:
-                            logger.info("Attempting to load state_dict by stripping 'module.' prefix.")
-                            stripped_state_dict = {k.replace("module.", "", 1): v for k, v in state_dict.items()}
-                            self.model_adapter.module_.load_state_dict(stripped_state_dict)
-                        else:
-                            # If not all prefixed, or stripping didn't help, re-raise the original error.
-                            logger.error(
-                                "State_dict keys are not consistently prefixed with 'module.'. Original error applies.")
-                            raise e_load_strict
-                    else:  # Other RuntimeError
-                        raise e_load_strict
-
+                self.model_adapter.module_.load_state_dict(state_dict)
                 self.model_adapter.module_.eval()
-                logger.info(f"Model state_dict applied successfully from: {model_path_or_key}")
+                logger.info(f"Op {run_id_for_log}: Model state_dict applied successfully from: {model_path_or_key}")
             except Exception as e_apply:
-                logger.error(f"Failed to apply loaded state_dict to model: {e_apply}", exc_info=True)
-                raise RuntimeError(f"Error applying state_dict from '{model_path_or_key}' to model.") from e_apply
+                logger.error(f"Op {run_id_for_log}: Failed to apply state_dict: {e_apply}", exc_info=True)
+                raise RuntimeError(f"Error applying state_dict from '{model_path_or_key}'.") from e_apply
         else:
-            raise FileNotFoundError(f"Model state_dict could not be loaded from source: {model_path_or_key}.")
+            raise FileNotFoundError(
+                f"Op {run_id_for_log}: Model state_dict could not be loaded from: {model_path_or_key}.")
