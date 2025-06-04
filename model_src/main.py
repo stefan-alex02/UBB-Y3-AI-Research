@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "GCD"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet'
@@ -168,7 +168,7 @@ if __name__ == "__main__":
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset.lower() in ['gcd', 'mgcd', 'mgcdf']:
         effective_test_split_ratio_if_flat = 9000 / 19000
-        effective_val_split_ratio = 0.1 * (19000 - 9000) / 100
+        effective_val_split_ratio = 0.1
         cv_folds = 5
         # augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
