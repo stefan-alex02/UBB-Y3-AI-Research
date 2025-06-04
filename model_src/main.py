@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
     force_flat = False
 
-    save_model = True  # Whether to save the model after training
+    save_model = False  # Whether to save the model after training
 
     data_augmentation_mode_override = None
     # data_augmentation_mode_override = AugmentationStrategy.PAPER_CCSN
@@ -185,12 +185,11 @@ if __name__ == "__main__":
         effective_val_split_ratio = 0.1
         cv_folds = 5
         # augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
-        augmentation_strategy = AugmentationStrategy.PAPER_CCSN
+        augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset.lower() == 'swimcat':
         effective_test_split_ratio_if_flat = 0.2  # Your default
         effective_val_split_ratio = 0.1  # Your default (applied to train_val part)
         cv_folds = 5
-        cv_folds = 2
         augmentation_strategy = AugmentationStrategy.PAPER_CCSN
     else:
         effective_test_split_ratio_if_flat = 0.2  # Your default
