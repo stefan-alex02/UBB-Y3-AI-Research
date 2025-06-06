@@ -83,6 +83,23 @@ public class ImageServiceImpl implements ImageService {
     }
 
     @Override
+    public byte[] getImageContent(Long imageId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image metadata", "id", imageId));
+
+        if (!image.getUser().getId().equals(user.getId())) {
+            // Even though the controller also checks, good to have service layer authz
+            throw new SecurityException("User not authorized to access this image content.");
+        }
+
+        String imageFilenameWithExt = image.getId() + "." + image.getFormat();
+        log.debug("Fetching image content for {} from Python service for user {}", imageFilenameWithExt, username);
+        return pythonApiService.downloadImageFromPython(username, imageFilenameWithExt);
+    }
+
+    @Override
     @Transactional
     public void deleteImage(Long imageId, String username) {
         User user = userRepository.findByUsername(username)

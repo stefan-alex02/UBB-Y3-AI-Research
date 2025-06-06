@@ -1,9 +1,5 @@
 package ro.ubb.ai.javaserver.service;
 
-import ro.ubb.ai.javaserver.dto.experiment.PythonRunExperimentRequestDTO;
-import ro.ubb.ai.javaserver.dto.experiment.PythonExperimentRunResponseDTO; // Corresponds to Python's ExperimentRunResponse
-import ro.ubb.ai.javaserver.dto.prediction.PythonPredictionRequestDTO; // Corresponds to Python's RunPredictionRequest
-import ro.ubb.ai.javaserver.dto.prediction.PythonPredictionRunResponseDTO; // Corresponds to Python's PredictionRunResponse
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +12,11 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import ro.ubb.ai.javaserver.dto.experiment.PythonExperimentRunResponseDTO;
+import ro.ubb.ai.javaserver.dto.experiment.PythonRunExperimentRequestDTO;
+import ro.ubb.ai.javaserver.dto.prediction.PythonPredictionRequestDTO;
+import ro.ubb.ai.javaserver.dto.prediction.PythonPredictionRunResponseDTO;
+import ro.ubb.ai.javaserver.exception.ResourceNotFoundException;
 
 import java.util.List;
 import java.util.Map;
@@ -61,6 +62,28 @@ public class PythonApiServiceImpl implements PythonApiService {
         } catch (Exception e) {
             log.error("Unexpected error starting Python experiment {}: {}", requestDTO.getExperimentRunId(), e.getMessage(), e);
             throw new RuntimeException("Unexpected error communicating with Python service.", e);
+        }
+    }
+
+    @Override
+    public List<Map<String, Object>> listPythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId, String subPath) {
+        // subPath is relative to the experiment_run_id folder. Example: "single_train_0/plots" or "" for root
+        String url = String.format("%s/experiments/%s/%s/%s/artifacts", pythonApiBaseUrl, datasetName, modelType, experimentRunId);
+        if (subPath != null && !subPath.isEmpty()) {
+            url += "?prefix=" + subPath;
+        }
+        log.info("Listing artifacts from Python for experiment: {} path: {}", experimentRunId, subPath);
+        try {
+            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return objectMapper.readValue(response.getBody(), new TypeReference<List<Map<String, Object>>>() {});
+            } else {
+                log.error("Failed to list artifacts from Python. Status: {}, Body: {}", response.getStatusCode(), response.getBody());
+                throw new RuntimeException("Failed to list artifacts from Python: " + response.getBody());
+            }
+        } catch (Exception e) {
+            log.error("Error listing artifacts from Python for experiment {}: {}", experimentRunId, e.getMessage(), e);
+            throw new RuntimeException("Error listing artifacts from Python.", e);
         }
     }
 
@@ -133,24 +156,28 @@ public class PythonApiServiceImpl implements PythonApiService {
     }
 
     @Override
-    public List<Map<String, Object>> listPythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId, String subPath) {
-        // subPath is relative to the experiment_run_id folder. Example: "single_train_0/plots" or "" for root
-        String url = String.format("%s/experiments/%s/%s/%s/artifacts", pythonApiBaseUrl, datasetName, modelType, experimentRunId);
-        if (subPath != null && !subPath.isEmpty()) {
-            url += "?prefix=" + subPath;
-        }
-        log.info("Listing artifacts from Python for experiment: {} path: {}", experimentRunId, subPath);
+    public byte[] downloadImageFromPython(String username, String imageFilenameWithExt) {
+        String url = String.format("%s/images/%s/%s", pythonApiBaseUrl, username, imageFilenameWithExt);
+        log.info("Requesting image content from Python: {}", url);
         try {
-            ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+            // Requesting as byte array directly
+            ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, null, byte[].class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
-                return objectMapper.readValue(response.getBody(), new TypeReference<List<Map<String, Object>>>() {});
+                log.debug("Successfully received image bytes from Python for: {}", imageFilenameWithExt);
+                return response.getBody();
             } else {
-                log.error("Failed to list artifacts from Python. Status: {}, Body: {}", response.getStatusCode(), response.getBody());
-                throw new RuntimeException("Failed to list artifacts from Python: " + response.getBody());
+                log.error("Failed to download image from Python. Status: {}, URL: {}", response.getStatusCode(), url);
+                throw new RuntimeException("Failed to download image from Python: " + response.getStatusCode());
             }
+        } catch (HttpClientErrorException e) {
+            log.error("HttpClientError downloading image from Python {}: {} - {}", url, e.getStatusCode(), e.getResponseBodyAsString());
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                throw new ResourceNotFoundException("Image file not found on Python server: " + imageFilenameWithExt);
+            }
+            throw new RuntimeException("Client error downloading image from Python: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
-            log.error("Error listing artifacts from Python for experiment {}: {}", experimentRunId, e.getMessage(), e);
-            throw new RuntimeException("Error listing artifacts from Python.", e);
+            log.error("Error downloading image from Python {}: {}", url, e.getMessage(), e);
+            throw new RuntimeException("Error communicating with Python service for image download.", e);
         }
     }
 

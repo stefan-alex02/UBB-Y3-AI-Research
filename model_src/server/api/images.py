@@ -76,11 +76,13 @@ async def get_image_endpoint(username: str, image_filename_with_ext: str, fast_a
     if not artifact_repo:
         raise HTTPException(status_code=500, detail="Artifact repository not configured.")
 
+    # image_filename_with_ext already includes the extension
     image_key = f"images/{username}/{image_filename_with_ext}"
-    logger.debug(f"Attempting to retrieve image: {image_key}")
+    logger.debug(f"Attempting to retrieve image from Python storage: {image_key}")  # Changed log
     try:
         file_bytes = artifact_repo.download_file_to_memory(image_key)
         if file_bytes is None:
+            logger.warning(f"Image not found in Python storage: {image_key}")  # Added warning
             raise HTTPException(status_code=404, detail="Image not found.")
 
         media_type = "application/octet-stream"
@@ -88,13 +90,16 @@ async def get_image_endpoint(username: str, image_filename_with_ext: str, fast_a
             media_type = "image/png"
         elif image_filename_with_ext.lower().endswith((".jpg", ".jpeg")):
             media_type = "image/jpeg"
+        elif image_filename_with_ext.lower().endswith(".gif"):
+            media_type = "image/gif"
+        # Add more types as needed
 
         return StreamingResponse(io.BytesIO(file_bytes), media_type=media_type)
-    except HTTPException:
+    except HTTPException:  # Re-raise HTTPException (like 404)
         raise
     except Exception as e:
-        logger.error(f"Error retrieving image {image_key}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to retrieve image.")
+        logger.error(f"Error retrieving image {image_key} from Python storage: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Failed to retrieve image from storage.")
 
 # TODO: DELETE endpoint for images
 # Needs to delete from MinIO/local file system.

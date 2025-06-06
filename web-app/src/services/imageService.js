@@ -25,23 +25,31 @@ const getUserImages = async () => {
     return response.data; // Expects List<ImageDTO>
 };
 
+const getImageByIdForUser = async (imageId) => {
+    // The Java endpoint /api/images/{imageId} should verify ownership internally
+    const response = await axios.get(`${API_URL}/${imageId}`);
+    return response.data; // Expects ImageDTO
+};
+
+const getImageContentBlob = async (imageId) => {
+    // Assumes auth token is set in axios defaults
+    const response = await axios.get(`${API_URL}/${imageId}/content`, {
+        responseType: 'blob', // Important: Fetch as a Blob
+    });
+    return response.data; // This will be a Blob
+};
+
 const deleteImage = async (imageId) => {
     await axios.delete(`${API_URL}/${imageId}`);
 };
-
-const getImageDataUrl = (username, imageId, format) => {
-    // For displaying image from Python server via Java proxy (if you build one)
-    // OR directly to Python if CORS is set up and Python has an image serving endpoint
-    return `${API_BASE_URL}/python-proxy-images/${username}/${imageId}.${format}`; // Example proxy path
-    // Or if Python serves directly: `PYTHON_API_URL/images/${username}/${imageId}.${format}`
-}
 
 
 const imageService = {
     uploadImage,
     getUserImages,
     deleteImage,
-    getImageDataUrl,
+    getImageContentBlob,
+    getImageByIdForUser,
 };
 
 export default imageService;
