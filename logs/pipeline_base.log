@@ -1,0 +1,3 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-06-06 01:29:38 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: logs\pipeline_base.log

@@ -1,0 +1,25 @@
+import React from 'react';
+import { Grid, Typography, Box } from '@mui/material';
+import ExperimentCard from './ExperimentCard';
+
+const ExperimentGrid = ({ experiments, onDelete }) => {
+    if (!experiments || experiments.length === 0) {
+        return (
+            <Box sx={{ textAlign: 'center', mt: 5 }}>
+                <Typography variant="subtitle1">No experiments to display.</Typography>
+            </Box>
+        );
+    }
+
+    return (
+        <Grid container spacing={3}>
+            {experiments.map((exp) => (
+                <Grid item key={exp.experimentRunId} xs={12} sm={6} md={4}>
+                    <ExperimentCard experiment={exp} onDelete={onDelete} />
+                </Grid>
+            ))}
+        </Grid>
+    );
+};
+
+export default ExperimentGrid;

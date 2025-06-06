@@ -1,0 +1,58 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-06-06 02:14:10 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: logs\pipeline_main.log
+2025-06-06 03:05:01 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/123.png
+2025-06-06 03:05:14 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/123.png
+2025-06-06 03:05:48 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/123.png
+2025-06-06 03:05:53 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/123.png
+2025-06-06 03:05:54 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/123.png
+2025-06-06 03:06:00 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/123.png
+2025-06-06 03:07:32 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/234.png
+2025-06-06 03:08:44 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/234.png
+2025-06-06 03:08:55 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/234.png
+2025-06-06 03:09:12 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/234.png
+2025-06-06 03:09:17 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/234.png
+2025-06-06 03:09:21 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/234.png
+2025-06-06 03:09:52 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/234.png
+2025-06-06 03:09:56 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/234.png
+2025-06-06 03:10:29 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/234.png
+2025-06-06 03:10:33 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:11:22 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:11:51 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:13:08 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:13:10 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:13:12 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:13:17 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/2/2345.png
+2025-06-06 03:13:23 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:14:10 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:14:11 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:14:13 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:14:13 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:14:15 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:14:15 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:14:16 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:15:23 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:15:43 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:15:44 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:15:44 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:15:45 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:15:46 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:15:49 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/a/a
+2025-06-06 03:19:08 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:23:25 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:23:26 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:23:39 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:23:40 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:23:41 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:23:45 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:23:46 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:26:17 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:28:02 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:28:04 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:28:24 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:33:17 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:33:53 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:51:03 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 03:59:26 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
+2025-06-06 04:35:46 | INFO     | [minio_repo:save_image_object : 181] | ℹ️ Image object saved to S3: s3://clouds/images/m1/17.jpg
+2025-06-06 20:42:54 | INFO     | [main      :test_log          : 106] | ℹ️ This is a test message from the pipeline logger via an endpoint.
