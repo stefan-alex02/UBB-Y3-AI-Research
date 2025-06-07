@@ -41,11 +41,11 @@ class LogColors:
 
 # Dataset dictionary
 DATASET_DICT = {
-    'GCD': "data/GCD",
-    'mGCD': "data/mini-GCD",
-    'mGCDf': "data/mini-GCD-flat",
-    'swimcat': "data/Swimcat-extend",
-    'ccsn': "data/CCSN",
+    'GCD': "GCD",
+    'mGCD': "mini-GCD",
+    'mGCDf': "mini-GCD-flat",
+    'swimcat': "Swimcat-extend",
+    'ccsn': "CCSN",
 }
 
 class AugmentationStrategy(str, Enum):

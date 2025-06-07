@@ -71,7 +71,7 @@ export const METHOD_DEFAULTS = {
         save_model: true,
         plot_level: 1, // 0:None, 1:Save, 2:Save&Show
         results_detail_level: 2, // 0:None, 1:Basic, 2:Detailed, 3:Full(w/batch)
-        internal_val_split_ratio: 0.2, // Python calls it val_split_ratio for this method
+        val_split_ratio: 0.2, // Python calls it val_split_ratio for this method
     },
     single_eval: {
         method_name: 'single_eval',
@@ -97,7 +97,7 @@ export const METHOD_DEFAULTS = {
         save_best_model: true,
         plot_level: 1,
         results_detail_level: 2,
-        internal_val_split_ratio: 0.15, // For Skorch training within each CV split of the search
+        val_split_ratio: 0.15, // For Skorch training within each CV split of the search
     },
     nested_grid_search: {
         method_name: 'nested_grid_search',
@@ -112,7 +112,7 @@ export const METHOD_DEFAULTS = {
         },
         plot_level: 1,
         results_detail_level: 2,
-        internal_val_split_ratio: 0.15, // For Skorch training within each INNER CV split
+        val_split_ratio: 0.15, // For Skorch training within each INNER CV split
     },
     cv_model_evaluation: {
         method_name: 'cv_model_evaluation',
@@ -121,7 +121,7 @@ export const METHOD_DEFAULTS = {
         evaluate_on: 'full', // 'full' or 'test'
         plot_level: 1,
         results_detail_level: 3,
-        internal_val_split_ratio: 0.1, // For Skorch training within each K-Fold
+        val_split_ratio: 0.1, // For Skorch training within each K-Fold
         // use_best_params_from_step: undefined // User can set this
     },
 };

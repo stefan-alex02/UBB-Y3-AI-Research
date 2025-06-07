@@ -5,21 +5,35 @@ const API_URL = `${API_BASE_URL}/experiments`;
 
 const createExperiment = async (experimentData) => {
     // experimentData: { name, modelType, datasetName, methodsSequence, ... }
+    console.log('Creating experiment with data:', experimentData);
     const response = await axios.post(API_URL, experimentData);
     return response.data; // Expects ExperimentDTO
 };
 
-const getExperiments = async (filters, pageable) => {
-    // filters: { modelType, datasetName, status, startedAfter, finishedBefore }
-    // pageable: { page, size, sortBy, sortDir }
-    const params = { ...filters, ...pageable };
+const getExperiments = async (filters = {}, pageable = { page: 0, size: 10, sortBy: 'startTime', sortDir: 'DESC' }) => {
+    const params = {
+        ...filters, // modelType, datasetName, status, startedAfter, finishedBefore
+        page: pageable.page,
+        size: pageable.size,
+        sort: `${pageable.sortBy},${pageable.sortDir}` // Spring Pageable expects sort as "property,direction"
+    };
+    // Remove null or empty string filter values before sending
+    Object.keys(params).forEach(key => {
+        if (params[key] === null || params[key] === '') {
+            delete params[key];
+        }
+    });
     const response = await axios.get(API_URL, { params });
-    return response.data; // Expects Page<ExperimentDTO>
+    return response.data; // Expects Spring Page<ExperimentDTO>
 };
 
 const getExperimentDetails = async (experimentRunId) => {
     const response = await axios.get(`${API_URL}/${experimentRunId}`);
     return response.data; // Expects ExperimentDTO
+};
+
+const deleteExperiment = async (experimentRunId) => {
+    await axios.delete(`${API_URL}/${experimentRunId}`);
 };
 
 // For fetching artifacts (JSON, text logs)
@@ -50,7 +64,7 @@ const experimentService = {
     getExperimentDetails,
     getExperimentArtifactContent,
     listExperimentArtifacts,
-    // deleteExperiment
+    deleteExperiment,
 };
 
 export default experimentService;

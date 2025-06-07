@@ -19,5 +19,4 @@ public class PythonRunExperimentRequestDTO {
     private Boolean saveModelDefault;
     private Boolean offlineAugmentation;
     private String augmentationStrategyOverride;
-    // ... other executor-level params
 }

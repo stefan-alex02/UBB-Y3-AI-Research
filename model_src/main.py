@@ -106,7 +106,7 @@ if __name__ == "__main__":
     ]
 
     # --- Check if the dataset path exists ---
-    dataset_path = script_dir / DATASET_DICT[selected_dataset]  # Path to the dataset
+    dataset_path = script_dir / 'data' / DATASET_DICT[selected_dataset]  # Path to the dataset
     if not Path(dataset_path).exists():
          logger.error(f"Dataset path not found: {dataset_path}")
          logger.error("Please create the dataset or modify the 'dataset_path' variable.")
@@ -223,7 +223,7 @@ if __name__ == "__main__":
             'method': 'grid',
             # 'method': 'random',
             # 'n_iter': 4,
-            'internal_val_split_ratio': effective_val_split_ratio,
+            'val_split_ratio': effective_val_split_ratio,
             'scoring': 'accuracy',
             'save_best_model': save_model,
             'results_detail_level': 2,
@@ -247,7 +247,7 @@ if __name__ == "__main__":
     methods_seq_4 = [
          ('cv_model_evaluation', {
              'params': chosen_fixed_params, # Pass fixed hyperparams
-             'internal_val_split_ratio': effective_val_split_ratio,
+             'val_split_ratio': effective_val_split_ratio,
              'cv': cv_folds,
              'evaluate_on': 'full', # Explicitly state (or rely on default)
              'results_detail_level': 3,

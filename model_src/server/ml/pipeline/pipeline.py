@@ -594,7 +594,7 @@ class ClassificationPipeline:
     def non_nested_grid_search(self,
                                param_grid: Union[Dict[str, list], List[Dict[str, list]]],
                                cv: int = 5,
-                               internal_val_split_ratio: Optional[float] = None,
+                               val_split_ratio: Optional[float] = None,
                                n_iter: Optional[int] = None,  # For RandomizedSearch
                                method: str = 'grid',  # 'grid' or 'random'
                                scoring: str = 'accuracy',  # Sklearn scorer string or callable
@@ -636,7 +636,7 @@ class ClassificationPipeline:
 
         # --- Determine & Validate Internal Validation Split ---
         default_internal_val_fallback = 0.15
-        val_frac_to_use = internal_val_split_ratio if internal_val_split_ratio is not None else self.dataset_handler.val_split_ratio
+        val_frac_to_use = val_split_ratio if val_split_ratio is not None else self.dataset_handler.val_split_ratio
         if not 0.0 < val_frac_to_use < 1.0:
              logger.warning(f"Provided internal validation split ratio ({val_frac_to_use:.3f}) is invalid. Using default fallback: {default_internal_val_fallback:.3f}")
              val_frac_to_use = default_internal_val_fallback
@@ -728,7 +728,7 @@ class ClassificationPipeline:
             'method': f"non_nested_{method_lower}_search",
             'run_id': run_id,
             'params': {'cv': cv, 'n_iter': n_iter if method_lower == 'random' else 'N/A', 'method': method_lower,
-                       'scoring': scoring, 'internal_val_split_ratio': val_frac_to_use}, # Added internal_val_split_ratio
+                       'scoring': scoring, 'val_split_ratio': val_frac_to_use},
             'best_params': search.best_params_,
             'best_score': search.best_score_,  # This is the CV score on trainval
             'cv_results': search.cv_results_, # Contains scores, fit_times, etc. for each fold/param set
@@ -784,7 +784,7 @@ class ClassificationPipeline:
                             f"Best refit model (on full train-val) converged at epoch: {results['best_refit_model_epoch_info']['best_epoch']}")
                     else:
                         logger.info(
-                            "Best refit model was trained without a validation split (e.g. internal_val_split_ratio was 0 or invalid).")
+                            "Best refit model was trained without a validation split (e.g. val_split_ratio was 0 or invalid).")
                         if refit_history:
                             results['best_refit_model_epoch_info'] = {
                                 'last_epoch': refit_history[-1].get('epoch'),
@@ -967,10 +967,10 @@ class ClassificationPipeline:
                            param_grid: Union[Dict[str, list], List[Dict[str, list]]],
                            outer_cv: int = 5,
                            inner_cv: int = 3,
-                           internal_val_split_ratio: Optional[float] = None,
-                           n_iter: Optional[int] = None, # For RandomizedSearch
-                           method: str = 'grid', # 'grid' or 'random'
-                           scoring: str = 'accuracy', # Sklearn scorer string or callable
+                           val_split_ratio: Optional[float] = None,
+                           n_iter: Optional[int] = None,  # For RandomizedSearch
+                           method: str = 'grid',  # 'grid' or 'random'
+                           scoring: str = 'accuracy',  # Sklearn scorer string or callable
                            results_detail_level: Optional[int] = None,
                            plot_level: Optional[int] = None) -> Dict[str, Any]:
         """
@@ -1016,7 +1016,7 @@ class ClassificationPipeline:
 
         # --- Determine & Validate Internal Validation Split ---
         default_internal_val_fallback = 0.15
-        val_frac_to_use = internal_val_split_ratio if internal_val_split_ratio is not None else self.dataset_handler.val_split_ratio
+        val_frac_to_use = val_split_ratio if val_split_ratio is not None else self.dataset_handler.val_split_ratio
         if not 0.0 < val_frac_to_use < 1.0:
              logger.warning(f"Provided internal validation split ratio ({val_frac_to_use:.3f}) is invalid. "
                             f"Using default fallback: {default_internal_val_fallback:.3f} for inner loop fits.")
@@ -1111,7 +1111,7 @@ class ClassificationPipeline:
                     'method': method_lower,
                     'scoring': scoring,
                     'forced_flat': self.force_flat_for_fixed_cv,
-                    'internal_val_split_ratio': val_frac_to_use
+                    'val_split_ratio': val_frac_to_use
                 },
                 'outer_cv_scores': {k: v.tolist() for k, v in cv_results.items() if k.startswith('test_')},
                 'mean_test_accuracy': float(np.mean(cv_results['test_accuracy'])),
@@ -1220,7 +1220,7 @@ class ClassificationPipeline:
     def cv_model_evaluation(self,
                             cv: int = 5,
                             evaluate_on: str = 'full',  # 'full' or 'test'
-                            internal_val_split_ratio: Optional[float] = None,
+                            val_split_ratio: Optional[float] = None,
                             params: Optional[Dict] = None,
                             confidence_level: float = 0.95,
                             results_detail_level: Optional[int] = None,
@@ -1234,7 +1234,7 @@ class ClassificationPipeline:
         Args:
             cv: Number of folds for cross-validation.
             evaluate_on: Which data split to use ('full' or 'test'). Default 'full'.
-            internal_val_split_ratio: Fraction for internal validation split during fold training.
+            val_split_ratio: Fraction for internal validation split during fold training.
                                       Defaults to handler's val_split_ratio or 0.15 fallback.
             params: Dictionary of fixed hyperparameters to use for training each fold.
                     If None, uses defaults from pipeline_v1 config. Can be merged with
@@ -1305,7 +1305,7 @@ class ClassificationPipeline:
 
         # --- Determine & Validate Internal Validation Split ---
         default_internal_val_fallback = 0.15
-        val_frac_to_use = internal_val_split_ratio if internal_val_split_ratio is not None else self.dataset_handler.val_split_ratio
+        val_frac_to_use = val_split_ratio if val_split_ratio is not None else self.dataset_handler.val_split_ratio
         if not 0.0 < val_frac_to_use < 1.0:
             logger.warning(
                 f"Provided internal validation split ratio ({val_frac_to_use:.3f}) is invalid. Using default fallback: {default_internal_val_fallback:.3f} for fold fits.")
@@ -1508,7 +1508,7 @@ class ClassificationPipeline:
         summary_params = {k: v for k, v in eval_params.items() if isinstance(v, (str, int, float, bool))}
         summary_params['cv'] = cv
         summary_params['evaluated_on'] = evaluate_on  # <<< Add to summary params
-        summary_params['internal_val_split_ratio'] = val_frac_to_use
+        summary_params['val_split_ratio'] = val_frac_to_use
         summary_params['confidence_level'] = confidence_level
         saved_json_path = self._save_results(results,
                                              "cv_model_evaluation",

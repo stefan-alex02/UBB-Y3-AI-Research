@@ -38,17 +38,22 @@ public class ExperimentController {
     @GetMapping
     @PreAuthorize("hasRole('METEOROLOGIST')")
     public ResponseEntity<Page<ExperimentDTO>> getAllExperiments(
-            @ModelAttribute ExperimentFilterDTO filterDTO, // Use @ModelAttribute for query params
+            @ModelAttribute ExperimentFilterDTO filterDTO, // Correct for query params
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "startTime") String sortBy,
+            @RequestParam(defaultValue = "startTime") String sortBy, // Default sort
             @RequestParam(defaultValue = "DESC") String sortDir) {
 
-        Sort.Direction direction = Sort.Direction.fromString(sortDir.toUpperCase());
+        Sort.Direction direction = "ASC".equalsIgnoreCase(sortDir) ? Sort.Direction.ASC : Sort.Direction.DESC;
         Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
         Page<ExperimentDTO> experiments = experimentService.filterExperiments(filterDTO, pageable);
         return ResponseEntity.ok(experiments);
     }
 
-    // TODO DELETE endpoint for experiments
+    @DeleteMapping("/{experimentRunId}")
+    @PreAuthorize("hasRole('METEOROLOGIST')")
+    public ResponseEntity<Void> deleteExperiment(@PathVariable String experimentRunId) {
+        experimentService.deleteExperiment(experimentRunId);
+        return ResponseEntity.noContent().build();
+    }
 }

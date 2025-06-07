@@ -1,6 +1,7 @@
 package ro.ubb.ai.javaserver.config;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
@@ -65,8 +66,9 @@ public class AppConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        // Configure other ObjectMapper settings if needed (e.g., disable FAIL_ON_UNKNOWN_PROPERTIES)
-        // objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        // Configure Jackson to convert Java camelCase to JSON snake_case
+        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE); // <--- ADD THIS LINE
+        // objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // Already good
         return objectMapper;
     }
 }

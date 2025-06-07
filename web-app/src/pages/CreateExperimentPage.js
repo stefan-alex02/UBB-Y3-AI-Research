@@ -67,7 +67,7 @@ const ExperimentSchema = Yup.object().shape({
                 method_search_type: Yup.string().oneOf(['grid', 'random']).optional().nullable(),
                 n_iter: Yup.number().integer().min(1).optional().nullable(),
                 evaluate_on: Yup.string().oneOf(['full', 'test']).optional().nullable(),
-                internal_val_split_ratio: Yup.number().min(0.01).max(0.99).optional().nullable(),
+                val_split_ratio: Yup.number().min(0.01).max(0.99).optional().nullable(),
                 use_best_params_from_step: Yup.number().integer().min(0).optional().nullable(),
             })
         )
@@ -156,7 +156,7 @@ const MethodStepCard = React.memo(({ method, index, values, errors, touched, han
                                 setFieldValue(`methodsSequence[${index}].params`, JSON.stringify(defaults.params || {}, null, 2));
 
                                 // Set other specific defaults or clear them
-                                const allOptionalKeys = ['save_model', 'save_best_model', 'plot_level', 'results_detail_level', 'cv', 'outer_cv', 'inner_cv', 'scoring', 'method_search_type', 'n_iter', 'evaluate_on', 'internal_val_split_ratio', 'use_best_params_from_step'];
+                                const allOptionalKeys = ['save_model', 'save_best_model', 'plot_level', 'results_detail_level', 'cv', 'outer_cv', 'inner_cv', 'scoring', 'method_search_type', 'n_iter', 'evaluate_on', 'val_split_ratio', 'use_best_params_from_step'];
                                 allOptionalKeys.forEach(key => {
                                     setFieldValue(`methodsSequence[${index}].${key}`, defaults[key] !== undefined ? defaults[key] : (key.endsWith('_level') ? 1 : undefined)); // Sensible default for levels
                                 });
@@ -213,7 +213,7 @@ const MethodStepCard = React.memo(({ method, index, values, errors, touched, han
                         </FormControl>
                     )}
                     {(currentMethodName === 'single_train' || currentMethodName === 'non_nested_grid_search' || currentMethodName === 'cv_model_evaluation') && (
-                        <Field as={TextField} type="number" name={`methodsSequence[${index}].internal_val_split_ratio`} label="Internal Val Split (0-1)" fullWidth size="small" sx={{mb:1.5}} InputLabelProps={{ shrink: true }} InputProps={{inputProps: {step: "0.01", min:"0.01", max:"0.99"}}}/>
+                        <Field as={TextField} type="number" name={`methodsSequence[${index}].val_split_ratio`} label="Internal Val Split (0-1)" fullWidth size="small" sx={{mb:1.5}} InputLabelProps={{ shrink: true }} InputProps={{inputProps: {step: "0.01", min:"0.01", max:"0.99"}}}/>
                     )}
                     {index > 0 && values.methodsSequence[index-1].method_name === 'non_nested_grid_search' && (currentMethodName === 'single_eval' || currentMethodName === 'cv_model_evaluation') && (
                         <FormControlLabel sx={{display:'flex', justifyContent: 'flex-start'}} control={
@@ -435,45 +435,67 @@ const CreateExperimentPage = () => {
                                 finalParams = m.params || {}; // Should already be an object if not string/array
                             }
 
-                            const methodPayload = {
-                                methodName: m.method_name,
+                            const methodPayloadForJava = {
+                                method_name: m.method_name, // <--- Change to snake_case
                                 params: finalParams,
                             };
 
-                            // Add optional top-level args for the Python method call
-                            if (m.save_model !== undefined) methodPayload.save_model = m.save_model;
-                            if (m.save_best_model !== undefined) methodPayload.save_best_model = m.save_best_model;
-                            if (m.plot_level !== undefined) methodPayload.plot_level = m.plot_level;
-                            if (m.results_detail_level !== undefined) methodPayload.results_detail_level = m.results_detail_level;
-                            if (m.cv !== undefined && m.cv !== null && m.cv !== '') methodPayload.cv = Number(m.cv);
-                            if (m.outer_cv !== undefined && m.outer_cv !== null && m.outer_cv !== '') methodPayload.outer_cv = Number(m.outer_cv);
-                            if (m.inner_cv !== undefined && m.inner_cv !== null && m.inner_cv !== '') methodPayload.inner_cv = Number(m.inner_cv);
-                            if (m.scoring) methodPayload.scoring = m.scoring;
-                            if (m.method_search_type) methodPayload.method = m.method_search_type; // Python uses 'method'
-                            if (m.n_iter !== undefined && m.n_iter !== null && m.n_iter !== '' && m.method_search_type === 'random') methodPayload.n_iter = Number(m.n_iter);
-                            if (m.evaluate_on) methodPayload.evaluate_on = m.evaluate_on;
-                            if (m.internal_val_split_ratio !== undefined && m.internal_val_split_ratio !== null && m.internal_val_split_ratio !== '') methodPayload.internal_val_split_ratio = Number(m.internal_val_split_ratio);
-                            if (m.use_best_params_from_step !== undefined && m.use_best_params_from_step !== null) methodPayload.use_best_params_from_step = Number(m.use_best_params_from_step);
+                            // Map React form state to snake_case keys for Java DTO
+                            if (m.save_model !== undefined) methodPayloadForJava.save_model = m.save_model;
+                            if (m.save_best_model !== undefined) methodPayloadForJava.save_best_model = m.save_best_model;
+                            if (m.plot_level !== undefined) methodPayloadForJava.plot_level = m.plot_level;
+                            if (m.results_detail_level !== undefined) methodPayloadForJava.results_detail_level = m.results_detail_level;
+                            if (m.cv !== undefined && m.cv !== null && m.cv !== '') methodPayloadForJava.cv = Number(m.cv);
+                            if (m.outer_cv !== undefined && m.outer_cv !== null && m.outer_cv !== '') methodPayloadForJava.outer_cv = Number(m.outer_cv);
+                            if (m.inner_cv !== undefined && m.inner_cv !== null && m.inner_cv !== '') methodPayloadForJava.inner_cv = Number(m.inner_cv);
+                            if (m.scoring) methodPayloadForJava.scoring = m.scoring;
+                            if (m.method_search_type) methodPayloadForJava.method_search_type = m.method_search_type; // This key is already snake_case like
+                            if (m.n_iter !== undefined && m.n_iter !== null && m.n_iter !== '' && m.method_search_type === 'random') methodPayloadForJava.n_iter = Number(m.n_iter);
+                            if (m.evaluate_on) methodPayloadForJava.evaluate_on = m.evaluate_on;
+                            if (m.val_split_ratio !== undefined && m.val_split_ratio !== null && m.val_split_ratio !== '') methodPayloadForJava.val_split_ratio = Number(m.val_split_ratio);
+                            if (m.use_best_params_from_step !== undefined && m.use_best_params_from_step !== null) methodPayloadForJava.use_best_params_from_step = Number(m.use_best_params_from_step);
 
-                            return methodPayload;
+                            return methodPayloadForJava;
                         });
 
-                        const finalPayload = {
-                            name: values.name,
-                            datasetName: values.datasetName,
-                            modelType: values.modelType,
-                            methodsSequence: pythonPayloadMethods,
-                            imgSizeH: values.imgSizeH ? Number(values.imgSizeH) : undefined,
-                            imgSizeW: values.imgSizeW ? Number(values.imgSizeW) : undefined,
-                            // saveModelDefault: values.saveModelDefault, // Removed from UI, Python will use its default or method specific
-                            offlineAugmentation: values.offlineAugmentation,
-                            augmentationStrategyOverride: values.augmentationStrategyOverride || undefined,
+// This is the DTO that will be sent to the Java backend's endpoint
+                        // It includes the user-defined name. Java will generate the experiment_run_id.
+                        const javaExperimentCreateRequest = {
+                            name: values.name, // 'name' is often fine as is, or use 'experiment_name'
+                            dataset_name: values.datasetName, // <--- Change to snake_case
+                            model_type: values.modelType,   // <--- Change to snake_case
+                            // The methodsSequence for Java DTO now correctly contains objects
+                            // with methodName and the already processed params object.
+                            methods_sequence: pythonPayloadMethods.map(pMethod => ({
+                                method_name: pMethod.method_name, // from Python payload construction
+                                params: pMethod.params,         // the actual params object
+                                // Pass through other top-level method controls if your Java DTO needs them directly
+                                // or if Java just passes this whole method object to Python
+                                save_model: pMethod.save_model,
+                                save_best_model: pMethod.save_best_model,
+                                plot_level: pMethod.plot_level,
+                                results_detail_level: pMethod.results_detail_level,
+                                cv: pMethod.cv,
+                                outer_cv: pMethod.outer_cv,
+                                inner_cv: pMethod.inner_cv,
+                                scoring: pMethod.scoring,
+                                method_search_type: pMethod.method, // 'method' in python
+                                n_iter: pMethod.n_iter,
+                                evaluate_on: pMethod.evaluate_on,
+                                val_split_ratio: pMethod.val_split_ratio,
+                                use_best_params_from_step: pMethod.use_best_params_from_step,
+                            })),
+                            img_size_h: values.imgSizeH ? Number(values.imgSizeH) : undefined, // <--- Change to snake_case
+                            img_size_w: values.imgSizeW ? Number(values.imgSizeW) : undefined, // <--- Change to snake_case
+                            offline_augmentation: values.offlineAugmentation, // <--- Change to snake_case
+                            augmentation_strategy_override: values.augmentationStrategyOverride || undefined, // <--- Change to snake_case
                         };
-                        // console.log("Final Payload to Java:", JSON.stringify(finalPayload, null, 2)); // For debugging
+                        // console.log("Payload to Java:", JSON.stringify(javaExperimentCreateRequest, null, 2));
 
                         try {
-                            const createdExperiment = await experimentService.createExperiment(finalPayload);
-                            setSuccess(`Experiment "${createdExperiment.name}" (ID: ${createdExperiment.experimentRunId}) submitted!`);
+                            // experimentService.createExperiment now takes this DTO
+                            const createdExperiment = await experimentService.createExperiment(javaExperimentCreateRequest);
+                            setSuccess(`Experiment "${createdExperiment.name}" (ID: ${createdExperiment.experimentRunId}) submitted successfully!`);
                             setTimeout(() => navigate('/experiments'), 2500);
                         } catch (err) {
                             setError(err.response?.data?.detail || err.message || 'Failed to create experiment.');
@@ -485,135 +507,156 @@ const CreateExperimentPage = () => {
                     {({ values, errors, touched, handleChange, handleBlur, setFieldValue, isSubmitting }) => (
                         <Form>
                             <CustomModeDetector initialSequence={currentPresetSequenceForDetector} />
-                            <Grid container spacing={3}>
-                                <Grid item xs={12}> <Typography variant="h6">Basic Experiment Info</Typography> </Grid>
-                                <Grid item xs={12}><Field as={TextField} name="name" label="Experiment Name" fullWidth required error={touched.name && Boolean(errors.name)} helperText={touched.name && errors.name} /></Grid>
-                                <Grid item xs={12} sm={4}><FormControl fullWidth required error={touched.datasetName && Boolean(errors.datasetName)}><InputLabel>Dataset</InputLabel><Field as={Select} name="datasetName" label="Dataset">{DATASET_NAMES.map(name => <MenuItem key={name} value={name}>{name}</MenuItem>)}</Field>{touched.datasetName && errors.datasetName && <FormHelperText error>{errors.datasetName}</FormHelperText>}</FormControl></Grid>
-                                <Grid item xs={12} sm={4}><FormControl fullWidth required error={touched.modelType && Boolean(errors.modelType)}><InputLabel>Model Type</InputLabel><Field as={Select} name="modelType" label="Model Type">{MODEL_TYPES.map(mt => <MenuItem key={mt.value} value={mt.value}>{mt.label}</MenuItem>)}</Field>{touched.modelType && errors.modelType && <FormHelperText error>{errors.modelType}</FormHelperText>}</FormControl></Grid>
-                                <Grid item xs={12} sm={4}><FormControl fullWidth required><InputLabel>Experiment Mode</InputLabel>
-                                    <Field as={Select} name="experimentMode" label="Experiment Mode"
-                                           onChange={(e) => {
-                                               const mode = e.target.value;
-                                               handleChange(e);
-                                               if (mode !== 'custom') {
-                                                   const presetSeq = PRESET_SEQUENCES[mode].map(m => ({
-                                                       ...METHOD_DEFAULTS[m.method_name], // Start with full defaults for the method
-                                                       ...m, // Override with preset specifics
-                                                       paramsEditorMode: 'json',
-                                                       params: JSON.stringify( (m.params || METHOD_DEFAULTS[m.method_name]?.params || {}), null, 2),
-                                                   }));
-                                                   setFieldValue('methodsSequence', presetSeq);
-                                                   setCurrentPresetSequenceForDetector(presetSeq); // For custom mode detection
-                                               }
-                                           }}
-                                    >{EXPERIMENT_MODES.map(em => <MenuItem key={em.value} value={em.value}>{em.label}</MenuItem>)}</Field>
-                                </FormControl></Grid>
+                            <Grid container spacing={3}> {/* Outer container for all form elements */}
+                                {/* Section 1: Basic Experiment Info */}
+                                <Grid item xs={12}> {/* This Grid item spans full width for its content row */}
+                                    <Typography variant="h6" gutterBottom>Basic Experiment Info</Typography>
+                                    <Divider sx={{ mb: 2 }} />
+                                    <Grid container spacing={2}> {/* Nested container for this section's fields */}
+                                        <Grid item xs={12}>
+                                            <Field as={TextField} name="name" label="Experiment Name" fullWidth required error={touched.name && Boolean(errors.name)} helperText={touched.name && errors.name} />
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <FormControl fullWidth required error={touched.datasetName && Boolean(errors.datasetName)}>
+                                                <InputLabel>Dataset</InputLabel>
+                                                <Field as={Select} name="datasetName" label="Dataset">{DATASET_NAMES.map(name => <MenuItem key={name} value={name}>{name}</MenuItem>)}</Field>
+                                                {touched.datasetName && errors.datasetName && <FormHelperText error>{errors.datasetName}</FormHelperText>}
+                                            </FormControl>
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <FormControl fullWidth required error={touched.modelType && Boolean(errors.modelType)}>
+                                                <InputLabel>Model Type</InputLabel>
+                                                <Field as={Select} name="modelType" label="Model Type">{MODEL_TYPES.map(mt => <MenuItem key={mt.value} value={mt.value}>{mt.label}</MenuItem>)}</Field>
+                                                {touched.modelType && errors.modelType && <FormHelperText error>{errors.modelType}</FormHelperText>}
+                                            </FormControl>
+                                        </Grid>
+                                        <Grid item xs={12} sm={4}>
+                                            <FormControl fullWidth required>
+                                                <InputLabel>Experiment Mode</InputLabel>
+                                                <Field as={Select} name="experimentMode" label="Experiment Mode"
+                                                   onChange={(e) => {
+                                                       const mode = e.target.value;
+                                                       handleChange(e);
+                                                       if (mode !== 'custom') {
+                                                           const presetSeq = PRESET_SEQUENCES[mode].map(m => ({
+                                                               ...METHOD_DEFAULTS[m.method_name], // Start with full defaults for the method
+                                                               ...m, // Override with preset specifics
+                                                               paramsEditorMode: 'json',
+                                                               params: JSON.stringify( (m.params || METHOD_DEFAULTS[m.method_name]?.params || {}), null, 2),
+                                                           }));
+                                                           setFieldValue('methodsSequence', presetSeq);
+                                                           setCurrentPresetSequenceForDetector(presetSeq); // For custom mode detection
+                                                       }
+                                                   }}
+                                                >{EXPERIMENT_MODES.map(em => <MenuItem key={em.value} value={em.value}>{em.label}</MenuItem>)}</Field>
+                                            </FormControl>
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
 
-                                <Grid item xs={12} sx={{mt:1}}><Typography variant="h6">Global Pipeline Settings</Typography><Divider/></Grid>
-                                <Grid item xs={6} sm={3}><Field as={TextField} name="imgSizeH" label="Img Height" type="number" fullWidth InputLabelProps={{ shrink: true }} /></Grid>
-                                <Grid item xs={6} sm={3}><Field as={TextField} name="imgSizeW" label="Img Width" type="number" fullWidth InputLabelProps={{ shrink: true }} /></Grid>
-                                <Grid item xs={12} sm={6} sx={{display:'flex', alignItems:'center'}}><FormControlLabel control={<Field as={Switch} type="checkbox" name="offlineAugmentation" />} label="Use Offline Augmented Data" /></Grid>
-                                <Grid item xs={12} sm={6}> {/* Augmentation Override Grid item */}
-                                    <FormControl fullWidth error={touched.augmentationStrategyOverride && Boolean(errors.augmentationStrategyOverride)}>
-                                        <InputLabel id="augmentation-override-label">
-                                            Augmentation Override (Optional)
-                                        </InputLabel>
-                                        <Field
-                                            as={Select}
-                                            name="augmentationStrategyOverride"
-                                            labelId="augmentation-override-label"
-                                            label="Augmentation Override (Optional)"
-
-                                            sx={{
-                                                '& .MuiSelect-select': { // Targets the inner div that displays the selected value
-                                                    minWidth: '150px',    // Example: Force a minimum width for the display area
-                                                                          // Adjust this value based on your longest expected label
-                                                    overflow: 'hidden',
-                                                    textOverflow: 'ellipsis', // Ensure ellipsis if it still overflows minWidth
-                                                    whiteSpace: 'nowrap',    // Typically for select display, you want it on one line
-                                                },
-                                                // Ensure the outer Select box itself has enough room
-                                                // minWidth: 200, // If the above doesn't give enough space for the ellipsis
-                                            }}
-
-                                            // Ensure the Select component itself can accommodate wider text
-                                            // by default, or by setting an explicit width or sx prop on the Select itself if needed.
-                                            // The MenuProps primarily control the dropdown menu.
-                                            MenuProps={{
-                                                PaperProps: {
-                                                    style: {
-                                                        maxHeight: 300, // Increased max height for dropdown
-                                                        width: 'auto',   // Allow paper to be wider than select if needed
-                                                        // or set a specific minWidth: e.g., 250 or 'fit-content'
-                                                    },
-                                                },
-                                            }}
-                                            renderValue={(selectedValue) => {
-                                                if (!selectedValue) {
-                                                    return <em style={{ opacity: 0.7 }}>(Pipeline Default)</em>;
-                                                }
-                                                const selectedStrategy = AVAILABLE_AUG_STRATEGIES.find(s => s.value === selectedValue);
-                                                // Render the selected value; MUI's Select should handle ellipsis if it overflows its own bounds
-                                                return selectedStrategy ? selectedStrategy.label : selectedValue;
-                                            }}
-                                            // Add sx to the Select itself if its default width is too constrained
-                                            // sx={{ minWidth: 200 /* Example: ensure a minimum width for the select box */ }}
-                                        >
-                                            <MenuItem value="">
-                                                <em style={{ opacity: 0.7 }}>(Pipeline Default)</em>
-                                            </MenuItem>
-                                            {AVAILABLE_AUG_STRATEGIES.map(aug => (
-                                                <MenuItem
-                                                    key={aug.value}
-                                                    value={aug.value}
-                                                    // sx prop on MenuItem to allow text wrapping and ensure full width is utilized
-                                                    sx={{
-                                                        whiteSpace: 'normal', // Allow text to wrap
-                                                        // If you want to ensure items take more width in the dropdown:
-                                                        minWidth: 'fit-content', // or a specific pixel value
-                                                        // Or ensure the Paper of MenuProps is wide enough
+                                {/* Section 2: Global Pipeline Settings */}
+                                <Grid item xs={12} sx={{ mt: 3 }}> {/* This Grid item spans full width for this section */}
+                                    <Typography variant="h6" gutterBottom>Global Pipeline Settings</Typography>
+                                    <Divider sx={{ mb: 2 }}/>
+                                    <Grid container spacing={2} alignItems="center"> {/* Nested container for this section's fields */}
+                                        <Grid item xs={6} sm={3}>
+                                            <Field as={TextField} name="imgSizeH" label="Img Height" type="number" fullWidth InputLabelProps={{ shrink: true }} />
+                                        </Grid>
+                                        <Grid item xs={6} sm={3}>
+                                            <Field as={TextField} name="imgSizeW" label="Img Width" type="number" fullWidth InputLabelProps={{ shrink: true }} />
+                                        </Grid>
+                                        <Grid item xs={12} sm={3} sx={{ display: 'flex', alignItems: 'center', justifyContent: {xs: 'flex-start', sm: 'center'} }}>
+                                            <FormControlLabel control={<Field as={Switch} type="checkbox" name="offlineAugmentation" />} label="Use Offline Augmented Data" />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6}> {/* Adjust sm if 3 was too small overall */}
+                                            <FormControl fullWidth error={touched.augmentationStrategyOverride && Boolean(errors.augmentationStrategyOverride)}>
+                                                <InputLabel id="augmentation-override-label">
+                                                    Augmentation Override (Optional)
+                                                </InputLabel>
+                                                <Field
+                                                    as={Select}
+                                                    name="augmentationStrategyOverride"
+                                                    labelId="augmentation-override-label"
+                                                    label="Augmentation Override (Optional)"
+                                                    sx={{ // Key: Style the Select component, specifically its display area
+                                                        '& .MuiSelect-select': {
+                                                            minWidth: '150px', // <<<< KEEP THIS OR ADJUST AS NEEDED
+                                                                               // This ensures the display box has a minimum width
+                                                            overflow: 'hidden',
+                                                            textOverflow: 'ellipsis',
+                                                            whiteSpace: 'nowrap', // Keep selected value on one line
+                                                        },
+                                                    }}
+                                                    renderValue={(selectedValue) => {
+                                                        if (!selectedValue || selectedValue === "") {
+                                                            return <em style={{ opacity: 0.7 }}>(Pipeline Default)</em>;
+                                                        }
+                                                        const strategy = AVAILABLE_AUG_STRATEGIES.find(s => s.value === selectedValue);
+                                                        return strategy ? strategy.label : selectedValue;
+                                                    }}
+                                                    MenuProps={{ // For the dropdown menu itself
+                                                        PaperProps: {
+                                                            style: {
+                                                                maxHeight: 280, // Max height of the dropdown list
+                                                                minWidth: 250,  // Ensure the dropdown LIST is wide enough for options
+                                                                                // This can be wider than the Select input itself
+                                                            },
+                                                        },
                                                     }}
                                                 >
-                                                    {/* No need for Tooltip here if whiteSpace: 'normal' works,
-                        but keep if you prefer hover for very long ones. */}
-                                                    {/* <Tooltip title={aug.label} placement="right-start"> */}
-                                                    <Typography variant="body2" component="div" sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'normal' }}>
-                                                        {aug.label}
-                                                    </Typography>
-                                                    {/* </Tooltip> */}
-                                                </MenuItem>
-                                            ))}
-                                        </Field>
-                                        {touched.augmentationStrategyOverride && errors.augmentationStrategyOverride && <FormHelperText error>{errors.augmentationStrategyOverride}</FormHelperText>}
-                                    </FormControl>
+                                                    <MenuItem value="">
+                                                        <em style={{ opacity: 0.7 }}>(Pipeline Default)</em>
+                                                    </MenuItem>
+                                                    {AVAILABLE_AUG_STRATEGIES.map(aug => (
+                                                        <MenuItem
+                                                            key={aug.value}
+                                                            value={aug.value}
+                                                            sx={{ whiteSpace: 'normal' }} // Allow item text to wrap in the dropdown list
+                                                        >
+                                                            {aug.label}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Field>
+                                                {touched.augmentationStrategyOverride && errors.augmentationStrategyOverride && (
+                                                    <FormHelperText error>{errors.augmentationStrategyOverride}</FormHelperText>
+                                                )}
+                                            </FormControl>
+                                        </Grid>
+                                    </Grid>
                                 </Grid>
 
 
-                                <Grid item xs={12} sx={{mt:1}}><Typography variant="h6">Methods Sequence</Typography><Divider /></Grid>
-                                <FieldArray name="methodsSequence">
-                                    {({ push, remove }) => (
-                                        <Grid item xs={12}>
-                                            {values.methodsSequence.map((methodItem, index) => (
-                                                <MethodStepCard
-                                                    key={`method-${index}-${methodItem.method_name}`} // More unique key
-                                                    method={methodItem} index={index} values={values} errors={errors}
-                                                    touched={touched} handleChange={handleChange}
-                                                    setFieldValue={setFieldValue} remove={remove}
-                                                />
-                                            ))}
-                                            <Button type="button" startIcon={<AddIcon />} onClick={() => {
-                                                const defaultNewMethod = METHOD_DEFAULTS.single_train; // Sensible default
-                                                push({
-                                                    ...defaultNewMethod,
-                                                    paramsEditorMode: 'json',
-                                                    params: JSON.stringify(defaultNewMethod.params || {}, null, 2)
-                                                });
-                                            }} sx={{ mt: 1 }}>Add Method Step</Button>
-                                        </Grid>
-                                    )}
-                                </FieldArray>
+                                {/* Section 3: Methods Sequence */}
+                                <Grid item xs={12} sx={{ mt: 3 }}> {/* This Grid item spans full width for this section */}
+                                    <Typography variant="h6" gutterBottom>Methods Sequence</Typography>
+                                    <Divider sx={{ mb: 2 }}/>
+                                    {/* The FieldArray for methodsSequence will go here, and it's already within its own full-width Grid item implicitly */}
+                                    <FieldArray name="methodsSequence">
+                                        {({ push, remove }) => (
+                                            <Grid item xs={12}>
+                                                {values.methodsSequence.map((methodItem, index) => (
+                                                    <MethodStepCard
+                                                        key={`method-${index}-${methodItem.method_name}`} // More unique key
+                                                        method={methodItem} index={index} values={values} errors={errors}
+                                                        touched={touched} handleChange={handleChange}
+                                                        setFieldValue={setFieldValue} remove={remove}
+                                                    />
+                                                ))}
+                                                <Button type="button" startIcon={<AddIcon />} onClick={() => {
+                                                    const defaultNewMethod = METHOD_DEFAULTS.single_train; // Sensible default
+                                                    push({
+                                                        ...defaultNewMethod,
+                                                        paramsEditorMode: 'json',
+                                                        params: JSON.stringify(defaultNewMethod.params || {}, null, 2)
+                                                    });
+                                                }} sx={{ mt: 1 }}>Add Method Step</Button>
+                                            </Grid>
+                                        )}
+                                    </FieldArray>
+                                </Grid>
 
-                                <Grid item xs={12} sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}> {/* Centered Button */}
+                                {/* Submit Button */}
+                                <Grid item xs={12} sx={{ mt: 3, display: 'flex', justifyContent: 'center' }}>
                                     <Button type="submit" variant="contained" color="primary" size="large" disabled={isSubmitting}>
                                         {isSubmitting ? <CircularProgress size={24} /> : 'Create and Run Experiment'}
                                     </Button>

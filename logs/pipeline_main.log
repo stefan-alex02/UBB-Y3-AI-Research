@@ -56,3 +56,14 @@ Timestamp           | Level    | Location                             | Message
 2025-06-06 03:59:26 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/images/m1/2345.png
 2025-06-06 04:35:46 | INFO     | [minio_repo:save_image_object : 181] | ℹ️ Image object saved to S3: s3://clouds/images/m1/17.jpg
 2025-06-06 20:42:54 | INFO     | [main      :test_log          : 106] | ℹ️ This is a test message from the pipeline logger via an endpoint.
+2025-06-06 22:09:02 | INFO     | [minio_repo:save_image_object : 181] | ℹ️ Image object saved to S3: s3://clouds/images/m1/18.jpg
+2025-06-07 02:44:51 | INFO     | [experim...:_execute_pipeli...:  63] | ℹ️ Background task started for experiment: 793395ca-272e-4ac0-b130-ef2cc8ae8040
+2025-06-07 02:45:06 | ERROR    | [experim...:update_experime...:  52] | ❌ RequestException updating Java status for 793395ca-272e-4ac0-b130-ef2cc8ae8040 to RUNNING: HTTPConnectionPool(host='localhost', port=8080): Read timed out. (read timeout=15). Payload: {'status': 'RUNNING'}
+2025-06-07 02:59:30 | INFO     | [experim...:_execute_pipeli...:  63] | ℹ️ Background task started for experiment: 5559ab1e-ea77-4455-ba22-556d71a4e1b3
+2025-06-07 02:59:45 | ERROR    | [experim...:update_experime...:  52] | ❌ RequestException updating Java status for 5559ab1e-ea77-4455-ba22-556d71a4e1b3 to RUNNING: HTTPConnectionPool(host='localhost', port=8080): Read timed out. (read timeout=15). Payload: {'status': 'RUNNING'}
+2025-06-07 03:02:53 | INFO     | [experim...:_execute_pipeli...:  63] | ℹ️ Background task started for experiment: 8978de25-e2b5-4ea9-b312-89b7012eb507
+2025-06-07 03:03:08 | INFO     | [experim...:update_experime...:  48] | ℹ️ Successfully updated experiment 8978de25-e2b5-4ea9-b312-89b7012eb507 to RUNNING in Java. Payload: {'status': 'RUNNING'}
+2025-06-07 03:05:54 | INFO     | [experim...:_execute_pipeli...:  63] | ℹ️ Background task started for experiment: ac88916a-7506-4c9b-a2e6-2f4d56ce4eec
+2025-06-07 03:05:58 | ERROR    | [experim...:update_experime...:  50] | ❌ HTTP error updating Java status for ac88916a-7506-4c9b-a2e6-2f4d56ce4eec to RUNNING: 404 - . Payload: {'status': 'RUNNING'}
+2025-06-07 03:11:00 | INFO     | [experim...:_execute_pipeli...:  63] | ℹ️ Background task started for experiment: cac28d5c-d357-4471-b92d-ebcd0369c340
+2025-06-07 03:11:24 | INFO     | [experim...:update_experime...:  48] | ℹ️ Successfully updated experiment cac28d5c-d357-4471-b92d-ebcd0369c340 to RUNNING in Java. Payload: {'status': 'RUNNING'}

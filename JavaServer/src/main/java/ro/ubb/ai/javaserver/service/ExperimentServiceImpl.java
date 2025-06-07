@@ -1,14 +1,14 @@
 package ro.ubb.ai.javaserver.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import ro.ubb.ai.javaserver.dto.experiment.ExperimentCreateRequest;
-import ro.ubb.ai.javaserver.dto.experiment.ExperimentDTO;
-import ro.ubb.ai.javaserver.dto.experiment.ExperimentFilterDTO;
-import ro.ubb.ai.javaserver.dto.experiment.PythonRunExperimentRequestDTO;
+import org.springframework.data.jpa.domain.Specification;
+import ro.ubb.ai.javaserver.dto.experiment.*;
 import ro.ubb.ai.javaserver.entity.Experiment;
 import ro.ubb.ai.javaserver.entity.User;
 import ro.ubb.ai.javaserver.enums.ExperimentStatus;
+import ro.ubb.ai.javaserver.exception.ResourceNotFoundException;
 import ro.ubb.ai.javaserver.repository.ExperimentRepository;
 import ro.ubb.ai.javaserver.repository.UserRepository;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -18,8 +18,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ro.ubb.ai.javaserver.repository.specification.ExperimentSpecification;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -37,73 +39,89 @@ public class ExperimentServiceImpl implements ExperimentService {
     public ExperimentDTO createExperiment(ExperimentCreateRequest createRequest) {
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         User currentUser = userRepository.findByUsername(currentUsername)
-                .orElseThrow(() -> new RuntimeException("User not found for experiment creation"));
+                .orElseThrow(() -> new RuntimeException("User not found for experiment creation: " + currentUsername));
 
         Experiment experiment = new Experiment();
-        String experimentRunId = UUID.randomUUID().toString(); // Generate ID in Java
-        experiment.setExperimentRunId(experimentRunId);
+        String systemGeneratedRunId = UUID.randomUUID().toString(); // Java generates the unique ID
+        experiment.setExperimentRunId(systemGeneratedRunId);
         experiment.setUser(currentUser);
-        experiment.setName(createRequest.getName());
+        experiment.setName(createRequest.getName()); // Store the user-provided name
         experiment.setModelType(createRequest.getModelType());
         experiment.setDatasetName(createRequest.getDatasetName());
         experiment.setStatus(ExperimentStatus.PENDING);
-        experiment.setStartTime(OffsetDateTime.now());
+        // startTime will be set by @PrePersist
 
         try {
-            // Serialize the methodsSequence to JSON string for sequence_config
+            // Store the full DTO list (which includes params as Maps) as a JSON string
             String sequenceConfigJson = objectMapper.writeValueAsString(createRequest.getMethodsSequence());
             experiment.setSequenceConfig(sequenceConfigJson);
         } catch (JsonProcessingException e) {
-            log.error("Error serializing sequence_config for experiment {}: {}", experimentRunId, e.getMessage());
+            log.error("Error serializing sequence_config for experiment {}: {}", systemGeneratedRunId, e.getMessage());
             throw new RuntimeException("Failed to prepare experiment configuration.", e);
         }
 
         Experiment savedExperiment = experimentRepository.save(experiment);
-        log.info("Experiment {} saved to DB with PENDING status.", experimentRunId);
+        log.info("Experiment '{}' (ID: {}) saved to DB with PENDING status by user {}.",
+                savedExperiment.getName(), systemGeneratedRunId, currentUsername);
 
-        // Prepare DTO for Python API
+        // Prepare DTO for Python API - Python needs the system-generated ID for its folders
         PythonRunExperimentRequestDTO pythonRequest = new PythonRunExperimentRequestDTO(
-                experimentRunId,
+                systemGeneratedRunId, // Pass the generated ID to Python
                 createRequest.getDatasetName(),
                 createRequest.getModelType(),
                 createRequest.getMethodsSequence(), // Pass the List<PythonExperimentMethodParamsDTO>
                 createRequest.getImgSizeH(),
                 createRequest.getImgSizeW(),
-                createRequest.getSaveModelDefault(),
+                null, // saveModelDefault - can be removed if Python doesn't use it globally
                 createRequest.getOfflineAugmentation(),
                 createRequest.getAugmentationStrategyOverride()
         );
 
-        // Call Python API (this will be asynchronous in the sense that Python runs it in background)
         try {
             pythonApiService.startPythonExperiment(pythonRequest);
-            log.info("Request to start experiment {} sent to Python service.", experimentRunId);
+            log.info("Request to start Python experiment ID {} (Name: '{}') sent.", systemGeneratedRunId, createRequest.getName());
         } catch (Exception e) {
-            log.error("Failed to send start_experiment request to Python for {}: {}. Marking as FAILED.", experimentRunId, e.getMessage());
-            // If sending the request to Python fails, mark the experiment as FAILED in DB
+            log.error("Failed to send start_experiment request to Python for ID {}: {}. Marking as FAILED.", systemGeneratedRunId, e.getMessage());
             savedExperiment.setStatus(ExperimentStatus.FAILED);
             savedExperiment.setEndTime(OffsetDateTime.now());
             experimentRepository.save(savedExperiment);
-            // Re-throw or handle appropriately for the frontend
-            throw new RuntimeException("Failed to initiate experiment with Python service.", e);
+            throw new RuntimeException("Failed to initiate experiment with Python service: " + e.getMessage(), e);
         }
 
-        return convertToDTO(savedExperiment);
+        return convertToDTO(savedExperiment); // convertToDTO should map entity to DTO
     }
 
     @Override
+    @Transactional(readOnly = true)
     public ExperimentDTO getExperimentById(String experimentRunId) {
-        return null;
+        Experiment experiment = experimentRepository.findById(experimentRunId)
+                .orElseThrow(() -> new ResourceNotFoundException("Experiment", "experimentRunId", experimentRunId));
+        return convertToDTO(experiment);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public Page<ExperimentDTO> filterExperiments(ExperimentFilterDTO filterDTO, Pageable pageable) {
-        return null;
+        log.debug("Filtering experiments with DTO: {} and Pageable: {}", filterDTO, pageable);
+        Specification<Experiment> spec = ExperimentSpecification.fromFilter(filterDTO);
+        Page<Experiment> experimentsPage = experimentRepository.findAll(spec, pageable);
+        log.info("Found {} experiments matching filter.", experimentsPage.getTotalElements());
+        return experimentsPage.map(this::convertToDTO); // Use Page.map for DTO conversion
     }
 
     @Override
+    @Transactional
     public void deleteExperiment(String experimentRunId) {
+        Experiment experiment = experimentRepository.findById(experimentRunId)
+                .orElseThrow(() -> new ResourceNotFoundException("Experiment", "experimentRunId", experimentRunId));
 
+        // TODO: Call PythonApiService to delete artifacts from MinIO for this experimentRunId
+        // This requires Python to have a DELETE /experiments/{experiment_run_id} endpoint
+        // that knows how to list and delete all objects under "experiments/{dataset}/{model_type}/{run_id}/"
+        log.warn("Python API call for deleting experiment artifacts for {} from MinIO is not yet implemented in ExperimentServiceImpl.deleteExperiment", experimentRunId);
+
+        experimentRepository.delete(experiment);
+        log.info("Experiment with ID {} deleted from DB.", experimentRunId);
     }
 
     @Override
@@ -130,11 +148,12 @@ public class ExperimentServiceImpl implements ExperimentService {
     // Other methods: getExperimentById, filterExperiments, deleteExperiment...
 
     private ExperimentDTO convertToDTO(Experiment experiment) {
-        // Use a DTO that includes necessary fields for the frontend
         ExperimentDTO dto = new ExperimentDTO();
         dto.setExperimentRunId(experiment.getExperimentRunId());
-        dto.setUserId(experiment.getUser().getId());
-        dto.setUserName(experiment.getUser().getUsername()); // Or name
+        if (experiment.getUser() != null) { // User can be null if ON DELETE SET NULL
+            dto.setUserId(experiment.getUser().getId());
+            dto.setUserName(experiment.getUser().getUsername());
+        }
         dto.setName(experiment.getName());
         dto.setModelType(experiment.getModelType());
         dto.setDatasetName(experiment.getDatasetName());
@@ -142,9 +161,22 @@ public class ExperimentServiceImpl implements ExperimentService {
         dto.setStatus(experiment.getStatus());
         dto.setStartTime(experiment.getStartTime());
         dto.setEndTime(experiment.getEndTime());
-        // You might not send the full sequenceConfig JSON to the list view,
-        // but maybe to the detail view.
-        // dto.setSequenceConfig(experiment.getSequenceConfig());
+
+        // Deserialize sequenceConfig from JSON string to List<PythonExperimentMethodParamsDTO>
+        if (experiment.getSequenceConfig() != null && !experiment.getSequenceConfig().isBlank()) {
+            try {
+                List<PythonExperimentMethodParamsDTO> sequence = objectMapper.readValue(
+                        experiment.getSequenceConfig(),
+                        new TypeReference<List<PythonExperimentMethodParamsDTO>>() {}
+                );
+                dto.setSequenceConfig(sequence);
+            } catch (JsonProcessingException e) {
+                log.error("Error deserializing sequence_config for experiment {}: {}", experiment.getExperimentRunId(), e.getMessage());
+                dto.setSequenceConfig(null); // Or an empty list, or a special error marker
+            }
+        } else {
+            dto.setSequenceConfig(null);
+        }
         return dto;
     }
 }

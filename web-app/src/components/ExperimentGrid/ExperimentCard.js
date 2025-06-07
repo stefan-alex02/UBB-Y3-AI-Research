@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
 import { Card, CardContent, CardActions, Typography, Button, Chip, Box, IconButton, Menu, MenuItem } from '@mui/material';
-import ScienceIcon from '@mui/icons-material/Science';
-import DatasetIcon from '@mui/icons-material/Dataset';
+import ScienceIcon from '@mui/icons-material/Science'; // Assuming you might use this if modelType is generic
 import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
+import DatasetIcon from '@mui/icons-material/Dataset';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useNavigate } from 'react-router-dom';
-import ConfirmDialog from '../ConfirmDialog'; // Assuming you have this
+import ConfirmDialog from '../ConfirmDialog';
 
 const ExperimentCard = ({ experiment, onDelete }) => {
     const navigate = useNavigate();
@@ -28,7 +28,7 @@ const ExperimentCard = ({ experiment, onDelete }) => {
     };
 
     const handleConfirmDelete = () => {
-        onDelete(experiment.experimentRunId);
+        onDelete(experiment.experiment_run_id); // Use snake_case
         setDialogOpen(false);
     };
 
@@ -42,19 +42,31 @@ const ExperimentCard = ({ experiment, onDelete }) => {
         }
     };
 
+    // Helper to format date. The incoming timestamps are seconds since epoch (or millis) based on the number.
+    // 1749255057.780194000 looks like seconds. If it were millis, it'd be much larger.
+    // JavaScript Date constructor expects milliseconds.
+    const formatDate = (timestampSeconds) => {
+        if (!timestampSeconds) return 'N/A';
+        try {
+            return new Date(timestampSeconds * 1000).toLocaleString();
+        } catch (e) {
+            return 'Invalid Date';
+        }
+    };
+
     return (
         <>
             <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
                 <CardContent sx={{ flexGrow: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <Typography variant="h6" component="div" gutterBottom noWrap title={experiment.name}>
-                            {experiment.name}
+                            {experiment.name || 'Unnamed Experiment'} {/* Use name directly */}
                         </Typography>
                         <IconButton size="small" onClick={handleMenuClick}>
                             <MoreVertIcon />
                         </IconButton>
                         <Menu anchorEl={anchorEl} open={openMenu} onClose={handleMenuClose}>
-                            <MenuItem onClick={() => { navigate(`/experiments/${experiment.experimentRunId}`); handleMenuClose(); }}>
+                            <MenuItem onClick={() => { navigate(`/experiments/${experiment.experiment_run_id}`); handleMenuClose(); }}>
                                 <VisibilityIcon sx={{ mr: 1 }} /> View Details
                             </MenuItem>
                             <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
@@ -64,50 +76,52 @@ const ExperimentCard = ({ experiment, onDelete }) => {
                     </Box>
                     <Chip
                         icon={<ModelTrainingIcon />}
-                        label={`Model: ${experiment.modelType}`}
+                        label={`Model: ${experiment.model_type || 'N/A'}`}
                         size="small"
                         sx={{ mb: 1, mr: 1 }}
                     />
                     <Chip
                         icon={<DatasetIcon />}
-                        label={`Dataset: ${experiment.datasetName}`}
+                        label={`Dataset: ${experiment.dataset_name || 'N/A'}`}
                         size="small"
                         sx={{ mb: 1 }}
                     />
-                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                        Run ID: <Typography component="span" variant="caption" sx={{ fontFamily: 'monospace' }}>{experiment.experimentRunId}</Typography>
+                    <Typography variant="body2" color="text.secondary" sx={{ mt: 1, wordBreak: 'break-all' }}>
+                        Run ID: <Typography component="span" variant="caption" sx={{ fontFamily: 'monospace' }}>{experiment.experiment_run_id || 'N/A'}</Typography>
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Status: <Chip label={experiment.status} color={getStatusColor(experiment.status)} size="small" />
+                        Status: <Chip label={experiment.status || 'N/A'} color={getStatusColor(experiment.status)} size="small" />
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Started: {new Date(experiment.startTime).toLocaleString()}
+                        Started: {formatDate(experiment.start_time)} {/* Use snake_case & formatDate */}
                     </Typography>
-                    {experiment.endTime && (
+                    {experiment.end_time && (
                         <Typography variant="body2" color="text.secondary">
-                            Ended: {new Date(experiment.endTime).toLocaleString()}
+                            Ended: {formatDate(experiment.end_time)} {/* Use snake_case & formatDate */}
                         </Typography>
                     )}
                     <Typography variant="body2" color="text.secondary">
-                        By: {experiment.userName || 'N/A'}
+                        By: {experiment.user_name || 'N/A'} {/* Use snake_case */}
                     </Typography>
                 </CardContent>
                 <CardActions>
                     <Button
                         size="small"
                         startIcon={<VisibilityIcon />}
-                        onClick={() => navigate(`/experiments/${experiment.experimentRunId}`)}
+                        onClick={() => navigate(`/experiments/${experiment.experiment_run_id}`)} // Use snake_case
                     >
                         View Results
                     </Button>
                 </CardActions>
             </Card>
             <ConfirmDialog
-                open={dialogOpen}
+                open={dialogOpen} // Controlled by dialogOpen state
                 onClose={() => setDialogOpen(false)}
                 onConfirm={handleConfirmDelete}
                 title="Delete Experiment?"
-                message={`Are you sure you want to delete the experiment "${experiment.name}" (ID: ${experiment.experimentRunId})? This action cannot be undone and will also delete any associated prediction artifacts (if implemented).`}
+                message={`Are you sure you want to delete the experiment "${experiment.name || 'N/A'}" (ID: ${experiment.experiment_run_id || 'N/A'})? This action cannot be undone and will also attempt to delete associated artifacts.`}
+                // CORRECTED: Use `experiment.name` and `experiment.experiment_run_id` directly from the prop
+                // INSTEAD OF: deleteConfirm.experimentName and deleteConfirm.experimentId
                 confirmText="Delete"
             />
         </>

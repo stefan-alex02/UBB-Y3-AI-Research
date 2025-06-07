@@ -11,7 +11,7 @@ import java.util.List;
 public class ExperimentCreateRequest {
     @NotBlank
     @Size(max = 255)
-    private String name; // User-friendly name
+    private String name; // User-friendly name - THIS IS NOW THE PRIMARY NAME
 
     @NotBlank
     @Size(max = 50)
@@ -22,14 +22,13 @@ public class ExperimentCreateRequest {
     private String datasetName;
 
     @NotEmpty
-    private List<PythonExperimentMethodParamsDTO> methodsSequence;
+    private List<PythonExperimentMethodParamsDTO> methodsSequence; // This DTO has Map<String, Object> params
 
-    // Optional overrides for Python PipelineExecutor defaults
+    // Optional overrides
     private Integer imgSizeH;
     private Integer imgSizeW;
-    private Boolean saveModelDefault;
+    // private Boolean saveModelDefault; // Removed from React UI, can be removed here too if Python executor handles it
     private Boolean offlineAugmentation;
     private String augmentationStrategyOverride;
-    // Add other executor-level params Java should control
 }
 

@@ -18,6 +18,7 @@ from ...persistence import ArtifactRepository, LocalFileSystemRepository, MinIOR
 class PipelineExecutor:
     def __init__(self,
                  dataset_path: Union[str, Path],
+                 conceptual_experiment_run_name: Optional[str] = None,
                  model_type: Union[str, ModelType] = ModelType.CNN,
                  model_load_path: Optional[Union[str, Path]] = None,
                  artifact_repository: Optional[ArtifactRepository] = None,
@@ -61,8 +62,18 @@ class PipelineExecutor:
             raise TypeError(f"Executor model_type must be str or ModelType, got {type(model_type)}")
 
         dataset_name_for_path = Path(dataset_path).name
-        timestamp_init_for_path = datetime.now().strftime('%Y%m%d_%H%M%S')
-        self.conceptual_experiment_run_name = f"{timestamp_init_for_path}_seed{RANDOM_SEED}"
+
+        if conceptual_experiment_run_name:
+            self.conceptual_experiment_run_name = conceptual_experiment_run_name
+            # Log that we are using the provided ID
+            # The logger might not be fully set up here yet, so print or delay detailed logging
+            print(
+                f"[Executor Init] Using provided conceptual_experiment_run_name: {self.conceptual_experiment_run_name}")
+        else:
+            # Fallback if Java somehow didn't send it (shouldn't happen with new flow)
+            timestamp_init_for_path = datetime.now().strftime('%Y%m%d_%H%M%S')
+            self.conceptual_experiment_run_name = f"{timestamp_init_for_path}_seed{RANDOM_SEED}"
+            print(f"[Executor Init] Generating conceptual_experiment_run_name: {self.conceptual_experiment_run_name}")
 
         # This is the top-level directory/prefix for *all* artifacts of this specific executor run
         # e.g., "experiments/CCSN/pvit/20250605_120000_seed42"

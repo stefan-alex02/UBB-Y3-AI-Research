@@ -15,7 +15,7 @@ class Settings(BaseSettings):
 
     # For local file repo fallback if MinIO is not configured or for images/predictions
     # if not using MinIO for those.
-    LOCAL_STORAGE_BASE_PATH: Path = Path("./ml_data_storage") # Default local storage
+    LOCAL_STORAGE_BASE_PATH: Path = Path("model_src/data/") # Default local storage
 
     # Logging configuration
     LOG_LEVEL: str = "INFO"
