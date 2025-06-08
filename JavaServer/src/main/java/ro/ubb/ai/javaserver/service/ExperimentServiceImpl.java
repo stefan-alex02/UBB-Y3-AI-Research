@@ -19,6 +19,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ro.ubb.ai.javaserver.repository.specification.ExperimentSpecification;
+import ro.ubb.ai.javaserver.websocket.ExperimentStatusWebSocketHandler;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -32,7 +33,8 @@ public class ExperimentServiceImpl implements ExperimentService {
     private final ExperimentRepository experimentRepository;
     private final UserRepository userRepository;
     private final PythonApiService pythonApiService;
-    private final ObjectMapper objectMapper; // For serializing sequenceConfig
+    private final ObjectMapper objectMapper;
+    private final ExperimentStatusWebSocketHandler webSocketHandler;
 
     @Override
     @Transactional
@@ -74,7 +76,9 @@ public class ExperimentServiceImpl implements ExperimentService {
                 createRequest.getImgSizeW(),
                 null, // saveModelDefault - can be removed if Python doesn't use it globally
                 createRequest.getOfflineAugmentation(),
-                createRequest.getAugmentationStrategyOverride()
+                createRequest.getAugmentationStrategyOverride(),
+                createRequest.getTestSplitRatioIfFlat(),
+                createRequest.getForceFlatForFixedCv()
         );
 
         try {
@@ -128,24 +132,34 @@ public class ExperimentServiceImpl implements ExperimentService {
     @Transactional
     public ExperimentDTO updateExperiment(String experimentRunId, ExperimentStatus status, String modelRelativePath, Boolean setEndTime, String errorMessage) {
         Experiment experiment = experimentRepository.findById(experimentRunId)
-                .orElseThrow(() -> new RuntimeException("Experiment not found: " + experimentRunId));
+                .orElseThrow(() -> new ResourceNotFoundException("Experiment not found: " + experimentRunId));
 
         experiment.setStatus(status);
         if (modelRelativePath != null && !modelRelativePath.isBlank()) {
             experiment.setModelRelativePath(modelRelativePath);
         }
+        // If setEndTime is explicitly true, or if status indicates completion/failure
         if (Boolean.TRUE.equals(setEndTime) || status == ExperimentStatus.COMPLETED || status == ExperimentStatus.FAILED) {
-            experiment.setEndTime(OffsetDateTime.now());
+            if (experiment.getEndTime() == null) { // Only set if not already set
+                experiment.setEndTime(OffsetDateTime.now());
+            }
         }
-        // Could add error message to a new field in Experiment entity if status is FAILED
+        // You might want a dedicated field for errorMessage in the Experiment entity
+        // if (errorMessage != null && status == ExperimentStatus.FAILED) {
+        //    experiment.setErrorMessage(errorMessage);
+        // }
 
         Experiment updatedExperiment = experimentRepository.save(experiment);
-        log.info("Experiment {} updated in DB. Status: {}, ModelPath: {}",
-                experimentRunId, status, modelRelativePath != null ? "Set" : "Not Set");
-        return convertToDTO(updatedExperiment);
-    }
+        log.info("Experiment {} updated in DB. Status: {}, ModelPath: {}, Error: {}",
+                experimentRunId, status, modelRelativePath != null ? "Set" : "Not Set", errorMessage != null ? "Yes" : "No");
 
-    // Other methods: getExperimentById, filterExperiments, deleteExperiment...
+        ExperimentDTO dto = convertToDTO(updatedExperiment); // Convert before broadcasting
+
+        // Broadcast the update to WebSocket clients
+        webSocketHandler.broadcastExperimentUpdate(dto);
+
+        return dto;
+    }
 
     private ExperimentDTO convertToDTO(Experiment experiment) {
         ExperimentDTO dto = new ExperimentDTO();

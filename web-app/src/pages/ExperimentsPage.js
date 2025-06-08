@@ -1,21 +1,39 @@
 // src/pages/ExperimentsPage.js
-import React, { useState, useEffect, useCallback } from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
-    Container, Typography, Button, Box, Grid, TextField, Select, MenuItem,
-    FormControl, InputLabel, CircularProgress, Paper, Pagination, Alert, IconButton
+    Alert,
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    FormControl,
+    FormControlLabel,
+    Grid,
+    IconButton,
+    InputLabel,
+    MenuItem,
+    Pagination,
+    Paper,
+    Select,
+    Switch,
+    TextField,
+    Tooltip,
+    Typography
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList'; // For filter section toggle
-import { useNavigate } from 'react-router-dom';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'; // Or AdapterDayjs
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import {useNavigate} from 'react-router-dom';
+import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFns'; // Or AdapterDayjs
+import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
+import {DateTimePicker} from '@mui/x-date-pickers/DateTimePicker';
 
 import ExperimentGrid from '../components/ExperimentGrid/ExperimentGrid';
 import experimentService from '../services/experimentService';
 import useAuth from '../hooks/useAuth';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDialog from '../components/ConfirmDialog'; // Assuming this is in components/
+import RefreshIcon from '@mui/icons-material/Refresh';
+
 
 const ExperimentsPage = () => {
     const navigate = useNavigate();
@@ -44,6 +62,80 @@ const ExperimentsPage = () => {
         experimentId: null,
         experimentName: '',
     });
+
+    const [autoUpdate, setAutoUpdate] = useState(true); // State for the auto-update toggle
+    const [isWsConnected, setIsWsConnected] = useState(false);
+    const webSocketRef = useRef(null); // To hold the WebSocket instance
+
+    const WS_URL = `ws://${window.location.hostname}:8080/ws/experiment-status`; // Adjust port if different
+
+
+    const connectWebSocket = useCallback(() => {
+        if (!user || user.role !== 'METEOROLOGIST' || (webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN)) {
+            return; // Don't connect if not authorized, or already connected
+        }
+
+        console.log('Attempting to connect WebSocket...');
+        webSocketRef.current = new WebSocket(WS_URL);
+
+        webSocketRef.current.onopen = () => {
+            console.log('WebSocket connected for experiment status updates');
+            setIsWsConnected(true);
+        };
+
+        webSocketRef.current.onmessage = (event) => {
+            try {
+                const updatedExperimentData = JSON.parse(event.data);
+                // Ensure keys from WebSocket match what the frontend expects (snake_case vs camelCase)
+                // If Java sends snake_case (default for DTOs with global SNAKE_CASE strategy):
+                console.log('WebSocket message received (raw):', updatedExperimentData);
+
+                setExperiments(prevExperiments =>
+                    prevExperiments.map(exp =>
+                        exp.experiment_run_id === updatedExperimentData.experiment_run_id
+                            ? { ...exp, ...updatedExperimentData } // Merge updates
+                            : exp
+                    )
+                );
+            } catch (e) {
+                console.error('Error processing WebSocket message:', e, 'Data:', event.data);
+            }
+        };
+
+        webSocketRef.current.onclose = (event) => {
+            console.log('WebSocket disconnected:', event.reason, `Code: ${event.code}`);
+            setIsWsConnected(false);
+            // Optional: Implement reconnection logic if autoUpdate is still true
+            // if (autoUpdate && !event.wasClean) { setTimeout(connectWebSocket, 5000); }
+        };
+
+        webSocketRef.current.onerror = (error) => {
+            console.error('WebSocket error:', error);
+            setIsWsConnected(false);
+            // Maybe set autoUpdate to false on persistent errors
+        };
+    }, [user, WS_URL]); // Removed autoUpdate from here to control connection manually
+
+    const disconnectWebSocket = useCallback(() => {
+        if (webSocketRef.current) {
+            webSocketRef.current.close();
+            webSocketRef.current = null; // Clear ref after closing
+            setIsWsConnected(false);
+            console.log('WebSocket explicitly disconnected.');
+        }
+    }, []);
+
+    useEffect(() => {
+        if (autoUpdate) {
+            connectWebSocket();
+        } else {
+            disconnectWebSocket();
+        }
+        // Cleanup function for when the component unmounts or autoUpdate changes
+        return () => {
+            disconnectWebSocket();
+        };
+    }, [autoUpdate, connectWebSocket, disconnectWebSocket]);
 
     const fetchExperiments = useCallback(async () => {
         if (!user || user.role !== 'METEOROLOGIST') {
@@ -140,12 +232,27 @@ const ExperimentsPage = () => {
                     <Typography variant="h4" component="h1">
                         Experiments Dashboard
                     </Typography>
-                    <Box>
+                    <Box sx={{display: 'flex', alignItems: 'center'}}>
+                        <Tooltip title={autoUpdate ? "Disable real-time status updates" : "Enable real-time status updates"}>
+                            <FormControlLabel
+                                control={<Switch checked={autoUpdate} onChange={(e) => setAutoUpdate(e.target.checked)} />}
+                                labelPlacement="start"
+                                label={autoUpdate ? (isWsConnected ? "Auto-Update: ON" : "Auto-Update: Connecting...") : "Auto-Update: OFF"}
+                                sx={{mr:1}}
+                            />
+                        </Tooltip>
+                        <Tooltip title="Manually refresh the experiment list">
+                          <span> {/* Span for Tooltip when button is disabled */}
+                              <IconButton onClick={() => fetchExperiments(true)} disabled={isLoading} color="primary">
+                              <RefreshIcon />
+                            </IconButton>
+                          </span>
+                        </Tooltip>
                         <Button
                             variant="outlined"
                             startIcon={<FilterListIcon />}
                             onClick={() => setShowFilters(!showFilters)}
-                            sx={{ mr: 2 }}
+                            sx={{ ml: 2, mr: 2 }}
                         >
                             {showFilters ? 'Hide Filters' : 'Show Filters'}
                         </Button>

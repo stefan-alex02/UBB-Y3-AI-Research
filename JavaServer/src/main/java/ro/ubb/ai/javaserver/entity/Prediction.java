@@ -10,9 +10,14 @@ import java.time.OffsetDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 @Entity
-@Table(name = "Predictions", uniqueConstraints = {
-        @UniqueConstraint(columnNames = {"image_id", "experiment_run_id_of_model"})
-})
+@Table(name = "Predictions"
+        // The unique constraint in SQL will handle the NULLs correctly.
+        // JPA/Hibernate might require specific handling if you were defining it via annotations
+        // for schema generation with NULLs, but since you manage schema with SQL, this is fine.
+        // uniqueConstraints = {
+        //    @UniqueConstraint(columnNames = {"image_id", "experiment_run_id_of_model"})
+        // }
+)
 public class Prediction {
 
     @Id
@@ -24,7 +29,7 @@ public class Prediction {
     private Image image;
 
     @ManyToOne(fetch = FetchType.LAZY) // An experiment that produced the model
-    @JoinColumn(name = "experiment_run_id_of_model", nullable = false)
+    @JoinColumn(name = "experiment_run_id_of_model", nullable = true) // <<<< ALLOW NULLABLE JOIN COLUMN
     private Experiment modelExperiment; // Renamed for clarity
 
     @Column(name = "predicted_class", length = 255, nullable = false)

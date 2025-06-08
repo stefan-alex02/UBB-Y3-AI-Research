@@ -38,6 +38,8 @@ dependencies {
     // For OffsetDateTime JSON serialization/deserialization with Jackson (Spring Boot default)
     implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310'
 
+    implementation 'org.springframework.boot:spring-boot-starter-websocket'
+
 
     compileOnly 'org.projectlombok:lombok'
     runtimeOnly 'org.postgresql:postgresql'

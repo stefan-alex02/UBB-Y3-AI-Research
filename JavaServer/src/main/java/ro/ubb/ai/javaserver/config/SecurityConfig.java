@@ -58,11 +58,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // Allow OPTIONS requests for preflight checks globally or for specific API paths
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Broadest, good for development
-                        // Or more specific:
-                        // .requestMatchers(HttpMethod.OPTIONS, "/api/**").permitAll()
-
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/internal/**").permitAll() // Still needs its own security (e.g., API key filter)
+                        .requestMatchers("/ws/experiment-status/**").permitAll() // Allow WebSocket handshake
                         .requestMatchers("/api/**").authenticated() // All other /api paths require authentication
                         .anyRequest().permitAll() // Or .denyAll() / .authenticated() as per your default
                 );

@@ -274,13 +274,15 @@ const ViewImagePredictionsPage = () => {
                 {/* Right Column: Selected Prediction Details & Artifacts */}
                 <Grid item xs={12} md={8}>
                     {selectedPrediction ? (
-                        <Paper elevation={2} sx={{ p: 2, minHeight: 'calc(100vh - 150px)' /* Example height */ }}>
+                        <Paper elevation={2} sx={{ p: 2 }}>
                             <Typography variant="h5" gutterBottom>
                                 Prediction Details
                             </Typography>
                             <Typography variant="h6">Predicted Class: <Chip label={selectedPrediction.predictedClass} color="primary" size="small"/></Typography>
                             <Typography variant="subtitle1">Confidence: {(selectedPrediction.confidence * 100).toFixed(2)}%</Typography>
-                            <Typography variant="body2" color="text.secondary">Model from Experiment ID: {selectedPrediction.modelExperimentRunId}</Typography>
+                            <Typography variant="body2" color="text.secondary">
+                                Model from Experiment: {selectedPrediction.modelExperimentName || (selectedPrediction.modelExperimentRunId ? `ID ...${selectedPrediction.modelExperimentRunId.slice(-6)} (Details Unavailable)` : 'Unknown/Deleted')}
+                            </Typography>
                             <Typography variant="body2" color="text.secondary">Prediction Timestamp: {new Date(selectedPrediction.predictionTimestamp).toLocaleString()}</Typography>
                             <Divider sx={{ my: 2 }} />
 

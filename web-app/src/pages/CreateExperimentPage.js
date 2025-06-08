@@ -15,7 +15,16 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 
 import experimentService from '../services/experimentService';
 // Assuming experimentConfig.js is in the same directory or adjust path
-import { EXPERIMENT_MODES, METHOD_DEFAULTS, PRESET_SEQUENCES, MODEL_TYPES, DATASET_NAMES, AVAILABLE_AUG_STRATEGIES, PIPELINE_METHODS } from './experimentConfig';
+import {
+    EXPERIMENT_MODES,
+    METHOD_DEFAULTS,
+    PRESET_SEQUENCES,
+    MODEL_TYPES,
+    DATASET_NAMES,
+    AVAILABLE_AUG_STRATEGIES,
+    PIPELINE_METHODS,
+    PRESET_SEQUENCES_INITIALIZED
+} from './experimentConfig';
 import ParamsInfoModal from '../components/Modals/ParamsInfoModal'; // Assuming modal is in components/Modals
 
 // Debounce helper (keep as is)
@@ -77,6 +86,9 @@ const ExperimentSchema = Yup.object().shape({
     imgSizeW: Yup.number().integer().positive().nullable().transform(value => (isNaN(value) || value === null || value === '' ? null : Number(value))),
     offlineAugmentation: Yup.boolean(),
     augmentationStrategyOverride: Yup.string().nullable(),
+    test_split_ratio_if_flat: Yup.number().min(0.01).max(0.99).nullable()
+        .transform(value => (isNaN(value) || value === null || value === '' ? null : Number(value))),
+    force_flat_for_fixed_cv: Yup.boolean(),
 });
 
 // kvArrayToJsonString and jsonStringToKvArray (keep as is)
@@ -135,6 +147,9 @@ const MethodStepCard = React.memo(({ method, index, values, errors, touched, han
 
     // For Info Modal specific to this step
     const [stepInfoModalOpen, setStepInfoModalOpen] = useState(false);
+
+    const isParamsEditorDisabled = method.use_best_params_from_step_checkbox &&
+        (currentMethodName === 'cv_model_evaluation' || currentMethodName === 'single_eval');
 
 
     return (
@@ -234,9 +249,9 @@ const MethodStepCard = React.memo(({ method, index, values, errors, touched, han
 
                 {/* Column 2: Params Editor */}
                 <Grid item xs={12} md={7}>
-                    <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1, minHeight: 40 /* Ensure a minimum height for alignment */ }}>
-                        <Typography variant="body2" color="textSecondary"> {/* Removed sx={{ lineHeight: 'normal' }} for now, rely on alignItems */}
-                            Method Parameters Block (for 'params' key)
+                    <Box sx={{display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1}}>
+                        <Typography variant="body2" color={isParamsEditorDisabled ? "text.disabled" : "textSecondary"}>
+                            {currentMethodName.includes('search') ? "Skorch HP Search Space (for 'param_grid')" : "Skorch Hyperparameters (for 'params')"}
                         </Typography>
                         <Box sx={{ display: 'flex', alignItems: 'center' }}>
                             <Tooltip title="Parameter Info/Help">
@@ -246,6 +261,7 @@ const MethodStepCard = React.memo(({ method, index, values, errors, touched, han
                                 </IconButton>
                             </Tooltip>
                             <ToggleButtonGroup
+                                disabled={isParamsEditorDisabled}
                                 value={method.paramsEditorMode}
                                 exclusive
                                 size="small" // ToggleButtonGroup size="small" affects button padding
@@ -275,11 +291,14 @@ const MethodStepCard = React.memo(({ method, index, values, errors, touched, han
                     </Box>
 
                     {method.paramsEditorMode === 'json' ? (
-                        <Field as={TextField} name={`methodsSequence[${index}].params`} fullWidth multiline rows={Math.max(4, ((typeof method.params === 'string' ? method.params : '{}').match(/\n/g) || []).length + 1)} variant="outlined" InputLabelProps={{ shrink: true }} label="Raw JSON for 'params'" error={methodTouched?.params && Boolean(methodErrors?.params)} helperText={methodTouched?.params && methodErrors?.params ? String(methodErrors.params) : "Enter valid JSON or {} for empty."}/>
+                        <Field as={TextField}
+                               name={`methodsSequence[${index}].params`}
+                               disabled={isParamsEditorDisabled}
+                               fullWidth multiline rows={Math.max(4, ((typeof method.params === 'string' ? method.params : '{}').match(/\n/g) || []).length + 1)} variant="outlined" InputLabelProps={{ shrink: true }} label="Raw JSON for 'params'" error={methodTouched?.params && Boolean(methodErrors?.params)} helperText={methodTouched?.params && methodErrors?.params ? String(methodErrors.params) : "Enter valid JSON or {} for empty."}/>
                     ) : (
                         <FieldArray name={`methodsSequence[${index}].params`}>
                             {({ push: kvPush, remove: kvRemove }) => (
-                                <Box sx={{maxHeight: 250, overflowY: 'auto', pr:1}}> {/* Scrollable KV area */}
+                                <Box sx={{opacity: isParamsEditorDisabled ? 0.5 : 1, pointerEvents: isParamsEditorDisabled ? 'none' : 'auto' }}> {/* Scrollable KV area */}
                                     {Array.isArray(method.params) && method.params.map((kvPair, kvIndex) => (
                                         <Grid container spacing={1} key={kvIndex} alignItems="center" sx={{ mb: 2, mt: kvIndex === 0 ? 1.5 : 0 }}> {/* Increased mb, added mt for first item if needed */}
                                             <Grid item xs={5}>
@@ -318,7 +337,10 @@ const MethodStepCard = React.memo(({ method, index, values, errors, touched, han
                                             </Grid>
                                         </Grid>
                                     ))}
-                                    <Button type="button" size="small" startIcon={<AddIcon />} onClick={() => kvPush({ keyName: '', keyValue: '' })} sx={{mt:0.5}}>Add Parameter</Button>
+                                    <Button type="button" size="small"
+                                            startIcon={<AddIcon />}
+                                            onClick={() => kvPush({ keyName: '', keyValue: '' })} sx={{mt:0.5}}
+                                            disabled={isParamsEditorDisabled}>Add Parameter</Button>
                                 </Box>
                             )}
                         </FieldArray>
@@ -365,20 +387,14 @@ const CreateExperimentPage = () => {
         datasetName: DATASET_NAMES[0] || '',
         modelType: MODEL_TYPES[0]?.value || '',
         experimentMode: EXPERIMENT_MODES[0].value,
-        methodsSequence: PRESET_SEQUENCES[EXPERIMENT_MODES[0].value].map(m => ({
-            ...m,
-            paramsEditorMode: 'json',
-            params: typeof m.params === 'object' ? JSON.stringify(m.params || {}, null, 2) : (m.params || '{}'),
-            // Initialize all potential optional fields for consistent structure
-            plot_level: m.plot_level !== undefined ? m.plot_level : 1,
-            results_detail_level: m.results_detail_level !== undefined ? m.results_detail_level : 2,
-            // Other fields will be undefined initially if not in METHOD_DEFAULTS for the specific method
-        })),
+        methodsSequence: PRESET_SEQUENCES_INITIALIZED[EXPERIMENT_MODES[0].value],
         imgSizeH: 224,
         imgSizeW: 224,
         // saveModelDefault: true, // Removed global one
         offlineAugmentation: false,
         augmentationStrategyOverride: '',
+        test_split_ratio_if_flat: 0.2, // Default value
+        force_flat_for_fixed_cv: false,  // Default value
     };
 
 
@@ -394,108 +410,120 @@ const CreateExperimentPage = () => {
                 <Formik
                     initialValues={initialValues}
                     validationSchema={ExperimentSchema}
-                    onSubmit={async (values) => {
+                    onSubmit={async (values, { setSubmitting, resetForm }) => {
                         setSubmitting(true);
                         setError('');
                         setSuccess('');
 
-                        const pythonPayloadMethods = values.methodsSequence.map(m => {
-                            let finalParams = {};
-                            if (m.paramsEditorMode === 'kv' && Array.isArray(m.params)) {
-                                m.params.forEach(pair => {
+                        // This is the payload structure for the Java DTO: ExperimentCreateRequest
+                        // It will contain a list of PythonExperimentMethodParamsDTO objects
+                        const javaMethodsSequence = values.methodsSequence.map(uiMethod => {
+                            let processedParamsObject = {}; // This will hold Skorch HPs or the param_grid content
+                            if (uiMethod.paramsEditorMode === 'kv' && Array.isArray(uiMethod.params)) {
+                                uiMethod.params.forEach(pair => {
                                     if (pair.keyName && pair.keyName.trim() !== "") {
                                         let parsedValue;
-                                        try { parsedValue = JSON.parse(pair.keyValue); }
-                                        catch (e) { parsedValue = pair.keyValue; } // Store as string if not valid JSON primitive/array/object
-
-                                        // Handle comma-separated strings for grid search lists
-                                        if (typeof parsedValue === 'string' && parsedValue.includes(',') && (m.method_name === 'non_nested_grid_search' || m.method_name === 'nested_grid_search')) {
+                                        try {
+                                            // Attempt to parse value as JSON (e.g., for numbers, booleans, arrays from strings)
+                                            parsedValue = JSON.parse(pair.keyValue);
+                                        } catch (e) {
+                                            parsedValue = pair.keyValue; // Store as string if not valid JSON primitive/array/object
+                                        }
+                                        // Heuristic for comma-separated lists for search grids
+                                        if (typeof parsedValue === 'string' && parsedValue.includes(',') &&
+                                            (uiMethod.method_name === 'non_nested_grid_search' || uiMethod.method_name === 'nested_grid_search')) {
                                             const potentialList = parsedValue.split(',').map(s => s.trim());
-                                            // Basic check if it looks like a list of numbers or simple strings
                                             if (potentialList.every(item => !isNaN(parseFloat(item))) && potentialList.some(item => item.includes('.'))) {
-                                                finalParams[pair.keyName.trim()] = potentialList.map(parseFloat);
+                                                processedParamsObject[pair.keyName.trim()] = potentialList.map(parseFloat);
                                             } else if (potentialList.every(item => /^-?\d+$/.test(item))) {
-                                                finalParams[pair.keyName.trim()] = potentialList.map(Number);
+                                                processedParamsObject[pair.keyName.trim()] = potentialList.map(Number);
                                             } else {
-                                                finalParams[pair.keyName.trim()] = potentialList; // As list of strings
+                                                processedParamsObject[pair.keyName.trim()] = potentialList;
                                             }
                                         } else {
-                                            finalParams[pair.keyName.trim()] = parsedValue;
+                                            processedParamsObject[pair.keyName.trim()] = parsedValue;
                                         }
                                     }
                                 });
-                            } else if (typeof m.params === 'string') {
-                                try { finalParams = m.params.trim() ? JSON.parse(m.params) : {}; }
-                                catch (e) {
-                                    setError(`Invalid JSON in params for method '${m.method_name}': ${e.message}. Please correct it.`);
+                            } else if (typeof uiMethod.params === 'string') { // Raw JSON editor
+                                try {
+                                    processedParamsObject = uiMethod.params.trim() ? JSON.parse(uiMethod.params) : {};
+                                } catch (e) {
+                                    setError(`Invalid JSON in parameters for method '${uiMethod.method_name}': ${e.message}. Please correct it before submitting.`);
                                     setSubmitting(false);
-                                    throw new Error("Invalid JSON params for method: " + m.method_name);
+                                    // Throw an error to stop Formik submission
+                                    throw new Error("Invalid JSON params for method: " + uiMethod.method_name);
                                 }
-                            } else {
-                                finalParams = m.params || {}; // Should already be an object if not string/array
+                            } else { // Should ideally not happen if editor mode logic is correct
+                                processedParamsObject = uiMethod.params || {};
                             }
 
+                            // This object maps to PythonExperimentMethodParamsDTO in Java
                             const methodPayloadForJava = {
-                                method_name: m.method_name, // <--- Change to snake_case
-                                params: finalParams,
+                                method_name: uiMethod.method_name,
+                                // 'params' or 'paramGrid' depending on the method type
                             };
 
-                            // Map React form state to snake_case keys for Java DTO
-                            if (m.save_model !== undefined) methodPayloadForJava.save_model = m.save_model;
-                            if (m.save_best_model !== undefined) methodPayloadForJava.save_best_model = m.save_best_model;
-                            if (m.plot_level !== undefined) methodPayloadForJava.plot_level = m.plot_level;
-                            if (m.results_detail_level !== undefined) methodPayloadForJava.results_detail_level = m.results_detail_level;
-                            if (m.cv !== undefined && m.cv !== null && m.cv !== '') methodPayloadForJava.cv = Number(m.cv);
-                            if (m.outer_cv !== undefined && m.outer_cv !== null && m.outer_cv !== '') methodPayloadForJava.outer_cv = Number(m.outer_cv);
-                            if (m.inner_cv !== undefined && m.inner_cv !== null && m.inner_cv !== '') methodPayloadForJava.inner_cv = Number(m.inner_cv);
-                            if (m.scoring) methodPayloadForJava.scoring = m.scoring;
-                            if (m.method_search_type) methodPayloadForJava.method_search_type = m.method_search_type; // This key is already snake_case like
-                            if (m.n_iter !== undefined && m.n_iter !== null && m.n_iter !== '' && m.method_search_type === 'random') methodPayloadForJava.n_iter = Number(m.n_iter);
-                            if (m.evaluate_on) methodPayloadForJava.evaluate_on = m.evaluate_on;
-                            if (m.val_split_ratio !== undefined && m.val_split_ratio !== null && m.val_split_ratio !== '') methodPayloadForJava.val_split_ratio = Number(m.val_split_ratio);
-                            if (m.use_best_params_from_step !== undefined && m.use_best_params_from_step !== null) methodPayloadForJava.use_best_params_from_step = Number(m.use_best_params_from_step);
+                            if (uiMethod.method_name === 'non_nested_grid_search' || uiMethod.method_name === 'nested_grid_search') {
+                                methodPayloadForJava.param_grid = processedParamsObject; // The editable block IS the param_grid
+                                methodPayloadForJava.params = {}; // Explicitly set params to empty or undefined if not used
+                            } else {
+                                methodPayloadForJava.params = processedParamsObject; // For single_train, cv_model_evaluation
+                                methodPayloadForJava.param_grid = undefined; // Or null, ensure it's not sent if not applicable
+                            }
 
+                            // Add other top-level method-specific controls (React state -> Java DTO camelCase)
+                            if (uiMethod.save_model !== undefined) methodPayloadForJava.save_model = uiMethod.save_model;
+                            if (uiMethod.save_best_model !== undefined) methodPayloadForJava.save_best_model = uiMethod.save_best_model;
+                            if (uiMethod.plot_level !== undefined) methodPayloadForJava.plot_level = uiMethod.plot_level;
+                            if (uiMethod.results_detail_level !== undefined) methodPayloadForJava.results_detail_level = uiMethod.results_detail_level;
+
+                            if (uiMethod.cv !== undefined && uiMethod.cv !== null && String(uiMethod.cv).trim() !== '') methodPayloadForJava.cv = Number(uiMethod.cv);
+                            if (uiMethod.outer_cv !== undefined && uiMethod.outer_cv !== null && String(uiMethod.outer_cv).trim() !== '') methodPayloadForJava.outer_cv = Number(uiMethod.outer_cv);
+                            if (uiMethod.inner_cv !== undefined && uiMethod.inner_cv !== null && String(uiMethod.inner_cv).trim() !== '') methodPayloadForJava.inner_cv = Number(uiMethod.inner_cv);
+
+                            if (uiMethod.scoring && String(uiMethod.scoring).trim() !== '') methodPayloadForJava.scoring = uiMethod.scoring;
+                            if (uiMethod.method_search_type && String(uiMethod.method_search_type).trim() !== '') methodPayloadForJava.method_search_type = uiMethod.method_search_type;
+
+                            if (uiMethod.n_iter !== undefined && uiMethod.n_iter !== null && String(uiMethod.n_iter).trim() !== '' && uiMethod.method_search_type === 'random') methodPayloadForJava.n_iter = Number(uiMethod.n_iter);
+                            if (uiMethod.evaluate_on && String(uiMethod.evaluate_on).trim() !== '') methodPayloadForJava.evaluate_on = uiMethod.evaluate_on;
+
+                            if (uiMethod.val_split_ratio !== undefined && uiMethod.val_split_ratio !== null && String(uiMethod.val_split_ratio).trim() !== '') methodPayloadForJava.val_split_ratio = Number(uiMethod.val_split_ratio);
+
+                            // 'use_best_params_from_step' is derived from 'use_best_params_from_step_checkbox'
+                            if (uiMethod.use_best_params_from_step_checkbox && uiMethod.use_best_params_from_step !== undefined) {
+                                methodPayloadForJava.use_best_params_from_step = uiMethod.use_best_params_from_step;
+                                // If using best params, the 'params' or 'paramGrid' for *this* step might be ignored by Python.
+                                // The React UI already disables the editor.
+                                if (uiMethod.method_name === 'cv_model_evaluation' || uiMethod.method_name === 'single_eval') {
+                                    if (uiMethod.method_name === 'cv_model_evaluation') methodPayloadForJava.params = {}; // Explicitly clear Skorch HPs for this method
+                                    // For single_eval, params is already {}
+                                }
+                            } else {
+                                methodPayloadForJava.use_best_params_from_step = undefined; // Ensure it's not sent if checkbox is off
+                            }
                             return methodPayloadForJava;
                         });
 
-// This is the DTO that will be sent to the Java backend's endpoint
-                        // It includes the user-defined name. Java will generate the experiment_run_id.
-                        const javaExperimentCreateRequest = {
-                            name: values.name, // 'name' is often fine as is, or use 'experiment_name'
-                            dataset_name: values.datasetName, // <--- Change to snake_case
-                            model_type: values.modelType,   // <--- Change to snake_case
-                            // The methodsSequence for Java DTO now correctly contains objects
-                            // with methodName and the already processed params object.
-                            methods_sequence: pythonPayloadMethods.map(pMethod => ({
-                                method_name: pMethod.method_name, // from Python payload construction
-                                params: pMethod.params,         // the actual params object
-                                // Pass through other top-level method controls if your Java DTO needs them directly
-                                // or if Java just passes this whole method object to Python
-                                save_model: pMethod.save_model,
-                                save_best_model: pMethod.save_best_model,
-                                plot_level: pMethod.plot_level,
-                                results_detail_level: pMethod.results_detail_level,
-                                cv: pMethod.cv,
-                                outer_cv: pMethod.outer_cv,
-                                inner_cv: pMethod.inner_cv,
-                                scoring: pMethod.scoring,
-                                method_search_type: pMethod.method, // 'method' in python
-                                n_iter: pMethod.n_iter,
-                                evaluate_on: pMethod.evaluate_on,
-                                val_split_ratio: pMethod.val_split_ratio,
-                                use_best_params_from_step: pMethod.use_best_params_from_step,
-                            })),
-                            img_size_h: values.imgSizeH ? Number(values.imgSizeH) : undefined, // <--- Change to snake_case
-                            img_size_w: values.imgSizeW ? Number(values.imgSizeW) : undefined, // <--- Change to snake_case
-                            offline_augmentation: values.offlineAugmentation, // <--- Change to snake_case
-                            augmentation_strategy_override: values.augmentationStrategyOverride || undefined, // <--- Change to snake_case
+                        const finalPayloadForJava = { // This is ExperimentCreateRequest
+                            name: values.name,
+                            dataset_name: values.datasetName,
+                            model_type: values.modelType,
+                            methods_sequence: javaMethodsSequence,
+                            img_size_h: values.imgSizeH ? Number(values.imgSizeH) : undefined,
+                            img_size_w: values.imgSizeW ? Number(values.imgSizeW) : undefined,
+                            offline_augmentation: values.offlineAugmentation,
+                            augmentation_strategy_override: values.augmentationStrategyOverride || undefined,
+                            test_split_ratio_if_flat: values.test_split_ratio_if_flat ? Number(values.test_split_ratio_if_flat) : undefined,
+                            force_flat_for_fixed_cv: values.force_flat_for_fixed_cv,
                         };
-                        // console.log("Payload to Java:", JSON.stringify(javaExperimentCreateRequest, null, 2));
+
+                        // console.log("Final Payload to Java:", JSON.stringify(finalPayloadForJava, null, 2));
 
                         try {
-                            // experimentService.createExperiment now takes this DTO
-                            const createdExperiment = await experimentService.createExperiment(javaExperimentCreateRequest);
+                            const createdExperiment = await experimentService.createExperiment(finalPayloadForJava);
                             setSuccess(`Experiment "${createdExperiment.name}" (ID: ${createdExperiment.experimentRunId}) submitted successfully!`);
+                            // resetForm(); // Optional: reset form after successful submission
                             setTimeout(() => navigate('/experiments'), 2500);
                         } catch (err) {
                             setError(err.response?.data?.detail || err.message || 'Failed to create experiment.');
@@ -622,6 +650,29 @@ const CreateExperimentPage = () => {
                                                 )}
                                             </FormControl>
                                         </Grid>
+                                        <Grid item xs={12} sm={6} md={3}>
+                                            <Field
+                                                as={TextField}
+                                                name="test_split_ratio_if_flat"
+                                                label="Test Split Ratio (if flat)"
+                                                type="number"
+                                                fullWidth
+                                                size="small" /* If other fields are small */
+                                                InputLabelProps={{ shrink: true }}
+                                                InputProps={{inputProps: {step: "0.01", min:"0.01", max:"0.99"}}}
+                                                helperText="For FLAT datasets only"
+                                            />
+                                        </Grid>
+                                        <Grid item xs={12} sm={6} md={3} sx={{ display: 'flex', alignItems: 'center', justifyContent: {xs: 'flex-start', sm: 'center'} }}>
+                                            <FormControlLabel
+                                                control={<Field as={Switch} type="checkbox" name="force_flat_for_fixed_cv" />}
+                                                label="Force Flat for Fixed CV"
+                                            />
+                                            <Tooltip title="If dataset has fixed train/test splits, this allows CV methods to use the entire dataset as one pool (use with caution).">
+                                                <IconButton size="small" sx={{p:0, ml:0.5}}><HelpOutlineIcon fontSize="inherit"/></IconButton>
+                                            </Tooltip>
+                                        </Grid>
+
                                     </Grid>
                                 </Grid>
 
@@ -653,6 +704,11 @@ const CreateExperimentPage = () => {
                                             </Grid>
                                         )}
                                     </FieldArray>
+                                    {values.methodsSequence.length > 2 && ( // Show warning if more than 2 methods
+                                        <Alert severity="warning" sx={{ mt: 2 }}>
+                                            Using more than two methods in a custom sequence can be complex to configure correctly and might lead to unexpected behavior or errors if the Python backend is not explicitly designed for such long chains. Please proceed with caution.
+                                        </Alert>
+                                    )}
                                 </Grid>
 
                                 {/* Submit Button */}

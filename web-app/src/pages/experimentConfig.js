@@ -67,33 +67,31 @@ export const EXPERIMENT_MODES = [
 export const METHOD_DEFAULTS = {
     single_train: {
         method_name: 'single_train',
-        params: { lr: 0.001, batch_size: 32, max_epochs: 20 }, // These are for the Skorch model
+        params: { lr: 0.001, batch_size: 32, max_epochs: 20 }, // These are Skorch HPs
         save_model: true,
-        plot_level: 1, // 0:None, 1:Save, 2:Save&Show
-        results_detail_level: 2, // 0:None, 1:Basic, 2:Detailed, 3:Full(w/batch)
-        val_split_ratio: 0.2, // Python calls it val_split_ratio for this method
+        plot_level: 1,
+        results_detail_level: 2,
+        val_split_ratio: 0.2,
     },
     single_eval: {
         method_name: 'single_eval',
-        params: {}, // No 'params' for the skorch model, it's just evaluating
+        params: {}, // No Skorch HPs needed for eval of current model
         plot_level: 2,
         results_detail_level: 2,
     },
     non_nested_grid_search: {
         method_name: 'non_nested_grid_search',
-        params: { // These are for GridSearchCV/RandomizedSearchCV
-            param_grid: { // This 'param_grid' is for Skorch HPs
-                // Example, will vary by model_type selected!
-                // For 'pvit': module__head_dropout_rate: [0.25, 0.5], lr: [1e-4, 5e-5]
-                // For 'cnn': module__dropout_rate: [0.3, 0.5], lr: [0.001, 0.0005]
-                lr: [0.0001, 0.0005], // General example
-                batch_size: [16, 32],
-            },
-            cv: 3, // Inner CV folds for tuning search space
-            scoring: 'accuracy',
-            method: 'grid', // 'grid' or 'random'
-            // n_iter: 10 (if method is 'random')
+        // 'params' for this method in Python will be the 'param_grid'
+        // The UI will edit this 'params' object as the search space for Skorch HPs
+        params: { // This object IS the param_grid
+            lr: [0.0001, 0.0005],
+            // Example: module__head_dropout_rate: [0.25, 0.5]
         },
+        // Other args for the Python method non_nested_grid_search:
+        cv: 3,
+        scoring: 'accuracy',
+        method_search_type: 'grid', // 'grid' or 'random' for the search itself
+        n_iter: 10, // Only if method_search_type is 'random'
         save_best_model: true,
         plot_level: 1,
         results_detail_level: 2,
@@ -101,15 +99,16 @@ export const METHOD_DEFAULTS = {
     },
     nested_grid_search: {
         method_name: 'nested_grid_search',
-        params: { // For the outer cross_validate and inner GridSearchCV
-            param_grid: { // For Skorch HPs in the inner search
-                lr: [0.001], // Keep inner grid small for presets
-            },
-            outer_cv: 3,
-            inner_cv: 2,
-            scoring: 'accuracy', // For inner GridSearchCV scoring
-            method: 'grid',
+        // 'params' for this method in Python will be the 'param_grid' for the inner loop
+        params: { // This object IS the param_grid for the inner search
+            lr: [0.001],
         },
+        // Other args for the Python method nested_grid_search:
+        outer_cv: 3,
+        inner_cv: 2,
+        scoring: 'accuracy', // For inner GridSearchCV scoring
+        method_search_type: 'grid',
+        n_iter: 5, // If inner search is random
         plot_level: 1,
         results_detail_level: 2,
         val_split_ratio: 0.15, // For Skorch training within each INNER CV split
@@ -117,14 +116,16 @@ export const METHOD_DEFAULTS = {
     cv_model_evaluation: {
         method_name: 'cv_model_evaluation',
         params: { lr: 0.001, max_epochs: 15 }, // Fixed Skorch HPs for training each fold model
-        cv: 5, // Number of K-Folds for evaluation
-        evaluate_on: 'full', // 'full' or 'test'
+        // Other args for the Python method cv_model_evaluation:
+        cv: 5,
+        evaluate_on: 'full',
         plot_level: 1,
         results_detail_level: 3,
         val_split_ratio: 0.1, // For Skorch training within each K-Fold
-        // use_best_params_from_step: undefined // User can set this
+        use_best_params_from_step: undefined, // Default
     },
 };
+
 
 // --- Preset Sequences for Experiment Modes ---
 // These are arrays of method configurations.
@@ -137,16 +138,11 @@ export const PRESET_SEQUENCES = {
         { ...METHOD_DEFAULTS.non_nested_grid_search },
         {
             ...METHOD_DEFAULTS.single_eval,
-            // The 'single_eval' here will implicitly use the best model
-            // from the preceding 'non_nested_grid_search' step if `use_best_params_from_step` is NOT set,
-            // because the pipeline's internal model_adapter gets updated.
-            // If you want to make it explicit or allow overriding params for this eval:
-            // use_best_params_from_step: 0, // This would tell Python executor
-            // to take 'best_params' from step 0 (the nn_cv)
-            // and merge them into any 'params' provided for this single_eval.
-            // However, single_eval doesn't take 'params' for model hyperparams,
-            // it uses the currently loaded model in the pipeline.
-            // So this key is more for cv_model_evaluation if it follows a search.
+            // For single_eval following nn_cv, 'use_best_params_from_step' isn't strictly needed
+            // as the pipeline's main adapter is updated. But if you want to allow
+            // overriding other single_eval params (like plot_level) for this specific step:
+            plot_level: 2, // Example override for this step in the preset
+            // params are still empty for single_eval
         },
     ],
     nested_cv: [
@@ -184,4 +180,37 @@ export const PARAM_INFO = {
         { key: 'n_iter', type: 'int', example: '10', description: '(RandomizedSearch) Number of parameter settings sampled.' },
     ],
     // Add sections for nested_grid_search specific params within 'params', etc.
+};
+
+// Helper for initializing method steps to ensure all fields exist for Formik
+export const initializeMethodStep = (methodConfig) => {
+    const baseDefaults = METHOD_DEFAULTS[methodConfig.method_name] || METHOD_DEFAULTS.single_train;
+    return {
+        method_name: methodConfig.method_name,
+        paramsEditorMode: 'json',
+        params: JSON.stringify(methodConfig.params || baseDefaults.params || {}, null, 2),
+        save_model: methodConfig.save_model !== undefined ? methodConfig.save_model : baseDefaults.save_model,
+        save_best_model: methodConfig.save_best_model !== undefined ? methodConfig.save_best_model : baseDefaults.save_best_model,
+        plot_level: methodConfig.plot_level !== undefined ? methodConfig.plot_level : baseDefaults.plot_level,
+        results_detail_level: methodConfig.results_detail_level !== undefined ? methodConfig.results_detail_level : baseDefaults.results_detail_level,
+        cv: methodConfig.cv !== undefined ? methodConfig.cv : baseDefaults.cv,
+        outer_cv: methodConfig.outer_cv !== undefined ? methodConfig.outer_cv : baseDefaults.outer_cv,
+        inner_cv: methodConfig.inner_cv !== undefined ? methodConfig.inner_cv : baseDefaults.inner_cv,
+        scoring: methodConfig.scoring !== undefined ? methodConfig.scoring : baseDefaults.scoring,
+        method_search_type: methodConfig.method_search_type !== undefined ? methodConfig.method_search_type : baseDefaults.method_search_type,
+        n_iter: methodConfig.n_iter !== undefined ? methodConfig.n_iter : baseDefaults.n_iter,
+        evaluate_on: methodConfig.evaluate_on !== undefined ? methodConfig.evaluate_on : baseDefaults.evaluate_on,
+        val_split_ratio: methodConfig.val_split_ratio !== undefined ? methodConfig.val_split_ratio : baseDefaults.val_split_ratio,
+        use_best_params_from_step: methodConfig.use_best_params_from_step !== undefined ? methodConfig.use_best_params_from_step : baseDefaults.use_best_params_from_step,
+        use_best_params_from_step_checkbox: methodConfig.use_best_params_from_step !== undefined, // For checkbox state
+    };
+};
+
+// Update PRESET_SEQUENCES to use this initializer
+export const PRESET_SEQUENCES_INITIALIZED = {
+    single_train_eval: PRESET_SEQUENCES.single_train_eval.map(initializeMethodStep),
+    nn_cv_eval: PRESET_SEQUENCES.nn_cv_eval.map(initializeMethodStep),
+    nested_cv: PRESET_SEQUENCES.nested_cv.map(initializeMethodStep),
+    cv_eval_fixed: PRESET_SEQUENCES.cv_eval_fixed.map(initializeMethodStep),
+    custom: PRESET_SEQUENCES.custom.map(initializeMethodStep),
 };

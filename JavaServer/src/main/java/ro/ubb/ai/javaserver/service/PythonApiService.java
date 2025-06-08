@@ -9,7 +9,8 @@ import java.util.Map;
 
 public interface PythonApiService {
     PythonExperimentRunResponseDTO startPythonExperiment(PythonRunExperimentRequestDTO requestDTO);
-    List<Map<String, Object>> listPythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId, String subPath);
+    List<Map<String, Object>> listPythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId, String path);
+    byte[] getPythonExperimentArtifactContent(String datasetName, String modelType, String experimentRunId, String artifactRelativePath);
 
     PythonPredictionRunResponseDTO runPredictionInPython(PythonPredictionRequestDTO requestDTO);
 

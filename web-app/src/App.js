@@ -4,11 +4,14 @@ import CssBaseline from '@mui/material/CssBaseline';
 import { AuthProvider } from './contexts/AuthContext';
 import { ThemeProvider, useThemeMode } from './contexts/ThemeContext';
 import AppRoutes from './routes/AppRoutes';
-import { createCustomTheme } from './theme'; // We'll define this
+import { createCustomTheme } from './theme';
+import useAuth from "./hooks/useAuth"; // We'll define this
 
 function ThemedApp() {
   const { mode } = useThemeMode();
-  const theme = React.useMemo(() => createCustomTheme(mode), [mode]);
+    const { user } = useAuth();
+    const theme = React.useMemo(() => createCustomTheme(mode, user?.role), [mode, user?.role]);
+
 
   return (
       <MuiThemeProvider theme={theme}>

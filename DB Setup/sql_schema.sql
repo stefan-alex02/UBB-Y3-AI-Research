@@ -15,7 +15,6 @@ CREATE TABLE Images (
     uploaded_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE CASCADE
 );
--- ... (indexes)
 
 -- Experiments Table
 CREATE TABLE Experiments (
@@ -31,17 +30,19 @@ CREATE TABLE Experiments (
     sequence_config JSONB,
     FOREIGN KEY (user_id) REFERENCES Users(id) ON DELETE SET NULL
 );
--- ... (indexes)
 
 -- Predictions Table
 CREATE TABLE Predictions (
-    id BIGSERIAL PRIMARY KEY, -- <--- CHANGE TO BIGSERIAL
-    image_id BIGINT NOT NULL, -- <--- Must match Image.id type
-    experiment_run_id_of_model VARCHAR(255) NOT NULL,
+    id BIGSERIAL PRIMARY KEY,
+    image_id BIGINT NOT NULL,
+    experiment_run_id_of_model VARCHAR(255) NULL,
     predicted_class VARCHAR(255) NOT NULL,
     confidence FLOAT NOT NULL,
     prediction_timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    UNIQUE (image_id, experiment_run_id_of_model),
+	
+	UNIQUE (image_id, experiment_run_id_of_model), -- This still works, NULLs are not equal.
     FOREIGN KEY (image_id) REFERENCES Images(id) ON DELETE CASCADE,
-    FOREIGN KEY (experiment_run_id_of_model) REFERENCES Experiments(experiment_run_id) ON DELETE CASCADE
+    FOREIGN KEY (experiment_run_id_of_model) REFERENCES Experiments(experiment_run_id) ON DELETE SET NULL
 );
+CREATE INDEX idx_predictions_image_id ON Predictions(image_id);
+CREATE INDEX idx_predictions_experiment_id ON Predictions(experiment_run_id_of_model);

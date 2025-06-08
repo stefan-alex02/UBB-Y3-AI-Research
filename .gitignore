@@ -25,3 +25,6 @@ venv.bak/
 __pycache__/
 *.py[cod]
 *$py.class$
+model_src/data/gcd-test-real-guidance.zip
+model_src/data/gcd-train-real-guidance.zip
+model_src/data/swimcat-real-guidance.zip

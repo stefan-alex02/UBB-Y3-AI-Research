@@ -51,7 +51,7 @@ const RegisterPage = () => {
                             password: values.password,
                             name: values.name,
                             role: values.isMeteorologist ? 'METEOROLOGIST' : 'NORMAL',
-                            ...(values.isMeteorologist && { meteorologistPasscode: values.meteorologistPasscode }),
+                            ...(values.isMeteorologist && { meteorologist_passcode: values.meteorologistPasscode }),
                         };
                         try {
                             await authService.register(registrationData);

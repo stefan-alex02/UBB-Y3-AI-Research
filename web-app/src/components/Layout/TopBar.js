@@ -1,56 +1,76 @@
 import React from 'react';
-import { AppBar, Toolbar, IconButton, Typography, Button, Box, Tooltip, Menu, MenuItem, Avatar, Select } from '@mui/material';
+import {
+    AppBar,
+    Avatar,
+    Box,
+    Button,
+    IconButton,
+    Menu,
+    MenuItem,
+    Select,
+    Toolbar,
+    Tooltip,
+    Typography,
+    useTheme
+} from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import Brightness4Icon from '@mui/icons-material/Brightness4'; // Dark mode
 import Brightness7Icon from '@mui/icons-material/Brightness7'; // Light mode
 import SettingsIcon from '@mui/icons-material/Settings'; // System mode (example)
-import AccountCircle from '@mui/icons-material/AccountCircle';
 import useAuth from '../../hooks/useAuth';
-import { useThemeMode } from '../../contexts/ThemeContext';
-import { useNavigate } from 'react-router-dom';
+import {useThemeMode} from '../../contexts/ThemeContext';
+import {useNavigate} from 'react-router-dom';
 
-
-const TopBar = ({ drawerWidth, handleDrawerToggle }) => {
+const TopBar = ({
+                    onMobileMenuClick,
+                    isMobile,
+                    // Props for AppBar styling based on permanent drawer state (only for non-mobile)
+                    isPermanentDrawerOpen,
+                    permanentDrawerWidth,
+                    miniDrawerWidth
+                }) => {
+    const theme = useTheme();
     const { user, logout } = useAuth();
     const { mode, setThemeMode } = useThemeMode();
     const navigate = useNavigate();
-
     const [anchorElUser, setAnchorElUser] = React.useState(null);
 
-    const handleOpenUserMenu = (event) => {
-        setAnchorElUser(event.currentTarget);
-    };
-    const handleCloseUserMenu = () => {
-        setAnchorElUser(null);
-    };
-    const handleLogout = () => {
-        logout();
-        handleCloseUserMenu();
-        navigate('/login');
-    };
-    const handleSettings = () => {
-        navigate('/settings');
-        handleCloseUserMenu();
-    }
+    const handleOpenUserMenu = (event) => setAnchorElUser(event.currentTarget);
+    const handleCloseUserMenu = () => setAnchorElUser(null);
+    const handleLogout = () => { logout(); handleCloseUserMenu(); navigate('/login'); };
+    const handleSettings = () => { navigate('/settings'); handleCloseUserMenu(); };
+
+    const appBarMarginLeft = !isMobile ? (isPermanentDrawerOpen ? permanentDrawerWidth : miniDrawerWidth) : 0;
+    const appBarWidth = !isMobile ? `calc(100% - ${appBarMarginLeft}px)` : '100%';
 
     return (
         <AppBar
             position="fixed"
             sx={{
-                width: { sm: `calc(100% - ${drawerWidth}px)` },
-                ml: { sm: `${drawerWidth}px` },
+                zIndex: (theme) => theme.zIndex.drawer + 1,
+                width: appBarWidth,
+                marginLeft: `${appBarMarginLeft}px`,
+                transition: theme.transitions.create(['width', 'margin'], {
+                    easing: theme.transitions.easing.sharp,
+                    duration: isPermanentDrawerOpen // Use current state for duration hint
+                        ? theme.transitions.duration.enteringScreen
+                        : theme.transitions.duration.leavingScreen,
+                }),
             }}
         >
             <Toolbar>
-                <IconButton
-                    color="inherit"
-                    aria-label="open drawer"
-                    edge="start"
-                    onClick={handleDrawerToggle}
-                    sx={{ mr: 2, display: { sm: 'none' } }}
-                >
-                    <MenuIcon />
-                </IconButton>
+                {/* Hamburger icon ONLY for mobile to toggle the temporary mobile drawer */}
+                {isMobile && (
+                    <IconButton
+                        color="inherit"
+                        aria-label="open drawer"
+                        edge="start"
+                        onClick={onMobileMenuClick}
+                        sx={{ mr: 2 }} // No display: {sm: 'none'} needed if parent check is isMobile
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                )}
                 <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
                     Cloud Classifier
                 </Typography>

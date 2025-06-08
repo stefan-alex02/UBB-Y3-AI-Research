@@ -1,3 +1,5 @@
+from datetime import datetime
+
 from pydantic import BaseModel, Field
 from typing import List, Dict, Any, Tuple, Union, Optional
 
@@ -6,6 +8,7 @@ from typing import List, Dict, Any, Tuple, Union, Optional
 class ExperimentMethodParams(BaseModel):
     method_name: str = Field(..., description="Name of the pipeline method, e.g., 'single_train'")
     params: Dict[str, Any] = Field(default_factory=dict, description="Parameters for the method's 'params' arg (e.g., Skorch HPs or GridSearchCV config)")
+    param_grid: Optional[Dict[str, Any]] = None
 
     save_model: Optional[bool] = None
     save_best_model: Optional[bool] = None
@@ -34,6 +37,8 @@ class RunExperimentRequest(BaseModel): # This is what Python's /experiments/run 
     img_size_w: Optional[int] = None
     offline_augmentation: Optional[bool] = False
     augmentation_strategy_override: Optional[str] = None
+    test_split_ratio_if_flat: Optional[float] = None
+    force_flat_for_fixed_cv: Optional[bool] = False
     # save_model_default: Optional[bool] = None # If you removed this global flag
 
 
@@ -46,11 +51,11 @@ class ExperimentRunResponse(BaseModel):
 class ArtifactNode(BaseModel):
     name: str
     path: str # Full path relative to experiment_run_id folder for files, or relative to prefix for folders
-    type: str # 'file' or 'folder'
-    children: Optional[List['ArtifactNode']] = None # For folders
-
-
-ArtifactNode.model_rebuild() # For self-referencing Pydantic model
+    type: str # 'file' or 'folder' or 'log', 'json', 'csv', 'png', 'pt' etc.
+    children: Optional[List['ArtifactNode']] = None
+    size: Optional[int] = None # Optional: file size in bytes
+    last_modified: Optional[datetime] = None # Optional: last modified timestamp
+ArtifactNode.model_rebuild()
 
 
 # --- Prediction Related ---

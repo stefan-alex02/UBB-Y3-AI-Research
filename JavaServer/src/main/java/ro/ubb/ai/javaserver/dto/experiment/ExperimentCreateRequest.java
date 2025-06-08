@@ -30,5 +30,7 @@ public class ExperimentCreateRequest {
     // private Boolean saveModelDefault; // Removed from React UI, can be removed here too if Python executor handles it
     private Boolean offlineAugmentation;
     private String augmentationStrategyOverride;
+    private Float testSplitRatioIfFlat;
+    private Boolean forceFlatForFixedCv;
 }
 

@@ -64,7 +64,8 @@ const ParamsInfoModal = ({ open, onClose, currentMethodName, currentModelType })
                             {relevantParams.map(param => (
                                 <ListItem key={param.key} divider>
                                     <ListItemText
-                                        primary={<><Chip label={param.key} size="small" sx={{mr:1}} /> <Typography component="span" variant="caption" color="text.secondary">({param.type})</Typography></>}
+                                        primary={<><Chip label={param.key} size="small" sx={{mr:1}} clickable={false} onClick={() => {}} />
+                                            <Typography component="span" variant="caption" color="text.secondary">({param.type})</Typography></>}
                                         secondary={<>Example: <code>{param.example}</code> <br/> {param.description}</>}
                                     />
                                 </ListItem>

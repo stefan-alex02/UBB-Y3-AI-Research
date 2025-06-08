@@ -12,12 +12,14 @@ import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.util.UriUtils;
 import ro.ubb.ai.javaserver.dto.experiment.PythonExperimentRunResponseDTO;
 import ro.ubb.ai.javaserver.dto.experiment.PythonRunExperimentRequestDTO;
 import ro.ubb.ai.javaserver.dto.prediction.PythonPredictionRequestDTO;
 import ro.ubb.ai.javaserver.dto.prediction.PythonPredictionRunResponseDTO;
 import ro.ubb.ai.javaserver.exception.ResourceNotFoundException;
 
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 
@@ -66,24 +68,53 @@ public class PythonApiServiceImpl implements PythonApiService {
     }
 
     @Override
-    public List<Map<String, Object>> listPythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId, String subPath) {
-        // subPath is relative to the experiment_run_id folder. Example: "single_train_0/plots" or "" for root
-        String url = String.format("%s/experiments/%s/%s/%s/artifacts", pythonApiBaseUrl, datasetName, modelType, experimentRunId);
-        if (subPath != null && !subPath.isEmpty()) {
-            url += "?prefix=" + subPath;
+    public List<Map<String, Object>> listPythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId, String path) {
+        String url = String.format("%s/experiments/%s/%s/%s/artifacts/list", pythonApiBaseUrl, datasetName, modelType, experimentRunId);
+        if (path != null && !path.isEmpty()) {
+            url += "?path=" + UriUtils.encodeQueryParam(path, StandardCharsets.UTF_8); // URL encode path
         }
-        log.info("Listing artifacts from Python for experiment: {} path: {}", experimentRunId, subPath);
+        log.info("Requesting artifact list from Python: {}", url);
         try {
             ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 return objectMapper.readValue(response.getBody(), new TypeReference<List<Map<String, Object>>>() {});
             } else {
                 log.error("Failed to list artifacts from Python. Status: {}, Body: {}", response.getStatusCode(), response.getBody());
-                throw new RuntimeException("Failed to list artifacts from Python: " + response.getBody());
+                throw new RuntimeException("Python service error listing artifacts: " + response.getBody());
             }
+        } catch (HttpClientErrorException e) {
+            log.error("HttpClientError listing artifacts from Python ({}): {} - {}", url, e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("Failed to list artifacts via Python: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
             log.error("Error listing artifacts from Python for experiment {}: {}", experimentRunId, e.getMessage(), e);
-            throw new RuntimeException("Error listing artifacts from Python.", e);
+            throw new RuntimeException("Error communicating with Python for artifact listing.", e);
+        }
+    }
+
+    @Override
+    public byte[] getPythonExperimentArtifactContent(String datasetName, String modelType, String experimentRunId, String artifactRelativePath) {
+        // artifactRelativePath already includes subfolders like "method_0_id/plots/myplot.png"
+        String encodedArtifactPath = UriUtils.encodePath(artifactRelativePath, StandardCharsets.UTF_8);
+        String url = String.format("%s/experiments/%s/%s/%s/artifacts/content/%s",
+                pythonApiBaseUrl, datasetName, modelType, experimentRunId, encodedArtifactPath);
+        log.info("Requesting artifact content from Python: {}", url);
+        try {
+            ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, null, byte[].class);
+            if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+                return response.getBody();
+            } else {
+                log.error("Failed to get artifact content from Python. Status: {}, URL: {}", response.getStatusCode(), url);
+                throw new RuntimeException("Python service error getting artifact content: " + response.getStatusCode());
+            }
+        } catch (HttpClientErrorException e) {
+            log.error("HttpClientError getting artifact content from Python ({}): {} - {}", url, e.getStatusCode(), e.getResponseBodyAsString());
+            if (e.getStatusCode() == HttpStatus.NOT_FOUND) {
+                throw new ResourceNotFoundException("Artifact content not found via Python: " + artifactRelativePath);
+            }
+            throw new RuntimeException("Client error getting artifact content via Python: " + e.getResponseBodyAsString(), e);
+        } catch (Exception e) {
+            log.error("Error getting artifact content from Python ({}): {}", url, e.getMessage(), e);
+            throw new RuntimeException("Error communicating with Python for artifact content.", e);
         }
     }
 

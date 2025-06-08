@@ -5,11 +5,11 @@ import java.time.OffsetDateTime;
 
 @Data
 public class PredictionDTO {
-    private Long id;
+    private Long id; // Assuming Integer PK
     private Long imageId;
-    private String modelExperimentRunId; // ID of the experiment that produced the model
+    private String modelExperimentRunId; // Can be null
+    private String modelExperimentName; // New field for display
     private String predictedClass;
     private Float confidence;
     private OffsetDateTime predictionTimestamp;
-    // You might add fields for artifact paths (LIME, prob plot) to be constructed on frontend
 }

@@ -36,26 +36,29 @@ const deleteExperiment = async (experimentRunId) => {
     await axios.delete(`${API_URL}/${experimentRunId}`);
 };
 
-// For fetching artifacts (JSON, text logs)
-const getExperimentArtifactContent = async (datasetName, modelType, experimentRunId, artifactPath) => {
-    // The actual URL to Python's artifact endpoint, possibly proxied by Java or direct
-    // This might be better handled by a generic artifact service if paths are consistent
-    const artifactUrl = `${API_BASE_URL}/python-proxy-artifacts/experiments/${datasetName}/${modelType}/${experimentRunId}/${artifactPath}`;
-    const response = await axios.get(artifactUrl, { responseType: 'blob' }); // Get as blob for images, or text for json/log
-
-    const contentType = response.headers['content-type'];
-    if (contentType && (contentType.includes('application/json') || contentType.includes('text/plain'))) {
-        return await response.data.text(); // For JSON or text
-    }
-    return response.data; // For images, this will be a Blob
+// This now calls the Java proxy for listing artifacts
+const listExperimentArtifacts = async (experimentRunId, subPath = '') => {
+    const params = subPath ? { path: subPath } : {}; // Java endpoint expects 'path' query param
+    const response = await axios.get(`${API_URL}/${experimentRunId}/artifacts/list`, { params });
+    return response.data; // Expects List<ArtifactNode> (Map<String,Object> from Java will be parsed by axios)
 };
 
-// For getting artifact list
-const listExperimentArtifacts = async (datasetName, modelType, experimentRunId, subPath = '') => {
-    const params = subPath ? { prefix: subPath } : {};
-    const response = await axios.get(`${API_URL}/python-proxy-artifacts/experiments/${datasetName}/${modelType}/${experimentRunId}/list`, { params });
-    return response.data; // Expects List<ArtifactNode>
-}
+// This now calls the Java proxy for artifact content
+const getExperimentArtifactContent = async (experimentRunId, artifactRelativePath) => {
+    // artifactRelativePath is like "method_0/results.json" or "executor_log.log"
+    // The Java endpoint /api/experiments/{id}/artifacts/content/** will handle the full path
+    const artifactUrl = `${API_URL}/${experimentRunId}/artifacts/content/${artifactRelativePath}`;
+
+    // Determine responseType based on expected content (could be passed in or inferred)
+    let responseType = 'blob'; // Default for images/binary
+    const ext = artifactRelativePath.split('.').pop()?.toLowerCase();
+    if (['json', 'log', 'txt', 'csv'].includes(ext)) {
+        responseType = 'text';
+    }
+
+    const response = await axios.get(artifactUrl, { responseType: responseType });
+    return response.data; // Blob for images, string for text/json/csv
+};
 
 
 const experimentService = {

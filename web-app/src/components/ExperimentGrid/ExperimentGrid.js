@@ -14,7 +14,7 @@ const ExperimentGrid = ({ experiments, onDelete }) => {
     return (
         <Grid container spacing={3}>
             {experiments.map((exp) => (
-                <Grid item key={exp.experimentRunId} xs={12} sm={6} md={4}>
+                <Grid item key={exp.experiment_run_id} xs={12} sm={6} md={4}>
                     <ExperimentCard experiment={exp} onDelete={onDelete} />
                 </Grid>
             ))}

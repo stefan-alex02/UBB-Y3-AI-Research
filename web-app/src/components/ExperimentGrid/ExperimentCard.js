@@ -79,18 +79,29 @@ const ExperimentCard = ({ experiment, onDelete }) => {
                         label={`Model: ${experiment.model_type || 'N/A'}`}
                         size="small"
                         sx={{ mb: 1, mr: 1 }}
+                        clickable={false}
+                        onClick={() => {}}
                     />
                     <Chip
                         icon={<DatasetIcon />}
                         label={`Dataset: ${experiment.dataset_name || 'N/A'}`}
                         size="small"
                         sx={{ mb: 1 }}
+                        clickable={false}
+                        onClick={() => {}}
                     />
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1, wordBreak: 'break-all' }}>
                         Run ID: <Typography component="span" variant="caption" sx={{ fontFamily: 'monospace' }}>{experiment.experiment_run_id || 'N/A'}</Typography>
                     </Typography>
-                    <Typography variant="body2" color="text.secondary">
-                        Status: <Chip label={experiment.status || 'N/A'} color={getStatusColor(experiment.status)} size="small" />
+                    <Typography component="div" variant="body2" color="text.secondary"> {/* Ensure parent is not unintentionally clickable */}
+                        Status:{" "}
+                        <Chip
+                            label={experiment.status || 'N/A'}
+                            color={getStatusColor(experiment.status)}
+                            size="small"
+                            clickable={false}
+                            onClick={() => {}}
+                        />
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                         Started: {formatDate(experiment.start_time)} {/* Use snake_case & formatDate */}

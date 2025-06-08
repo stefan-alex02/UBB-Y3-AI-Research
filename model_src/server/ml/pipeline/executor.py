@@ -15,6 +15,16 @@ from ..logger_utils import setup_logger, logger  # Import the logger instance
 from ...persistence import ArtifactRepository, LocalFileSystemRepository, MinIORepository
 
 
+# Define a custom exception for executor-level failures if you want more specific handling
+class ExecutorRunFailedError(RuntimeError):
+    """Custom exception for when one or more methods in the executor fail."""
+    def __init__(self, message, failed_method_id=None, original_exception=None, results_so_far=None):
+        super().__init__(message)
+        self.failed_method_id = failed_method_id
+        self.original_exception = original_exception
+        self.results_so_far = results_so_far
+
+
 class PipelineExecutor:
     def __init__(self,
                  dataset_path: Union[str, Path],
@@ -197,6 +207,7 @@ class PipelineExecutor:
         self.all_results: dict = {'executor_run_id': self.conceptual_experiment_run_name}
         logger.info(f"Starting execution of methods for Executor Run ID: {self.conceptual_experiment_run_name}")
         start_time_total = time.time()
+        execution_successful = True  # Flag to track overall success
 
         for i, (method_name, params) in enumerate(self.methods_to_run):
             method_operation_id = f"{method_name}_{i}"
@@ -210,30 +221,42 @@ class PipelineExecutor:
                 if not isinstance(prev_step_index, int) or prev_step_index < 0 or prev_step_index >= i:
                     err_msg = f"Invalid prev_step_index '{prev_step_index}' for '{method_name}'. Must be 0 <= index < current_step_index ({i})."
                     logger.error(err_msg)
-                    self.all_results[method_operation_id] = {"error": err_msg}
-                    break
+                    self.all_results[method_operation_id] = {"error": err_msg, "status": "FAILED_SETUP"}
+                    execution_successful = False
+                    # Instead of break, raise an exception that _execute_pipeline_task can catch
+                    raise ExecutorRunFailedError(
+                        message=err_msg,
+                        failed_method_id=method_operation_id,
+                        results_so_far=self.all_results
+                    )
+                    # break # Old behavior
 
                 prev_method_op_id_key = f"{self.methods_to_run[prev_step_index][0]}_{prev_step_index}"
-                logger.info(
-                    f"Injecting 'best_params' from step {prev_step_index} (Op ID: {prev_method_op_id_key}) into params for '{method_name}'.")
                 prev_result = self.all_results.get(prev_method_op_id_key)
 
                 if prev_result and isinstance(prev_result, dict) and 'best_params' in prev_result and isinstance(
                         prev_result['best_params'], dict):
-                    best_params_from_prev = prev_result['best_params']
-                    logger.info(f"  Injecting best params: {best_params_from_prev}")
-                    final_merged_params_for_method = best_params_from_prev.copy()
+                    # ... (logic for injecting best_params - remains the same) ...
+                    logger.info(f"  Injecting best params from {prev_method_op_id_key}: {prev_result['best_params']}")
+                    final_merged_params_for_method = prev_result['best_params'].copy()
                     if 'params' in current_params and isinstance(current_params['params'], dict):
                         final_merged_params_for_method.update(current_params['params'])
                     current_params['params'] = final_merged_params_for_method
                 else:
-                    err_msg = f"No 'best_params' dict found in results of step {prev_step_index} (Op ID: {prev_method_op_id_key})."
+                    err_msg = f"No 'best_params' dict found in results of step {prev_step_index} (Op ID: {prev_method_op_id_key}). Cannot proceed with '{method_name}'."
                     logger.error(err_msg)
-                    self.all_results[method_operation_id] = {"error": err_msg}
-                    break
+                    self.all_results[method_operation_id] = {"error": err_msg, "status": "FAILED_SETUP"}
+                    execution_successful = False
+                    raise ExecutorRunFailedError(
+                        message=err_msg,
+                        failed_method_id=method_operation_id,
+                        results_so_far=self.all_results
+                    )
+                    # break # Old behavior
 
             logger.debug(f"Running method '{method_name}' with effective parameters: {current_params}")
             start_time_method = time.time()
+            original_exception = None
             try:
                 pipeline_method = getattr(self.pipeline, method_name)
                 result = pipeline_method(**current_params)
@@ -241,32 +264,64 @@ class PipelineExecutor:
                 method_duration = time.time() - start_time_method
                 logger.info(
                     f"--- Method {method_name} (Op ID: {method_operation_id}) completed successfully in {method_duration:.2f}s ---")
-            except (ValueError, TypeError, AttributeError) as config_err:  # AttributeError also often config-related
+            except (ValueError, TypeError, AttributeError) as config_err:
                 logger.error(
                     f"!!! Configuration/Usage error in '{method_name}' (Op ID: {method_operation_id}): {config_err}",
                     exc_info=True)
-                self.all_results[method_operation_id] = {"error": str(config_err), "traceback": traceback.format_exc()}
-                break
+                self.all_results[method_operation_id] = {"error": str(config_err), "traceback": traceback.format_exc(),
+                                                         "status": "FAILED"}
+                execution_successful = False
+                original_exception = config_err
+                break  # Stop further methods in this run
             except FileNotFoundError as fnf_err:
                 logger.error(f"!!! File not found during '{method_name}' (Op ID: {method_operation_id}): {fnf_err}",
                              exc_info=True)
-                self.all_results[method_operation_id] = {"error": str(fnf_err), "traceback": traceback.format_exc()}
+                self.all_results[method_operation_id] = {"error": str(fnf_err), "traceback": traceback.format_exc(),
+                                                         "status": "FAILED"}
+                execution_successful = False
+                original_exception = fnf_err
                 break
-            except RuntimeError as rt_err:
+            except RuntimeError as rt_err:  # Includes Skorch/PyTorch runtime errors
                 logger.error(f"!!! Runtime error during '{method_name}' (Op ID: {method_operation_id}): {rt_err}",
                              exc_info=True)
-                self.all_results[method_operation_id] = {"error": str(rt_err), "traceback": traceback.format_exc()}
+                self.all_results[method_operation_id] = {"error": str(rt_err), "traceback": traceback.format_exc(),
+                                                         "status": "FAILED"}
+                execution_successful = False
+                original_exception = rt_err
                 break
-            except Exception as e:
+            except Exception as e:  # Catch-all for unexpected errors
                 logger.critical(
                     f"!!! Unexpected critical error during '{method_name}' (Op ID: {method_operation_id}): {e}",
                     exc_info=True)
-                self.all_results[method_operation_id] = {"error": str(e), "traceback": traceback.format_exc()}
+                self.all_results[method_operation_id] = {"error": str(e), "traceback": traceback.format_exc(),
+                                                         "status": "FAILED_UNEXPECTED"}
+                execution_successful = False
+                original_exception = e
                 break
+            # If any of the above except blocks were entered and 'break' was called,
+            # we need to propagate this failure out of the run() method.
 
         total_duration = time.time() - start_time_total
-        logger.info(
-            f"Pipeline execution finished in {total_duration:.2f}s for Executor Run ID: {self.conceptual_experiment_run_name}.")
+
+        if not execution_successful:
+            # An error occurred in one of the methods and 'break' was hit.
+            # The last method_operation_id that failed will have its error stored.
+            failed_method_id_for_exception = method_operation_id  # The one that caused the break
+            error_message_for_exception = self.all_results[failed_method_id_for_exception].get('error',
+                                                                                               'Unknown error in method execution')
+            logger.error(
+                f"Pipeline execution for Run ID {self.conceptual_experiment_run_name} HALTED due to failure in method '{failed_method_id_for_exception}'. Total duration: {total_duration:.2f}s."
+            )
+            # Re-raise a specific exception that _execute_pipeline_task can catch
+            raise ExecutorRunFailedError(
+                message=f"Execution failed at method '{failed_method_id_for_exception}': {error_message_for_exception}",
+                failed_method_id=failed_method_id_for_exception,
+                original_exception=original_exception,  # The exception caught in the loop
+                results_so_far=self.all_results
+            )
+        else:
+            logger.info(
+                f"Pipeline execution finished successfully in {total_duration:.2f}s for Executor Run ID: {self.conceptual_experiment_run_name}.")
 
         if self.save_main_log_file and \
                 self.pipeline.artifact_repo and \

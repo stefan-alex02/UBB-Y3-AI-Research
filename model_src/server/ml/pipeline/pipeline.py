@@ -854,7 +854,9 @@ class ClassificationPipeline:
 
                         arch_config_to_save = {
                             'model_type': self.model_type.value,
-                            'num_classes': self.dataset_handler.num_classes
+                            'num_classes': self.dataset_handler.num_classes,
+                            'img_size_h': self.dataset_handler.img_size[0],
+                            'img_size_w': self.dataset_handler.img_size[1],
                             # Add all 'module__' parameters from best_estimator_refit.get_params()
                             # These were the ones that resulted in the best model.
                         }
@@ -1809,7 +1811,9 @@ class ClassificationPipeline:
 
                 arch_config = {
                     'model_type': self.model_type.value,  # Store the enum value
-                    'num_classes': self.dataset_handler.num_classes
+                    'num_classes': self.dataset_handler.num_classes,
+                    'img_size_h': self.dataset_handler.img_size[0],  # Get from dataset_handler
+                    'img_size_w': self.dataset_handler.img_size[1],  # Get from dataset_handler
                 }
                 for key, value in effective_adapter_config.items():
                     if key.startswith('module__'):
@@ -2279,6 +2283,9 @@ class ClassificationPipeline:
             # Re-initialize SkorchModelAdapter with loaded architecture
             loaded_model_type_str = arch_config_dict.pop('model_type')
             loaded_num_classes = arch_config_dict.pop('num_classes')
+            loaded_img_size_h = arch_config_dict.pop('img_size_h', None)
+            loaded_img_size_w = arch_config_dict.pop('img_size_w', None)
+
             try:
                 loaded_model_type_enum = ModelType(loaded_model_type_str)
             except ValueError:
@@ -2300,6 +2307,31 @@ class ClassificationPipeline:
             current_pipeline_defaults['valid_transform'] = self.dataset_handler.get_eval_transform()
             # Ensure 'classes' is set for skorch compatibility during prediction
             current_pipeline_defaults['classes'] = np.arange(loaded_num_classes)
+
+            # === RECONFIGURE ImageDatasetHandler and Transforms ===
+            if loaded_img_size_h is not None and loaded_img_size_w is not None:
+                new_img_size = (loaded_img_size_h, loaded_img_size_w)
+                if new_img_size != self.dataset_handler.img_size:
+                    logger.info(f"Reconfiguring ImageDatasetHandler for loaded model's image size: {new_img_size}")
+                    # Re-initialize or update the dataset_handler with the new image size.
+                    # This might involve creating a new ImageDatasetHandler instance or updating its properties
+                    # and then re-getting the transforms.
+                    self.dataset_handler.img_size = new_img_size  # Directly update if mutable
+                    # Crucially, update the transforms in the model_adapter_config that will be used
+                    # to re-initialize the SkorchModelAdapter
+                    current_pipeline_defaults[
+                        'train_transform'] = self.dataset_handler.get_train_transform()  # Re-get with new size
+                    current_pipeline_defaults[
+                        'valid_transform'] = self.dataset_handler.get_eval_transform()  # Re-get with new size
+                    # Also update the pipeline's own model_adapter_config if it's used as a base elsewhere
+                    self.model_adapter_config['train_transform'] = current_pipeline_defaults['train_transform']
+                    self.model_adapter_config['valid_transform'] = current_pipeline_defaults['valid_transform']
+                    self.model_adapter_config['img_size'] = new_img_size  # Store it in pipeline's config too
+                else:
+                    logger.info(f"Loaded model's image size {new_img_size} matches current pipeline config.")
+            else:
+                logger.warning(
+                    "Image size not found in loaded arch_config. Using current pipeline default image size for transforms.")
 
             logger.info(
                 f"Op {run_id_for_log}: Re-initializing SkorchModelAdapter for {LoadedModelClass.__name__} with {loaded_num_classes} classes.")
@@ -2349,7 +2381,7 @@ class ClassificationPipeline:
 
                 self.model_adapter.module_.load_state_dict(state_dict)
                 self.model_adapter.module_.eval()
-                logger.info(f"Op {run_id_for_log}: Model state_dict applied successfully from: {model_path_or_key}")
+                logger.info(f"Op {run_id_for_log}: Model state_dict applied successfully from: {model_path_or_key}. Model image size context: {self.dataset_handler.img_size}")
             except Exception as e_apply:
                 logger.error(f"Op {run_id_for_log}: Failed to apply state_dict: {e_apply}", exc_info=True)
                 raise RuntimeError(f"Error applying state_dict from '{model_path_or_key}'.") from e_apply

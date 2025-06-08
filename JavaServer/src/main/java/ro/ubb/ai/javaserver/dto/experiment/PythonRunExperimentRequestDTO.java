@@ -19,4 +19,6 @@ public class PythonRunExperimentRequestDTO {
     private Boolean saveModelDefault;
     private Boolean offlineAugmentation;
     private String augmentationStrategyOverride;
+    private Float testSplitRatioIfFlat;
+    private Boolean forceFlatForFixedCv;
 }

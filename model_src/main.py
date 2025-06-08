@@ -250,7 +250,7 @@ if __name__ == "__main__":
              'val_split_ratio': effective_val_split_ratio,
              'cv': cv_folds,
              'evaluate_on': 'full', # Explicitly state (or rely on default)
-             'results_detail_level': 3,
+             'results_detail_level': 2,
         })
     ]
 

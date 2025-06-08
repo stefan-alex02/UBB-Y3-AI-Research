@@ -89,7 +89,6 @@ public class PredictionServiceImpl implements PredictionService {
                 .ifPresent(existingPrediction -> {
                     log.info("Deleting existing prediction for image {} with model from experiment {}", image.getId(), modelExperiment.getExperimentRunId());
                     predictionRepository.delete(existingPrediction);
-                    // TODO: Optionally call Python API to delete old prediction artifacts from MinIO
                 });
 
         Prediction newPrediction = new Prediction();
@@ -99,7 +98,6 @@ public class PredictionServiceImpl implements PredictionService {
         newPrediction.setConfidence(pyPredResult.getConfidence());
 
         Prediction savedPrediction = predictionRepository.save(newPrediction);
-        log.info("Prediction saved for imageId: {}, model from experiment: {}", image.getId(), modelExperiment.getExperimentRunId());
         return convertToDTO(savedPrediction);
     }
 
@@ -155,7 +153,14 @@ public class PredictionServiceImpl implements PredictionService {
         PredictionDTO dto = new PredictionDTO();
         dto.setId(prediction.getId());
         dto.setImageId(prediction.getImage().getId());
-        dto.setModelExperimentRunId(prediction.getModelExperiment().getExperimentRunId());
+        if (prediction.getModelExperiment() != null) { // Handle null modelExperiment
+            dto.setModelExperimentRunId(prediction.getModelExperiment().getExperimentRunId());
+            // Optionally add modelExperimentName if needed for display
+            dto.setModelExperimentName(prediction.getModelExperiment().getName());
+        } else {
+            dto.setModelExperimentRunId(null); // Or a placeholder like "UNKNOWN_EXPERIMENT"
+            dto.setModelExperimentName("Unknown/Deleted Experiment");
+        }
         dto.setPredictedClass(prediction.getPredictedClass());
         dto.setConfidence(prediction.getConfidence());
         dto.setPredictionTimestamp(prediction.getPredictionTimestamp());
