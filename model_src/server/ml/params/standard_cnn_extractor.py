@@ -28,6 +28,12 @@ standard_cnn_fixed_params = {
     # --- Early Stopping ---
     'callbacks__default_early_stopping__patience': 15,  # Stop if no improvement for 10 epochs (after LR drops)
 
+    # --- CutMix Parameters ---
+    'cutmix_alpha': 1.0,
+    'cutmix_probability': 0.9,  # for CCSN
+    # 'cutmix_probability': 0.3, # for Swimcat
+    # 'cutmix_probability': 0.5, # for GCD
+
     # --- Label Smoothing ---
     'criterion__label_smoothing': 0.1,  # Can help prevent overconfidence
 
