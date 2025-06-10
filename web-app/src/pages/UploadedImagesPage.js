@@ -84,8 +84,8 @@ const UploadedImagesPage = () => {
         <Container maxWidth="lg">
             <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
                 <Typography variant="h4" component="h1">Your Uploaded Images</Typography>
-                <Box>
-                    <FileUploadButton onUploadSuccess={handleImageUploadSuccess} sx={{mr:2}} />
+                <Box sx={{ '& > *:not(:last-child)': { mr: 1 } }}>
+                    <FileUploadButton onUploadSuccess={handleImageUploadSuccess} />
                     <Button
                         variant="contained"
                         color="secondary"

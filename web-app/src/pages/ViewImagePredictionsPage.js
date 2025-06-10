@@ -466,7 +466,7 @@ const ViewImagePredictionsPage = () => {
                             <Typography variant="body2" color="text.secondary" sx={{textAlign:'center'}}>
                                 Uploaded: {formatDateSafe(imageDetails.uploaded_at)}
                             </Typography>
-                            <Button fullWidth variant="contained" startIcon={<AddCircleOutlineIcon />} onClick={handleNewPredictionClick} sx={{ mt: 2 }}>
+                            <Button color="secondary" fullWidth variant="contained" startIcon={<AddCircleOutlineIcon />} onClick={handleNewPredictionClick} sx={{ mt: 2 }}>
                                 New Prediction
                             </Button>
                         </Paper>

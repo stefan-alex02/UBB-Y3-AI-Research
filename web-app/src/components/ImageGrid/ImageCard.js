@@ -84,7 +84,19 @@ const ImageCard = ({ image, onDelete, selectedImageIds, onImageSelect }) => {
                 ) : (
                     <>
                         <FormControlLabel
-                            sx={{ position: 'absolute', zIndex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius:1, p:0.5 }}
+                            sx={{
+                                position: 'absolute',
+                                zIndex: 1,
+                                backgroundColor: 'rgba(0,0,0,0.3)',
+                                borderRadius: 1,
+                                p: 0.2,
+                                margin: 0,
+                                '.MuiFormControlLabel-label': { display: 'none' },
+                                width: 'fit-content',
+                                display: 'flex',
+                                justifyContent: 'center',
+                                alignItems: 'center'
+                            }}
                             control={
                                 <Checkbox
                                     size="small"

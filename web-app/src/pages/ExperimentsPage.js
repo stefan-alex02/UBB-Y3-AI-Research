@@ -228,7 +228,7 @@ const ExperimentsPage = () => {
                         <Button variant="outlined" startIcon={<FilterListIcon />} onClick={() => setShowFilters(!showFilters)} sx={{ ml: 2, mr: 2 }}>
                             {showFilters ? 'Hide Filters' : 'Show Filters'}
                         </Button>
-                        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/experiments/create')}>New Experiment</Button>
+                        <Button color="secondary" variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/experiments/create')}>New Experiment</Button>
                     </Box>
                 </Box>
 
@@ -236,10 +236,10 @@ const ExperimentsPage = () => {
                     <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
                         <Grid container spacing={2} alignItems="center">
                             <Grid item xs={12} sm={6} md={4} lg={3}>
-                                <TextField fullWidth label="Experiment Name Contains" name="nameContains" value={filters.nameContains} onChange={handleFilterChange} variant="outlined" size="small"/>
+                                <TextField fullWidth label="Experiment Name" name="nameContains" value={filters.nameContains} onChange={handleFilterChange} variant="outlined" size="small"/>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4} lg={2}>
-                                <FormControl fullWidth variant="outlined" size="small">
+                            <Grid item xs={12} sm={6} md={4} lg={3}>
+                                <FormControl fullWidth variant="outlined" size="small" sx={{ minWidth: '130px' }}>
                                     <InputLabel>Model Type</InputLabel>
                                     <Select name="modelType" value={filters.modelType} label="Model Type" onChange={handleFilterChange}>
                                         <MenuItem value=""><em>Any</em></MenuItem>
@@ -247,8 +247,8 @@ const ExperimentsPage = () => {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4} lg={2}>
-                                <FormControl fullWidth variant="outlined" size="small">
+                            <Grid item xs={12} sm={6} md={4} lg={3}>
+                                <FormControl fullWidth variant="outlined" size="small" sx={{ minWidth: '130px' }}>
                                     <InputLabel>Dataset Name</InputLabel>
                                     <Select name="datasetName" value={filters.datasetName} label="Dataset Name" onChange={handleFilterChange}>
                                         <MenuItem value=""><em>Any</em></MenuItem>
@@ -256,13 +256,18 @@ const ExperimentsPage = () => {
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4} lg={2}>
-                                <FormControl fullWidth variant="outlined" size="small">
+                            <Grid item xs={12} sm={6} md={4} lg={3}>
+                                <FormControl fullWidth variant="outlined" size="small" sx={{ minWidth: '130px' }}>
                                     <InputLabel>Status</InputLabel>
-                                    <Select name="status" value={filters.status} label="Status" onChange={handleFilterChange}> <MenuItem value=""><em>Any</em></MenuItem> {/* ... statuses ... */} </Select>
+                                    <Select name="status" value={filters.status} label="Status" onChange={handleFilterChange}> <MenuItem value=""><em>Any</em></MenuItem>
+                                        <MenuItem value="PENDING">Pending</MenuItem>
+                                        <MenuItem value="RUNNING">Running</MenuItem>
+                                        <MenuItem value="COMPLETED">Completed</MenuItem>
+                                        <MenuItem value="FAILED">Failed</MenuItem>
+                                    </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={4} lg={2}>
+                            <Grid item xs={12} sm={6} md={4} lg={3}>
                                 <FormControl fullWidth variant="outlined" size="small">
                                     <InputLabel>Model Saved?</InputLabel>
                                     <Select name="hasModelSaved" value={filters.hasModelSaved === null ? "any" : String(filters.hasModelSaved)} label="Model Saved?" onChange={handleHasModelSavedChange}>
