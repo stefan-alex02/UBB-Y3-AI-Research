@@ -13,15 +13,11 @@ public interface PythonApiService {
     byte[] getPythonExperimentArtifactContent(String datasetName, String modelType, String experimentRunId, String artifactRelativePath);
 
     PythonPredictionRunResponseDTO runPredictionInPython(PythonPredictionRequestDTO requestDTO);
+    List<Map<String, Object>> listPythonPredictionArtifacts(String username, String imageId, String experimentIdOfModel, String path);
+    byte[] getPythonPredictionArtifactContent(String username, String imageId, String experimentIdOfModel, String artifactRelativePath);
 
     void uploadImageToPython(String username, String imageId, String imageFormat, MultipartFile file);
     byte[] downloadImageFromPython(String username, String imageFilenameWithExt);
-
-
-    // Methods for fetching artifacts (Python will stream bytes)
-    // You'd need similar for predictions:
-    // List<Map<String, Object>> listPythonPredictionArtifacts(String username, String imageId, String experimentIdOfModel, String subPath);
-    // byte[] getPythonArtifact(String fullArtifactPath); // A generic getter, path constructed by caller
 
     // Methods for deleting artifacts from Python (MinIO)
     // void deletePythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId);

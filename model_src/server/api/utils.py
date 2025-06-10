@@ -38,6 +38,7 @@ class RunExperimentRequest(BaseModel): # This is what Python's /experiments/run 
     offline_augmentation: Optional[bool] = False
     augmentation_strategy_override: Optional[str] = None
     test_split_ratio_if_flat: Optional[float] = None
+    random_seed: Optional[int] = None
     force_flat_for_fixed_cv: Optional[bool] = False
     # save_model_default: Optional[bool] = None # If you removed this global flag
 

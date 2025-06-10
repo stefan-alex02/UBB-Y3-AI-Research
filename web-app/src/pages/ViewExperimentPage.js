@@ -35,7 +35,7 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import experimentService from '../services/experimentService';
 import ArtifactViewer from '../components/ArtifactViewer/ArtifactViewer'; // We'll update this for CSV sort
 import LoadingSpinner from '../components/LoadingSpinner';
-import ImageFullscreenModal from '../components/ImageFullscreenModal';
+import ImageFullscreenModal from '../components/Modals/ImageFullscreenModal';
 import JsonViewer from '../components/ArtifactViewer/JsonViewer'; // Assuming JsonViewer is separate
 
 const getArtifactType = (filename) => {

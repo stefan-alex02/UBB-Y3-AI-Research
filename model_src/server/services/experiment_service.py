@@ -9,6 +9,7 @@ from fastapi import Request as FastAPIRequest, BackgroundTasks, HTTPException
 
 # Assuming these are your Pydantic models from app/api/utils.py
 from ..api.utils import RunExperimentRequest, ArtifactNode
+from ..core import task_queue
 from ..core.config import settings, APP_LOGGER_NAME
 from ..ml.config import AugmentationStrategy, DATASET_DICT
 # Assuming your ML pipeline imports
@@ -73,23 +74,45 @@ def _execute_pipeline_task(
 
         pipeline_logger.info(f"PipelineExecutor run completed for experiment: {experiment_run_id}.")
 
-        # Extract model path (only if execution was successful up to this point)
-        for method_result_key in reversed(list(final_results.keys())):
-            result_data = final_results.get(method_result_key, {})
-            if isinstance(result_data, dict) and result_data.get("saved_model_path"):
-                full_saved_path = result_data["saved_model_path"]
-                base_prefix_to_strip = executor.current_executor_run_artifacts_prefix
-                if base_prefix_to_strip and full_saved_path.startswith(base_prefix_to_strip + "/"):
-                    final_model_path = full_saved_path[len(base_prefix_to_strip) + 1:]
-                else:
-                    final_model_path = Path(full_saved_path).name
-                pipeline_logger.info(f"Extracted model relative path for DB: {final_model_path}")
-                break
+        if final_results:  # Check if final_results is not None
+            for method_op_id_key in reversed(list(final_results.keys())):
+                result_data = final_results.get(method_op_id_key)
+                if isinstance(result_data, dict):
+                    # 'saved_model_path' from _save_results is the full S3 key or local FS path
+                    # e.g., "experiments/DATASET/MODEL_TYPE/EXPERIMENT_RUN_ID/single_train_0_timestamp/model.pt"
+                    full_artifact_path_or_key = result_data.get("saved_model_path")
+
+                    if full_artifact_path_or_key:
+                        # current_executor_run_artifacts_prefix is "experiments/DATASET/MODEL_TYPE/EXPERIMENT_RUN_ID"
+                        base_prefix_to_strip = executor.current_executor_run_artifacts_prefix
+
+                        # Ensure consistent slashes for comparison and stripping
+                        normalized_full_path = PurePath(full_artifact_path_or_key).as_posix()
+                        normalized_base_prefix = PurePath(base_prefix_to_strip).as_posix()
+
+                        if normalized_full_path.startswith(normalized_base_prefix + "/"):
+                            # This gives "single_train_0_timestamp/model.pt"
+                            final_model_path_for_db = normalized_full_path[len(normalized_base_prefix) + 1:]
+                        else:
+                            # Fallback: if path structure is unexpected, just take the last two parts
+                            # (hoping it's method_folder/model.pt) or just the filename.
+                            # This fallback might need adjustment based on actual path structures.
+                            path_parts = PurePath(normalized_full_path).parts
+                            if len(path_parts) >= 2:
+                                final_model_path_for_db = str(PurePath(path_parts[-2]) / path_parts[-1])
+                            else:
+                                final_model_path_for_db = PurePath(normalized_full_path).name
+                            pipeline_logger.warning(
+                                f"Could not strip base prefix '{normalized_base_prefix}' from '{normalized_full_path}'. Using fallback relative path: '{final_model_path_for_db}'")
+
+                        pipeline_logger.info(
+                            f"Extracted model relative path for DB: {final_model_path_for_db} from full path: {full_artifact_path_or_key}")
+                        break  # Found a model path, assume it's the primary one
 
         update_experiment_in_java_sync(
             experiment_run_id,
             status="COMPLETED",
-            model_relative_path=final_model_path,
+            model_relative_path=final_model_path_for_db,
             set_end_time=True
         )
 
@@ -147,21 +170,19 @@ async def start_experiment(
     for method_api_config in config.methods_sequence: # method_api_config is Pydantic ExperimentMethodParams
         python_method_kwargs = {}
 
-        # ** CRITICAL PART: Distinguish between 'params' and 'param_grid' **
-        # The Pydantic ExperimentMethodParams has both 'params' and 'param_grid' as Optional
-        # The React onSubmit logic decides which one to populate based on method_name
         if method_api_config.method_name in ['non_nested_grid_search', 'nested_grid_search']:
             if method_api_config.param_grid is not None:
                 python_method_kwargs['param_grid'] = method_api_config.param_grid
-            else: # Should not happen if React form logic is correct for these methods
-                python_method_kwargs['param_grid'] = {} # Default to empty if somehow missing
-            # For search methods, their 'params' field (Skorch HPs) is *inside* the param_grid.
-            # The top-level 'params' arg to the Python pipeline method is not used for Skorch HPs here.
-        elif method_api_config.params is not None and method_api_config.method_name != 'single_eval':
-            python_method_kwargs['params'] = method_api_config.params
-        else: # For methods like single_eval that might not have 'params' from UI
-             pass
-
+        elif method_api_config.method_name == 'cv_model_evaluation':
+            # If use_best_params_from_step is provided, Python executor will inject best_params.
+            # The 'params' sent here can be merged/overridden by Python.
+            if method_api_config.params is not None:
+                python_method_kwargs['params'] = method_api_config.params
+            if method_api_config.use_best_params_from_step is not None:  # This is now an int or None
+                python_method_kwargs['use_best_params_from_step'] = method_api_config.use_best_params_from_step
+        elif method_api_config.method_name == 'single_train':
+            if method_api_config.params is not None:
+                python_method_kwargs['params'] = method_api_config.params
 
         # Map other direct arguments from Pydantic model to Python method kwargs
         # (Field names in Pydantic model are already snake_case)
@@ -189,12 +210,9 @@ async def start_experiment(
             python_method_kwargs['evaluate_on'] = method_api_config.evaluate_on
         if method_api_config.val_split_ratio is not None:
             python_method_kwargs['val_split_ratio'] = method_api_config.val_split_ratio
-        if method_api_config.use_best_params_from_step is not None:
+        # Pass use_best_params_from_step for cv_model_evaluation if present
+        if method_api_config.method_name == 'cv_model_evaluation' and method_api_config.use_best_params_from_step is not None:
             python_method_kwargs['use_best_params_from_step'] = method_api_config.use_best_params_from_step
-            # If using best params, and method is 'cv_model_evaluation', clear its 'params'
-            if method_api_config.method_name == 'cv_model_evaluation':
-                 python_method_kwargs['params'] = {} # Override, params will be injected by executor
-            # For 'single_eval', 'params' are not used for model HPs anyway
 
         methods_sequence_for_executor.append(
             (method_api_config.method_name, python_method_kwargs)
@@ -216,6 +234,7 @@ async def start_experiment(
         "img_size": (img_h, img_w),
         "save_main_log_file": True,
         "conceptual_experiment_run_name": config.experiment_run_id,
+        "random_seed_override": config.random_seed,
         "max_epochs": settings.DEFAULT_MAX_EPOCHS, # Global default Skorch max_epochs
         "results_detail_level": 2,
         "plot_level": 1,
@@ -227,17 +246,27 @@ async def start_experiment(
     }
 
     artifact_repo_from_state = request_fast_api.app.state.artifact_repo
-    # ... (error handling for artifact_repo_from_state) ...
+    if not artifact_repo_from_state: # Ensure this check is robust
+        error_msg = f"Artifact repository not configured. Cannot start experiment {config.experiment_run_id}."
+        fastapi_app_logger.error(error_msg)
+        await update_experiment_in_java_async(config.experiment_run_id, "FAILED", error_message=error_msg, set_end_time=True)
+        raise HTTPException(status_code=500, detail=error_msg)
 
-    background_tasks_fastapi.add_task(
+    # Instead of FastAPI's BackgroundTasks, add to our queue
+    await task_queue.add_experiment_to_queue(
         _execute_pipeline_task,
-        executor_params=executor_params,
-        experiment_run_id=config.experiment_run_id,
-        artifact_repo=artifact_repo_from_state
+        args=(), # No positional args for _execute_pipeline_task
+        kwargs={ # Pass arguments as keyword arguments
+            "executor_params": executor_params,
+            "experiment_run_id": config.experiment_run_id,
+            "artifact_repo": artifact_repo_from_state
+        }
     )
 
-    return {"experiment_run_id": config.experiment_run_id, "message": "Experiment task submitted to Python background processing.", "status": "SUBMITTED_TO_PYTHON"}
+    fastapi_app_logger.info(f"Experiment (system ID: {config.experiment_run_id}) added to execution queue.")
 
+    return {"experiment_run_id": config.experiment_run_id,
+            "message": "Experiment task queued for sequential execution.", "status": "QUEUED_IN_PYTHON"}
 
 async def update_experiment_in_java_async(
     experiment_run_id: str,

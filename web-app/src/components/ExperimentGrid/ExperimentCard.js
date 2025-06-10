@@ -8,6 +8,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from '../ConfirmDialog';
+import {formatDateSafe} from "../../utils/dateUtils";
 
 const ExperimentCard = ({ experiment, onDelete }) => {
     const navigate = useNavigate();
@@ -39,18 +40,6 @@ const ExperimentCard = ({ experiment, onDelete }) => {
             case 'PENDING': return 'warning';
             case 'FAILED': return 'error';
             default: return 'default';
-        }
-    };
-
-    // Helper to format date. The incoming timestamps are seconds since epoch (or millis) based on the number.
-    // 1749255057.780194000 looks like seconds. If it were millis, it'd be much larger.
-    // JavaScript Date constructor expects milliseconds.
-    const formatDate = (timestampSeconds) => {
-        if (!timestampSeconds) return 'N/A';
-        try {
-            return new Date(timestampSeconds * 1000).toLocaleString();
-        } catch (e) {
-            return 'Invalid Date';
         }
     };
 
@@ -104,11 +93,11 @@ const ExperimentCard = ({ experiment, onDelete }) => {
                         />
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Started: {formatDate(experiment.start_time)} {/* Use snake_case & formatDate */}
+                        Started: {formatDateSafe(experiment.start_time)} {/* Use snake_case & formatDate */}
                     </Typography>
                     {experiment.end_time && (
                         <Typography variant="body2" color="text.secondary">
-                            Ended: {formatDate(experiment.end_time)} {/* Use snake_case & formatDate */}
+                            Ended: {formatDateSafe(experiment.end_time)} {/* Use snake_case & formatDate */}
                         </Typography>
                     )}
                     <Typography variant="body2" color="text.secondary">

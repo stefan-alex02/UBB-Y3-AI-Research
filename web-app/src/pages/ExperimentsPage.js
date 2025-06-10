@@ -1,39 +1,23 @@
-// src/pages/ExperimentsPage.js
-import React, {useCallback, useEffect, useRef, useState} from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-    Alert,
-    Box,
-    Button,
-    CircularProgress,
-    Container,
-    FormControl,
-    FormControlLabel,
-    Grid,
-    IconButton,
-    InputLabel,
-    MenuItem,
-    Pagination,
-    Paper,
-    Select,
-    Switch,
-    TextField,
-    Tooltip,
-    Typography
+    Container, Typography, Button, Box, Grid, TextField, Select, MenuItem,
+    FormControl, InputLabel, CircularProgress, Paper, Pagination, Alert, IconButton,
+    FormControlLabel, Checkbox, Collapse, Tooltip, Switch // Added Checkbox, Collapse
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import FilterListIcon from '@mui/icons-material/FilterList'; // For filter section toggle
-import {useNavigate} from 'react-router-dom';
-import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFns'; // Or AdapterDayjs
-import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
-import {DateTimePicker} from '@mui/x-date-pickers/DateTimePicker';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import RefreshIcon from '@mui/icons-material/Refresh'; // Keep for manual refresh
+import { useNavigate } from 'react-router-dom';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 
 import ExperimentGrid from '../components/ExperimentGrid/ExperimentGrid';
 import experimentService from '../services/experimentService';
 import useAuth from '../hooks/useAuth';
 import LoadingSpinner from '../components/LoadingSpinner';
-import ConfirmDialog from '../components/ConfirmDialog'; // Assuming this is in components/
-import RefreshIcon from '@mui/icons-material/Refresh';
-
+import ConfirmDialog from '../components/ConfirmDialog';
+import { MODEL_TYPES, DATASET_NAMES } from './experimentConfig'; // Import constants
 
 const ExperimentsPage = () => {
     const navigate = useNavigate();
@@ -42,32 +26,54 @@ const ExperimentsPage = () => {
     const [experiments, setExperiments] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const [filters, setFilters] = useState({
+    const initialFilters = {
+        nameContains: '',
         modelType: '',
         datasetName: '',
         status: '',
+        hasModelSaved: null, // null for 'any', true for 'yes', false for 'no'
         startedAfter: null,
         finishedBefore: null,
-    });
+    };
+    const [filters, setFilters] = useState(initialFilters);
     const [pagination, setPagination] = useState({
-        page: 0, // 0-indexed for Spring Data Pageable
-        size: 9,
-        totalPages: 0,
-        totalElements: 0,
+        page: 0, size: 12, totalPages: 0, totalElements: 0,
     });
-    const [showFilters, setShowFilters] = useState(false); // To toggle filter section visibility
+    const [showFilters, setShowFilters] = useState(false);
+    const [deleteConfirm, setDeleteConfirm] = useState({ open: false, experimentId: null, experimentName: '' });
 
-    const [deleteConfirm, setDeleteConfirm] = useState({
-        open: false,
-        experimentId: null,
-        experimentName: '',
-    });
-
-    const [autoUpdate, setAutoUpdate] = useState(true); // State for the auto-update toggle
+    // For WebSocket (kept for completeness, can be simplified if not core to this request)
+    const [autoUpdate, setAutoUpdate] = useState(true); // Default to off for simplicity
     const [isWsConnected, setIsWsConnected] = useState(false);
-    const webSocketRef = useRef(null); // To hold the WebSocket instance
+    const webSocketRef = useRef(null);
+    const WS_URL = `ws://${window.location.hostname}:8080/ws/experiment-status`;
 
-    const WS_URL = `ws://${window.location.hostname}:8080/ws/experiment-status`; // Adjust port if different
+
+    const fetchExperiments = useCallback(async (isManualRefresh = false) => {
+        if (!user || user.role !== 'METEOROLOGIST') {
+            setIsLoading(false); setExperiments([]); return;
+        }
+        setIsLoading(true); setError(null);
+        try {
+            const pageable = { page: pagination.page, size: pagination.size, sortBy: 'startTime', sortDir: 'DESC' };
+            const activeFilters = { ...filters };
+            if (activeFilters.startedAfter) activeFilters.startedAfter = new Date(activeFilters.startedAfter).toISOString();
+            if (activeFilters.finishedBefore) activeFilters.finishedBefore = new Date(activeFilters.finishedBefore).toISOString();
+            // Ensure hasModelSaved is not sent if null (for 'any')
+            if (activeFilters.hasModelSaved === null || activeFilters.hasModelSaved === "any") {
+                delete activeFilters.hasModelSaved;
+            }
+
+            const data = await experimentService.getExperiments(activeFilters, pageable);
+            setExperiments(data.content || []);
+            setPagination(prev => ({ ...prev, totalPages: data.total_pages, totalElements: data.total_elements }));
+        } catch (err) {
+            setError(err.response?.data?.message || err.message || 'Failed to fetch experiments.');
+            setExperiments([]); setPagination(prev => ({ ...prev, totalPages: 0, totalElements: 0 }));
+        } finally { setIsLoading(false); }
+    }, [user, filters, pagination.page, pagination.size]);
+
+    useEffect(() => { fetchExperiments(); }, [fetchExperiments]);
 
 
     const connectWebSocket = useCallback(() => {
@@ -137,50 +143,23 @@ const ExperimentsPage = () => {
         };
     }, [autoUpdate, connectWebSocket, disconnectWebSocket]);
 
-    const fetchExperiments = useCallback(async () => {
-        if (!user || user.role !== 'METEOROLOGIST') {
-            setIsLoading(false);
-            setExperiments([]); // Clear experiments if user is not authorized
-            return;
-        }
-        setIsLoading(true);
-        setError(null);
-        try {
-            const pageable = {
-                page: pagination.page,
-                size: pagination.size,
-                sortBy: 'startTime', // Default sort
-                sortDir: 'DESC'
-            };
-            const activeFilters = { ...filters };
-            // Ensure dates are ISO strings if not null
-            if (activeFilters.startedAfter) activeFilters.startedAfter = new Date(activeFilters.startedAfter).toISOString();
-            if (activeFilters.finishedBefore) activeFilters.finishedBefore = new Date(activeFilters.finishedBefore).toISOString();
-
-            const data = await experimentService.getExperiments(activeFilters, pageable);
-            setExperiments(data.content || []);
-            setPagination(prev => ({
-                ...prev,
-                totalPages: data.totalPages,
-                totalElements: data.totalElements,
-            }));
-        } catch (err) {
-            setError(err.response?.data?.message || err.message || 'Failed to fetch experiments.');
-            setExperiments([]);
-            setPagination(prev => ({ ...prev, totalPages: 0, totalElements: 0 }));
-        } finally {
-            setIsLoading(false);
-        }
-    }, [user, filters, pagination.page, pagination.size]); // Dependencies for useCallback
-
-    useEffect(() => {
-        fetchExperiments();
-    }, [fetchExperiments]); // fetchExperiments is memoized by useCallback
-
     const handleFilterChange = (event) => {
-        const { name, value } = event.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
-        setPagination(prev => ({ ...prev, page: 0 })); // Reset to first page on filter change
+        const { name, value, type, checked } = event.target;
+        setFilters(prev => ({
+            ...prev,
+            [name]: type === 'checkbox' ? (checked ? true : (name === 'hasModelSaved' ? false : checked) ) : value
+            // For hasModelSaved, if unchecked after being true, set to false. If "any", it will be null.
+        }));
+        setPagination(prev => ({ ...prev, page: 0 }));
+    };
+
+    const handleHasModelSavedChange = (event) => {
+        const value = event.target.value; // "any", "true", "false"
+        setFilters(prev => ({
+            ...prev,
+            hasModelSaved: value === "any" ? null : (value === "true")
+        }));
+        setPagination(prev => ({ ...prev, page: 0 }));
     };
 
     const handleDateChange = (name, date) => {
@@ -229,9 +208,7 @@ const ExperimentsPage = () => {
         <LocalizationProvider dateAdapter={AdapterDateFns}>
             <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
                 <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-                    <Typography variant="h4" component="h1">
-                        Experiments Dashboard
-                    </Typography>
+                    <Typography variant="h4" component="h1">Experiments Dashboard</Typography>
                     <Box sx={{display: 'flex', alignItems: 'center'}}>
                         <Tooltip title={autoUpdate ? "Disable real-time status updates" : "Enable real-time status updates"}>
                             <FormControlLabel
@@ -248,72 +225,69 @@ const ExperimentsPage = () => {
                             </IconButton>
                           </span>
                         </Tooltip>
-                        <Button
-                            variant="outlined"
-                            startIcon={<FilterListIcon />}
-                            onClick={() => setShowFilters(!showFilters)}
-                            sx={{ ml: 2, mr: 2 }}
-                        >
+                        <Button variant="outlined" startIcon={<FilterListIcon />} onClick={() => setShowFilters(!showFilters)} sx={{ ml: 2, mr: 2 }}>
                             {showFilters ? 'Hide Filters' : 'Show Filters'}
                         </Button>
-                        <Button
-                            variant="contained"
-                            startIcon={<AddIcon />}
-                            onClick={() => navigate('/experiments/create')}
-                        >
-                            New Experiment
-                        </Button>
+                        <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/experiments/create')}>New Experiment</Button>
                     </Box>
                 </Box>
 
-                {showFilters && (
+                <Collapse in={showFilters}>
                     <Paper elevation={2} sx={{ p: 2, mb: 3 }}>
-                        <Grid container spacing={2} alignItems="flex-end"> {/* alignItems to bottom align button */}
-                            <Grid item xs={12} sm={6} md={3} lg={2}>
-                                <TextField fullWidth label="Model Type" name="modelType" value={filters.modelType} onChange={handleFilterChange} variant="outlined" size="small"/>
+                        <Grid container spacing={2} alignItems="center">
+                            <Grid item xs={12} sm={6} md={4} lg={3}>
+                                <TextField fullWidth label="Experiment Name Contains" name="nameContains" value={filters.nameContains} onChange={handleFilterChange} variant="outlined" size="small"/>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={3} lg={2}>
-                                <TextField fullWidth label="Dataset Name" name="datasetName" value={filters.datasetName} onChange={handleFilterChange} variant="outlined" size="small"/>
-                            </Grid>
-                            <Grid item xs={12} sm={6} md={2} lg={2}>
+                            <Grid item xs={12} sm={6} md={4} lg={2}>
                                 <FormControl fullWidth variant="outlined" size="small">
-                                    <InputLabel>Status</InputLabel>
-                                    <Select name="status" value={filters.status} label="Status" onChange={handleFilterChange}>
+                                    <InputLabel>Model Type</InputLabel>
+                                    <Select name="modelType" value={filters.modelType} label="Model Type" onChange={handleFilterChange}>
                                         <MenuItem value=""><em>Any</em></MenuItem>
-                                        <MenuItem value="PENDING">Pending</MenuItem>
-                                        <MenuItem value="RUNNING">Running</MenuItem>
-                                        <MenuItem value="COMPLETED">Completed</MenuItem>
-                                        <MenuItem value="FAILED">Failed</MenuItem>
+                                        {MODEL_TYPES.map(mt => <MenuItem key={mt.value} value={mt.value}>{mt.label}</MenuItem>)}
                                     </Select>
                                 </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={3} lg={2.5}>
-                                <DateTimePicker
-                                    label="Started After"
-                                    value={filters.startedAfter}
-                                    onChange={(newValue) => handleDateChange('startedAfter', newValue)}
-                                    slotProps={{ textField: { size: 'small', fullWidth: true, variant: 'outlined' } }}
-                                />
+                            <Grid item xs={12} sm={6} md={4} lg={2}>
+                                <FormControl fullWidth variant="outlined" size="small">
+                                    <InputLabel>Dataset Name</InputLabel>
+                                    <Select name="datasetName" value={filters.datasetName} label="Dataset Name" onChange={handleFilterChange}>
+                                        <MenuItem value=""><em>Any</em></MenuItem>
+                                        {DATASET_NAMES.map(dn => <MenuItem key={dn} value={dn}>{dn}</MenuItem>)}
+                                    </Select>
+                                </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={3} lg={2.5}>
-                                <DateTimePicker
-                                    label="Finished Before"
-                                    value={filters.finishedBefore}
-                                    onChange={(newValue) => handleDateChange('finishedBefore', newValue)}
-                                    slotProps={{ textField: { size: 'small', fullWidth: true, variant: 'outlined' } }}
-                                />
+                            <Grid item xs={12} sm={6} md={4} lg={2}>
+                                <FormControl fullWidth variant="outlined" size="small">
+                                    <InputLabel>Status</InputLabel>
+                                    <Select name="status" value={filters.status} label="Status" onChange={handleFilterChange}> <MenuItem value=""><em>Any</em></MenuItem> {/* ... statuses ... */} </Select>
+                                </FormControl>
                             </Grid>
-                            <Grid item xs={12} sm={6} md={1} lg={1} sx={{display:'flex', alignItems:'flex-end'}}>
-                                <Button onClick={handleClearFilters} variant="text" size="medium">Clear</Button>
+                            <Grid item xs={12} sm={6} md={4} lg={2}>
+                                <FormControl fullWidth variant="outlined" size="small">
+                                    <InputLabel>Model Saved?</InputLabel>
+                                    <Select name="hasModelSaved" value={filters.hasModelSaved === null ? "any" : String(filters.hasModelSaved)} label="Model Saved?" onChange={handleHasModelSavedChange}>
+                                        <MenuItem value="any"><em>Any</em></MenuItem>
+                                        <MenuItem value="true">Yes</MenuItem>
+                                        <MenuItem value="false">No</MenuItem>
+                                    </Select>
+                                </FormControl>
+                            </Grid>
+                            <Grid item xs={12} sm={6} md={4} lg={2.5}><DateTimePicker label="Started After" value={filters.startedAfter} onChange={(d) => handleDateChange('startedAfter', d)} slotProps={{ textField: { size: 'small', fullWidth: true } }} /></Grid>
+                            <Grid item xs={12} sm={6} md={4} lg={2.5}><DateTimePicker label="Finished Before" value={filters.finishedBefore} onChange={(d) => handleDateChange('finishedBefore', d)} slotProps={{ textField: { size: 'small', fullWidth: true } }} /></Grid>
+                            <Grid item xs={12} md={12} lg={1} sx={{display:'flex', justifyContent: {xs:'flex-start', lg:'flex-end'}, pt: {xs:1, lg:0} }}>
+                                <Button onClick={handleClearFilters} variant="text" size="medium">Clear All</Button>
                             </Grid>
                         </Grid>
                     </Paper>
-                )}
+                </Collapse>
 
                 {isLoading && <Box sx={{display: 'flex', justifyContent: 'center', my: 5}}><CircularProgress /></Box>}
                 {!isLoading && error && <Alert severity="error" sx={{my: 2}}>{error}</Alert>}
                 {!isLoading && !error && (
                     <>
+                        <Typography variant="body2" color="textSecondary" sx={{mb:1}}>
+                            Showing {experiments.length} of {pagination.totalElements} experiments.
+                        </Typography>
                         {experiments.length > 0 ? (
                             <ExperimentGrid experiments={experiments} onDelete={openDeleteDialog} />
                         ) : (

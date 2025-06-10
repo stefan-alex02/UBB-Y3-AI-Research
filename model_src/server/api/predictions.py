@@ -6,7 +6,7 @@ import io
 
 from starlette.responses import StreamingResponse
 
-from ..services import prediction_service
+from ..services import prediction_service as service
 from .utils import RunPredictionRequest, PredictionRunResponse, ArtifactNode
 # from app.main import artifact_repo_instance # Avoid global
 from ..persistence import MinIORepository
@@ -25,7 +25,7 @@ async def run_prediction_endpoint(
         fast_api_request: FastAPIRequest  # To access app.state
 ):
     try:
-        predictions = await prediction_service.run_prediction(fast_api_request, config)
+        predictions = await service.run_prediction(fast_api_request, config)
         return PredictionRunResponse(predictions=predictions, message="Predictions completed successfully.")
     except HTTPException as he:  # Re-raise HTTPExceptions from the service
         raise he
@@ -37,73 +37,69 @@ async def run_prediction_endpoint(
         raise HTTPException(status_code=500, detail=f"Prediction execution failed: {e}")
 
 
-@router.get("/{username}/{image_id}/{experiment_id_of_model}/artifacts", response_model=List[ArtifactNode])
-async def list_prediction_artifacts_endpoint(
+@router.get("/{username}/{image_id}/{experiment_id_of_model}/artifacts/list", response_model=List[ArtifactNode])
+async def list_prediction_artifacts_api(
         username: str, image_id: str, experiment_id_of_model: str,
-        fast_api_request: FastAPIRequest,  # To access app.state
-        prefix: Optional[str] = None  # Optional sub-prefix, e.g., "plots"
+        fast_api_request: FastAPIRequest,
+        path: Optional[str] = ""  # Query parameter for sub-path, e.g., "plots"
 ):
     artifact_repo = fast_api_request.app.state.artifact_repo
     if not artifact_repo:
         raise HTTPException(status_code=500, detail="Artifact repository not configured.")
-    if not isinstance(artifact_repo, MinIORepository):
-        raise HTTPException(status_code=501,
-                            detail="Artifact listing currently only supported for S3-like repositories.")
-
-    base_prediction_prefix = f"predictions/{username}/{image_id}/{experiment_id_of_model}/"
-    current_list_prefix = base_prediction_prefix
-    if prefix:
-        clean_prefix = prefix.lstrip('/')
-        if clean_prefix and not clean_prefix.endswith('/'):
-            clean_prefix += '/'
-        current_list_prefix = base_prediction_prefix + clean_prefix
-
-    logger.info(f"Listing prediction artifacts for prefix: {current_list_prefix}")
     try:
-        listed_content = artifact_repo.list_objects_in_prefix(prefix=current_list_prefix, delimiter='/')
-        nodes = []
-        for subfolder_key in listed_content.get('subfolders', []):
-            relative_folder_path = subfolder_key[len(base_prediction_prefix):].strip('/')
-            folder_name = PurePath(subfolder_key.strip('/')).name
-            nodes.append(ArtifactNode(name=folder_name, path=relative_folder_path, type="folder"))
-        for object_key in listed_content.get('objects', []):
-            relative_file_path = object_key[len(base_prediction_prefix):]
-            file_name = PurePath(object_key).name
-            nodes.append(ArtifactNode(name=file_name, path=relative_file_path, type="file"))
+        clean_sub_path = path.lstrip('/').lstrip('\\') if path else ""
+        logger.info(
+            f"Listing prediction artifacts for user {username}, image {image_id}, model_exp {experiment_id_of_model}, sub-path: '{clean_sub_path}'")
+        nodes = service.list_artifacts_for_prediction(
+            artifact_repo, username, image_id, experiment_id_of_model, clean_sub_path
+        )
         return nodes
     except Exception as e:
-        logger.error(f"Error listing prediction artifacts for {current_list_prefix}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to list prediction artifacts.")
+        logger.error(f"Error listing prediction artifacts: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to list prediction artifacts: {str(e)}")
 
 
-@router.get("/{username}/{image_id}/{experiment_id_of_model}/artifacts/{artifact_path:path}")
-async def get_prediction_artifact_endpoint(
+@router.get("/{username}/{image_id}/{experiment_id_of_model}/artifacts/content/{artifact_path:path}")
+async def get_prediction_artifact_content_api(
         username: str, image_id: str, experiment_id_of_model: str, artifact_path: str,
-        fast_api_request: FastAPIRequest  # To access app.state
+        fast_api_request: FastAPIRequest
 ):
     artifact_repo = fast_api_request.app.state.artifact_repo
     if not artifact_repo:
         raise HTTPException(status_code=500, detail="Artifact repository not configured.")
-
-    full_artifact_key = f"predictions/{username}/{image_id}/{experiment_id_of_model}/{artifact_path}"
-    logger.info(f"Fetching prediction artifact: {full_artifact_key}")
+    logger.info(
+        f"Fetching prediction artifact content: predictions/{username}/{image_id}/{experiment_id_of_model}/{artifact_path}")
     try:
-        file_bytes = artifact_repo.download_file_to_memory(full_artifact_key)
+        file_bytes = service.get_prediction_artifact_content_bytes(
+            artifact_repo, username, image_id, experiment_id_of_model, artifact_path
+        )
         if file_bytes is None:
-            raise HTTPException(status_code=404, detail="Prediction artifact not found.")
+            raise HTTPException(status_code=404, detail="Prediction artifact content not found.")
 
         media_type = "application/octet-stream"
-        if artifact_path.lower().endswith(".json"):
-            media_type = "application/json"
-        elif artifact_path.lower().endswith(".png"):
-            media_type = "image/png"
-        # Add other types as needed
+        # Use the same get_artifact_type_from_filename helper from prediction_service
+        file_type_from_name = service.get_artifact_type_from_filename(artifact_path)
+
+        if file_type_from_name == "json":
+            media_type = "application/json; charset=utf-8"
+        elif file_type_from_name == "image":
+            ext = artifact_path.split('.')[-1].lower()
+            if ext == "png":
+                media_type = "image/png"
+            elif ext in ["jpg", "jpeg"]:
+                media_type = "image/jpeg"
+            else:
+                media_type = "application/octet-stream"
+        elif file_type_from_name == "log":
+            media_type = "text/plain; charset=utf-8"
+        elif file_type_from_name == "csv":
+            media_type = "text/csv; charset=utf-8"
 
         return StreamingResponse(io.BytesIO(file_bytes), media_type=media_type)
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error fetching prediction artifact {full_artifact_key}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Failed to fetch prediction artifact.")
+        logger.error(f"Error fetching prediction artifact content for .../{artifact_path}: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Failed to fetch prediction artifact content: {str(e)}")
 
 # TODO: DELETE endpoint for predictions (all artifacts for a specific image_id + experiment_id_of_model)

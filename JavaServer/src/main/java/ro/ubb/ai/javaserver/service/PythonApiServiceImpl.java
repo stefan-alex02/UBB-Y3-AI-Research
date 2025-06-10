@@ -1,5 +1,6 @@
 package ro.ubb.ai.javaserver.service;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
@@ -138,6 +139,43 @@ public class PythonApiServiceImpl implements PythonApiService {
     }
 
     @Override
+    public List<Map<String, Object>> listPythonPredictionArtifacts(String username, String imageId, String experimentIdOfModel, String path) {
+        String url = String.format("%s/predictions/%s/%s/%s/artifacts/list",
+                pythonApiBaseUrl, username, imageId, experimentIdOfModel);
+        if (path != null && !path.isEmpty()) {
+            url += "?path=" + UriUtils.encodeQueryParam(path, StandardCharsets.UTF_8);
+        }
+        log.info("Requesting prediction artifact list from Python: {}", url);
+        // ... (rest of the logic similar to listPythonExperimentArtifacts, handle response and errors)
+        // Ensure to use new TypeReference<List<Map<String, Object>>>() for deserialization
+        // For brevity, not repeating the full try-catch, but it should be there.
+        ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            try {
+                return objectMapper.readValue(response.getBody(), new TypeReference<List<Map<String, Object>>>() {});
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Failed to parse prediction artifact list from Python", e);
+            }
+        }
+        throw new RuntimeException("Python service error listing prediction artifacts: " + response.getBody());
+    }
+
+    @Override
+    public byte[] getPythonPredictionArtifactContent(String username, String imageId, String experimentIdOfModel, String artifactRelativePath) {
+        String encodedArtifactPath = UriUtils.encodePath(artifactRelativePath, StandardCharsets.UTF_8);
+        String url = String.format("%s/predictions/%s/%s/%s/artifacts/content/%s",
+                pythonApiBaseUrl, username, imageId, experimentIdOfModel, encodedArtifactPath);
+        log.info("Requesting prediction artifact content from Python: {}", url);
+        // ... (rest of the logic similar to getPythonExperimentArtifactContent, handle response and errors)
+        // For brevity, not repeating the full try-catch.
+        ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, null, byte[].class);
+        if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
+            return response.getBody();
+        }
+        throw new RuntimeException("Python service error getting prediction artifact content: " + response.getStatusCode());
+    }
+
+    @Override
     public void uploadImageToPython(String username, String imageId, String imageFormat, MultipartFile file) {
         String url = pythonApiBaseUrl + "/images/upload";
         log.info("Uploading image {} (ID: {}) with format {} to Python for user {}",
@@ -211,6 +249,4 @@ public class PythonApiServiceImpl implements PythonApiService {
             throw new RuntimeException("Error communicating with Python service for image download.", e);
         }
     }
-
-    // Similar methods for listPythonPredictionArtifacts, getPythonArtifact (returning byte[] or Resource), deletePythonArtifacts etc.
 }

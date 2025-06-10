@@ -75,7 +75,6 @@ export const METHOD_DEFAULTS = {
     },
     single_eval: {
         method_name: 'single_eval',
-        params: {}, // No Skorch HPs needed for eval of current model
         plot_level: 2,
         results_detail_level: 2,
     },

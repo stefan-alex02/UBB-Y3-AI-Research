@@ -13,13 +13,17 @@ logger_name_global = 'ImgClassPipe' # Define the name once
 
 # --- Seed Initialization ---
 RANDOM_SEED = 42
-np.random.seed(RANDOM_SEED)
-torch.manual_seed(RANDOM_SEED)
-random.seed(RANDOM_SEED) # Ensure random module is also seeded
 
-# Commenting these out might sometimes resolve unrelated CUDA errors, but reduces reproducibility
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(RANDOM_SEED)
+def apply_random_seed(seed: int = RANDOM_SEED):
+    """Applies a fixed random seed for reproducibility."""
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    random.seed(seed) # Ensure random module is also seeded
+
+    # Commenting these out might sometimes resolve unrelated CUDA errors, but reduces reproducibility
+    if torch.cuda.is_available():
+        torch.cuda.manual_seed_all(seed)
+
 torch.backends.cudnn.deterministic = True # This ensures that the results are reproducible
 torch.backends.cudnn.benchmark = False   # This is set to False to ensure reproducibility, but may affect performance
 

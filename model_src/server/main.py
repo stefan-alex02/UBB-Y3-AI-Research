@@ -1,15 +1,16 @@
 import logging
-from fastapi import FastAPI, Depends, HTTPException, Request
-from fastapi.responses import JSONResponse
-from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+
 from .api import experiments, images, predictions
+from .core import task_queue
 from .core.config import settings, APP_LOGGER_NAME
-from .core.security import get_api_key
-from .persistence import load_minio_repository, load_file_repository, ArtifactRepository # Your existing imports
-from .ml.logger_utils import setup_logger as setup_pipeline_logger, logger as pipeline_main_logger # Your pipeline logger
-from .ml.logger_utils import setup_logger as setup_pipeline_logger, EnhancedFormatter, logger_name_global # Import your logger_name_global
+from .ml.logger_utils import setup_logger as setup_pipeline_logger, EnhancedFormatter, \
+    logger_name_global  # Import your logger_name_global
+from .persistence import load_minio_repository, load_file_repository, ArtifactRepository  # Your existing imports
 
 # --- FastAPI Application Logger Setup ---
 # This logger is for FastAPI/Uvicorn specific messages IF you want to customize them,
@@ -60,7 +61,10 @@ async def lifespan(app: FastAPI):
 
     app.state.artifact_repo = artifact_repo_instance
     fastapi_app_logger.info("FastAPI lifespan startup complete. Artifact repo attached to app state.")
+    # Start the experiment queue processor
+    task_queue.ensure_processor_is_running()
     yield
+    fastapi_app_logger.info("FastAPI application shutdown sequence initiated...")
     fastapi_app_logger.info("FastAPI application shutdown sequence initiated...")
     # Any cleanup for artifact_repo_instance if needed
     fastapi_app_logger.info("FastAPI lifespan shutdown complete.")

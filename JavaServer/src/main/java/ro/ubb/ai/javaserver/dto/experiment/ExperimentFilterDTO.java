@@ -7,16 +7,14 @@ import java.time.OffsetDateTime;
 
 @Data
 public class ExperimentFilterDTO {
+    private String nameContains; // New: Filter by experiment name (user-defined name)
     private String modelType;
     private String datasetName;
     private ExperimentStatus status;
+    private Boolean hasModelSaved; // New: Filter by whether model_relative_path is set
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime startedAfter;
     @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME)
     private OffsetDateTime finishedBefore;
-    // Add pagination params: page, size, sortBy, sortDir
-    private Integer page;
-    private Integer size;
-    private String sortBy;
-    private String sortDir;
+    // Pagination params are handled by Pageable in controller
 }

@@ -6,6 +6,7 @@ import BrokenImageIcon from '@mui/icons-material/BrokenImage'; // For error stat
 import { useNavigate } from 'react-router-dom';
 import imageService from '../../services/imageService'; // Import your service
 import ConfirmDialog from '../ConfirmDialog';
+import {formatDateSafe} from "../../utils/dateUtils";
 
 
 const ImageCard = ({ image, onDelete }) => {
@@ -84,7 +85,7 @@ const ImageCard = ({ image, onDelete }) => {
                         Format: {image.format?.toUpperCase()}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Uploaded: {new Date(image.uploadedAt).toLocaleDateString()}
+                        Uploaded: {formatDateSafe(image.uploaded_at)}
                     </Typography>
                 </CardContent>
                 <CardActions sx={{ justifyContent: 'space-between', p: 1 }}>

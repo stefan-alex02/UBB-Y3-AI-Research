@@ -23,24 +23,23 @@ const deletePrediction = async (imageId, modelExperimentRunId) => {
     await axios.delete(`${API_URL}/image/${imageId}/model/${modelExperimentRunId}`);
 };
 
-// For fetching prediction artifacts (JSON, plots)
-// Similar to experimentService, assumes Java proxy or direct Python call setup
-const getPredictionArtifactContent = async (username, imageId, experimentIdOfModel, artifactPath) => {
-    const artifactUrl = `${API_BASE_URL}/python-proxy-artifacts/predictions/${username}/${imageId}/${experimentIdOfModel}/${artifactPath}`;
-    const response = await axios.get(artifactUrl, { responseType: 'blob' });
-    const contentType = response.headers['content-type'];
-    if (contentType && (contentType.includes('application/json') || contentType.includes('text/plain'))) {
-        return await response.data.text();
-    }
-    return response.data; // Blob for images
+const listPredictionArtifacts = async (username, imageId, experimentIdOfModel, subPath = '') => {
+    const params = subPath ? { path: subPath } : {};
+    // Calls Java proxy endpoint
+    const response = await axios.get(`${API_URL}/${imageId}/model/${experimentIdOfModel}/artifacts/list`, { params });
+    return response.data;
 };
 
-const listPredictionArtifacts = async (username, imageId, experimentIdOfModel, subPath = '') => {
-    const params = subPath ? { prefix: subPath } : {};
-    const response = await axios.get(
-        `${API_BASE_URL}/python-proxy-artifacts/predictions/${username}/${imageId}/${experimentIdOfModel}/list`, { params }
-    );
-    return response.data; // Expects List<ArtifactNode>
+const getPredictionArtifactContent = async (username, imageId, experimentIdOfModel, artifactRelativePath) => {
+    // Calls Java proxy endpoint
+    const artifactUrl = `${API_URL}/${imageId}/model/${experimentIdOfModel}/artifacts/content/${artifactRelativePath}`;
+    let responseType = 'blob';
+    const ext = artifactRelativePath.split('.').pop()?.toLowerCase();
+    if (['json', 'log', 'txt', 'csv'].includes(ext)) {
+        responseType = 'text';
+    }
+    const response = await axios.get(artifactUrl, { responseType: responseType });
+    return response.data;
 };
 
 const predictionService = {

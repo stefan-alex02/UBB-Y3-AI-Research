@@ -20,5 +20,6 @@ public class PythonRunExperimentRequestDTO {
     private Boolean offlineAugmentation;
     private String augmentationStrategyOverride;
     private Float testSplitRatioIfFlat;
+    private Integer randomSeed;
     private Boolean forceFlatForFixedCv;
 }

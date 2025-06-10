@@ -43,7 +43,6 @@ class ResNet18BasedCloud(nn.Module):
                     f"Classifier head: Linear({num_ftrs}->{fc_hidden_neurons})->BN->ReLU->Dropout({dropout_rate_fc})->Linear({fc_hidden_neurons}->{num_classes})")
 
     def forward(self, x):
-        x = self.features(
-            x)  # Output of ResNet18 before original FC is (B, 512, 1, 1) due to internal AdaptiveAvgPool2d
+        x = self.features(x)  # Output of ResNet18 before original FC is (B, 512, 1, 1) due to internal AdaptiveAvgPool2d
         x = self.classifier_head(x)
         return x

@@ -1,4 +1,4 @@
-import React, {useCallback, useEffect, useState} from 'react';
+import React, {useCallback, useEffect, useMemo, useState} from 'react';
 import {useNavigate, useParams} from 'react-router-dom';
 import {
     Alert,
@@ -8,33 +8,42 @@ import {
     Chip,
     CircularProgress,
     Container,
-    Divider,
     Grid,
     IconButton,
     List,
-    ListItem,
     ListItemButton,
     ListItemIcon,
     ListItemText,
     Paper,
     Skeleton,
+    Tab,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    TableSortLabel,
+    Tabs,
     Typography
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-import FolderIcon from '@mui/icons-material/Folder';
-import ArticleIcon from '@mui/icons-material/Article';
 import BrokenImageIcon from '@mui/icons-material/BrokenImage';
-import ZoomInIcon from '@mui/icons-material/ZoomIn'; // For fullscreen image icon
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import BarChartIcon from '@mui/icons-material/BarChart'; // For Probability Plot
 import imageService from '../services/imageService';
 import predictionService from '../services/predictionService';
-import ArtifactViewer from '../components/ArtifactViewer/ArtifactViewer';
+import PlotViewer from '../components/ArtifactViewer/PlotViewer'; // For direct use with plots
 import LoadingSpinner from '../components/LoadingSpinner';
-import useAuth from '../hooks/useAuth';
-import ImageFullscreenModal from '../components/ImageFullscreenModal'; // Import the modal
+import ImageFullscreenModal from '../components/ImageFullscreenModal';
 import NewPredictionModal from '../components/Modals/NewPredictionModal';
-import {API_BASE_URL} from "../config"; // Assuming modal is moved
+import InsightsIcon from '@mui/icons-material/Insights';
+import {API_BASE_URL} from "../config";
+import {getComparator, stableSort} from "../utils/tableUtils";
+import {formatDateSafe} from "../utils/dateUtils";
+import useAuth from "../hooks/useAuth"; // Assuming modal is moved
 
 // (getArtifactType helper function - ensure it's defined or imported from a utils file)
 const getArtifactType = (filename) => {
@@ -48,224 +57,212 @@ const getArtifactType = (filename) => {
 };
 
 const ViewImagePredictionsPage = () => {
-    const { imageId } = useParams(); // imageId from URL is string, convert to Long if needed for API
+    const { imageId: routeImageId } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const [imageDetails, setImageDetails] = useState(null); // ImageDTO from DB
-    const [predictions, setPredictions] = useState([]);   // List<PredictionDTO>
-    const [selectedPrediction, setSelectedPrediction] = useState(null); // Full PredictionDTO
-
-    const [predictionArtifacts, setPredictionArtifacts] = useState([]); // List<ArtifactNode> for selected prediction
-    const [selectedArtifactToView, setSelectedArtifactToView] = useState(null); // { name, type, content, url } for ArtifactViewer
+    const [imageDetails, setImageDetails] = useState(null);
+    const [predictions, setPredictions] = useState([]);
+    const [selectedPrediction, setSelectedPrediction] = useState(null);
+    const [selectedPredictionDetailsJson, setSelectedPredictionDetailsJson] = useState(null);
+    const [predictionArtifacts, setPredictionArtifacts] = useState([]);
+    const [selectedPlotToView, setSelectedPlotToView] = useState(null); // Not used in the latest version, selectedArtifactToView covers plots
 
     // State for the main uploaded image display
     const [mainImageBlob, setMainImageBlob] = useState(null);
-    const [isLoadingMainImage, setIsLoadingMainImage] = useState(true);
+    const [isLoadingMainImage, setIsLoadingMainImage] = useState(true); // <<<< ENSURE THIS IS DECLARED
     const [mainImageError, setMainImageError] = useState(false);
 
     // State for general page loading and errors
-    const [isLoadingPageData, setIsLoadingPageData] = useState(true);
+    const [isLoadingPageData, setIsLoadingPageData] = useState(true); // Overall page data (image metadata + prediction list)
+    const [isLoadingPredictionsList, setIsLoadingPredictionsList] = useState(false); // Specifically for the predictions list part if fetched separately
+    const [isLoadingSelectedPredictionContent, setIsLoadingSelectedPredictionContent] = useState(false);
     const [pageError, setPageError] = useState(null);
 
-    // State for loading specific artifact content
-    const [isLoadingArtifactContent, setIsLoadingArtifactContent] = useState(false);
+    const [activeContentTab, setActiveContentTab] = useState(0);
 
-    // State for modals
     const [newPredictionModalOpen, setNewPredictionModalOpen] = useState(false);
-    const [fullscreenModalOpen, setFullscreenModalOpen] = useState(false);
-    const [fullscreenModalSource, setFullscreenModalSource] = useState({ src: null, type: 'url', title: '' });
+    const [fullscreenModal, setFullscreenModal] = useState({ open: false, src: null, title: '', type: 'url' });
 
-
-    const fetchPageData = useCallback(async () => {
-        if (!user || !imageId) return;
+    const fetchPageInitialData = useCallback(async () => {
+        if (!user || !routeImageId) return;
         setIsLoadingPageData(true);
-        setPageError(null);
-        setMainImageError(false);
         setIsLoadingMainImage(true);
-
-        let tempMainImageBlob = null;
+        setMainImageError(false);
+        setPageError(null);
+        // tempMainImageBlob is not strictly needed if mainImageDisplayUrl's useEffect handles cleanup
+        // let tempMainImageBlob = null;
 
         try {
-            // 1. Fetch image metadata
-            const imgData = await imageService.getImageByIdForUser(Number(imageId), user.username);
+            const imgData = await imageService.getImageByIdForUser(Number(routeImageId), user.username);
             setImageDetails(imgData);
 
-            // 2. Fetch image content (blob)
             if (imgData && imgData.id) {
                 try {
-                    tempMainImageBlob = await imageService.getImageContentBlob(imgData.id);
-                    setMainImageBlob(tempMainImageBlob);
+                    const blob = await imageService.getImageContentBlob(imgData.id);
+                    setMainImageBlob(blob);
                 } catch (contentError) {
                     console.error("Failed to load main image content:", contentError);
                     setMainImageError(true);
                 }
             } else {
-                setMainImageError(true); // No imgData to fetch content
+                setMainImageError(true);
             }
+            setIsLoadingMainImage(false);
 
-            // 3. Fetch predictions for this image
-            const predData = await predictionService.getPredictionsForImage(Number(imageId));
+            setIsLoadingPredictionsList(true);
+            const predData = await predictionService.getPredictionsForImage(Number(routeImageId));
             setPredictions(predData);
-            if (predData.length > 0 && !selectedPrediction) { // Auto-select first if none selected
-                handlePredictionSelect(predData[0]);
-            } else if (selectedPrediction) { // If one was already selected, refresh its artifacts
-                fetchPredictionArtifacts(selectedPrediction);
-            }
+            // Do not auto-select, let user click
+            setSelectedPrediction(null);
+            setSelectedPredictionDetailsJson(null);
+            setPredictionArtifacts([]);
+            setIsLoadingPredictionsList(false);
 
         } catch (err) {
-            setPageError(err.response?.data?.detail || err.message || 'Failed to load page data.');
+            setPageError(err.response?.data?.message || err.message || "Failed to load page data.");
             setMainImageError(true);
+            setIsLoadingMainImage(false);
+            setIsLoadingPredictionsList(false);
         } finally {
             setIsLoadingPageData(false);
-            setIsLoadingMainImage(false); // Content loading attempt is done
         }
-    }, [imageId, user, selectedPrediction]); // selectedPrediction added to refresh artifacts if it changes
+    }, [routeImageId, user]); // Removed user.username, user object itself is enough
 
     useEffect(() => {
-        fetchPageData();
-    }, [fetchPageData]); // Called once on mount and if dependencies change
+        fetchPageInitialData();
+    }, [fetchPageInitialData]);
 
 
-    const fetchPredictionArtifacts = useCallback(async (prediction, subPath = '') => {
-        if (!user || !prediction) return;
-        setIsLoadingArtifactContent(true); // Use this for the artifact list loading
-        setSelectedArtifactToView(null); // Clear currently viewed artifact
+    // Fetches content for a selected prediction (prediction_details.json and lists its plots)
+    const fetchSelectedPredictionData = useCallback(async (prediction) => {
+        if (!user || !prediction || !imageDetails) return;
+        setIsLoadingSelectedPredictionContent(true);
+        setSelectedPredictionDetailsJson(null);
+        setPredictionArtifacts([]); // Clear old artifacts
+        setPageError(null);
+
         try {
-            const data = await predictionService.listPredictionArtifacts(
-                user.username,
-                String(prediction.imageId), // Ensure string for path construction
-                prediction.modelExperimentRunId,
-                subPath
+            // 1. Fetch prediction_details.json
+            const jsonContentStr = await predictionService.getPredictionArtifactContent(
+                user.username, String(imageDetails.id), prediction.modelExperimentRunId, "prediction_details.json"
             );
-            setPredictionArtifacts(data);
+            setSelectedPredictionDetailsJson(JSON.parse(jsonContentStr));
+
+            // 2. List artifacts in the "plots" subfolder for this prediction
+            const plotArtifacts = await predictionService.listPredictionArtifacts(
+                user.username, String(imageDetails.id), prediction.modelExperimentRunId, "plots"
+            );
+            setPredictionArtifacts(plotArtifacts.filter(art => getArtifactType(art.name) === 'image')); // Only image plots
+
         } catch (err) {
-            setPageError(prev => `${prev ? prev + '; ' : ''}Failed to list prediction artifacts: ${err.message}`);
-            setPredictionArtifacts([]);
+            setPageError(err.response?.data?.message || err.message || `Failed to load details for prediction made with model ${prediction.modelExperimentRunId}.`);
+            setSelectedPredictionDetailsJson({ error: "Could not load details." });
         } finally {
-            setIsLoadingArtifactContent(false);
+            setIsLoadingSelectedPredictionContent(false);
         }
-    }, [user]);
+    }, [user, imageDetails]);
 
     const handlePredictionSelect = (prediction) => {
         setSelectedPrediction(prediction);
-        setPredictionArtifacts([]); // Clear old artifacts before fetching new ones
-        fetchPredictionArtifacts(prediction);
-    };
-
-    const handleArtifactClick = async (artifactNode) => {
-        if (!user || !selectedPrediction || !imageDetails) return;
-
-        setIsLoadingArtifactContent(true);
-        setSelectedArtifactToView({ name: artifactNode.name, type: 'loading', content: null, url: null });
-        const artifactType = getArtifactType(artifactNode.name);
-        const artifactRelativePath = artifactNode.path; // e.g., "plots/lime.png" or "prediction_details.json"
-
-        try {
-            const pythonApiBaseForPredArtifacts = `/python-proxy-artifacts/predictions/${user.username}/${imageDetails.id}/${selectedPrediction.modelExperimentRunId}`;
-
-            if (artifactType === 'image') {
-                setSelectedArtifactToView({
-                    name: artifactNode.name,
-                    type: artifactType,
-                    url: `${API_BASE_URL}${pythonApiBaseForPredArtifacts}/${artifactRelativePath}`,
-                    content: null,
-                });
-            } else { // For JSON, log, csv
-                const content = await predictionService.getPredictionArtifactContent(
-                    user.username,
-                    String(imageDetails.id),
-                    selectedPrediction.modelExperimentRunId,
-                    artifactRelativePath
-                );
-                setSelectedArtifactToView({
-                    name: artifactNode.name,
-                    type: artifactType,
-                    content: content,
-                    url: null,
-                });
-            }
-        } catch (err) {
-            setPageError(`Failed to load artifact ${artifactNode.name}: ${err.message}`);
-            setSelectedArtifactToView({ name: artifactNode.name, type: 'error', content: err.message });
-        } finally {
-            setIsLoadingArtifactContent(false);
+        setActiveContentTab(0); // Default to probabilities tab
+        if (prediction) {
+            fetchSelectedPredictionData(prediction);
+        } else { // Deselected or no prediction
+            setSelectedPredictionDetailsJson(null);
+            setPredictionArtifacts([]);
         }
     };
 
-    const handlePredictionCreated = () => {
-        setNewPredictionModalOpen(false);
-        fetchPageData(); // Refresh predictions list and potentially image details
+    // Create object URL for main image display only when needed
+    const mainImageDisplayUrl = useMemo(() => {
+        if (mainImageBlob instanceof Blob) {
+            return URL.createObjectURL(mainImageBlob);
+        }
+        return null;
+    }, [mainImageBlob]);
+
+    const openFullscreen = (src, title, type = 'url') => {
+        setFullscreenModal({ open: true, src, title, type });
     };
 
-    const openFullscreenImage = (blob, title) => {
-        setFullscreenModalSource({ src: blob, type: 'blob', title: title });
-        setFullscreenModalOpen(true);
+    // CSV Sorting state for probabilities table
+    const [probTableOrder, setProbTableOrder] = useState('desc');
+    const [probTableOrderBy, setProbTableOrderBy] = useState('probability'); // Default sort by probability
+
+    const handleProbTableSortRequest = (property) => {
+        const isAsc = probTableOrderBy === property && probTableOrder === 'asc';
+        setProbTableOrder(isAsc ? 'desc' : 'asc');
+        setProbTableOrderBy(property);
     };
-    const openFullscreenPlot = (url, title) => {
-        setFullscreenModalSource({ src: url, type: 'url', title: title });
-        setFullscreenModalOpen(true);
+
+    const sortedProbabilities = useMemo(() => {
+        if (!selectedPredictionDetailsJson || !selectedPredictionDetailsJson.top_k_predictions_for_plot) {
+            return [];
+        }
+        // top_k_predictions_for_plot is [ [className, prob], ... ]
+        // Convert to object array for easier sorting with stableSort
+        const data = selectedPredictionDetailsJson.top_k_predictions_for_plot.map(p => ({ className: p[0], probability: p[1] }));
+        return stableSort(data, getComparator(probTableOrder, probTableOrderBy));
+    }, [selectedPredictionDetailsJson, probTableOrder, probTableOrderBy]);
+
+    const getPlotUrl = (plotName) => {
+        if (!user || !imageDetails || !selectedPrediction) return '';
+        // This needs to call the Java proxy that gets content from Python
+        return `${API_BASE_URL}/api/predictions/${imageDetails.id}/model/${selectedPrediction.modelExperimentRunId}/artifacts/content/plots/${plotName}`;
     };
 
 
-    if (isLoadingPageData && !imageDetails) return <Container sx={{mt:2}}><LoadingSpinner /></Container>;
-    if (pageError && !imageDetails) return <Container sx={{mt:2}}><Alert severity="error">{pageError}</Alert></Container>;
+    // --- Main Render ---
+    if (isLoadingPageData && !imageDetails) return <Container sx={{mt:2, textAlign: 'center'}}><CircularProgress size={50} sx={{mt:5}}/><Typography>Loading image details...</Typography></Container>;
+    if (pageError && !imageDetails) return <Container sx={{mt:2}}><Alert severity="error" onClose={() => setPageError(null)}>{pageError}</Alert></Container>;
+    if (!imageDetails) return <Container sx={{mt:2}}><Alert severity="info">Image details not available or ID not found.</Alert></Container>;
+
 
     return (
         <Container maxWidth="xl" sx={{ mt: 2, mb: 4 }}>
-            <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/images')} sx={{ mb: 2 }}>
-                Back to Images
-            </Button>
+            <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/images')} sx={{ mb: 2 }}>Back to Images</Button>
 
             <Grid container spacing={3}>
-                {/* Left Column: Image and Predictions List */}
                 <Grid item xs={12} md={4}>
-                    {imageDetails && (
-                        <Paper elevation={3} sx={{ p: 2, mb: 2, position: 'sticky', top: '80px' }}>
-                            <Typography variant="h5" gutterBottom>Image: {imageDetails.id}.{imageDetails.format}</Typography>
-                            <Box sx={{ textAlign: 'center', mb: 1, position: 'relative' }}>
-                                {isLoadingMainImage ? (
-                                    <Skeleton variant="rectangular" width="100%" height={250} animation="wave" sx={{ borderRadius: 1 }} />
-                                ) : mainImageError ? (
-                                    <Box sx={{ height: 250, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'grey.200', borderRadius: 1 }}>
-                                        <BrokenImageIcon color="action" sx={{ fontSize: 60 }} />
-                                        <Typography color="textSecondary">Image Preview Unavailable</Typography>
-                                    </Box>
-                                ) : (
-                                    <>
-                                        <CardMedia component="img" image={mainImageBlob ? URL.createObjectURL(mainImageBlob) : ''} alt={`Image ${imageDetails.id}`} sx={{ borderRadius: 1, maxHeight: 300, width: 'auto', maxWidth: '100%', objectFit: 'contain' }} />
-                                        <IconButton onClick={() => mainImageBlob && openFullscreenImage(mainImageBlob, `Image ${imageDetails.id}.${imageDetails.format}`)}
-                                                    sx={{position:'absolute', top: 8, right: 8, backgroundColor: 'rgba(0,0,0,0.3)', '&:hover': {backgroundColor: 'rgba(0,0,0,0.5)'}}}
-                                                    size="small"
-                                                    disabled={!mainImageBlob || mainImageError}
-                                        >
-                                            <ZoomInIcon sx={{color: 'white'}}/>
-                                        </IconButton>
-                                    </>
-                                )}
-                            </Box>
-                            <Typography variant="body2" color="text.secondary">Uploaded: {new Date(imageDetails.uploadedAt).toLocaleString()}</Typography>
-                            <Button fullWidth variant="contained" startIcon={<AddCircleOutlineIcon />} onClick={() => setNewPredictionModalOpen(true)} sx={{ mt: 2 }}>
-                                New Prediction
-                            </Button>
-                        </Paper>
-                    )}
+                    <Paper elevation={3} sx={{ p: 2, mb: 2, position: 'sticky', top: '80px' }}>
+                        <Typography variant="h5" gutterBottom>Image: {imageDetails.id}.{imageDetails.format}</Typography>
+                        <Box sx={{ textAlign: 'center', mb: 1, position: 'relative' }}>
+                            {isLoadingMainImage ? ( // Use isLoadingMainImage here
+                                <Skeleton variant="rectangular" width="100%" height={250} animation="wave" sx={{ borderRadius: 1 }} />
+                            ) : mainImageError || !mainImageDisplayUrl ? ( // Check for error OR if URL couldn't be created
+                                <Box sx={{ height: 250, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', backgroundColor: 'grey.200', borderRadius: 1 }}>
+                                    <BrokenImageIcon color="action" sx={{ fontSize: 60 }} />
+                                    <Typography color="textSecondary">Image Preview Unavailable</Typography>
+                                </Box>
+                            ) : (
+                                <>
+                                    <CardMedia component="img" image={mainImageDisplayUrl} alt={`Image ${imageDetails.id}`} sx={{ maxHeight: 300, objectFit: 'contain', borderRadius: 1 }} />
+                                    <IconButton onClick={() => mainImageBlob && openFullscreen(mainImageBlob, `Image ${imageDetails.id}`, 'blob')} sx={{position:'absolute', top: 8, right: 8, bgcolor: 'rgba(0,0,0,0.3)', '&:hover':{bgcolor:'rgba(0,0,0,0.5)'}}} size="small" disabled={!mainImageBlob || mainImageError}>
+                                        <ZoomInIcon sx={{color: 'white'}}/>
+                                    </IconButton>
+                                </>
+                            )}
+                        </Box>
+                        <Typography variant="body2" color="text.secondary">Uploaded: {formatDateSafe(imageDetails.uploadedAt)}</Typography>
+                        <Button fullWidth variant="contained" startIcon={<AddCircleOutlineIcon />} onClick={() => setNewPredictionModalOpen(true)} sx={{ mt: 2 }}>New Prediction</Button>
+                    </Paper>
 
                     <Paper elevation={1} sx={{p:1, mt:2}}>
                         <Typography variant="h6" sx={{p:1}}>Predictions History</Typography>
-                        {isLoadingPageData && predictions.length === 0 ? <CircularProgress sx={{m:2}} /> : (
-                            <List dense sx={{maxHeight: 'calc(100vh - 500px)', overflowY: 'auto'}}> {/* Adjust maxHeight as needed */}
+                        {isLoadingPredictionsList && predictions.length === 0 ? <CircularProgress sx={{m:2}} /> : ( // Use isLoadingPredictionsList
+                            <List dense sx={{maxHeight: 'calc(100vh - 550px)', overflowY: 'auto'}}>
                                 {predictions.map(pred => (
                                     <ListItemButton key={pred.id} selected={selectedPrediction?.id === pred.id} onClick={() => handlePredictionSelect(pred)}>
                                         <ListItemIcon sx={{minWidth: '36px'}}><AssessmentIcon fontSize="small" color={selectedPrediction?.id === pred.id ? "primary" : "action"}/></ListItemIcon>
                                         <ListItemText
                                             primary={`${pred.predictedClass} (${(pred.confidence * 100).toFixed(1)}%)`}
-                                            secondary={`Model: ...${pred.modelExperimentRunId.slice(-6)} | ${new Date(pred.predictionTimestamp).toLocaleDateString()}`}
+                                            secondary={`Model: ${pred.modelExperimentName || (pred.modelExperimentRunId ? `...${pred.modelExperimentRunId.slice(-6)}` : 'Unknown')} | ${formatDateSafe(pred.predictionTimestamp)}`}
                                             primaryTypographyProps={{variant: 'body2', fontWeight: selectedPrediction?.id === pred.id ? 'bold' : 'normal'}}
                                         />
                                     </ListItemButton>
                                 ))}
-                                {predictions.length === 0 && !isLoadingPageData && <Typography sx={{p:2, textAlign:'center'}} variant="body2">No predictions yet for this image.</Typography>}
+                                {predictions.length === 0 && !isLoadingPredictionsList && <Typography sx={{p:2, textAlign:'center'}} variant="body2">No predictions recorded for this image.</Typography>}
                             </List>
                         )}
                     </Paper>
@@ -273,87 +270,112 @@ const ViewImagePredictionsPage = () => {
 
                 {/* Right Column: Selected Prediction Details & Artifacts */}
                 <Grid item xs={12} md={8}>
-                    {selectedPrediction ? (
-                        <Paper elevation={2} sx={{ p: 2 }}>
-                            <Typography variant="h5" gutterBottom>
-                                Prediction Details
-                            </Typography>
-                            <Typography variant="h6">Predicted Class: <Chip label={selectedPrediction.predictedClass} color="primary" size="small"/></Typography>
-                            <Typography variant="subtitle1">Confidence: {(selectedPrediction.confidence * 100).toFixed(2)}%</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                                Model from Experiment: {selectedPrediction.modelExperimentName || (selectedPrediction.modelExperimentRunId ? `ID ...${selectedPrediction.modelExperimentRunId.slice(-6)} (Details Unavailable)` : 'Unknown/Deleted')}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">Prediction Timestamp: {new Date(selectedPrediction.predictionTimestamp).toLocaleString()}</Typography>
-                            <Divider sx={{ my: 2 }} />
+                    {!selectedPrediction && !isLoadingSelectedPredictionContent && (
+                        <Paper elevation={2} sx={{ p: 3, textAlign: 'center', minHeight: 400, display:'flex', alignItems:'center', justifyContent:'center' }}>
+                            <Typography variant="h6" color="text.secondary">Select a prediction from the list to view details.</Typography>
+                        </Paper>
+                    )}
+                    {isLoadingSelectedPredictionContent && <Box sx={{display:'flex', justifyContent:'center', alignItems:'center', height:400}}><CircularProgress /></Box>}
 
-                            <Typography variant="h6">Artifacts for this Prediction</Typography>
-                            {/* TODO: Add Breadcrumbs for prediction artifacts if they can have sub-folders (currently they don't in the design) */}
-                            {isLoadingArtifactContent && predictionArtifacts.length === 0 ? <CircularProgress sx={{my:2}} /> : (
-                                <List dense component={Paper} elevation={0} sx={{border: '1px solid #eee', borderRadius:1, maxHeight: 150, overflowY:'auto', mb:1}}>
-                                    {predictionArtifacts.sort((a,b) => a.name.localeCompare(b.name)).map((node) => ( // Simple sort
-                                        <ListItem key={node.path} disablePadding >
-                                            <ListItemButton onClick={() => handleArtifactClick(node)} selected={selectedArtifactToView?.name === node.name}>
-                                                <ListItemIcon sx={{minWidth: '32px'}}>{node.type === 'folder' ? <FolderIcon fontSize="small" /> : <ArticleIcon fontSize="small" />}</ListItemIcon>
-                                                <ListItemText primary={node.name} primaryTypographyProps={{ variant: 'body2', noWrap: true }} />
-                                                {getArtifactType(node.name) === 'image' && (
-                                                    <IconButton size="small" onClick={(e) => {
-                                                        e.stopPropagation(); // Prevent ListItemButton click
-                                                        const artifactBasePath = `${API_BASE_URL}/python-proxy-artifacts/predictions/${user.username}/${imageDetails.id}/${selectedPrediction.modelExperimentRunId}`;
-                                                        openFullscreenPlot(`${artifactBasePath}/${node.path}`, `${node.name} for Prediction ${selectedPrediction.id}`);
-                                                    }}>
-                                                        <ZoomInIcon fontSize="small"/>
-                                                    </IconButton>
-                                                )}
-                                            </ListItemButton>
-                                        </ListItem>
-                                    ))}
-                                    {predictionArtifacts.length === 0 && !isLoadingArtifactContent && <Typography sx={{p:2, textAlign:'center'}} variant="body2">No artifacts found for this prediction.</Typography>}
-                                </List>
-                            )}
-                            <Box sx={{ mt: 1, border: '1px dashed grey', p: selectedArtifactToView ? 0 : 2, borderRadius: 1, minHeight: 300, maxHeight: 'calc(100vh - 550px)', overflowY:'auto' }}>
-                                {isLoadingArtifactContent && selectedArtifactToView?.type === 'loading' && <LoadingSpinner />}
-                                {selectedArtifactToView && selectedArtifactToView.type !== 'loading' && (
-                                    <ArtifactViewer
-                                        artifactName={selectedArtifactToView.name}
-                                        artifactType={selectedArtifactToView.type}
-                                        artifactContent={selectedArtifactToView.content}
-                                        artifactUrl={selectedArtifactToView.url} // Used if type is 'image'
-                                        title={selectedArtifactToView.name}
-                                    />
+                    {selectedPrediction && selectedPredictionDetailsJson && !isLoadingSelectedPredictionContent && (
+                        <Paper elevation={2} sx={{ p: 2 }}>
+                            <Box sx={{mb:2}}>
+                                <Typography variant="h5" gutterBottom>Details for Prediction with Model: {selectedPrediction.modelExperimentName || `...${selectedPrediction.modelExperimentRunId.slice(-6)}`}</Typography>
+                                <Typography variant="h6">Main Prediction: <Chip label={`${selectedPredictionDetailsJson.predicted_class_name} (${(selectedPredictionDetailsJson.confidence * 100).toFixed(1)}%)`} color="primary" /></Typography>
+                                <Typography variant="caption" display="block">Image Source Path: {selectedPredictionDetailsJson.image_user_source_path}</Typography>
+                            </Box>
+
+                            <Tabs value={activeContentTab} onChange={(e, newValue) => setActiveContentTab(newValue)} variant="fullWidth">
+                                <Tab label="Class Probabilities & Plot" icon={<BarChartIcon/>} iconPosition="start" />
+                                <Tab label="LIME Explanation" icon={<InsightsIcon/>} iconPosition="start" disabled={!selectedPredictionDetailsJson.lime_explanation || selectedPredictionDetailsJson.lime_explanation.error} />
+                            </Tabs>
+
+                            {/* Probabilities Tab Panel */}
+                            <Box role="tabpanel" hidden={activeContentTab !== 0} sx={{pt:2}}>
+                                {activeContentTab === 0 && (
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} md={5}> {/* Probabilities Table */}
+                                            <Typography variant="subtitle1" gutterBottom>Top Class Probabilities</Typography>
+                                            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 350 }}>
+                                                <Table stickyHeader size="small">
+                                                    <TableHead><TableRow>
+                                                        <TableCell><TableSortLabel active={probTableOrderBy==='className'} direction={probTableOrderBy==='className' ? probTableOrder : 'asc'} onClick={()=>handleProbTableSortRequest('className')}>Class</TableSortLabel></TableCell>
+                                                        <TableCell align="right"><TableSortLabel active={probTableOrderBy==='probability'} direction={probTableOrderBy==='probability' ? probTableOrder : 'asc'} onClick={()=>handleProbTableSortRequest('probability')}>Probability</TableSortLabel></TableCell>
+                                                    </TableRow></TableHead>
+                                                    <TableBody>
+                                                        {sortedProbabilities.map(p => (
+                                                            <TableRow key={p.className} hover selected={p.className === selectedPredictionDetailsJson.predicted_class_name}>
+                                                                <TableCell>{p.className}</TableCell>
+                                                                <TableCell align="right">{(p.probability * 100).toFixed(2)}%</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </TableContainer>
+                                        </Grid>
+                                        <Grid item xs={12} md={7}> {/* Probability Bar Plot */}
+                                            <Typography variant="subtitle1" gutterBottom>Probability Distribution Plot</Typography>
+                                            {predictionArtifacts.find(a => a.name === 'probability_distribution.png') ? (
+                                                <PlotViewer
+                                                    artifactUrl={getPlotUrl('probability_distribution.png')}
+                                                    altText="Probability Distribution Plot"
+                                                    onZoom={() => openFullscreen(getPlotUrl('probability_distribution.png'), 'Probability Distribution')}
+                                                />
+                                            ) : <Typography variant="caption">Plot not available.</Typography>}
+                                        </Grid>
+                                    </Grid>
                                 )}
-                                {!selectedArtifactToView && !isLoadingArtifactContent && (
-                                    pageError ? <Alert severity="warning" sx={{m:1}}>{pageError.includes("Failed to load artifact") ? pageError : "Select an artifact to view."}</Alert> :
-                                        <Typography sx={{ textAlign: 'center', color: 'text.secondary', mt: '20%' }}>
-                                            Select an artifact to view its content.
-                                        </Typography>
+                            </Box>
+
+                            {/* LIME Tab Panel */}
+                            <Box role="tabpanel" hidden={activeContentTab !== 1} sx={{pt:2}}>
+                                {activeContentTab === 1 && selectedPredictionDetailsJson.lime_explanation && !selectedPredictionDetailsJson.lime_explanation.error && (
+                                    <Grid container spacing={2}>
+                                        <Grid item xs={12} md={5}> {/* LIME Weights/Features */}
+                                            <Typography variant="subtitle1" gutterBottom>LIME Feature Weights for "{selectedPredictionDetailsJson.lime_explanation.explained_class_name}"</Typography>
+                                            <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 350 }}>
+                                                <Table stickyHeader size="small">
+                                                    <TableHead><TableRow><TableCell>Feature (Segment ID)</TableCell><TableCell align="right">Weight</TableCell></TableRow></TableHead>
+                                                    <TableBody>
+                                                        {(selectedPredictionDetailsJson.lime_explanation.feature_weights || []).map(fw => (
+                                                            <TableRow key={fw[0]} hover>
+                                                                <TableCell>{fw[0]}</TableCell>
+                                                                <TableCell align="right" sx={{color: fw[1] > 0 ? 'success.main' : 'error.main'}}>{fw[1].toFixed(4)}</TableCell>
+                                                            </TableRow>
+                                                        ))}
+                                                    </TableBody>
+                                                </Table>
+                                            </TableContainer>
+                                            <Typography variant="caption" display="block" sx={{mt:1}}>Showing top {selectedPredictionDetailsJson.lime_explanation.num_features_from_lime_run} features.</Typography>
+                                        </Grid>
+                                        <Grid item xs={12} md={7}> {/* LIME Explanation Plot */}
+                                            <Typography variant="subtitle1" gutterBottom>LIME Explanation Plot</Typography>
+                                            {predictionArtifacts.find(a => a.name === 'lime_explanation.png') ? (
+                                                <PlotViewer
+                                                    artifactUrl={getPlotUrl('lime_explanation.png')}
+                                                    altText="LIME Explanation Plot"
+                                                    onZoom={() => openFullscreen(getPlotUrl('lime_explanation.png'), 'LIME Explanation')}
+                                                />
+                                            ) : <Typography variant="caption">LIME plot not available.</Typography>}
+                                        </Grid>
+                                    </Grid>
+                                )}
+                                {activeContentTab === 1 && selectedPredictionDetailsJson.lime_explanation?.error && (
+                                    <Alert severity="warning">LIME explanation could not be generated: {selectedPredictionDetailsJson.lime_explanation.error}</Alert>
                                 )}
                             </Box>
                         </Paper>
-                    ) : (
-                        <Paper elevation={2} sx={{ p: 3, textAlign: 'center', minHeight: 'calc(70vh)', display:'flex', flexDirection:'column', justifyContent:'center' }}>
-                            <Typography variant="h6" color="text.secondary">
-                                {isLoadingPageData ? 'Loading predictions...' : 'Select a prediction from the list on the left, or create a new one.'}
-                            </Typography>
+                    )}
+                    {selectedPrediction && !selectedPredictionDetailsJson && !isLoadingSelectedPredictionContent && (
+                        <Paper elevation={2} sx={{p:3, textAlign:'center'}}>
+                            <Typography color="error">Could not load prediction details (JSON file not found or unparsable).</Typography>
                         </Paper>
                     )}
                 </Grid>
             </Grid>
 
-            {imageDetails && (
-                <NewPredictionModal
-                    open={newPredictionModalOpen}
-                    onClose={() => setNewPredictionModalOpen(false)}
-                    imageId={Number(imageId)} // Pass the imageId
-                    onPredictionCreated={handlePredictionCreated}
-                />
-            )}
-            <ImageFullscreenModal
-                open={fullscreenModalOpen}
-                onClose={() => setFullscreenModalOpen(false)}
-                imageUrl={fullscreenModalSource.type === 'url' ? fullscreenModalSource.src : null}
-                imageBlob={fullscreenModalSource.type === 'blob' ? fullscreenModalSource.src : null}
-                title={fullscreenModalSource.title}
-            />
+            <NewPredictionModal open={newPredictionModalOpen} onClose={() => setNewPredictionModalOpen(false)} imageId={Number(routeImageId)} onPredictionCreated={handlePredictionCreated} />
+            <ImageFullscreenModal open={fullscreenModal.open} onClose={() => setFullscreenModal({open:false, src:null, title:''})} imageUrl={fullscreenModal.type === 'url' ? fullscreenModal.src : null} imageBlob={fullscreenModal.type === 'blob' ? fullscreenModal.src : null} title={fullscreenModal.title} />
         </Container>
     );
 };

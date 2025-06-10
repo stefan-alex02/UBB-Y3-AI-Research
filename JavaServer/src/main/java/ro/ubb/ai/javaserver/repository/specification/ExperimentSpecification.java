@@ -5,48 +5,65 @@ import ro.ubb.ai.javaserver.entity.Experiment;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
-import org.springframework.util.StringUtils; // For StringUtils.hasText
+import org.springframework.util.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-@Component // Make it a Spring component if you want to autowire it, though static methods are also fine
+@Component
 public class ExperimentSpecification {
 
+    public static final String NAME = "name"; // User-defined name
+    public static final String MODEL_TYPE = "modelType";
+    public static final String DATASET_NAME = "datasetName";
+    public static final String STATUS = "status";
+    public static final String START_TIME = "startTime";
+    public static final String END_TIME = "endTime";
+    public static final String MODEL_RELATIVE_PATH = "modelRelativePath";
+
     public static Specification<Experiment> fromFilter(ExperimentFilterDTO filter) {
-        return (root, query, criteriaBuilder) -> {
+        return (root, query, cb) -> { // cb for criteriaBuilder
             List<Predicate> predicates = new ArrayList<>();
 
             if (filter == null) {
-                return criteriaBuilder.conjunction(); // No filters, return all
+                return cb.conjunction();
             }
 
-            if (StringUtils.hasText(filter.getModelType())) {
-                predicates.add(criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("modelType")), // Use metamodel for type safety
-                        filter.getModelType().toLowerCase()
+            if (StringUtils.hasText(filter.getNameContains())) {
+                predicates.add(cb.like(
+                        cb.lower(root.get(NAME)), // User-defined name
+                        "%" + filter.getNameContains().toLowerCase() + "%"
                 ));
+            }
+            if (StringUtils.hasText(filter.getModelType())) {
+                predicates.add(cb.equal(root.get(MODEL_TYPE), filter.getModelType()));
             }
             if (StringUtils.hasText(filter.getDatasetName())) {
-                predicates.add(criteriaBuilder.equal(
-                        criteriaBuilder.lower(root.get("datasetName")),
-                        filter.getDatasetName().toLowerCase()
-                ));
+                predicates.add(cb.equal(root.get(DATASET_NAME), filter.getDatasetName()));
             }
             if (filter.getStatus() != null) {
-                predicates.add(criteriaBuilder.equal(root.get("status"), filter.getStatus()));
+                predicates.add(cb.equal(root.get(STATUS), filter.getStatus()));
+            }
+            if (filter.getHasModelSaved() != null) {
+                if (Boolean.TRUE.equals(filter.getHasModelSaved())) {
+                    predicates.add(cb.isNotNull(root.get(MODEL_RELATIVE_PATH)));
+                    predicates.add(cb.notEqual(root.get(MODEL_RELATIVE_PATH), "")); // Also check not empty string
+                } else { // hasModelSaved is false
+                    predicates.add(cb.or(
+                            cb.isNull(root.get(MODEL_RELATIVE_PATH)),
+                            cb.equal(root.get(MODEL_RELATIVE_PATH), "")
+                    ));
+                }
             }
             if (filter.getStartedAfter() != null) {
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("startTime"), filter.getStartedAfter()));
+                predicates.add(cb.greaterThanOrEqualTo(root.get(START_TIME), filter.getStartedAfter()));
             }
             if (filter.getFinishedBefore() != null) {
-                // If filtering for finished experiments, ensure endTime is not null
-                predicates.add(criteriaBuilder.isNotNull(root.get("endTime")));
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("endTime"), filter.getFinishedBefore()));
+                predicates.add(cb.isNotNull(root.get(END_TIME))); // Only consider if ended
+                predicates.add(cb.lessThanOrEqualTo(root.get(END_TIME), filter.getFinishedBefore()));
             }
-            // Add more filters here, e.g., by name (LIKE query), by user_id etc.
 
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return cb.and(predicates.toArray(new Predicate[0]));
         };
     }
 }

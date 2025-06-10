@@ -78,6 +78,7 @@ public class ExperimentServiceImpl implements ExperimentService {
                 createRequest.getOfflineAugmentation(),
                 createRequest.getAugmentationStrategyOverride(),
                 createRequest.getTestSplitRatioIfFlat(),
+                createRequest.getRandomSeed(),
                 createRequest.getForceFlatForFixedCv()
         );
 
