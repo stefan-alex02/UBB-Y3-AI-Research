@@ -130,3 +130,40 @@ class LocalFileSystemRepository(ArtifactRepository):
         except Exception as e:
             logger.error(f"Failed to save image object locally to {full_path}: {e}")
             return None
+
+    def delete_object(self, key: str) -> bool:
+        full_path = self._get_full_path(key)
+        try:
+            if full_path.is_file():
+                full_path.unlink()
+                logger.info(f"Local file deleted: {full_path}")
+                return True
+            elif full_path.is_dir():  # Should not happen for single object, but good to check
+                logger.warning(
+                    f"Attempted to delete_object on a directory: {full_path}. Use delete_objects_by_prefix for directories.")
+                return False
+            else:
+                logger.info(f"Local file for deletion not found: {full_path}")
+                return True  # Not finding it is like it's already deleted
+        except Exception as e:
+            logger.error(f"Failed to delete local file {full_path}: {e}")
+            return False
+
+    def delete_objects_by_prefix(self, prefix: str) -> bool:
+        # For local file system, prefix usually corresponds to a directory
+        full_prefix_path = self._get_full_path(prefix)
+        try:
+            if full_prefix_path.is_dir():
+                shutil.rmtree(full_prefix_path)
+                logger.info(f"Local directory and all its contents deleted: {full_prefix_path}")
+                return True
+            elif full_prefix_path.exists():  # It's a file, not a directory prefix
+                logger.warning(
+                    f"Attempted to delete_objects_by_prefix on a file: {full_prefix_path}. Use delete_object.")
+                return self.delete_object(prefix)  # Try deleting it as a single file
+            else:
+                logger.info(f"Local directory/prefix for deletion not found: {full_prefix_path}")
+                return True  # Not finding it is like it's already deleted
+        except Exception as e:
+            logger.error(f"Failed to delete local directory/prefix {full_prefix_path}: {e}")
+            return False

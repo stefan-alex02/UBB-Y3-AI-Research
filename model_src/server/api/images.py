@@ -8,6 +8,7 @@ from pydantic import BaseModel
 # from app.main import artifact_repo_instance # Avoid global
 import logging
 from ..core.config import APP_LOGGER_NAME # Import the consistent name
+from ..persistence import ArtifactRepository
 
 logger = logging.getLogger(APP_LOGGER_NAME) # Use the same name
 
@@ -101,6 +102,35 @@ async def get_image_endpoint(username: str, image_filename_with_ext: str, fast_a
         logger.error(f"Error retrieving image {image_key} from Python storage: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Failed to retrieve image from storage.")
 
-# TODO: DELETE endpoint for images
-# Needs to delete from MinIO/local file system.
-# @router.delete("/{username}/{image_id_with_format}") ...
+
+@router.delete("/{username}/{image_id_with_format}")
+async def delete_image_api(
+        username: str,
+        image_id_with_format: str,  # e.g., "123.png"
+        fast_api_request: FastAPIRequest
+):
+    logger.info(f"Received request to delete image: {image_id_with_format} for user {username}")
+    artifact_repo: ArtifactRepository = fast_api_request.app.state.artifact_repo
+    if not artifact_repo:
+        raise HTTPException(status_code=500, detail="Artifact repository not configured.")
+
+    image_key = str((PurePath("images") / username / image_id_with_format).as_posix())
+
+    success = artifact_repo.delete_object(image_key)
+    if success:
+        # Also delete all associated prediction folders for this image
+        # Prediction folder structure: predictions/{username}/{image_id_without_ext}/
+        image_id_without_ext = PurePath(image_id_with_format).stem
+        predictions_prefix_for_image = str((PurePath("predictions") / username / image_id_without_ext).as_posix()) + "/"
+        logger.info(
+            f"Attempting to delete associated prediction artifacts under prefix: {predictions_prefix_for_image}")
+        preds_deleted_success = artifact_repo.delete_objects_by_prefix(predictions_prefix_for_image)
+        if not preds_deleted_success:
+            logger.warning(
+                f"Failed to delete all prediction artifacts for image {image_id_with_format}, but image file itself might be deleted.")
+            # Decide if this should be a partial success or an error. For now, proceed.
+
+        return {"message": f"Image {image_key} and associated predictions deletion process initiated."}
+    else:
+        # If image deletion itself failed, it's more critical
+        raise HTTPException(status_code=500, detail=f"Failed to delete image file {image_key} from artifact store.")

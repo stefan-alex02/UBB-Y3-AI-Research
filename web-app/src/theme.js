@@ -1,21 +1,23 @@
 // src/theme.js
 import { createTheme, alpha } from '@mui/material/styles';
-import { blue, pink, green, grey, amber, lightBlue, lightGreen } from '@mui/material/colors'; // Added more colors
+import { blue, green, grey, amber, lightBlue, lightGreen } from '@mui/material/colors'; // Added more colors
 
 // Function to get design tokens based on mode and optional userRole
 export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role if not provided
     const isMeteorologist = userRole === 'METEOROLOGIST';
 
     // Define focus colors based on role and mode
-    let lightFocusColor, darkFocusColor, darkFocusColor2, dividerColor, primaryColor;
+    let lightFocusColor, darkFocusColor, darkFocusColor2, dividerColor, primaryColor, secondaryColor;
     if (isMeteorologist) {
         primaryColor = green; // Use green for meteorologists
+        secondaryColor = amber;
         lightFocusColor = green[600];
         darkFocusColor = lightGreen[400];
         darkFocusColor2 = green[300]; // Lighter green for dark mode primary
         dividerColor = green[400];
     } else {
         primaryColor = blue; // Default to blue for other roles
+        secondaryColor = amber;
         lightFocusColor = blue[600];
         darkFocusColor = lightBlue[400];
         darkFocusColor2 = blue[300]; // Lighter blue for dark mode primary
@@ -29,7 +31,7 @@ export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role 
                 ? {
                     // Palette values for light mode
                     primary: primaryColor,
-                    secondary: pink,
+                    secondary: secondaryColor,
                     divider: amber[200],
                     focusRing: lightFocusColor, // Custom focus ring color for light mode
                     text: {
@@ -49,7 +51,7 @@ export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role 
                 : {
                     // Palette values for dark mode
                     primary: { main: darkFocusColor }, // Lighter blue for dark mode primary
-                    secondary: { main: pink[300] },   // Lighter pink
+                    secondary: { main: secondaryColor[300] },
                     divider: dividerColor,
                     focusRing: darkFocusColor, // Custom focus ring color for dark mode
                     background: {

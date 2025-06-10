@@ -1,17 +1,17 @@
 import io
 import logging
+from pathlib import PurePath
 from typing import List, Optional
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Request as FastAPIRequest
 from fastapi.responses import StreamingResponse
 
 from .utils import RunExperimentRequest, ExperimentRunResponse, ArtifactNode
-from ..core.config import APP_LOGGER_NAME  # Import the consistent name
+from ..core.config import APP_LOGGER_NAME
 from ..services import experiment_service
 from ..services.experiment_service import get_artifact_type_from_filename
 
-
-logger = logging.getLogger(APP_LOGGER_NAME) # Use the same name
+logger = logging.getLogger(APP_LOGGER_NAME)
 
 router = APIRouter()
 
@@ -109,6 +109,23 @@ async def get_experiment_artifact_content_endpoint(  # Renamed for clarity
         logger.error(f"Error fetching artifact content for .../{artifact_path}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to fetch artifact content: {str(e)}")
 
-# TODO: Add DELETE /experiments/{dataset_name}/{model_type}/{experiment_run_id}
-# This would call a service function that lists ALL objects (recursively) under the experiment's base prefix
-# and then deletes them one by one or using a bulk delete if the S3 client supports it.
+@router.delete("/{dataset_name}/{model_type}/{experiment_run_id}")
+async def delete_experiment_api(
+        dataset_name: str,
+        model_type: str,
+        experiment_run_id: str,
+        fast_api_request: FastAPIRequest
+):
+    logger.info(
+        f"Received request to delete experiment: {experiment_run_id} (dataset: {dataset_name}, model: {model_type})")
+    artifact_repo = fast_api_request.app.state.artifact_repo
+    if not artifact_repo:
+        raise HTTPException(status_code=500, detail="Artifact repository not configured.")
+
+    experiment_prefix = str((PurePath("experiments") / dataset_name / model_type / experiment_run_id).as_posix()) + "/"
+
+    success = artifact_repo.delete_objects_by_prefix(experiment_prefix)
+    if success:
+        return {"message": f"Experiment artifacts for {experiment_run_id} deletion process initiated."}
+    else:
+        raise HTTPException(status_code=500, detail=f"Failed to delete experiment artifacts for {experiment_run_id}.")

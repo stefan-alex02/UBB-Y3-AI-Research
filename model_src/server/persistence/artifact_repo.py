@@ -41,3 +41,13 @@ class ArtifactRepository(ABC):
     @abstractmethod
     def save_image_object(self, image_bytes: bytes, key: str, content_type: str = 'image/png') -> Optional[str]:
         pass
+
+    @abstractmethod
+    def delete_object(self, key: str) -> bool:
+        """Deletes a single object. Returns True on success, False otherwise."""
+        pass
+
+    @abstractmethod
+    def delete_objects_by_prefix(self, prefix: str) -> bool:
+        """Deates all objects under a given prefix. Returns True if all deletions were attempted (some might fail silently depending on client)."""
+        pass

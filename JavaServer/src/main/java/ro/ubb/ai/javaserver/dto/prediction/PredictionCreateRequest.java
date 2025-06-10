@@ -9,7 +9,7 @@ import java.util.List;
 @Data
 public class PredictionCreateRequest {
     @NotNull
-    private Long imageId; // The image we are predicting on
+    private List<Long> imageIds; // The image we are predicting on
 
     @NotBlank
     private String modelExperimentRunId; // The ExperimentRunId of the model to use

@@ -9,6 +9,8 @@ public class PredictionDTO {
     private Long imageId;
     private String modelExperimentRunId; // Can be null
     private String modelExperimentName; // New field for display
+    private String modelType;
+    private String datasetName;
     private String predictedClass;
     private Float confidence;
     private OffsetDateTime predictionTimestamp;

@@ -33,6 +33,10 @@ import * as PropTypes from "prop-types";
 import {format as formatDateFns} from "date-fns";
 import {DATASET_NAMES, MODEL_TYPES} from '../../pages/experimentConfig';
 import ModelTrainingIcon from "@mui/icons-material/ModelTraining";
+import DatasetIcon from "@mui/icons-material/Dataset";
+import PersonIcon from "@mui/icons-material/Person";
+import EventIcon from "@mui/icons-material/Event";
+
 
 const formatDateSafe = (timestampSeconds) => {
     if (timestampSeconds === null || timestampSeconds === undefined) {
@@ -108,7 +112,7 @@ ModelSelectItem.propTypes = {
     onClick: PropTypes.func
 };
 
-const NewPredictionModal = ({ open, onClose, imageId, onPredictionCreated }) => {
+const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) => {
     const [availableModels, setAvailableModels] = useState([]);
     const [selectedModelExperimentId, setSelectedModelExperimentId] = useState('');
 
@@ -130,22 +134,28 @@ const NewPredictionModal = ({ open, onClose, imageId, onPredictionCreated }) => 
     });
 
     const fetchAvailableModels = useCallback(async () => {
-        setLoadingModels(true); setError('');
+        if (!open) return; // Ensure we only fetch if the modal is intended to be open
+
+        setLoadingModels(true);
+        setError('');
         try {
             const filters = {
                 status: 'COMPLETED',
                 hasModelSaved: true,
-                nameContains: modelFilters.nameContains || undefined, // Add this
+                nameContains: modelFilters.nameContains || undefined,
                 modelType: modelFilters.modelType || undefined,
                 datasetName: modelFilters.datasetName || undefined,
             };
             const pageable = { page: modelPagination.page, size: modelPagination.size, sortBy: 'endTime', sortDir: 'DESC' };
+
             const data = await experimentService.getExperiments(filters, pageable);
-            setAvailableModels(data.content || []);
+            const fetchedModels = data.content || [];
+            setAvailableModels(fetchedModels);
             setModelPagination(prev => ({ ...prev, totalPages: data.totalPages }));
 
-            // If the currently selected model is no longer in the fetched list (due to filter/page change), clear it
-            if (selectedModelExperimentId && data.content && !data.content.some(m => m.experiment_run_id === selectedModelExperimentId)) {
+            // If the currently selected model is no longer in the new list, clear the selection.
+            // This check should happen *after* setting availableModels.
+            if (selectedModelExperimentId && !fetchedModels.some(m => m.experiment_run_id === selectedModelExperimentId)) {
                 setSelectedModelExperimentId('');
             }
 
@@ -155,21 +165,30 @@ const NewPredictionModal = ({ open, onClose, imageId, onPredictionCreated }) => 
         } finally {
             setLoadingModels(false);
         }
-    }, [modelFilters, modelPagination.page, modelPagination.size, selectedModelExperimentId]);
+        // `selectedModelExperimentId` is removed from here to break the loop.
+        // The logic to clear it is now inside the function, and this function will be
+        // re-called if filters/pagination change, at which point the check is still valid.
+    }, [open, modelFilters, modelPagination.page, modelPagination.size]);
+
 
     useEffect(() => {
+        // This effect handles fetching when modal opens or filters/pagination change
         if (open) {
             fetchAvailableModels();
-        } else {
-            // Reset state when modal closes
+        }
+    }, [open, fetchAvailableModels]); // fetchAvailableModels is now more stable
+
+    useEffect(() => {
+        // This effect handles resetting state when the modal is closed
+        if (!open) {
             setSelectedModelExperimentId('');
-            setModelFilters({ nameContains: '', modelType: '', datasetName: '' }); // Reset all filters
-            setModelPagination(prev => ({ ...prev, page: 0, totalPages: 0 })); // Keep size
+            setModelFilters({ nameContains: '', modelType: '', datasetName: '' });
+            setModelPagination(prev => ({ ...prev, page: 0, totalPages: 0 }));
             setAvailableModels([]);
             setError('');
             setPredictConfig({ generateLime: false, limeNumFeatures: 5, limeNumSamples: 100, probPlotTopK: 5 });
         }
-    }, [open, fetchAvailableModels]);
+    }, [open]); // Only depends on 'open'
 
     const handleConfigChange = (event) => {
         const { name, value, checked, type } = event.target;
@@ -199,14 +218,14 @@ const NewPredictionModal = ({ open, onClose, imageId, onPredictionCreated }) => 
             // and the Python config params.
             // The PythonPredictionRequestDTO built in Java service will construct the full details.
             await predictionService.createPrediction({
-                image_id: imageId, // imageId is passed as prop
+                image_ids: imageIds, // imageId is passed as prop
                 model_experiment_run_id: selectedModelExperimentId,
                 generate_lime: predictConfig.generateLime,
                 lime_num_features: predictConfig.limeNumFeatures,
                 lime_num_samples: predictConfig.limeNumSamples,
                 prob_plot_top_k: predictConfig.probPlotTopK,
             });
-            onPredictionCreated(); // Callback to refresh parent component
+            if (onPredictionCreated) onPredictionCreated();
             onClose(); // Close modal
         } catch (err) {
             setError(err.response?.data?.detail || err.message || 'Failed to create prediction.');
@@ -216,8 +235,10 @@ const NewPredictionModal = ({ open, onClose, imageId, onPredictionCreated }) => 
     };
 
     return (
-        <Dialog open={open} onClose={onClose} maxWidth="lg" fullWidth> {/* Increased maxWidth to lg */}
-            <DialogTitle>New Prediction for Image ID: {imageId}</DialogTitle>
+        <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+            <DialogTitle>
+                New Prediction for {imageIds.length > 1 ? `${imageIds.length} Images` : `Image ID: ${imageIds[0]}`}
+            </DialogTitle>
             <DialogContent dividers>
                 {error && <Alert severity="error" sx={{ mb: 2 }} onClose={()=>setError('')}>{error}</Alert>}
 
@@ -301,6 +322,12 @@ const NewPredictionModal = ({ open, onClose, imageId, onPredictionCreated }) => 
                     InputLabelProps={{ shrink: true }}
                     InputProps={{ inputProps: { min: -1 } }}
                 />
+                {submitting && !error && (
+                    <Alert severity="info" sx={{mt:2}}>
+                        Prediction submitted! You can close this window.
+                        Refresh the predictions list on the main page to see the result when ready.
+                    </Alert>
+                )}
             </DialogContent>
             <DialogActions sx={{p: '16px 24px'}}>
                 <Button onClick={onClose} color="inherit">Cancel</Button>
@@ -319,7 +346,7 @@ const NewPredictionModal = ({ open, onClose, imageId, onPredictionCreated }) => 
 NewPredictionModal.propTypes = {
     open: PropTypes.bool.isRequired,
     onClose: PropTypes.func.isRequired,
-    imageId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
+    imageIds: PropTypes.arrayOf(PropTypes.oneOfType([PropTypes.string, PropTypes.number])).isRequired,
     onPredictionCreated: PropTypes.func.isRequired,
 };
 

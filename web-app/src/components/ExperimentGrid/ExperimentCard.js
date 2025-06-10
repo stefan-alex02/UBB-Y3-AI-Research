@@ -120,8 +120,6 @@ const ExperimentCard = ({ experiment, onDelete }) => {
                 onConfirm={handleConfirmDelete}
                 title="Delete Experiment?"
                 message={`Are you sure you want to delete the experiment "${experiment.name || 'N/A'}" (ID: ${experiment.experiment_run_id || 'N/A'})? This action cannot be undone and will also attempt to delete associated artifacts.`}
-                // CORRECTED: Use `experiment.name` and `experiment.experiment_run_id` directly from the prop
-                // INSTEAD OF: deleteConfirm.experimentName and deleteConfirm.experimentId
                 confirmText="Delete"
             />
         </>

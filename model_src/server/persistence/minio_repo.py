@@ -234,3 +234,55 @@ class MinIORepository(ArtifactRepository):
             logger.error(f"Failed to list objects in prefix '{prefix_to_list}' of bucket '{self.bucket_name}': {e}")
 
         return {'objects': [], 'subfolders': []}  # Return empty on error
+
+    def delete_object(self, key: str) -> bool:
+        try:
+            self.client.delete_object(Bucket=self.bucket_name, Key=key)
+            logger.info(f"Object deleted from S3: s3://{self.bucket_name}/{key}")
+            return True
+        except ClientError as e:
+            logger.error(f"Failed to delete object s3://{self.bucket_name}/{key}: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error deleting object s3://{self.bucket_name}/{key}: {e}")
+            return False
+
+    def delete_objects_by_prefix(self, prefix: str) -> bool:
+        if not prefix:
+            logger.error("Cannot delete objects: prefix is empty.")
+            return False
+        # Ensure prefix ends with / if it's meant to be a folder, but MinIO list_objects_v2 handles it.
+        # However, for deletion, you want to match keys starting with this prefix.
+        try:
+            objects_to_delete = []
+            for obj_data in self.client.list_objects_v2(Bucket=self.bucket_name, Prefix=prefix).get('Contents', []):
+                objects_to_delete.append({'Key': obj_data['Key']})
+
+            if not objects_to_delete:
+                logger.info(f"No objects found with prefix s3://{self.bucket_name}/{prefix} to delete.")
+                return True  # Nothing to delete is a success in this context
+
+            logger.info(
+                f"Attempting to delete {len(objects_to_delete)} objects with prefix s3://{self.bucket_name}/{prefix}")
+            # MinIO delete_objects can take up to 1000 keys at a time
+            for i in range(0, len(objects_to_delete), 1000):
+                chunk = objects_to_delete[i:i + 1000]
+                response = self.client.delete_objects(
+                    Bucket=self.bucket_name,
+                    Delete={'Objects': chunk, 'Quiet': False}  # Quiet=False returns info on deleted/errored items
+                )
+                if response.get('Errors'):
+                    for err in response['Errors']:
+                        logger.error(f"Error deleting object {err['Key']}: {err['Code']} - {err['Message']}")
+                    # Decide if one error means overall failure. For now, log and continue.
+                deleted_count = len(response.get('Deleted', []))
+                logger.info(f"Successfully deleted {deleted_count} objects in chunk.")
+
+            logger.info(f"Finished deletion attempt for prefix s3://{self.bucket_name}/{prefix}")
+            return True  # Returns True if the operation was attempted. Check logs for individual errors.
+        except ClientError as e:
+            logger.error(f"Failed to list or delete objects with prefix s3://{self.bucket_name}/{prefix}: {e}")
+            return False
+        except Exception as e:
+            logger.error(f"Unexpected error deleting objects by prefix s3://{self.bucket_name}/{prefix}: {e}")
+            return False

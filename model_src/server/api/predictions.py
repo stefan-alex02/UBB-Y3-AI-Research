@@ -9,7 +9,7 @@ from starlette.responses import StreamingResponse
 from ..services import prediction_service as service
 from .utils import RunPredictionRequest, PredictionRunResponse, ArtifactNode
 # from app.main import artifact_repo_instance # Avoid global
-from ..persistence import MinIORepository
+from ..persistence import ArtifactRepository
 
 import logging
 from ..core.config import APP_LOGGER_NAME # Import the consistent name
@@ -19,22 +19,21 @@ logger = logging.getLogger(APP_LOGGER_NAME) # Use the same name
 router = APIRouter()
 
 
-@router.post("/run", response_model=PredictionRunResponse)
+@router.post("/run", response_model=PredictionRunResponse) # Assuming PredictionRunResponse is your Pydantic model
 async def run_prediction_endpoint(
-        config: RunPredictionRequest,
-        fast_api_request: FastAPIRequest  # To access app.state
+    config: RunPredictionRequest, # This is your Pydantic model for the request body
+    fast_api_request: FastAPIRequest
 ):
     try:
-        predictions = await service.run_prediction(fast_api_request, config)
-        return PredictionRunResponse(predictions=predictions, message="Predictions completed successfully.")
-    except HTTPException as he:  # Re-raise HTTPExceptions from the service
-        raise he
-    except ValueError as ve:  # Specific value errors from service
-        logger.warning(f"Prediction value error for user {config.username}: {ve}")
-        raise HTTPException(status_code=400, detail=str(ve))
+        # Call the async wrapper in your service
+        predictions_list = await service.run_prediction_async_wrapper(fast_api_request, config)
+        return PredictionRunResponse(predictions=predictions_list, message="Predictions completed successfully.")
+    except HTTPException as he:
+        raise he # Re-raise HTTPExceptions to let FastAPI handle them
     except Exception as e:
-        logger.error(f"Error running prediction for user {config.username}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail=f"Prediction execution failed: {e}")
+        logger.error(f"API Error running prediction for user {config.username}: {e}", exc_info=True)
+        # This will be caught by your global exception handler if not an HTTPException
+        raise HTTPException(status_code=500, detail=f"Prediction submission failed: {str(e)}")
 
 
 @router.get("/{username}/{image_id}/{experiment_id_of_model}/artifacts/list", response_model=List[ArtifactNode])
@@ -102,4 +101,25 @@ async def get_prediction_artifact_content_api(
         logger.error(f"Error fetching prediction artifact content for .../{artifact_path}: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Failed to fetch prediction artifact content: {str(e)}")
 
-# TODO: DELETE endpoint for predictions (all artifacts for a specific image_id + experiment_id_of_model)
+
+@router.delete("/{username}/{image_id}/{experiment_id_of_model}")
+async def delete_prediction_api(
+        username: str,
+        image_id: str,  # Image ID (without extension)
+        experiment_id_of_model: str,
+        fast_api_request: FastAPIRequest
+):
+    logger.info(
+        f"Received request to delete prediction artifacts for user {username}, image {image_id}, model_exp {experiment_id_of_model}")
+    artifact_repo: ArtifactRepository = fast_api_request.app.state.artifact_repo
+    if not artifact_repo:
+        raise HTTPException(status_code=500, detail="Artifact repository not configured.")
+
+    prediction_prefix = str((PurePath("predictions") / username / image_id / experiment_id_of_model).as_posix()) + "/"
+
+    success = artifact_repo.delete_objects_by_prefix(prediction_prefix)
+    if success:
+        return {
+            "message": f"Prediction artifacts for image {image_id}, model_exp {experiment_id_of_model} deletion process initiated."}
+    else:
+        raise HTTPException(status_code=500, detail=f"Failed to delete prediction artifacts.")

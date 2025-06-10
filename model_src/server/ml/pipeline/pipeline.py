@@ -35,7 +35,7 @@ from ..logger_utils import logger
 from ..plotter import _save_figure_or_show, ResultsPlotter
 from ..skorch_utils import SkorchModelAdapter
 from ..skorch_utils import get_default_callbacks
-from ...persistence import MinIORepository, LocalFileSystemRepository
+from ...persistence import LocalFileSystemRepository
 from ...persistence.artifact_repo import ArtifactRepository
 
 try:

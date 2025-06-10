@@ -1,5 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { Card, CardMedia, CardContent, CardActions, Typography, Button, IconButton, Box, Skeleton } from '@mui/material'; // Added Skeleton
+import {
+    Card,
+    CardMedia,
+    CardContent,
+    CardActions,
+    Typography,
+    Button,
+    IconButton,
+    Box,
+    Skeleton,
+    Checkbox, FormControlLabel
+} from '@mui/material'; // Added Skeleton
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import BrokenImageIcon from '@mui/icons-material/BrokenImage'; // For error state
@@ -9,13 +20,14 @@ import ConfirmDialog from '../ConfirmDialog';
 import {formatDateSafe} from "../../utils/dateUtils";
 
 
-const ImageCard = ({ image, onDelete }) => {
+const ImageCard = ({ image, onDelete, selectedImageIds, onImageSelect }) => {
     const navigate = useNavigate();
     const [imageUrl, setImageUrl] = useState(null);
     const [isLoadingImage, setIsLoadingImage] = useState(true);
     const [imageError, setImageError] = useState(false);
     const [confirmOpen, setConfirmOpen] = useState(false);
 
+    const isSelected = selectedImageIds.has(image.id);
 
     useEffect(() => {
         let objectUrl = null;
@@ -62,7 +74,7 @@ const ImageCard = ({ image, onDelete }) => {
 
     return (
         <>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column', position: 'relative', border: isSelected ? '2px solid' : '1px solid', borderColor: isSelected ? 'primary.main' : 'transparent' }}>
                 {isLoadingImage ? (
                     <Skeleton variant="rectangular" width="100%" height={180} animation="wave" />
                 ) : imageError ? (
@@ -70,12 +82,25 @@ const ImageCard = ({ image, onDelete }) => {
                         <BrokenImageIcon color="action" sx={{ fontSize: 60 }} />
                     </Box>
                 ) : (
-                    <CardMedia
-                        component="img"
-                        sx={{ height: 180, objectFit: 'cover' }}
-                        image={imageUrl}
-                        alt={`Uploaded image ${image.id}`}
-                    />
+                    <>
+                        <FormControlLabel
+                            sx={{ position: 'absolute', zIndex: 1, backgroundColor: 'rgba(0,0,0,0.3)', borderRadius:1, p:0.5 }}
+                            control={
+                                <Checkbox
+                                    size="small"
+                                    checked={isSelected}
+                                    onChange={() => onImageSelect(image.id)}
+                                    onClick={(e) => e.stopPropagation()} // Prevent card click when toggling checkbox
+                                />
+                            }
+                        />
+                        <CardMedia
+                            component="img"
+                            sx={{ height: 180, objectFit: 'cover' }}
+                            image={imageUrl}
+                            alt={`Uploaded image ${image.id}`}
+                        />
+                    </>
                 )}
                 <CardContent sx={{ flexGrow: 1 }}>
                     <Typography gutterBottom variant="h6" component="div" noWrap>

@@ -37,10 +37,10 @@ public class PredictionController {
 
     @PostMapping
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PredictionDTO> createPrediction(@Valid @RequestBody PredictionCreateRequest createRequest) {
+    public ResponseEntity<List<PredictionDTO>> createPrediction(@Valid @RequestBody PredictionCreateRequest createRequest) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
-        PredictionDTO prediction = predictionService.createPrediction(createRequest, currentUsername);
+        List<PredictionDTO> prediction = predictionService.createPrediction(createRequest, currentUsername);
         return new ResponseEntity<>(prediction, HttpStatus.CREATED);
     }
 

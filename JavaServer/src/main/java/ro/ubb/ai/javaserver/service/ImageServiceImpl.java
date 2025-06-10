@@ -111,12 +111,13 @@ public class ImageServiceImpl implements ImageService {
             throw new SecurityException("User not authorized to delete this image.");
         }
 
-        // TODO: Call PythonApiService to delete image from MinIO first
-        // pythonApiService.deletePythonImage(username, imageId + "." + image.getFormat());
-        // If successful, then delete from DB
-        log.warn("Python API call for deleting image {} from MinIO is not yet implemented in ImageServiceImpl.deleteImage", imageId);
+        String imageIdWithFormat = image.getId() + "." + image.getFormat();
 
+        // Call Python to delete image file and ALL its prediction folders from MinIO
+        pythonApiService.deletePythonImage(username, imageIdWithFormat);
+        // Python's deletePythonImage now also handles deleting predictions/{username}/{imageId}/
 
+        // DB will cascade delete Predictions for this image due to `ON DELETE CASCADE` on Images table for predictions.
         imageRepository.delete(image);
         log.info("Image with ID {} deleted from DB for user {}.", imageId, username);
     }

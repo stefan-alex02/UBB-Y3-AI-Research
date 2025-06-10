@@ -108,9 +108,9 @@ const ArtifactViewer = ({
                 };
 
                 return (
-                    <Paper elevation={0} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow:'hidden' }}>
-                        {title && <Typography variant="subtitle2" gutterBottom sx={{px:1, pt:1, flexShrink:0}}>{title || artifactName}</Typography>}
-                        <TableContainer sx={{ flexGrow: 1, overflow: 'auto' }}>
+                    <Paper elevation={0} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow:'hidden', alignItems: 'center' /* Center table if narrower than container */ }}>
+                        {title && <Typography variant="subtitle2" gutterBottom sx={{px:1, pt:1, flexShrink:0, alignSelf: 'flex-start'}}>{title || artifactName}</Typography>}
+                        <TableContainer sx={{ flexGrow: 1, overflow: 'auto', width: 'fit-content', maxWidth: '100%'}}>
                             <Table stickyHeader size="small">
                                 <TableHead>
                                     <TableRow>

@@ -11,16 +11,14 @@ public interface PythonApiService {
     PythonExperimentRunResponseDTO startPythonExperiment(PythonRunExperimentRequestDTO requestDTO);
     List<Map<String, Object>> listPythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId, String path);
     byte[] getPythonExperimentArtifactContent(String datasetName, String modelType, String experimentRunId, String artifactRelativePath);
+    void deletePythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId);
 
     PythonPredictionRunResponseDTO runPredictionInPython(PythonPredictionRequestDTO requestDTO);
     List<Map<String, Object>> listPythonPredictionArtifacts(String username, String imageId, String experimentIdOfModel, String path);
     byte[] getPythonPredictionArtifactContent(String username, String imageId, String experimentIdOfModel, String artifactRelativePath);
+    void deletePythonPredictionArtifacts(String username, String imageId, String experimentIdOfModel);
 
     void uploadImageToPython(String username, String imageId, String imageFormat, MultipartFile file);
     byte[] downloadImageFromPython(String username, String imageFilenameWithExt);
-
-    // Methods for deleting artifacts from Python (MinIO)
-    // void deletePythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId);
-    // void deletePythonImage(String username, String imageIdWithFormat);
-    // void deletePythonPredictionArtifacts(String username, String imageId, String experimentIdOfModel);
+    void deletePythonImage(String username, String imageIdWithFormat);
 }

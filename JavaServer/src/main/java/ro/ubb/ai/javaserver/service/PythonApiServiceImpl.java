@@ -120,6 +120,22 @@ public class PythonApiServiceImpl implements PythonApiService {
     }
 
     @Override
+    public void deletePythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId) {
+        String url = String.format("%s/experiments/%s/%s/%s", pythonApiBaseUrl, datasetName, modelType, experimentRunId);
+        log.info("Requesting Python to delete experiment artifacts: {}", url);
+        try {
+            restTemplate.delete(url);
+            log.info("Python API call to delete experiment artifacts for {} successful.", experimentRunId);
+        } catch (HttpClientErrorException e) {
+            log.error("HttpClientError deleting experiment {} via Python: {} - {}", experimentRunId, e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("Failed to delete experiment via Python: " + e.getResponseBodyAsString(), e);
+        } catch (Exception e) {
+            log.error("Error deleting experiment {} via Python: {}", experimentRunId, e.getMessage(), e);
+            throw new RuntimeException("Error communicating with Python for experiment deletion.", e);
+        }
+    }
+
+    @Override
     public PythonPredictionRunResponseDTO runPredictionInPython(PythonPredictionRequestDTO requestDTO) {
         String url = pythonApiBaseUrl + "/predictions/run";
         log.info("Sending prediction request to Python for user: {}", requestDTO.getUsername());
@@ -173,6 +189,24 @@ public class PythonApiServiceImpl implements PythonApiService {
             return response.getBody();
         }
         throw new RuntimeException("Python service error getting prediction artifact content: " + response.getStatusCode());
+    }
+
+    @Override
+    public void deletePythonPredictionArtifacts(String username, String imageId, String experimentIdOfModel) {
+        String url = String.format("%s/predictions/%s/%s/%s", pythonApiBaseUrl, username, imageId, experimentIdOfModel);
+        log.info("Requesting Python to delete prediction artifacts: {}", url);
+        try {
+            restTemplate.delete(url);
+            log.info("Python API call to delete prediction artifacts for image {}, model_exp {} successful.", imageId, experimentIdOfModel);
+        } catch (HttpClientErrorException e) {
+            log.error("HttpClientError deleting prediction of image {} and of model of experiment {} via Python: {} - {}",
+                    imageId, experimentIdOfModel, e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("Failed to delete prediction via Python: " + e.getResponseBodyAsString(), e);
+        } catch (Exception e) {
+            log.error("Error deleting prediction of image {} and of model of experiment {} via Python: {}",
+                    imageId, experimentIdOfModel, e.getMessage(), e);
+            throw new RuntimeException("Error communicating with Python for prediction deletion.", e);
+        }
     }
 
     @Override
@@ -247,6 +281,22 @@ public class PythonApiServiceImpl implements PythonApiService {
         } catch (Exception e) {
             log.error("Error downloading image from Python {}: {}", url, e.getMessage(), e);
             throw new RuntimeException("Error communicating with Python service for image download.", e);
+        }
+    }
+
+    @Override
+    public void deletePythonImage(String username, String imageIdWithFormat) {
+        String url = String.format("%s/images/%s/%s", pythonApiBaseUrl, username, imageIdWithFormat);
+        log.info("Requesting Python to delete image: {}", url);
+        try {
+            restTemplate.delete(url);
+            log.info("Python API call to delete image {} successful.", imageIdWithFormat);
+        } catch (HttpClientErrorException e) {
+            log.error("HttpClientError deleting image {} via Python: {} - {}", imageIdWithFormat, e.getStatusCode(), e.getResponseBodyAsString());
+            throw new RuntimeException("Failed to delete image via Python: " + e.getResponseBodyAsString(), e);
+        } catch (Exception e) {
+            log.error("Error deleting image {} via Python: {}", imageIdWithFormat, e.getMessage(), e);
+            throw new RuntimeException("Error communicating with Python for image deletion.", e);
         }
     }
 }

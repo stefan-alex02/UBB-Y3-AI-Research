@@ -120,13 +120,14 @@ public class ExperimentServiceImpl implements ExperimentService {
         Experiment experiment = experimentRepository.findById(experimentRunId)
                 .orElseThrow(() -> new ResourceNotFoundException("Experiment", "experimentRunId", experimentRunId));
 
-        // TODO: Call PythonApiService to delete artifacts from MinIO for this experimentRunId
-        // This requires Python to have a DELETE /experiments/{experiment_run_id} endpoint
-        // that knows how to list and delete all objects under "experiments/{dataset}/{model_type}/{run_id}/"
-        log.warn("Python API call for deleting experiment artifacts for {} from MinIO is not yet implemented in ExperimentServiceImpl.deleteExperiment", experimentRunId);
+        // Call Python to delete experiment artifacts folder from MinIO
+        pythonApiService.deletePythonExperimentArtifacts(
+                experiment.getDatasetName(), experiment.getModelType(), experimentRunId
+        );
 
+        // DB will set Predictions.experiment_run_id_of_model to NULL due to ON DELETE SET NULL
         experimentRepository.delete(experiment);
-        log.info("Experiment with ID {} deleted from DB.", experimentRunId);
+        log.info("Experiment with ID {} deleted from DB. Associated predictions updated.", experimentRunId);
     }
 
     @Override
