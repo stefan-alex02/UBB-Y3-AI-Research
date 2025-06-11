@@ -60,9 +60,10 @@ ArtifactNode.model_rebuild()
 
 
 # --- Prediction Related ---
-class ImageIdFormatPair(BaseModel):
-    image_id: Union[int, str] # SQL PK for the image
-    image_format: str # e.g. "png", "jpg"
+class ImagePredictionTask(BaseModel): # NEW
+    image_id: str # From Java's Image.id
+    image_format: str
+    prediction_id: str # From Java's Prediction.id (newly created)
 
 
 class ModelLoadDetails(BaseModel):
@@ -77,9 +78,10 @@ class ModelLoadDetails(BaseModel):
 
 class RunPredictionRequest(BaseModel):
     username: str
-    image_id_format_pairs: List[ImageIdFormatPair]
-    model_load_details: ModelLoadDetails
-    experiment_run_id_of_model: str # ID of the experiment that *produced* the model (for result grouping)
+    image_prediction_tasks: List[ImagePredictionTask] # CHANGED
+    model_load_details: Optional[ModelLoadDetails] # Make optional if predictions can use a default model
+    experiment_run_id_of_model: Optional[str] = None # Context for which model logic to use
+
     generate_lime: Optional[bool] = False
     lime_num_features: Optional[int] = 5
     lime_num_samples: Optional[int] = 100
@@ -87,8 +89,9 @@ class RunPredictionRequest(BaseModel):
 
 
 class SinglePredictionResult(BaseModel):
+    prediction_id: str
     image_id: Union[int, str]
-    experiment_id: str # experiment_run_id_of_model
+    experiment_id: str
     predicted_class: str
     confidence: float
 

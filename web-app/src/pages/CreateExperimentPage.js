@@ -210,7 +210,7 @@ const MethodStepCard = React.memo(({ method, index, values, errors, touched, han
                         </Field>
                     </FormControl>
 
-                    {(currentMethodName === 'non_nested_grid_search' || currentMethodName === 'cv_model_evaluation' || currentMethodName === 'nested_grid_search') && (
+                    {(currentMethodName === 'non_nested_grid_search' || currentMethodName === 'cv_model_evaluation') && (
                         <Field as={TextField} type="number" name={`methodsSequence[${index}].cv`} label="CV Folds" fullWidth size="small" sx={{mb:1.5}} InputLabelProps={{ shrink: true }} InputProps={{ inputProps: { min: 2 } }}/>
                     )}
                     {(currentMethodName === 'nested_grid_search') && (<>

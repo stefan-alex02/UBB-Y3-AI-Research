@@ -165,14 +165,14 @@ const ViewImagePredictionsPage = () => {
         try {
             // 1. Fetch prediction_details.json
             const jsonContentStr = await predictionService.getPredictionArtifactContent(
-                user.username, String(imageDetails.id), prediction.model_experiment_run_id, "prediction_details.json"
+                String(prediction.id), "prediction_details.json"
             );
             const parsedJson = JSON.parse(jsonContentStr);
             setSelectedPredictionDetailsJson(parsedJson);
 
             // 2. List artifacts in the "plots" subfolder
             fetchedPlotArtifacts = await predictionService.listPredictionArtifacts(
-                user.username, String(imageDetails.id), prediction.model_experiment_run_id, "plots"
+                String(prediction.id), "plots"
             );
             // Keep all listed plot artifacts (not just images) for potential future use,
             // but filter for images when trying to display them.
@@ -184,7 +184,7 @@ const ViewImagePredictionsPage = () => {
                 setIsLoadingProbPlot(true);
                 try {
                     const blob = await predictionService.getPredictionArtifactContent(
-                        user.username, String(imageDetails.id), prediction.model_experiment_run_id, probabilityPlotNode.path // Use full relative path from listing
+                        String(prediction.id), probabilityPlotNode.path
                     );
                     if (blob) setProbabilityPlotUrl(URL.createObjectURL(blob));
                 } catch (plotError) {
@@ -204,7 +204,7 @@ const ViewImagePredictionsPage = () => {
                     setIsLoadingLimePlot(true);
                     try {
                         const blob = await predictionService.getPredictionArtifactContent(
-                            user.username, String(imageDetails.id), prediction.model_experiment_run_id, limePlotNode.path // Use full relative path
+                            String(prediction.id), limePlotNode.path
                         );
                         if (blob) setLimePlotUrl(URL.createObjectURL(blob));
                     } catch (limePlotError) {
@@ -364,10 +364,7 @@ const ViewImagePredictionsPage = () => {
         if (deletePredictionConfirm.prediction) {
             setPageError(null);
             try {
-                await predictionService.deletePrediction(
-                    deletePredictionConfirm.prediction.image_id, // Assuming PredictionDTO has image_id (snake_case)
-                    deletePredictionConfirm.prediction.model_experiment_run_id
-                );
+                await predictionService.deletePrediction(deletePredictionConfirm.prediction.id);
                 setDeletePredictionConfirm({ open: false, prediction: null });
                 // Refresh predictions list and clear selection
                 fetchPageInitialData(); // This will deselect
@@ -815,7 +812,10 @@ const ViewImagePredictionsPage = () => {
                 </Grid>
             </Grid>
 
-            {imageDetails && <NewPredictionModal open={newPredictionModalOpen} onClose={() => setNewPredictionModalOpen(false)} imageIds={Number(routeImageId)} onPredictionCreated={handlePredictionCreated} />}
+            {imageDetails && <NewPredictionModal open={newPredictionModalOpen}
+                                                 onClose={() => setNewPredictionModalOpen(false)}
+                                                 imageIds={Array.of(Number(routeImageId))}
+                                                 onPredictionCreated={handlePredictionCreated} />}
             <ImageFullscreenModal open={fullscreenModal.open} onClose={() => setFullscreenModal(prev => ({...prev, open:false}))} imageUrl={fullscreenModal.type === 'url' ? fullscreenModal.src : null} imageBlob={fullscreenModal.type === 'blob' ? fullscreenModal.src : null} title={fullscreenModal.title} />
         </Container>
     );

@@ -1185,3 +1185,526 @@ Timestamp           | Level    | Location                             | Message
 2025-06-11 01:46:32 | INFO     | [experim...:_execute_pipeli...:  65] | ℹ️ Background task started for experiment: 61ac9ab4-99fa-4b61-a11f-6c898d0f47a1
 2025-06-11 01:46:32 | ERROR    | [experim...:update_experime...:  53] | ❌ HTTP error updating Java status for 61ac9ab4-99fa-4b61-a11f-6c898d0f47a1 to RUNNING: 404 - . Payload: {'status': 'RUNNING'}
 2025-06-11 01:46:32 | INFO     | [executor  :__init__          :  65] | ℹ️ PipelineExecutor initialized with effective random seed: 42
+2025-06-11 15:19:42 | ERROR    | [minio_repo:download_file_t...: 125] | ❌ File not found in MinIO: s3://clouds/predictions/m1/2/26/prediction_details.json
+2025-06-11 15:21:17 | INFO     | [minio_repo:delete_objects_...: 262] | ℹ️ No objects found with prefix s3://clouds/predictions/m1/2/26/ to delete.
+2025-06-11 15:27:53 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:27:53 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:27:53 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:27:53 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:27:53 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:27:53 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:27:53 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:27:53 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:27:53 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:27:53 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:27:53 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:27:53 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:27:53 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:27:53 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:27:53 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:27:53 | INFO     | [pipeline  :load_model        :2245] | ℹ️ Operation load_model_op_152753: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:27:53 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:27:53 | INFO     | [pipeline  :load_model        :2293] | ℹ️ Op load_model_op_152753: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:27:53 | INFO     | [pipeline  :load_model        :2342] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:27:53 | INFO     | [pipeline  :load_model        :2347] | ℹ️ Op load_model_op_152753: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:27:54 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:27:54 | INFO     | [pipeline  :load_model        :2366] | ℹ️ Op load_model_op_152753: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:27:54 | INFO     | [pipeline  :load_model        :2395] | ℹ️ Op load_model_op_152753: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:27:54 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_152754_706506: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:30:03 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:30:03 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:30:03 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:30:03 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:30:03 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:30:03 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:30:03 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:30:03 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:30:03 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:30:03 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:30:03 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:30:03 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:30:03 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:30:03 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:30:03 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:30:03 | INFO     | [pipeline  :load_model        :2245] | ℹ️ Operation load_model_op_153003: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:30:03 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:30:03 | INFO     | [pipeline  :load_model        :2293] | ℹ️ Op load_model_op_153003: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:30:03 | INFO     | [pipeline  :load_model        :2342] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:30:03 | INFO     | [pipeline  :load_model        :2347] | ℹ️ Op load_model_op_153003: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:30:03 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:30:03 | INFO     | [pipeline  :load_model        :2366] | ℹ️ Op load_model_op_153003: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:30:03 | INFO     | [pipeline  :load_model        :2395] | ℹ️ Op load_model_op_153003: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:30:03 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_153003_739441: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:30:03 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_153003_739441: Loaded 1 images.
+2025-06-11 15:31:08 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:31:08 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:31:08 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:31:08 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:31:08 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:31:08 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:31:08 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:31:08 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:31:08 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:31:08 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:31:08 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:31:08 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:31:08 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:31:08 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:31:08 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:31:08 | INFO     | [pipeline  :load_model        :2245] | ℹ️ Operation load_model_op_153108: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:31:08 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:31:08 | INFO     | [pipeline  :load_model        :2293] | ℹ️ Op load_model_op_153108: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:31:08 | INFO     | [pipeline  :load_model        :2342] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:31:08 | INFO     | [pipeline  :load_model        :2347] | ℹ️ Op load_model_op_153108: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:31:09 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:31:09 | INFO     | [pipeline  :load_model        :2366] | ℹ️ Op load_model_op_153108: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:31:09 | INFO     | [pipeline  :load_model        :2395] | ℹ️ Op load_model_op_153108: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:31:09 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_153109_175589: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:31:09 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_153109_175589: Loaded 1 images.
+2025-06-11 15:37:18 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:37:18 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:37:18 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:37:18 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:37:18 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:37:18 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:37:18 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:37:18 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:37:18 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:37:18 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:37:18 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:37:18 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:37:18 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:37:18 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:37:18 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:37:18 | INFO     | [pipeline  :load_model        :2245] | ℹ️ Operation load_model_op_153718: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:37:18 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:37:18 | INFO     | [pipeline  :load_model        :2293] | ℹ️ Op load_model_op_153718: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:37:18 | INFO     | [pipeline  :load_model        :2342] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:37:18 | INFO     | [pipeline  :load_model        :2347] | ℹ️ Op load_model_op_153718: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:37:19 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:37:19 | INFO     | [pipeline  :load_model        :2366] | ℹ️ Op load_model_op_153718: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:37:19 | INFO     | [pipeline  :load_model        :2395] | ℹ️ Op load_model_op_153718: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:37:19 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_153719_182750: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:37:19 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_153719_182750: Loaded 1 images.
+2025-06-11 15:37:23 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/30/prediction_details.json
+2025-06-11 15:37:23 | INFO     | [pipeline  :predict_images    :2204] | ℹ️ Op predict_op_20250611_153719_182750: Prediction JSON for image 4 saved to: predictions/m1/4/30/prediction_details.json
+2025-06-11 15:37:23 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/30/plots/probability_distribution.png
+2025-06-11 15:37:23 | INFO     | [pipeline  :predict_images    :2234] | ℹ️ Op predict_op_20250611_153719_182750: Finished predictions for 1 images.
+2025-06-11 15:40:35 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:40:35 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:40:35 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:40:35 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:40:35 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:40:35 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:40:35 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:40:35 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:40:35 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:40:35 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:40:35 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:40:35 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:40:35 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:40:35 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:40:35 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:40:35 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_154035: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:40:35 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:40:35 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_154035: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:40:35 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:40:35 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_154035: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:40:35 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:40:35 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_154035: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:40:35 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_154035: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:40:35 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_154035_999524: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:40:36 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_154035_999524: Loaded 1 images.
+2025-06-11 15:40:36 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/31/prediction_details.json
+2025-06-11 15:40:36 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_154035_999524: Prediction JSON for image 4 saved to: predictions/m1/4/31/prediction_details.json
+2025-06-11 15:40:36 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/31/plots/probability_distribution.png
+2025-06-11 15:40:36 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_154035_999524: Finished predictions for 1 images.
+2025-06-11 15:42:41 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:42:41 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:42:41 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:42:41 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:42:41 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:42:41 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:42:41 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:42:41 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:42:41 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:42:41 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:42:41 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:42:41 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:42:41 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:42:41 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:42:41 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:42:41 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_154241: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:42:41 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:42:41 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_154241: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:42:41 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:42:41 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_154241: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:42:41 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:42:41 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_154241: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:42:41 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_154241: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:42:41 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_154241_849495: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:42:41 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_154241_849495: Loaded 1 images.
+2025-06-11 15:42:42 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/32/prediction_details.json
+2025-06-11 15:42:42 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_154241_849495: Prediction JSON for image 4 saved to: predictions/m1/4/32/prediction_details.json
+2025-06-11 15:42:42 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/32/plots/probability_distribution.png
+2025-06-11 15:42:42 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_154241_849495: Finished predictions for 1 images.
+2025-06-11 15:42:51 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/32/plots/': 1 objects, 0 subfolders.
+2025-06-11 15:43:16 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/32/plots/': 1 objects, 0 subfolders.
+2025-06-11 15:48:44 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:48:44 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:48:44 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:48:44 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:48:44 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:48:44 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:48:44 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:48:44 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:48:44 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:48:44 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:48:44 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:48:44 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:48:44 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:48:44 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:48:44 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:48:44 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_154844: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:48:44 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:48:44 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_154844: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:48:44 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:48:44 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_154844: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:48:45 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:48:45 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_154844: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:48:45 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_154844: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:48:45 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_154845_560553: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:48:45 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_154845_560553: Loaded 1 images.
+2025-06-11 15:48:45 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/33/prediction_details.json
+2025-06-11 15:48:45 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_154845_560553: Prediction JSON for image 4 saved to: predictions/m1/4/33/prediction_details.json
+2025-06-11 15:48:46 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/33/plots/probability_distribution.png
+2025-06-11 15:48:46 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_154845_560553: Finished predictions for 1 images.
+2025-06-11 15:48:58 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/33/plots/': 1 objects, 0 subfolders.
+2025-06-11 15:49:17 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/33/plots/': 1 objects, 0 subfolders.
+2025-06-11 15:49:20 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 2 objects with prefix s3://clouds/predictions/m1/4/33/
+2025-06-11 15:49:20 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 2 objects in chunk.
+2025-06-11 15:49:20 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/4/33/
+2025-06-11 15:49:34 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:49:34 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:49:34 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:49:34 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:49:34 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:49:34 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:49:34 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:49:34 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:49:34 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:49:34 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:49:34 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:49:34 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:49:34 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:49:34 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:49:34 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:49:34 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_154934: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:49:34 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:49:34 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_154934: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:49:34 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:49:34 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_154934: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:49:35 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:49:35 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_154934: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:49:35 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_154934: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:49:35 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_154935_662211: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:49:35 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_154935_662211: Loaded 1 images.
+2025-06-11 15:49:58 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/34/prediction_details.json
+2025-06-11 15:49:58 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_154935_662211: Prediction JSON for image 4 saved to: predictions/m1/4/34/prediction_details.json
+2025-06-11 15:49:59 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/34/plots/lime_explanation.png
+2025-06-11 15:49:59 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/34/plots/probability_distribution.png
+2025-06-11 15:49:59 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_154935_662211: Finished predictions for 1 images.
+2025-06-11 15:50:05 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/34/plots/': 2 objects, 0 subfolders.
+2025-06-11 15:52:41 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:52:41 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:52:41 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:52:41 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:52:41 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:52:41 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:52:41 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:52:41 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:52:41 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:52:41 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:52:41 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:52:41 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:52:41 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:52:41 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:52:41 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:52:41 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_155241: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:52:41 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:52:41 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_155241: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:52:41 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:52:41 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_155241: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:52:42 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:52:42 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_155241: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:52:42 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_155241: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:52:42 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_155242_347645: Starting prediction for 2 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:52:42 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_155242_347645: Loaded 2 images.
+2025-06-11 15:52:42 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/37/prediction_details.json
+2025-06-11 15:52:42 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_155242_347645: Prediction JSON for image 4 saved to: predictions/m1/4/37/prediction_details.json
+2025-06-11 15:52:43 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/37/plots/probability_distribution.png
+2025-06-11 15:52:43 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/2/38/prediction_details.json
+2025-06-11 15:52:43 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_155242_347645: Prediction JSON for image 2 saved to: predictions/m1/2/38/prediction_details.json
+2025-06-11 15:52:43 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/2/38/plots/probability_distribution.png
+2025-06-11 15:52:43 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_155242_347645: Finished predictions for 2 images.
+2025-06-11 15:52:43 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 3 objects with prefix s3://clouds/predictions/m1/4/34/
+2025-06-11 15:52:43 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 3 objects in chunk.
+2025-06-11 15:52:43 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/4/34/
+2025-06-11 15:52:52 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/2/38/plots/': 1 objects, 0 subfolders.
+2025-06-11 15:52:55 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 2 objects with prefix s3://clouds/predictions/m1/2/38/
+2025-06-11 15:52:55 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 2 objects in chunk.
+2025-06-11 15:52:55 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/2/38/
+2025-06-11 15:53:10 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/37/plots/': 1 objects, 0 subfolders.
+2025-06-11 15:53:16 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:53:16 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:53:16 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:53:16 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:53:16 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:53:16 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:53:16 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:53:16 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:53:16 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:53:16 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:53:16 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:53:16 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:53:16 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:53:16 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:53:16 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:53:16 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_155316: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:53:16 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:53:16 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_155316: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:53:16 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:53:16 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_155316: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:53:16 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:53:16 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_155316: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:53:16 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_155316: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:53:16 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_155316_843152: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:53:16 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_155316_843152: Loaded 1 images.
+2025-06-11 15:53:39 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/39/prediction_details.json
+2025-06-11 15:53:39 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_155316_843152: Prediction JSON for image 4 saved to: predictions/m1/4/39/prediction_details.json
+2025-06-11 15:53:41 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/39/plots/lime_explanation.png
+2025-06-11 15:53:41 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/39/plots/probability_distribution.png
+2025-06-11 15:53:41 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_155316_843152: Finished predictions for 1 images.
+2025-06-11 15:53:41 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 2 objects with prefix s3://clouds/predictions/m1/4/37/
+2025-06-11 15:53:41 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 2 objects in chunk.
+2025-06-11 15:53:41 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/4/37/
+2025-06-11 15:53:57 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:53:57 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:53:57 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:53:57 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:53:57 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:53:57 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:53:57 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:53:57 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:53:57 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:53:57 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:53:57 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:53:57 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:53:57 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:53:57 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:53:57 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:53:57 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_155357: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:53:57 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:53:57 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_155357: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:53:57 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:53:57 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_155357: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:53:58 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:53:58 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_155357: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:53:58 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_155357: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:53:58 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_155358_525809: Starting prediction for 2 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:53:58 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_155358_525809: Loaded 2 images.
+2025-06-11 15:53:58 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/40/prediction_details.json
+2025-06-11 15:53:58 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_155358_525809: Prediction JSON for image 4 saved to: predictions/m1/4/40/prediction_details.json
+2025-06-11 15:53:58 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/2/41/prediction_details.json
+2025-06-11 15:53:58 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_155358_525809: Prediction JSON for image 2 saved to: predictions/m1/2/41/prediction_details.json
+2025-06-11 15:53:58 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_155358_525809: Finished predictions for 2 images.
+2025-06-11 15:53:58 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 3 objects with prefix s3://clouds/predictions/m1/4/39/
+2025-06-11 15:53:58 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 3 objects in chunk.
+2025-06-11 15:53:58 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/4/39/
+2025-06-11 15:55:35 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/40/plots/': 0 objects, 0 subfolders.
+2025-06-11 15:58:11 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:58:11 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:58:11 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:58:11 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:58:11 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:58:11 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:58:11 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:58:11 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:58:11 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:58:11 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:58:11 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:58:11 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:58:11 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:58:11 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:58:11 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:58:11 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_155811: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:58:11 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:58:11 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_155811: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:58:11 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:58:11 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_155811: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:58:12 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:58:12 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_155811: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:58:12 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_155811: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:58:12 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_155812_443351: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:58:12 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_155812_443351: Loaded 1 images.
+2025-06-11 15:58:35 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/42/prediction_details.json
+2025-06-11 15:58:35 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_155812_443351: Prediction JSON for image 4 saved to: predictions/m1/4/42/prediction_details.json
+2025-06-11 15:58:36 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/42/plots/lime_explanation.png
+2025-06-11 15:58:36 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/42/plots/probability_distribution.png
+2025-06-11 15:58:36 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_155812_443351: Finished predictions for 1 images.
+2025-06-11 15:58:43 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/42/plots/': 2 objects, 0 subfolders.
+2025-06-11 15:58:57 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 15:58:57 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 15:58:57 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 15:58:57 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:58:57 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:58:57 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 15:58:57 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 15:58:57 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 15:58:57 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 15:58:57 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 15:58:57 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 15:58:57 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 15:58:57 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 15:58:57 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 15:58:57 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 15:58:57 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_155857: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:58:57 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:58:57 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_155857: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 15:58:57 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 15:58:57 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_155857: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 15:58:58 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:58:58 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_155857: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 15:58:58 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_155857: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 15:58:58 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_155858_174904: Starting prediction for 2 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 15:58:58 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_155858_174904: Loaded 2 images.
+2025-06-11 15:58:58 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/43/prediction_details.json
+2025-06-11 15:58:58 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_155858_174904: Prediction JSON for image 4 saved to: predictions/m1/4/43/prediction_details.json
+2025-06-11 15:58:58 | ERROR    | [plotter   :plot_single_pre...:1316] | ❌ Error plotting probability distribution for 4: zero-size array to reduction operation maximum which has no identity
+2025-06-11 15:58:58 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/2/44/prediction_details.json
+2025-06-11 15:58:58 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_155858_174904: Prediction JSON for image 2 saved to: predictions/m1/2/44/prediction_details.json
+2025-06-11 15:58:58 | ERROR    | [plotter   :plot_single_pre...:1316] | ❌ Error plotting probability distribution for 2: zero-size array to reduction operation maximum which has no identity
+2025-06-11 15:58:58 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_155858_174904: Finished predictions for 2 images.
+2025-06-11 15:58:58 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 3 objects with prefix s3://clouds/predictions/m1/4/42/
+2025-06-11 15:58:58 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 3 objects in chunk.
+2025-06-11 15:58:58 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/4/42/
+2025-06-11 15:59:10 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/2/44/plots/': 0 objects, 0 subfolders.
+2025-06-11 16:02:00 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/2/44/plots/': 0 objects, 0 subfolders.
+2025-06-11 16:02:03 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 1 objects with prefix s3://clouds/predictions/m1/2/44/
+2025-06-11 16:02:03 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 1 objects in chunk.
+2025-06-11 16:02:03 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/2/44/
+2025-06-11 16:02:07 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/43/plots/': 0 objects, 0 subfolders.
+2025-06-11 16:02:09 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 1 objects with prefix s3://clouds/predictions/m1/4/43/
+2025-06-11 16:02:09 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 1 objects in chunk.
+2025-06-11 16:02:09 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/4/43/
+2025-06-11 16:02:23 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 16:02:23 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 16:02:23 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 16:02:23 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 16:02:23 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 16:02:23 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 16:02:23 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 16:02:23 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 16:02:23 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 16:02:23 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 16:02:23 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 16:02:23 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 16:02:23 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 16:02:23 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 16:02:23 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 16:02:23 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_160223: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 16:02:23 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 16:02:23 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_160223: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 16:02:23 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 16:02:23 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_160223: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 16:02:24 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 16:02:24 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_160223: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 16:02:24 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_160223: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 16:02:24 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_160224_389709: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 16:02:24 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_160224_389709: Loaded 1 images.
+2025-06-11 16:02:49 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/45/prediction_details.json
+2025-06-11 16:02:49 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_160224_389709: Prediction JSON for image 4 saved to: predictions/m1/4/45/prediction_details.json
+2025-06-11 16:02:50 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/45/plots/lime_explanation.png
+2025-06-11 16:02:51 | INFO     | [minio_repo:save_plot_figure  : 103] | ℹ️ Plot saved to S3: s3://clouds/predictions/m1/4/45/plots/probability_distribution.png
+2025-06-11 16:02:51 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_160224_389709: Finished predictions for 1 images.
+2025-06-11 16:03:26 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/45/plots/': 2 objects, 0 subfolders.
+2025-06-11 16:08:06 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/45/plots/': 2 objects, 0 subfolders.
+2025-06-11 16:08:22 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 16:08:22 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 16:08:22 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 16:08:22 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 16:08:22 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 16:08:22 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 16:08:22 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 16:08:22 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 16:08:22 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 16:08:22 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 16:08:22 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 16:08:22 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 16:08:22 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 16:08:22 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 16:08:22 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 16:08:22 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_160822: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 16:08:22 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 16:08:22 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_160822: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 16:08:22 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 16:08:22 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_160822: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 16:08:23 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 16:08:23 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_160822: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 16:08:23 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_160822: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 16:08:23 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_160823_682479: Starting prediction for 2 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 16:08:23 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_160823_682479: Loaded 2 images.
+2025-06-11 16:08:23 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/4/50/prediction_details.json
+2025-06-11 16:08:23 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_160823_682479: Prediction JSON for image 4 saved to: predictions/m1/4/50/prediction_details.json
+2025-06-11 16:08:24 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/2/51/prediction_details.json
+2025-06-11 16:08:24 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_160823_682479: Prediction JSON for image 2 saved to: predictions/m1/2/51/prediction_details.json
+2025-06-11 16:08:24 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_160823_682479: Finished predictions for 2 images.
+2025-06-11 16:08:24 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 3 objects with prefix s3://clouds/predictions/m1/4/45/
+2025-06-11 16:08:24 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 3 objects in chunk.
+2025-06-11 16:08:24 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/4/45/
+2025-06-11 16:08:27 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/4/50/plots/': 0 objects, 0 subfolders.
+2025-06-11 16:08:51 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/2/51/plots/': 0 objects, 0 subfolders.
+2025-06-11 16:09:09 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-11 16:09:09 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat
+2025-06-11 16:09:09 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: cnn
+2025-06-11 16:09:09 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 16:09:09 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 16:09:09 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: False
+2025-06-11 16:09:09 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.DEFAULT_STANDARD
+2025-06-11 16:09:09 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-11 16:09:09 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\mini-GCD-flat...
+2025-06-11 16:09:09 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 347 original train+val, 87 original test. Offline augmented samples loaded: 0.
+2025-06-11 16:09:09 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-11 16:09:09 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 347 train+val, 87 test. Total: 434
+2025-06-11 16:09:09 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments (using MinIORepository)
+2025-06-11 16:09:09 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-11 16:09:09 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with SimpleCNN
+2025-06-11 16:09:09 | INFO     | [pipeline  :load_model        :2246] | ℹ️ Operation load_model_op_160909: Attempting to load model from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 16:09:09 | INFO     | [minio_repo:load_json         : 135] | ℹ️ JSON loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 16:09:09 | INFO     | [pipeline  :load_model        :2294] | ℹ️ Op load_model_op_160909: Loaded architecture config from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632_arch_config.json
+2025-06-11 16:09:09 | INFO     | [pipeline  :load_model        :2343] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-06-11 16:09:09 | INFO     | [pipeline  :load_model        :2348] | ℹ️ Op load_model_op_160909: Re-initializing SkorchModelAdapter for SimpleCNN with 7 classes.
+2025-06-11 16:09:10 | INFO     | [minio_repo:load_model_stat...: 146] | ℹ️ Model state_dict loaded from S3: s3://clouds/experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 16:09:10 | INFO     | [pipeline  :load_model        :2367] | ℹ️ Op load_model_op_160909: Model state_dict loaded via repo from: experiments/mini-GCD-flat/cnn/61ac9ab4-99fa-4b61-a11f-6c898d0f47a1/single_train_014632/cnn_sngl_ep1_val_loss2p68_014632.pt
+2025-06-11 16:09:10 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Op load_model_op_160909: Model state_dict applied successfully from: mini-GCD-flat\cnn\61ac9ab4-99fa-4b61-a11f-6c898d0f47a1\single_train_014632\cnn_sngl_ep1_val_loss2p68_014632.pt. Model image size context: (224, 224)
+2025-06-11 16:09:10 | INFO     | [pipeline  :predict_images    :2006] | ℹ️ Op predict_op_20250611_160910_314491: Starting prediction for 1 images by user 'm1', using model from experiment '61ac9ab4-99fa-4b61-a11f-6c898d0f47a1'.
+2025-06-11 16:09:10 | INFO     | [pipeline  :predict_images    :2075] | ℹ️ Op predict_op_20250611_160910_314491: Loaded 1 images.
+2025-06-11 16:09:23 | INFO     | [minio_repo:save_json         :  82] | ℹ️ JSON saved to S3: s3://clouds/predictions/m1/2/52/prediction_details.json
+2025-06-11 16:09:23 | INFO     | [pipeline  :predict_images    :2205] | ℹ️ Op predict_op_20250611_160910_314491: Prediction JSON for image 2 saved to: predictions/m1/2/52/prediction_details.json
+2025-06-11 16:09:23 | INFO     | [pipeline  :predict_images    :2235] | ℹ️ Op predict_op_20250611_160910_314491: Finished predictions for 1 images.
+2025-06-11 16:09:23 | INFO     | [minio_repo:delete_objects_...: 265] | ℹ️ Attempting to delete 1 objects with prefix s3://clouds/predictions/m1/2/51/
+2025-06-11 16:09:23 | INFO     | [minio_repo:delete_objects_...: 279] | ℹ️ Successfully deleted 1 objects in chunk.
+2025-06-11 16:09:23 | INFO     | [minio_repo:delete_objects_...: 281] | ℹ️ Finished deletion attempt for prefix s3://clouds/predictions/m1/2/51/
+2025-06-11 16:09:26 | INFO     | [minio_repo:list_objects_in...: 226] | ℹ️ Listed contents for prefix 's3://clouds/predictions/m1/2/52/plots/': 0 objects, 0 subfolders.
+2025-06-11 16:18:08 | INFO     | [experim...:_execute_pipeli...:  65] | ℹ️ Background task started for experiment: f86e42c7-8911-45d1-81b3-496b0982a4c6
+2025-06-11 16:18:11 | INFO     | [experim...:update_experime...:  51] | ℹ️ Successfully updated experiment f86e42c7-8911-45d1-81b3-496b0982a4c6 to RUNNING in Java. Payload: {'status': 'RUNNING'}
+2025-06-11 16:18:11 | INFO     | [executor  :__init__          :  65] | ℹ️ PipelineExecutor initialized with effective random seed: 42
+2025-06-11 16:41:53 | INFO     | [experim...:_execute_pipeli...:  65] | ℹ️ Background task started for experiment: a30e7c21-bd87-4608-99be-79fe4f212203
+2025-06-11 16:41:53 | INFO     | [experim...:update_experime...:  51] | ℹ️ Successfully updated experiment a30e7c21-bd87-4608-99be-79fe4f212203 to RUNNING in Java. Payload: {'status': 'RUNNING'}
+2025-06-11 16:41:53 | INFO     | [executor  :__init__          :  65] | ℹ️ PipelineExecutor initialized with effective random seed: 42
+2025-06-11 16:46:49 | INFO     | [experim...:_execute_pipeli...:  65] | ℹ️ Background task started for experiment: 3aa4cb96-f4a9-42a4-ba76-172d53e85f60
+2025-06-11 16:46:49 | INFO     | [experim...:update_experime...:  51] | ℹ️ Successfully updated experiment 3aa4cb96-f4a9-42a4-ba76-172d53e85f60 to RUNNING in Java. Payload: {'status': 'RUNNING'}
+2025-06-11 16:46:49 | INFO     | [executor  :__init__          :  65] | ℹ️ PipelineExecutor initialized with effective random seed: 42
+2025-06-11 16:48:40 | INFO     | [experim...:_execute_pipeli...:  65] | ℹ️ Background task started for experiment: 05c3bbde-4da7-40a0-8e23-8fbf740ad7f1
+2025-06-11 16:48:40 | INFO     | [experim...:update_experime...:  51] | ℹ️ Successfully updated experiment 05c3bbde-4da7-40a0-8e23-8fbf740ad7f1 to RUNNING in Java. Payload: {'status': 'RUNNING'}
+2025-06-11 16:48:40 | INFO     | [executor  :__init__          :  65] | ℹ️ PipelineExecutor initialized with effective random seed: 42

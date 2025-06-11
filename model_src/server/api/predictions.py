@@ -1,18 +1,15 @@
-from fastapi import APIRouter, Depends, HTTPException, Request as FastAPIRequest
-from typing import List, Optional
+import io
 import logging
 from pathlib import PurePath
-import io
+from typing import List, Optional
 
+from fastapi import APIRouter, HTTPException, Request as FastAPIRequest
 from starlette.responses import StreamingResponse
 
-from ..services import prediction_service as service
 from .utils import RunPredictionRequest, PredictionRunResponse, ArtifactNode
-# from app.main import artifact_repo_instance # Avoid global
+from ..core.config import APP_LOGGER_NAME
 from ..persistence import ArtifactRepository
-
-import logging
-from ..core.config import APP_LOGGER_NAME # Import the consistent name
+from ..services import prediction_service as service
 
 logger = logging.getLogger(APP_LOGGER_NAME) # Use the same name
 
@@ -36,9 +33,9 @@ async def run_prediction_endpoint(
         raise HTTPException(status_code=500, detail=f"Prediction submission failed: {str(e)}")
 
 
-@router.get("/{username}/{image_id}/{experiment_id_of_model}/artifacts/list", response_model=List[ArtifactNode])
+@router.get("/{username}/{image_id}/{prediction_id}/artifacts/list", response_model=List[ArtifactNode])
 async def list_prediction_artifacts_api(
-        username: str, image_id: str, experiment_id_of_model: str,
+        username: str, image_id: str, prediction_id: str,
         fast_api_request: FastAPIRequest,
         path: Optional[str] = ""  # Query parameter for sub-path, e.g., "plots"
 ):
@@ -48,9 +45,9 @@ async def list_prediction_artifacts_api(
     try:
         clean_sub_path = path.lstrip('/').lstrip('\\') if path else ""
         logger.info(
-            f"Listing prediction artifacts for user {username}, image {image_id}, model_exp {experiment_id_of_model}, sub-path: '{clean_sub_path}'")
+            f"Listing prediction artifacts for user {username}, image {image_id}, model_exp {prediction_id}, sub-path: '{clean_sub_path}'")
         nodes = service.list_artifacts_for_prediction(
-            artifact_repo, username, image_id, experiment_id_of_model, clean_sub_path
+            artifact_repo, username, image_id, prediction_id, clean_sub_path
         )
         return nodes
     except Exception as e:
@@ -58,19 +55,19 @@ async def list_prediction_artifacts_api(
         raise HTTPException(status_code=500, detail=f"Failed to list prediction artifacts: {str(e)}")
 
 
-@router.get("/{username}/{image_id}/{experiment_id_of_model}/artifacts/content/{artifact_path:path}")
+@router.get("/{username}/{image_id}/{prediction_id}/artifacts/content/{artifact_path:path}")
 async def get_prediction_artifact_content_api(
-        username: str, image_id: str, experiment_id_of_model: str, artifact_path: str,
+        username: str, image_id: str, prediction_id: str, artifact_path: str,
         fast_api_request: FastAPIRequest
 ):
     artifact_repo = fast_api_request.app.state.artifact_repo
     if not artifact_repo:
         raise HTTPException(status_code=500, detail="Artifact repository not configured.")
     logger.info(
-        f"Fetching prediction artifact content: predictions/{username}/{image_id}/{experiment_id_of_model}/{artifact_path}")
+        f"Fetching prediction artifact content: predictions/{username}/{image_id}/{prediction_id}/{artifact_path}")
     try:
         file_bytes = service.get_prediction_artifact_content_bytes(
-            artifact_repo, username, image_id, experiment_id_of_model, artifact_path
+            artifact_repo, username, image_id, prediction_id, artifact_path
         )
         if file_bytes is None:
             raise HTTPException(status_code=404, detail="Prediction artifact content not found.")
@@ -102,24 +99,24 @@ async def get_prediction_artifact_content_api(
         raise HTTPException(status_code=500, detail=f"Failed to fetch prediction artifact content: {str(e)}")
 
 
-@router.delete("/{username}/{image_id}/{experiment_id_of_model}")
+@router.delete("/{username}/{image_id}/{prediction_id}")
 async def delete_prediction_api(
         username: str,
-        image_id: str,  # Image ID (without extension)
-        experiment_id_of_model: str,
+        image_id: str,
+        prediction_id: str,
         fast_api_request: FastAPIRequest
 ):
     logger.info(
-        f"Received request to delete prediction artifacts for user {username}, image {image_id}, model_exp {experiment_id_of_model}")
+        f"Received request to delete prediction artifacts for user {username}, image {image_id}, model_exp {prediction_id}")
     artifact_repo: ArtifactRepository = fast_api_request.app.state.artifact_repo
     if not artifact_repo:
         raise HTTPException(status_code=500, detail="Artifact repository not configured.")
 
-    prediction_prefix = str((PurePath("predictions") / username / image_id / experiment_id_of_model).as_posix()) + "/"
+    prediction_prefix = str((PurePath("predictions") / username / image_id / prediction_id).as_posix()) + "/"
 
     success = artifact_repo.delete_objects_by_prefix(prediction_prefix)
     if success:
         return {
-            "message": f"Prediction artifacts for image {image_id}, model_exp {experiment_id_of_model} deletion process initiated."}
+            "message": f"Prediction artifacts for image {image_id}, model_exp {prediction_id} deletion process initiated."}
     else:
         raise HTTPException(status_code=500, detail=f"Failed to delete prediction artifacts.")

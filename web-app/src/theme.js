@@ -32,7 +32,7 @@ export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role 
                     // Palette values for light mode
                     primary: primaryColor,
                     secondary: secondaryColor,
-                    divider: amber[200],
+                    divider: secondaryColor[200],
                     focusRing: lightFocusColor, // Custom focus ring color for light mode
                     text: {
                         primary: grey[900],

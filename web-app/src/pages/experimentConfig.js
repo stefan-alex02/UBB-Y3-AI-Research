@@ -16,20 +16,15 @@ export const MODEL_TYPES = [
 ];
 
 // --- Dataset Names ---
-// These should correspond to the keys in your Python `DATASET_DICT`.
-// The user selects one, and this string is passed to the Python backend.
 export const DATASET_NAMES = [
-    'GCD',        // data/GCD
-    'mGCD',       // data/mini-GCD
-    'mGCDf',      // data/mini-GCD-flat
-    'swimcat',    // data/Swimcat-extend (as used in your main.py)
-    'Swimcat-extend', // Adding this as it was specifically in your main.py
-    'CCSN',       // data/CCSN
-    // Add any other dataset names (keys from DATASET_DICT) you frequently use
+    'mGCD',
+    'mGCDf',
+    'GCD',
+    'swimcat',
+    'ccsn',
 ];
 
 // --- Augmentation Strategies ---
-// These should correspond to the values of your Python `AugmentationStrategy` enum.
 export const AVAILABLE_AUG_STRATEGIES = [
     { value: "default_standard", label: "Default Standard Augmentations" },
     { value: "sky_only_rotation", label: "Sky/Cloud Optimized (Full Rotation)" },

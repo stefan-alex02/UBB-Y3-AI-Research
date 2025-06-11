@@ -17,7 +17,6 @@ import ro.ubb.ai.javaserver.repository.PredictionRepository;
 import ro.ubb.ai.javaserver.repository.UserRepository;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -45,100 +44,119 @@ public class PredictionServiceImpl implements PredictionService {
             throw new IllegalArgumentException("Selected experiment " + modelExperiment.getExperimentRunId() + " does not have a saved model path.");
         }
 
-        List<ImageIdFormatPairDTO> imagePairsForPython = new ArrayList<>();
-        List<Image> validImagesForDb = new ArrayList<>();
+        List<ImagePredictionTaskDTO> tasksForPython = new ArrayList<>();
+        List<Prediction> newPredictionEntities = new ArrayList<>();
+        List<Prediction> oldPredictionsToDeleteArtifactsFor = new ArrayList<>();
 
-        for (Long imageId : createRequest.getImageIds()) {
-            Image image = imageRepository.findById(imageId)
-                    .orElseThrow(() -> new ResourceNotFoundException("Image", "id", imageId));
+        for (Long imageIdFromRequest : createRequest.getImageIds()) {
+            Image image = imageRepository.findById(imageIdFromRequest)
+                    .orElseThrow(() -> new ResourceNotFoundException("Image", "id", imageIdFromRequest));
             if (!image.getUser().getId().equals(user.getId())) {
-                log.warn("User {} not authorized for image {}, skipping.", username, imageId);
-                continue; // Or throw an error for the whole batch
+                log.warn("User {} not authorized for image {}, skipping in batch.", username, imageIdFromRequest);
+                continue;
             }
-            ImageIdFormatPairDTO pair = new ImageIdFormatPairDTO();
-            pair.setImageId(String.valueOf(imageId));
-            pair.setImageFormat(image.getFormat());
-            imagePairsForPython.add(pair);
-            validImagesForDb.add(image); // Keep track of valid Image entities
+
+            predictionRepository.findByImageIdAndModelExperimentExperimentRunId(image.getId(), modelExperiment.getExperimentRunId())
+                    .ifPresent(oldPrediction -> {
+                        oldPredictionsToDeleteArtifactsFor.add(oldPrediction); // Collect for artifact deletion
+                        predictionRepository.delete(oldPrediction); // Delete old SQL record now
+                        predictionRepository.flush(); // Ensure deletion is committed immediately
+                        log.info("Removed old SQL prediction record: id {}, image {}, model_exp {}",
+                                oldPrediction.getId(), image.getId(), modelExperiment.getExperimentRunId());
+                    });
+
+
+            // 2. Create new Prediction entity (without results yet) to get its ID
+            Prediction newPredictionShell = new Prediction();
+            newPredictionShell.setImage(image);
+            newPredictionShell.setModelExperiment(modelExperiment); // Can be null
+            newPredictionShell.setPredictedClass("PENDING"); // Placeholder
+            newPredictionShell.setConfidence(0.0f);          // Placeholder
+            Prediction savedNewPrediction = predictionRepository.saveAndFlush(newPredictionShell); // saveAndFlush to get ID immediately
+
+            newPredictionEntities.add(savedNewPrediction); // Keep track for updating later
+
+            ImagePredictionTaskDTO task = new ImagePredictionTaskDTO();
+            task.setImageId(String.valueOf(image.getId()));
+            task.setImageFormat(image.getFormat());
+            task.setPredictionId(String.valueOf(savedNewPrediction.getId())); // Pass new Prediction ID
+            tasksForPython.add(task);
         }
 
-        if (imagePairsForPython.isEmpty()) {
-            throw new IllegalArgumentException("No valid or authorized images found for prediction.");
+        if (tasksForPython.isEmpty()) {
+            throw new IllegalArgumentException("No valid images for prediction in the batch.");
         }
 
-        // Prepare request for Python
+        // 3. Prepare and Call Python
         PythonPredictionRequestDTO pythonRequest = new PythonPredictionRequestDTO();
         pythonRequest.setUsername(username);
-        pythonRequest.setImageIdFormatPairs(imagePairsForPython);
+        pythonRequest.setImagePredictionTasks(tasksForPython);
 
         ModelLoadDetailsDTO modelDetails = new ModelLoadDetailsDTO();
         modelDetails.setDatasetNameOfModel(modelExperiment.getDatasetName());
         modelDetails.setModelTypeOfModel(modelExperiment.getModelType());
         modelDetails.setExperimentRunIdOfModelProducer(modelExperiment.getExperimentRunId());
         modelDetails.setRelativeModelPathInExperiment(modelExperiment.getModelRelativePath());
-        pythonRequest.setModelLoadDetails(modelDetails);
 
-        pythonRequest.setExperimentRunIdOfModel(modelExperiment.getExperimentRunId()); // For grouping results
+        pythonRequest.setModelLoadDetails(modelDetails);
+        pythonRequest.setExperimentRunIdOfModel(modelExperiment.getExperimentRunId());
         pythonRequest.setGenerateLime(createRequest.getGenerateLime());
         pythonRequest.setLimeNumFeatures(createRequest.getLimeNumFeatures());
         pythonRequest.setLimeNumSamples(createRequest.getLimeNumSamples());
         pythonRequest.setProbPlotTopK(createRequest.getProbPlotTopK());
 
-        // Call Python API
-        PythonPredictionRunResponseDTO pythonResponse = pythonApiService.runPredictionInPython(pythonRequest);
-
-        if (pythonResponse == null || pythonResponse.getPredictions() == null ||
-                pythonResponse.getPredictions().size() != validImagesForDb.size()) { // Expect one result per valid image sent
-            log.error("Python prediction service returned inconsistent results. Expected: {}, Got: {}",
-                    validImagesForDb.size(), pythonResponse.getPredictions() != null ? pythonResponse.getPredictions().size() : 0);
-            throw new RuntimeException("Prediction failed: Python service returned inconsistent results.");
+        PythonPredictionRunResponseDTO pythonResponse;
+        try {
+            pythonResponse = pythonApiService.runPredictionInPython(pythonRequest);
+        } catch (Exception e) {
+            // If Python call fails, the transaction will roll back, deleting the newPredictionShells.
+            // Old prediction SQL records were already deleted but their artifacts still exist.
+            // This is a trade-off: new prediction failed, old SQL records gone.
+            // Alternative: don't delete old SQL until new one succeeds (more complex transaction).
+            log.error("Python prediction call failed: {}", e.getMessage());
+            throw new RuntimeException("Prediction processing failed in Python backend.", e);
         }
 
+        // 4. Update new Prediction entities with results from Python and Delete Old Artifacts
         List<PredictionDTO> createdPredictionDTOs = new ArrayList<>();
-        for (int i = 0; i < validImagesForDb.size(); i++) {
-            Image image = validImagesForDb.get(i);
-            PythonSinglePredictionResultDTO pyPredResult = pythonResponse.getPredictions().stream()
-                    .filter(p -> String.valueOf(image.getId()).equals(p.getImageId()))
-                    .findFirst()
-                    .orElse(null);
-
-            if (pyPredResult == null) {
-                log.warn("No prediction result from Python for imageId: {}. Skipping DB save for this one.", image.getId());
-                continue;
-            }
-
-            // **Handle Deletion of Old Prediction Artifacts First**
-            if (modelExperiment != null) { // Only if a specific model is used
-                predictionRepository.findByImageIdAndModelExperimentExperimentRunId(image.getId(), modelExperiment.getExperimentRunId())
-                        .ifPresent(existingPrediction -> {
-                            log.info("Overwriting existing prediction for image {} with model from experiment {}. Deleting old artifacts first.",
-                                    image.getId(), modelExperiment.getExperimentRunId());
-                            // Call Python to delete old prediction artifacts for this specific imageId + modelExperimentRunId
-                            try {
-                                pythonApiService.deletePythonPredictionArtifacts(
-                                        username,
-                                        String.valueOf(image.getId()),
-                                        modelExperiment.getExperimentRunId()
-                                );
-                            } catch (Exception e) {
-                                log.error("Failed to delete old prediction artifacts for image {}, model_exp {}: {}",
-                                        image.getId(), modelExperiment.getExperimentRunId(), e.getMessage());
-                                // Decide if this should stop the process or just log and continue
-                            }
-                            predictionRepository.delete(existingPrediction); // Delete old DB record
-                        });
-            }
-
-
-            Prediction newPrediction = new Prediction();
-            newPrediction.setImage(image);
-            newPrediction.setModelExperiment(modelExperiment);
-            newPrediction.setPredictedClass(pyPredResult.getPredictedClass());
-            newPrediction.setConfidence(pyPredResult.getConfidence());
-            Prediction savedPrediction = predictionRepository.save(newPrediction);
-            createdPredictionDTOs.add(convertToDTO(savedPrediction));
+        if (pythonResponse == null || pythonResponse.getPredictions() == null) {
+            throw new RuntimeException("Python service returned null or empty predictions response.");
         }
-        log.info("Batch prediction processed for {} images for user {}.", createdPredictionDTOs.size(), username);
+
+        for (PythonSinglePredictionResultDTO pyPredResult : pythonResponse.getPredictions()) {
+            Long currentPredictionId = Long.valueOf(pyPredResult.getPredictionId()); // Assuming Python returns prediction_id_db
+
+            newPredictionEntities.stream()
+                    .filter(p -> p.getId().equals(currentPredictionId))
+                    .findFirst()
+                    .ifPresentOrElse(p -> {
+                        p.setPredictedClass(pyPredResult.getPredictedClass());
+                        p.setConfidence(pyPredResult.getConfidence());
+                        createdPredictionDTOs.add(convertToDTO(p));
+                    }, () -> log.warn("No matching Prediction entity found for ID: {}", currentPredictionId));
+        }
+
+        // 5. Now that new predictions are successfully processed and new DB records will commit,
+        //    delete the artifacts of the OLD predictions.
+        for (Prediction oldPrediction : oldPredictionsToDeleteArtifactsFor) {
+            try {
+                log.info("Deleting old artifacts for prediction ID: {}", oldPrediction.getId());
+                pythonApiService.deletePythonPredictionArtifacts(
+                        username,
+                        String.valueOf(oldPrediction.getImage().getId()),
+                        String.valueOf(oldPrediction.getId()) // Use old prediction's ID
+                );
+            } catch (Exception e) {
+                log.error("Failed to delete old artifacts for prediction ID {}: {}. New prediction still created.", oldPrediction.getId(), e.getMessage());
+                // Continue, as the new prediction is already made. This is a cleanup failure.
+            }
+        }
+
+        if (createdPredictionDTOs.size() != tasksForPython.size()) {
+            log.warn("Mismatch in number of tasks sent to Python and results processed. Sent: {}, Processed DTOs: {}", tasksForPython.size(), createdPredictionDTOs.size());
+            // This could indicate some predictions failed in Python or weren't matched.
+        }
+
         return createdPredictionDTOs;
     }
 
@@ -156,40 +174,37 @@ public class PredictionServiceImpl implements PredictionService {
     }
 
     @Override
-    public PredictionDTO getPrediction(Long imageId, String modelExperimentRunId, String username) {
+    public PredictionDTO getPrediction(Long predictionId, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        Image image = imageRepository.findById(imageId)
-                .orElseThrow(() -> new ResourceNotFoundException("Image", "id", imageId));
-        if (!image.getUser().getId().equals(user.getId())) {
+        Prediction prediction = predictionRepository.findById(predictionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Prediction", "id", predictionId));
+        if (!prediction.getImage().getUser().getId().equals(user.getId())) {
             throw new SecurityException("User not authorized to view this prediction.");
         }
-        Prediction prediction = predictionRepository.findByImageIdAndModelExperimentExperimentRunId(imageId, modelExperimentRunId)
-                .orElseThrow(() -> new ResourceNotFoundException("Prediction", "image_id and model_experiment_id", imageId + "/" + modelExperimentRunId));
         return convertToDTO(prediction);
     }
 
 
     @Override
     @Transactional
-    public void deletePrediction(Long imageId, String modelExperimentRunId, String username) {
+    public void deletePrediction(Long predictionId, String username) {
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
-        imageRepository.findById(imageId).orElseThrow(() -> new ResourceNotFoundException("Image", "id", imageId));
-        // Find the prediction to ensure it exists and user has rights via image ownership
-        Prediction prediction = predictionRepository.findByImageIdAndModelExperimentExperimentRunId(imageId, modelExperimentRunId)
-                .orElseThrow(() -> new ResourceNotFoundException("Prediction", "imageId and modelExperimentRunId", imageId + "/" + modelExperimentRunId));
+        Prediction prediction = predictionRepository.findById(predictionId)
+                .orElseThrow(() -> new ResourceNotFoundException("Prediction", "id", predictionId));
         if (!prediction.getImage().getUser().getId().equals(user.getId())) {
             throw new SecurityException("User not authorized to delete this prediction.");
         }
 
         // Call Python to delete prediction artifacts folder from MinIO
         pythonApiService.deletePythonPredictionArtifacts(
-                username, String.valueOf(imageId), modelExperimentRunId
+                username,
+                String.valueOf(prediction.getImage().getId()),
+                String.valueOf(prediction.getId()) // Use prediction.id for path
         );
-
-        predictionRepository.delete(prediction); // Delete from DB
-        log.info("Prediction for imageId: {}, model from experiment: {} deleted.", imageId, modelExperimentRunId);
+        predictionRepository.delete(prediction);
+        log.info("Prediction ID {} deleted from DB and artifacts.", predictionId);
     }
 
     private PredictionDTO convertToDTO(Prediction prediction) {

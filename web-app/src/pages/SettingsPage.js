@@ -71,7 +71,7 @@ const SettingsPage = () => {
 
                         try {
                             const updatedUserDTO = await userService.updateUserSettings(user.id, updateData);
-                            // Update user in AuthContext if your context supports it
+                            // Update user in AuthContext
                             if (setUser) {
                                 setUser(prevUser => ({...prevUser, name: updatedUserDTO.name}));
                             }

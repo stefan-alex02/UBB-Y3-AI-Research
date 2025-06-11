@@ -30,7 +30,7 @@ public class PythonApiServiceImpl implements PythonApiService {
 
     private final RestTemplate restTemplate;
     private final String pythonApiBaseUrl;
-    private final String internalApiKey; // Key for Java -> Python internal calls (if any)
+    private final String internalApiKey;
     private final ObjectMapper objectMapper;
 
 
@@ -138,7 +138,7 @@ public class PythonApiServiceImpl implements PythonApiService {
     @Override
     public PythonPredictionRunResponseDTO runPredictionInPython(PythonPredictionRequestDTO requestDTO) {
         String url = pythonApiBaseUrl + "/predictions/run";
-        log.info("Sending prediction request to Python for user: {}", requestDTO.getUsername());
+        log.info("Sending batch prediction request to Python for user: {}", requestDTO.getUsername());
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
@@ -155,16 +155,13 @@ public class PythonApiServiceImpl implements PythonApiService {
     }
 
     @Override
-    public List<Map<String, Object>> listPythonPredictionArtifacts(String username, String imageId, String experimentIdOfModel, String path) {
+    public List<Map<String, Object>> listPythonPredictionArtifacts(String username, String imageId, String predictionId, String path) {
         String url = String.format("%s/predictions/%s/%s/%s/artifacts/list",
-                pythonApiBaseUrl, username, imageId, experimentIdOfModel);
+                pythonApiBaseUrl, username, imageId, predictionId);
         if (path != null && !path.isEmpty()) {
             url += "?path=" + UriUtils.encodeQueryParam(path, StandardCharsets.UTF_8);
         }
         log.info("Requesting prediction artifact list from Python: {}", url);
-        // ... (rest of the logic similar to listPythonExperimentArtifacts, handle response and errors)
-        // Ensure to use new TypeReference<List<Map<String, Object>>>() for deserialization
-        // For brevity, not repeating the full try-catch, but it should be there.
         ResponseEntity<String> response = restTemplate.getForEntity(url, String.class);
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
             try {
@@ -177,13 +174,11 @@ public class PythonApiServiceImpl implements PythonApiService {
     }
 
     @Override
-    public byte[] getPythonPredictionArtifactContent(String username, String imageId, String experimentIdOfModel, String artifactRelativePath) {
+    public byte[] getPythonPredictionArtifactContent(String username, String imageId, String predictionId, String artifactRelativePath) {
         String encodedArtifactPath = UriUtils.encodePath(artifactRelativePath, StandardCharsets.UTF_8);
         String url = String.format("%s/predictions/%s/%s/%s/artifacts/content/%s",
-                pythonApiBaseUrl, username, imageId, experimentIdOfModel, encodedArtifactPath);
+                pythonApiBaseUrl, username, imageId, predictionId, encodedArtifactPath);
         log.info("Requesting prediction artifact content from Python: {}", url);
-        // ... (rest of the logic similar to getPythonExperimentArtifactContent, handle response and errors)
-        // For brevity, not repeating the full try-catch.
         ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, null, byte[].class);
         if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
             return response.getBody();
@@ -192,19 +187,19 @@ public class PythonApiServiceImpl implements PythonApiService {
     }
 
     @Override
-    public void deletePythonPredictionArtifacts(String username, String imageId, String experimentIdOfModel) {
-        String url = String.format("%s/predictions/%s/%s/%s", pythonApiBaseUrl, username, imageId, experimentIdOfModel);
+    public void deletePythonPredictionArtifacts(String username, String imageId, String predictionId) {
+        String url = String.format("%s/predictions/%s/%s/%s", pythonApiBaseUrl, username, imageId, predictionId);
         log.info("Requesting Python to delete prediction artifacts: {}", url);
         try {
             restTemplate.delete(url);
-            log.info("Python API call to delete prediction artifacts for image {}, model_exp {} successful.", imageId, experimentIdOfModel);
+            log.info("Python API call to delete prediction artifacts for image {}, id {} successful.", imageId, predictionId);
         } catch (HttpClientErrorException e) {
-            log.error("HttpClientError deleting prediction of image {} and of model of experiment {} via Python: {} - {}",
-                    imageId, experimentIdOfModel, e.getStatusCode(), e.getResponseBodyAsString());
+            log.error("HttpClientError deleting prediction of image {} and with id {} via Python: {} - {}",
+                    imageId, predictionId, e.getStatusCode(), e.getResponseBodyAsString());
             throw new RuntimeException("Failed to delete prediction via Python: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
-            log.error("Error deleting prediction of image {} and of model of experiment {} via Python: {}",
-                    imageId, experimentIdOfModel, e.getMessage(), e);
+            log.error("Error deleting prediction of image {} and with id {} via Python: {}",
+                    imageId, predictionId, e.getMessage(), e);
             throw new RuntimeException("Error communicating with Python for prediction deletion.", e);
         }
     }
@@ -223,7 +218,6 @@ public class PythonApiServiceImpl implements PythonApiService {
             body.add("image_id", imageId);
             body.add("image_format", imageFormat);
 
-            // --- SIMPLIFIED FILE PART ADDITION ---
             // Wrap the MultipartFile's bytes in a ByteArrayResource.
             // Crucially, override getFilename() so RestTemplate can set the
             // Content-Disposition filename parameter for the file part.
@@ -234,8 +228,6 @@ public class PythonApiServiceImpl implements PythonApiService {
                 }
             };
             body.add("file", fileResource); // "file" must match the FastAPI parameter name
-            // --- END OF SIMPLIFIED FILE PART ---
-
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 

@@ -30,7 +30,7 @@ export const AuthProvider = ({ children }) => {
     const login = async (username, password) => {
         const data = await authService.login(username, password);
         localStorage.setItem('authToken', data.token);
-        setUser({ id: data.id, username: data.username, role: data.role, token: data.token });
+        setUser({ id: data.id, name: data.name, username: data.username, role: data.role, token: data.token });
         return data; // Return full response for potential redirects
     };
 
@@ -46,7 +46,7 @@ export const AuthProvider = ({ children }) => {
         authService.logout(); // Clear axios auth header if set
     };
 
-    const value = { user, loading, login, register, logout };
+    const value = { user, setUser, loading, login, register, logout };
 
     return (
         <AuthContext.Provider value={value}>

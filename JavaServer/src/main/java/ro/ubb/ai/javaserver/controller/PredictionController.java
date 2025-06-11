@@ -32,7 +32,7 @@ import java.util.Map;
 public class PredictionController {
 
     private final PredictionService predictionService;
-    private final PythonApiService pythonApiService; // Inject
+    private final PythonApiService pythonApiService;
     private final UrlPathHelper urlPathHelper = new UrlPathHelper();
 
     @PostMapping
@@ -52,45 +52,41 @@ public class PredictionController {
         return ResponseEntity.ok(predictionService.getPredictionsForImage(imageId, currentUsername));
     }
 
-    @GetMapping("/image/{imageId}/model/{modelExperimentRunId}")
+    @GetMapping("/{predictionId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<PredictionDTO> getSpecificPrediction(
-            @PathVariable Long imageId,
-            @PathVariable String modelExperimentRunId) {
+    public ResponseEntity<PredictionDTO> getSpecificPredictionById(
+            @PathVariable Long predictionId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
-        return ResponseEntity.ok(predictionService.getPrediction(imageId, modelExperimentRunId, currentUsername));
+        return ResponseEntity.ok(predictionService.getPrediction(predictionId, currentUsername));
     }
 
-    @GetMapping("/{imageId}/model/{modelExperimentRunId}/artifacts/list")
+    @GetMapping("/{predictionId}/artifacts/list")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<List<Map<String, Object>>> listPredictionArtifacts(
-            @PathVariable Long imageId,
-            @PathVariable String modelExperimentRunId,
+            @PathVariable Long predictionId,
             @RequestParam(required = false, defaultValue = "") String path,
             Authentication authentication) {
         String currentUsername = authentication.getName();
-        // Optional: Add a check here if user owns the imageId, though Python might do it too
-        log.info("Proxying request to list prediction artifacts for user {}, image {}, model_exp {}, path: '{}'",
-                currentUsername, imageId, modelExperimentRunId, path);
+        PredictionDTO prediction = predictionService.getPrediction(predictionId, currentUsername);
+
         List<Map<String, Object>> artifacts = pythonApiService.listPythonPredictionArtifacts(
-                currentUsername, String.valueOf(imageId), modelExperimentRunId, path
+                currentUsername, String.valueOf(prediction.getImageId()), String.valueOf(predictionId), path
         );
         return ResponseEntity.ok(artifacts);
     }
 
-    @GetMapping("/{imageId}/model/{modelExperimentRunId}/artifacts/content/**")
+    @GetMapping("/{predictionId}/artifacts/content/**")
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Resource> getPredictionArtifactContent(
-            @PathVariable Long imageId,
-            @PathVariable String modelExperimentRunId,
+            @PathVariable Long predictionId,
             HttpServletRequest request,
             Authentication authentication) {
         String currentUsername = authentication.getName();
-        // Optional: Check ownership
+        PredictionDTO prediction = predictionService.getPrediction(predictionId, currentUsername); // Fetch to get imageId
 
-        String fullRequestPath = urlPathHelper.getPathWithinApplication(request); // More robust
-        String basePathToTrim = String.format("/api/predictions/%d/model/%s/artifacts/content/", imageId, modelExperimentRunId);
+        String fullRequestPath = urlPathHelper.getPathWithinApplication(request);
+        String basePathToTrim = String.format("/api/predictions/%d/artifacts/content/", predictionId);
         String artifactRelativePath = "";
 
         if (fullRequestPath.startsWith(basePathToTrim)) {
@@ -103,11 +99,11 @@ public class PredictionController {
         if (artifactRelativePath.isEmpty()) {
             return ResponseEntity.badRequest().build();
         }
-        log.info("Proxying request for prediction artifact content: user {}, image {}, model_exp {}, relPath: {}",
-                currentUsername, imageId, modelExperimentRunId, artifactRelativePath);
+        log.info("Proxying request for prediction artifact content: user {}, image {}, id {}, relPath: {}",
+                currentUsername, prediction.getImageId(), prediction.getId(), artifactRelativePath);
         try {
             byte[] contentBytes = pythonApiService.getPythonPredictionArtifactContent(
-                    currentUsername, String.valueOf(imageId), modelExperimentRunId, artifactRelativePath
+                    currentUsername, String.valueOf(prediction.getImageId()), String.valueOf(predictionId), artifactRelativePath
             );
 
             HttpHeaders headers = new HttpHeaders();
@@ -124,25 +120,23 @@ public class PredictionController {
             ByteArrayResource resource = new ByteArrayResource(contentBytes);
             return ResponseEntity.ok().headers(headers).contentLength(contentBytes.length).body(resource);
         } catch (ResourceNotFoundException e) {
-            log.error("Artifact not found: user {}, image {}, model_exp {}, relPath: {}. Error: {}",
-                    currentUsername, imageId, modelExperimentRunId, artifactRelativePath, e.getMessage());
+            log.error("Artifact not found: user {}, image {}, id {}, relPath: {}. Error: {}",
+                    currentUsername, prediction.getImageId(), prediction.getId(), artifactRelativePath, e.getMessage());
             return ResponseEntity.notFound().build();
         }
         catch (Exception e) {
-            log.error("Error retrieving prediction artifact content: user {}, image {}, model_exp {}, relPath: {}. Error: {}",
-                    currentUsername, imageId, modelExperimentRunId, artifactRelativePath, e.getMessage());
+            log.error("Error retrieving prediction artifact content: user {}, image {}, id {}, relPath: {}. Error: {}",
+                    currentUsername, prediction.getImageId(), prediction.getId(), artifactRelativePath, e.getMessage());
         }
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build(); // Fallback
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
     }
 
-    @DeleteMapping("/image/{imageId}/model/{modelExperimentRunId}")
+    @DeleteMapping("/{predictionId}")
     @PreAuthorize("isAuthenticated()")
-    public ResponseEntity<Void> deletePrediction(
-            @PathVariable Long imageId,
-            @PathVariable String modelExperimentRunId) {
+    public ResponseEntity<Void> deletePrediction(@PathVariable Long predictionId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
-        predictionService.deletePrediction(imageId, modelExperimentRunId, currentUsername);
+        predictionService.deletePrediction(predictionId, currentUsername);
         return ResponseEntity.noContent().build();
     }
 }

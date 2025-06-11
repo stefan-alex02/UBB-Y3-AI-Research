@@ -6,9 +6,9 @@ import java.util.List;
 @Data
 public class PythonPredictionRequestDTO {
     private String username;
-    private List<ImageIdFormatPairDTO> imageIdFormatPairs; // List of images to predict
+    private List<ImagePredictionTaskDTO> imagePredictionTasks;
     private ModelLoadDetailsDTO modelLoadDetails;
-    private String experimentRunIdOfModel; // For grouping results under the model's experiment ID
+    private String experimentRunIdOfModel;
 
     private Boolean generateLime;
     private Integer limeNumFeatures;

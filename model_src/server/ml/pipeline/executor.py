@@ -269,7 +269,7 @@ class PipelineExecutor:
                 current_params = params_from_sequence.copy()  # These are the kwargs for the pipeline method
 
                 use_best_params_key = 'use_best_params_from_step'
-                step_index_to_use_params_from = current_params.get(use_best_params_key)
+                step_index_to_use_params_from = current_params.pop(use_best_params_key, None)
 
                 user_defined_skorch_hps_for_this_step = current_params.get('params',
                                                                                 {}).copy() if method_name != 'non_nested_grid_search' and method_name != 'nested_grid_search' else {}

@@ -1989,7 +1989,7 @@ class ClassificationPipeline:
         return results
 
     def predict_images(self,
-                       image_id_format_pairs: List[Tuple[Union[int, str], str]],
+                       image_tasks_for_pipeline: List[Any],
                        experiment_run_id_of_model: str,
                        username: str = "anonymous", # Default username for artifact storage
                        persist_prediction_artifacts: bool = True,
@@ -2003,13 +2003,13 @@ class ClassificationPipeline:
                        ) -> List[Dict[str, Any]]:
 
         predict_op_run_id = f"predict_op_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
-        logger.info(f"Op {predict_op_run_id}: Starting prediction for {len(image_id_format_pairs)} images "
+        logger.info(f"Op {predict_op_run_id}: Starting prediction for {len(image_tasks_for_pipeline)} images "
                     f"by user '{username}', using model from experiment '{experiment_run_id_of_model}'.")
 
         if not self.model_adapter.initialized_: logger.error(
             f"Op {predict_op_run_id}: Model adapter not initialized."); raise RuntimeError(
             "Model adapter not initialized.")
-        if not image_id_format_pairs: logger.warning(f"Op {predict_op_run_id}: No image_id_format_pairs."); return []
+        if not image_tasks_for_pipeline: logger.warning(f"Op {predict_op_run_id}: No image_tasks_for_pipeline."); return []
         lime_explainer = None
         if generate_lime_explanations and LIME_AVAILABLE:
             lime_explainer = LimeImageExplainer(random_state=RANDOM_SEED)
@@ -2024,11 +2024,11 @@ class ClassificationPipeline:
                             img_np_lime = np.clip(img_np_lime, 0, 255).astype(np.uint8)
                     elif img_np_lime.dtype != np.uint8:
                         img_np_lime = np.clip(img_np_lime, 0, 255).astype(np.uint8)
-                    pil_img_lime = Image.fromarray(img_np_lime);
-                    transformed_img_lime = self.dataset_handler.get_eval_transform()(pil_img_lime);
+                    pil_img_lime = Image.fromarray(img_np_lime)
+                    transformed_img_lime = self.dataset_handler.get_eval_transform()(pil_img_lime)
                     processed_images_lime.append(transformed_img_lime)
                 if not processed_images_lime: return np.array([])
-                batch_tensor_lime = torch.stack(processed_images_lime).to(self.model_adapter.device);
+                batch_tensor_lime = torch.stack(processed_images_lime).to(self.model_adapter.device)
                 self.model_adapter.module_.eval()
                 with torch.no_grad():
                     logits_lime = self.model_adapter.module_(batch_tensor_lime); probs_lime = torch.softmax(logits_lime,
@@ -2036,11 +2036,13 @@ class ClassificationPipeline:
                 return probs_lime.cpu().numpy()
         elif generate_lime_explanations:
             logger.warning(f"Op {predict_op_run_id}: LIME requested but not available.")
-        pil_images_for_processing: List[Tuple[Optional[Image.Image], Union[int, str]]] = []
-        for image_id, img_format in image_id_format_pairs:
-            pil_image: Optional[Image.Image] = None;
-            img_filename = f"{image_id}.{img_format.lower().replace('.', '')}"
-            image_key_or_path: str
+        pil_images_for_processing: List[Tuple[Optional[Image.Image], Any]] = []
+        valid_tasks: List[Any] = []
+
+        for task in image_tasks_for_pipeline:
+            pil_image: Optional[Image.Image] = None
+            img_filename = f"{task.image_id}.{task.image_format.lower().replace('.', '')}"
+            image_key_or_path: str | Path
             if self.artifact_repo and not isinstance(self.artifact_repo, LocalFileSystemRepository):
                 image_key_or_path = str((PurePath("images") / username / img_filename).as_posix())
                 try:
@@ -2061,9 +2063,14 @@ class ClassificationPipeline:
                         logger.error(f"Failed to load local image {image_key_or_path}: {e}")
                 else:
                     logger.warning(f"Image not found local: {image_key_or_path}")
-            pil_images_for_processing.append((pil_image, image_id))
+            if pil_image:
+                pil_images_for_processing.append((pil_image, task))
+                valid_tasks.append(task)
+            else:
+                logger.warning(
+                    f"Could not load image for task: image_id={task.image_id}, prediction_id={task.prediction_id}")
         valid_pil_images = [img for img, _ in pil_images_for_processing if img is not None]
-        valid_image_ids = [img_id for img, img_id in pil_images_for_processing if img is not None]
+        valid_image_ids = [image_id for img, (image_id, _, _) in pil_images_for_processing if img is not None]
         if not valid_pil_images: logger.error(f"Op {predict_op_run_id}: No valid images loaded."); return []
         logger.info(f"Op {predict_op_run_id}: Loaded {len(valid_pil_images)} images.")
 
@@ -2108,8 +2115,11 @@ class ClassificationPipeline:
         # but we will explicitly exclude LIME segments from the JSON saved by _save_results.
         effective_results_detail_level = self.results_detail_level if results_detail_level is None else results_detail_level
 
-        for i, image_id in enumerate(valid_image_ids):
+        for i, task_object in enumerate(valid_tasks):
             if i >= len(all_probabilities_np): continue
+
+            image_id = task_object.image_id
+            prediction_id = task_object.prediction_id
 
             probs_np = all_probabilities_np[i]
             predicted_idx = int(np.argmax(probs_np))
@@ -2167,8 +2177,9 @@ class ClassificationPipeline:
                     # Prepare the full content for the individual prediction JSON file
             single_prediction_json_content = {
                 "image_id": image_id,
+                "prediction_id": prediction_id,
                 "experiment_run_id_of_model": experiment_run_id_of_model,
-                "image_user_source_path": f"images/{username}/{image_id}.{dict(image_id_format_pairs).get(image_id, 'unknown_fmt')}",
+                "image_user_source_path": f"images/{username}/{image_id}.{task_object.image_format.lower().replace('.', '')}",
                 "probabilities": probs_np.tolist(),
                 "predicted_class_idx": predicted_idx,
                 "predicted_class_name": predicted_name,
@@ -2178,17 +2189,18 @@ class ClassificationPipeline:
             }
 
             predictions_to_return_for_api.append({
-                "image_id": image_id, "experiment_id": experiment_run_id_of_model,
-                "predicted_class": predicted_name, "confidence": confidence,
+                "image_id": image_id,
+                "prediction_id": prediction_id,
+                "experiment_id": experiment_run_id_of_model,
+                "predicted_class": predicted_name,
+                "confidence": confidence,
             })
 
-            prediction_artifact_base_path = PurePath("predictions") / username / str(
-                image_id) / experiment_run_id_of_model
+            prediction_artifact_base_path = PurePath("predictions") / username / str(image_id) / str(prediction_id)
 
             # Save individual prediction JSON
             if persist_prediction_artifacts and self.artifact_repo and effective_results_detail_level > 0:
                 pred_json_key = str((prediction_artifact_base_path / "prediction_details.json").as_posix())
-                # Pass the content that EXCLUDES segments
                 self.artifact_repo.save_json(single_prediction_json_content, pred_json_key)
                 logger.info(f"Op {predict_op_run_id}: Prediction JSON for image {image_id} saved to: {pred_json_key}")
 

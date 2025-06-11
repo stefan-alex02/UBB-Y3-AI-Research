@@ -76,18 +76,43 @@ const TopBar = ({
                 </Typography>
 
                 <Select
-                    value={localStorage.getItem('themeModePreference') || 'system'} // Store preference separately from actual mode
+                    value={localStorage.getItem('themeModePreference') || 'system'}
                     onChange={(e) => {
                         const newPreference = e.target.value;
                         localStorage.setItem('themeModePreference', newPreference);
                         setThemeMode(newPreference);
                     }}
                     size="small"
-                    sx={{ mr: 2, color: 'inherit', '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.5)'}, '.MuiSvgIcon-root': { color: 'inherit'} }}
+                    sx={{
+                        mr: 2,
+                        color: 'inherit',
+                        '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.5)' },
+                        '.MuiSvgIcon-root': { color: 'inherit' }
+                    }}
+                    renderValue={(value) => {
+                        const options = {
+                            light: { icon: <Brightness7Icon fontSize="small" sx={{ mr: 1 }} />, label: 'Light' },
+                            dark: { icon: <Brightness4Icon fontSize="small" sx={{ mr: 1 }} />, label: 'Dark' },
+                            system: { icon: <SettingsIcon fontSize="small" sx={{ mr: 1 }} />, label: 'System' }
+                        };
+                        const option = options[value] || options['system'];
+                        return (
+                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                {option.icon}
+                                {option.label}
+                            </Box>
+                        );
+                    }}
                 >
-                    <MenuItem value="light"><Brightness7Icon sx={{mr:1}} fontSize="small"/> Light</MenuItem>
-                    <MenuItem value="dark"><Brightness4Icon sx={{mr:1}} fontSize="small"/> Dark</MenuItem>
-                    <MenuItem value="system"><SettingsIcon sx={{mr:1}} fontSize="small"/> System</MenuItem>
+                    <MenuItem value="light" sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Brightness7Icon sx={{ mr: 1 }} fontSize="small" /> Light
+                    </MenuItem>
+                    <MenuItem value="dark" sx={{ display: 'flex', alignItems: 'center' }}>
+                        <Brightness4Icon sx={{ mr: 1 }} fontSize="small" /> Dark
+                    </MenuItem>
+                    <MenuItem value="system" sx={{ display: 'flex', alignItems: 'center' }}>
+                        <SettingsIcon sx={{ mr: 1 }} fontSize="small" /> System
+                    </MenuItem>
                 </Select>
 
 
