@@ -19,9 +19,9 @@ hybrid_vit_fixed_params = {
     'criterion__label_smoothing': 0.1, # Common value for label smoothing
 
     # --- CutMix Parameters ---
-    'cutmix_alpha': 1.0,
+    # 'cutmix_alpha': 1.0,
     # 'cutmix_probability': 0.9,  # for CCSN
-    'cutmix_probability': 0.3, # for Swimcat
+    # 'cutmix_probability': 0.3, # for Swimcat
     # 'cutmix_probability': 0.5, # for GCD
 
     # --- Gradient Clipping---
@@ -42,7 +42,7 @@ hybrid_vit_fixed_params = {
     'module__vit_model_variant': 'vit_b_16',
     'module__vit_pretrained_imagenet': True, # ViT backend uses its ImageNet pretraining
     'module__unfreeze_strategy': 'encoder_tail',
-    'module__num_transformer_blocks_to_unfreeze': 2, # Fine-tune last 2 ViT blocks. Could try 1 to 4.
+    'module__num_transformer_blocks_to_unfreeze': 1, # Fine-tune last 2 ViT blocks. Could try 1 to 4.
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
     'module__unfreeze_patch_embedding': False,       # For ViT's own, not used in hybrid mode by ViT
