@@ -11,15 +11,14 @@ from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_par
 from model_src.server.ml.params.resnet import resnet18_cloud_fixed_params
 from model_src.server.ml.params.shufflenet import shufflenet_cloud_fixed_params
 from model_src.server.ml.params.standard_cnn_extractor import standard_cnn_fixed_params
-from server.ml.logger_utils import logger
-from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused, best_config_as_grid_vit
-from server.ml.params.scratch_vit import fixed_params_vit_scratch, param_grid_vit_from_scratch
 from server.ml import ModelType
 from server.ml import PipelineExecutor
 from server.ml.config import DATASET_DICT, AugmentationStrategy
-from server.ml.params import (debug_fixed_params, cnn_fixed_params, pretrained_vit_fixed_params,
-                              diffusion_param_grid, param_grid_pretrained_vit_conditional)
+from server.ml.logger_utils import logger
+from server.ml.params import (debug_fixed_params, cnn_fixed_params, pretrained_vit_fixed_params)
 from server.ml.params import debug_param_grid, cnn_param_grid
+from server.ml.params.pretrained_vit import best_config_as_grid_vit
+from server.ml.params.scratch_vit import fixed_params_vit_scratch, param_grid_vit_from_scratch
 from server.persistence import load_file_repository, load_minio_repository
 
 if __name__ == "__main__":
@@ -46,7 +45,7 @@ if __name__ == "__main__":
 
     # Select Model:
     model_type = "shufflenet"
-    # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet'
+    # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet'
 
 
     # Offline Augmentation:
@@ -152,10 +151,6 @@ if __name__ == "__main__":
     elif model_type == ModelType.SCRATCH_VIT:
         chosen_fixed_params = fixed_params_vit_scratch
         chosen_param_grid = param_grid_vit_from_scratch
-
-    elif model_type == ModelType.DIFFUSION:
-        chosen_fixed_params = debug_fixed_params # TODO: update
-        chosen_param_grid = diffusion_param_grid
 
     elif model_type == ModelType.XCLOUD:
         chosen_fixed_params = xcloud_fixed_params
@@ -304,18 +299,7 @@ if __name__ == "__main__":
         })
     ]
 
-    # Example 8: Load Pre-trained and Fine-tune + Evaluate (Non-functional for now)
-    # pretrained_model_path = "./results/mini-GCD-flat/cnn/20250508_155404_seed42/single_train_20250508_155404_816633/cnn_epoch5_val_valid-loss3.1052.pt" # Replace with actual path
-    # methods_seq_8 = [
-    #     ('load_model', {'model_path_or_key': pretrained_model_path}),
-    #     ('single_train', {
-    #         'save_model': True,
-    #         'val_split_ratio': 0.2,
-    #     }),
-    #     ('single_eval', {}),
-    # ]
-
-    # --- Select the chosen sequence based on index (1-6) ---
+    # --- Select the chosen sequence based on index (1-7) ---
     chosen_sequence = globals()[f"methods_seq_{chosen_sequence_idx}"]
 
     logger.info(f"Executing sequence: {[m[0] for m in chosen_sequence]}")

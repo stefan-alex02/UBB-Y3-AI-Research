@@ -1,7 +1,6 @@
 from enum import Enum
 
 from .cnn import SimpleCNN
-from .diffusion_classifier import DiffusionClassifier
 from .feature_extractors import PaperCNNFeatureExtractor
 from .hybrid_models import HybridViT
 from .paper_xception_mobilenet import XceptionBasedCloudNet, MobileNetBasedCloudNet
@@ -16,8 +15,6 @@ model_mapping = {
     "cnn": SimpleCNN,
     "pvit": PretrainedViT,
     "svit": ScratchViT,
-
-    "diff": DiffusionClassifier,
 
     "hyvit": HybridViT,  # New entry for dedicated hybrid model
     "cnn_feat": PaperCNNFeatureExtractor,  # If you want to train/test CNN extractor alone
@@ -35,7 +32,6 @@ class ModelType(str, Enum):  # Inheriting from str makes it directly usable as a
     CNN = "cnn"
     PRETRAINED_VIT = "pvit"
     SCRATCH_VIT = "svit"
-    DIFFUSION = "diff"
 
     HYBRID_VIT = "hyvit"
     CNN_FEAT = "cnn_feat"
