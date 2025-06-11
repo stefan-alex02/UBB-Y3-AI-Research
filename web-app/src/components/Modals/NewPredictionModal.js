@@ -62,14 +62,14 @@ const ModelSelectItem = ({ experiment, selected, onClick }) => (
         selected={selected}
         onClick={onClick}
         sx={{
-            mb: 1,
+            mb: 0.5,
             borderRadius: 1,
             border: selected ? '2px solid' : '1px solid',
             borderColor: selected ? 'primary.main' : 'divider',
-            p: 1.5
+            p: 1
         }}
     >
-        <ListItemIcon sx={{minWidth: 36, mr: 1.5}}><ModelTrainingIcon color={selected ? "primary" : "action"} fontSize="medium"/></ListItemIcon>
+        <ListItemIcon sx={{minWidth: 32, mr: 1}}><ModelTrainingIcon color={selected ? "primary" : "action"} fontSize="small"/></ListItemIcon>
         <ListItemText
             primary={
                 <Typography variant="body1" component="div" sx={{ fontWeight: selected ? 500 : 400, color: selected ? "primary.main" : "text.primary", mb: 0.5 }}>
@@ -78,21 +78,30 @@ const ModelSelectItem = ({ experiment, selected, onClick }) => (
             }
             secondary={
                 <Box>
+                    {/* First row: Model, Dataset, User side by side */}
+                    <Box sx={{ display: 'flex', flexDirection: 'row', mb: 0.5, flexWrap: 'wrap', gap: 1 }}>
+                        <Typography component="span" variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center'}}>
+                            <ModelTrainingIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> Model: {experiment.model_type || 'N/A'}
+                        </Typography>
+                        <Typography component="span" variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center'}}>
+                            <DatasetIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> Dataset: {experiment.dataset_name || 'N/A'}
+                        </Typography>
+                    </Box>
+
+                    {/* Second row: Completed date */}
                     <Typography component="div" variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center', mb: 0.25}}>
-                        <ModelTrainingIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> Model: {experiment.model_type || 'N/A'}
+                        <EventIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> {formatDateSafe(experiment.end_time)}
                     </Typography>
-                    <Typography component="div" variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center', mb: 0.25}}>
-                        <DatasetIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> Dataset: {experiment.dataset_name || 'N/A'}
-                    </Typography>
-                    <Typography component="div" variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center', mb: 0.25}}>
-                        <PersonIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> By: {experiment.user_name || 'N/A'}
-                    </Typography>
-                    <Typography component="div" variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center'}}>
-                        <EventIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> Completed: {formatDateSafe(experiment.end_time)}
-                    </Typography>
-                    <Typography component="div" variant="caption" color="text.secondary" sx={{mt:0.25, fontFamily: 'monospace', fontSize:'0.7rem'}}>
-                        ID: ...{experiment.experiment_run_id ? experiment.experiment_run_id.slice(-12) : 'N/A'}
-                    </Typography>
+
+                    {/* Third row: ID */}
+                    <Box sx={{ display: 'flex', flexDirection: 'row', mb: 0.5, flexWrap: 'wrap', gap: 1 }}>
+                        <Typography component="div" variant="caption" color="text.secondary" sx={{fontFamily: 'monospace', fontSize:'0.7rem'}}>
+                            ID: {experiment.experiment_run_id ? experiment.experiment_run_id.slice(0, 12) : 'N/A'}...
+                        </Typography>
+                        <Typography component="span" variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center'}}>
+                            <PersonIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> By: {experiment.user_name || 'N/A'}
+                        </Typography>
+                    </Box>
                 </Box>
             }
         />
@@ -121,7 +130,7 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
         modelType: '',
         datasetName: ''
     });
-    const [modelPagination, setModelPagination] = useState({ page: 0, size: 4, totalPages: 0 });
+    const [modelPagination, setModelPagination] = useState({ page: 0, size: 3, totalPages: 0 });
 
     const [loadingModels, setLoadingModels] = useState(false);
     const [submitting, setSubmitting] = useState(false);
@@ -151,7 +160,7 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
             const data = await experimentService.getExperiments(filters, pageable);
             const fetchedModels = data.content || [];
             setAvailableModels(fetchedModels);
-            setModelPagination(prev => ({ ...prev, totalPages: data.totalPages }));
+            setModelPagination(prev => ({ ...prev, totalPages: data.total_pages }));
 
             // If the currently selected model is no longer in the new list, clear the selection.
             // This check should happen *after* setting availableModels.
@@ -246,10 +255,10 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
                 <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
                     <Grid container spacing={2} alignItems="center">
                         <Grid item xs={12} sm={4}>
-                            <TextField fullWidth label="Filter by Experiment Name" name="nameContains" value={modelFilters.nameContains} onChange={handleModelFilterChange} variant="outlined" size="small"/>
+                            <TextField fullWidth label="Experiment Name" name="nameContains" value={modelFilters.nameContains} onChange={handleModelFilterChange} variant="outlined" size="small"/>
                         </Grid>
                         <Grid item xs={12} sm={4}>
-                            <FormControl fullWidth size="small">
+                            <FormControl fullWidth size="small" sx={{ minWidth: '220px' }}>
                                 <InputLabel>Filter by Model Type</InputLabel>
                                 <Select name="modelType" value={modelFilters.modelType} label="Filter by Model Type" onChange={handleModelFilterChange}>
                                     <MenuItem value=""><em>Any Type</em></MenuItem>
@@ -258,7 +267,7 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
                             </FormControl>
                         </Grid>
                         <Grid item xs={12} sm={6}>
-                            <FormControl fullWidth size="small">
+                            <FormControl fullWidth size="small" sx={{ minWidth: '220px' }}>
                                 <InputLabel>Filter by Dataset</InputLabel>
                                 <Select name="datasetName" value={modelFilters.datasetName} label="Filter by Dataset" onChange={handleModelFilterChange}>
                                     <MenuItem value=""><em>Any Dataset</em></MenuItem>
@@ -274,9 +283,9 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
                         {availableModels.length === 0 ? (
                             <Typography sx={{textAlign:'center', my:3, color:'text.secondary'}}>No models match your criteria.</Typography>
                         ) : (
-                            <Grid container spacing={2} sx={{ maxHeight: 350, overflow: 'auto', mb:1, pr:1 /* padding for scrollbar */ }}>
+                            <Grid container spacing={2} sx={{ maxHeight: 350, overflow: 'auto', mb:1, pr:1}}>
                                 {availableModels.map(exp => (
-                                    <Grid item xs={12} sm={6} key={exp.experiment_run_id}> {/* 2 cards per row on sm+ */}
+                                    <Grid item xs={12} sm={6} key={exp.experiment_run_id}>
                                         <ModelSelectItem
                                             experiment={exp}
                                             selected={selectedModelExperimentId === exp.experiment_run_id}

@@ -67,7 +67,7 @@ const ExperimentSchema = Yup.object().shape({
                 params: ParamsSchema,
                 save_model: Yup.boolean().optional(),
                 save_best_model: Yup.boolean().optional(),
-                plot_level: Yup.number().min(0).max(2).integer().optional(),
+                plot_level: Yup.number().min(0).max(1).integer().optional(),
                 results_detail_level: Yup.number().min(0).max(3).integer().optional(),
                 cv: Yup.number().integer().min(2).optional().nullable(), // Allow nullable for conditional logic
                 outer_cv: Yup.number().integer().min(2).optional().nullable(),
@@ -199,7 +199,7 @@ const MethodStepCard = React.memo(({ method, index, values, errors, touched, han
                         <FormControl fullWidth size="small" sx={{mb:1.5}}>
                             <InputLabel>Plot Level</InputLabel>
                             <Field as={Select} name={`methodsSequence[${index}].plot_level`} label="Plot Level">
-                                <MenuItem value={0}>None</MenuItem><MenuItem value={1}>Save Only</MenuItem><MenuItem value={2}>Save & Show</MenuItem>
+                                <MenuItem value={0}>No Save</MenuItem><MenuItem value={1}>Save Plots</MenuItem>
                             </Field>
                         </FormControl>
                     }

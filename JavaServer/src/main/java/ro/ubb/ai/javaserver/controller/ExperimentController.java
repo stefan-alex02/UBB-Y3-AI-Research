@@ -50,7 +50,7 @@ public class ExperimentController {
     }
 
     @GetMapping
-    @PreAuthorize("hasRole('METEOROLOGIST')")
+    @PreAuthorize("isAuthenticated()")
     public ResponseEntity<Page<ExperimentDTO>> getAllExperiments(
             @ModelAttribute ExperimentFilterDTO filterDTO, // Correct for query params
             @RequestParam(defaultValue = "0") int page,

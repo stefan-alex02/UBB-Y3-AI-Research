@@ -70,7 +70,7 @@ export const METHOD_DEFAULTS = {
     },
     single_eval: {
         method_name: 'single_eval',
-        plot_level: 2,
+        plot_level: 1,
         results_detail_level: 2,
     },
     non_nested_grid_search: {
@@ -135,7 +135,7 @@ export const PRESET_SEQUENCES = {
             // For single_eval following nn_cv, 'use_best_params_from_step' isn't strictly needed
             // as the pipeline's main adapter is updated. But if you want to allow
             // overriding other single_eval params (like plot_level) for this specific step:
-            plot_level: 2, // Example override for this step in the preset
+            plot_level: 1, // Example override for this step in the preset
             // params are still empty for single_eval
         },
     ],

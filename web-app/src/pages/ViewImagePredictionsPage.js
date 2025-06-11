@@ -656,7 +656,8 @@ const ViewImagePredictionsPage = () => {
                                     <Typography variant="h5" gutterBottom>
                                         Details for Prediction with Model: {selectedPrediction.model_experiment_name || `...${selectedPrediction.model_experiment_run_id.slice(-6)}`}
                                     </Typography>
-                                    <Typography variant="h6">Main Prediction: <Chip label={`${selectedPredictionDetailsJson.predicted_class_name} (${(selectedPredictionDetailsJson.confidence * 100).toFixed(1)}%)`} color="primary" /></Typography>
+                                    <Typography variant="h6">Main Prediction: <Chip label={`${selectedPredictionDetailsJson.predicted_class_name} (${(selectedPredictionDetailsJson.confidence * 100).toFixed(1)}%)`} color="primary"
+                                                                                    clickable={false} onClick={() => {}} /></Typography>
                                     <Typography variant="caption" display="block">Image Source Path: {selectedPredictionDetailsJson.image_user_source_path}</Typography>
                                 </Box>
                                 <Tooltip title="Delete this Prediction">

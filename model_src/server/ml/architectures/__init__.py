@@ -8,6 +8,7 @@ from .feature_extractors import PaperCNNFeatureExtractor
 from .hybrid_models import HybridViT
 from .paper_xception_mobilenet import XceptionBasedCloudNet, MobileNetBasedCloudNet
 from .resnet import ResNet18BasedCloud
+from .shufflenet import ShuffleNetCloud
 
 
 __all__ = [
@@ -22,4 +23,5 @@ __all__ = [
     "XceptionBasedCloudNet",
     "MobileNetBasedCloudNet",
     "ResNet18BasedCloud",
+    "ShuffleNetCloud"
 ]

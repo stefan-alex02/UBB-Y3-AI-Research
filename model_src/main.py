@@ -9,6 +9,7 @@ from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params, hybri
 from model_src.server.ml.params.paper_xception_mobilenet import xcloud_fixed_params, mcloud_fixed_params
 from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_params
 from model_src.server.ml.params.resnet import resnet18_cloud_fixed_params
+from model_src.server.ml.params.shufflenet import shufflenet_cloud_fixed_params
 from model_src.server.ml.params.standard_cnn_extractor import standard_cnn_fixed_params
 from server.ml.logger_utils import logger
 from server.ml.params.pretrained_vit import param_grid_pretrained_vit_focused, best_config_as_grid_vit
@@ -41,13 +42,15 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "ccsn"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "pvit"  # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet'
+    model_type = "shufflenet"
+    # 'cnn', 'pvit', 'swin', 'svit', 'diff', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet'
+
 
     # Offline Augmentation:
-    offline_augmentation = True  # Whether to use pre-augmented data (if available)
+    offline_augmentation = False  # Whether to use pre-augmented data (if available)
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -57,7 +60,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 4  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -168,6 +171,10 @@ if __name__ == "__main__":
 
     elif model_type == ModelType.PRETRAINED_SWIN:
         chosen_fixed_params = pretrained_swin_fixed_params
+        chosen_param_grid = None
+
+    elif model_type == ModelType.SHUFFLE_CLOUD:
+        chosen_fixed_params = shufflenet_cloud_fixed_params
         chosen_param_grid = None
 
     else:
