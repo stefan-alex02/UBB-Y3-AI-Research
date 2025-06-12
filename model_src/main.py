@@ -72,8 +72,8 @@ if __name__ == "__main__":
 
     save_model = False  # Whether to save the model after training
 
-    data_augmentation_mode_override = None
-    # data_augmentation_mode_override = AugmentationStrategy.PAPER_CCSN
+    # data_augmentation_mode_override = None
+    data_augmentation_mode_override = AugmentationStrategy.DEFAULT_STANDARD
 
     # Flag for overriding parameters:
     enable_debug_params = False # Set to True to use the override params for any model type
