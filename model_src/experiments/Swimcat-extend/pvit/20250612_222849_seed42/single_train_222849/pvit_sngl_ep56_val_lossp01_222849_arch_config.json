@@ -1,0 +1,17 @@
+{
+    "model_type": "pvit",
+    "num_classes": 6,
+    "img_size_h": 224,
+    "img_size_w": 224,
+    "module__num_classes": 6,
+    "module__vit_model_variant": "vit_b_16",
+    "module__pretrained": true,
+    "module__unfreeze_strategy": "encoder_tail",
+    "module__num_transformer_blocks_to_unfreeze": 1,
+    "module__unfreeze_cls_token": true,
+    "module__unfreeze_pos_embedding": true,
+    "module__unfreeze_patch_embedding": false,
+    "module__unfreeze_encoder_layernorm": true,
+    "module__custom_head_hidden_dims": null,
+    "module__head_dropout_rate": 0.5
+}

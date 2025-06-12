@@ -28,3 +28,4 @@ __pycache__/
 model_src/data/gcd-test-real-guidance.zip
 model_src/data/gcd-train-real-guidance.zip
 model_src/data/swimcat-real-guidance.zip
+/model_src/data/GCD-flat/

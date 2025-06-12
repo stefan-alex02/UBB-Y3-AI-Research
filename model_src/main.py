@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "GCDf"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "pvit"
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 7  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -69,7 +69,7 @@ if __name__ == "__main__":
     # Flag for CV methods on FIXED datasets:
     # Set to True to allow nested_grid_search and cv_model_evaluation on FIXED datasets
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
-    force_flat = False
+    force_flat = True
 
     save_model = True  # Whether to save the model after training
 
@@ -86,10 +86,10 @@ if __name__ == "__main__":
     # Path to the .pt file RELATIVE TO THE 'experiments/' prefix if using S3/MinIO,
     # or full/relative path if local.
     # The load_model method will prepend "experiments/" if needed for S3.
-    saved_model_dataset = "experiments\\CCSN" # Dataset the model was trained on
+    saved_model_dataset = "experiments\\GCD-flat" # Dataset the model was trained on
     saved_model_type_folder = "pvit"      # Model type folder for that experiment
-    saved_model_experiment_run_id = "20250612_202803_seed42" # The RUN_ID of the experiment that saved the model
-    saved_model_relative_path = "single_train_202803\\pvit_sngl_ep23_val_loss1p26_202803.pt" # Actual .pt filename
+    saved_model_experiment_run_id = "20250612_234618_seed42" # The RUN_ID of the experiment that saved the model
+    saved_model_relative_path = "single_train_234618\\pvit_sngl_ep32_val_lossp27_234618.pt" # Actual .pt filename
 
     # Construct the path that load_model expects
     # For S3/MinIO, load_model internally adds "experiments/" if not present.
@@ -185,8 +185,11 @@ if __name__ == "__main__":
         effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
         cv_folds = 10
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
-    elif selected_dataset.lower() in ['gcd', 'mgcd', 'mgcdf']:
-        effective_test_split_ratio_if_flat = 9000 / 19000
+    elif selected_dataset.lower() in ['gcd', 'gcdf', 'mgcd', 'mgcdf']:
+        if selected_dataset.lower() == 'gcdf':
+            effective_test_split_ratio_if_flat = 0.2
+        else:
+            effective_test_split_ratio_if_flat = 9000 / 19000
         effective_val_split_ratio = 0.1
         cv_folds = 5
         augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
