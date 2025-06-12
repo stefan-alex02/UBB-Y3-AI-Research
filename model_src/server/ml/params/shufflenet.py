@@ -1,9 +1,7 @@
 shufflenet_cloud_fixed_params = {
     # --- Skorch/Training Loop Parameters ---
     'max_epochs': 50,       # Based on paper's Table 1 & Fig 7-9
-    'lr': 1e-3,             # A common starting LR for fine-tuning CNNs like ShuffleNet with Adam/AdamW.
-                            # The paper's 1e-4 was for their full X-Cloud/M-Cloud system.
-                            # This might need tuning (1e-3, 5e-4, 1e-4).
+    'lr': 1e-4,
     'batch_size': 64,       # As per paper's Table 1 description for ShuffleNet.
 
     # --- Optimizer Configuration ---
