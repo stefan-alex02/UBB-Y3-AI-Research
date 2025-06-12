@@ -195,9 +195,9 @@ class PipelineExecutor:
             if method_name == 'load_model' and 'model_path_or_key' not in params:
                 raise ValueError(f"Method 'load_model' requires 'model_path_or_key'.")
             if method_name == 'predict_images' and not (
-                    'image_id_format_pairs' in params and 'experiment_run_id_of_model' in params):
+                    'image_tasks_for_pipeline' in params and 'experiment_run_id_of_model' in params):
                 raise ValueError(
-                    f"Method 'predict_images' requires 'image_id_format_pairs' and 'experiment_run_id_of_model'.")
+                    f"Method 'predict_images' requires 'image_tasks_for_pipeline' and 'experiment_run_id_of_model'.")
         logger.debug("Basic method validation successful.")
 
     def _get_previous_result(self, step_index: int, method_operation_id_key: str) -> Optional[Dict[str, Any]]:

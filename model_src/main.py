@@ -4,6 +4,7 @@ from typing import List, Tuple, Union
 
 import numpy as np
 
+from model_src.server.api.utils import ImagePredictionTask
 from model_src.server.ml.params.feature_extractors import paper_cnn_standalone_fixed_params
 from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params, hybrid_vit_param_grid
 from model_src.server.ml.params.paper_xception_mobilenet import xcloud_fixed_params, mcloud_fixed_params
@@ -41,10 +42,10 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "GCD"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "swimcat"  # 'GCD', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "shufflenet"
+    model_type = "pvit"
     # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet'
 
 
@@ -70,10 +71,10 @@ if __name__ == "__main__":
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
     force_flat = False
 
-    save_model = False  # Whether to save the model after training
+    save_model = True  # Whether to save the model after training
 
-    # data_augmentation_mode_override = None
-    data_augmentation_mode_override = AugmentationStrategy.DEFAULT_STANDARD
+    data_augmentation_mode_override = None
+    # data_augmentation_mode_override = AugmentationStrategy.DEFAULT_STANDARD
 
     # Flag for overriding parameters:
     enable_debug_params = False # Set to True to use the override params for any model type
@@ -85,12 +86,10 @@ if __name__ == "__main__":
     # Path to the .pt file RELATIVE TO THE 'experiments/' prefix if using S3/MinIO,
     # or full/relative path if local.
     # The load_model method will prepend "experiments/" if needed for S3.
-    saved_model_dataset = "Swimcat-extend" # Dataset the model was trained on
-    saved_model_type_folder = "hyvit"      # Model type folder for that experiment
-    # saved_model_experiment_run_id = "20250604_022700_seed42" # The RUN_ID of the experiment that saved the model
-    saved_model_experiment_run_id = "20250605_021526_seed42" # The RUN_ID of the experiment that saved the model
-    # saved_model_relative_path = "single_train_022700\\hyvit_epochEllipsis.pt" # Actual .pt filename
-    saved_model_relative_path = "non_nested_grid_021526\\hyvit_gridcv_cvscp60_021526.pt" # Actual .pt filename
+    saved_model_dataset = "experiments\\CCSN" # Dataset the model was trained on
+    saved_model_type_folder = "pvit"      # Model type folder for that experiment
+    saved_model_experiment_run_id = "20250612_202803_seed42" # The RUN_ID of the experiment that saved the model
+    saved_model_relative_path = "single_train_202803\\pvit_sngl_ep23_val_loss1p26_202803.pt" # Actual .pt filename
 
     # Construct the path that load_model expects
     # For S3/MinIO, load_model internally adds "experiments/" if not present.
@@ -101,10 +100,14 @@ if __name__ == "__main__":
     # Example: "Swimcat-extend/hyvit/20250604_022700_seed42/hyvit_epochEllipsis.pt"
 
     # iterate over the images in the directory (first 10)
-    images_to_predict_info: List[Tuple[Union[int, str], str]] = [
-        (145, "jpg"),
-        ('D_img11', "png"),
-        ("D_img27", "png")
+    images_to_predict_info: List[any] = [
+        ImagePredictionTask(image_id='TG Mures_25-05-2025_square', image_format='jpg', prediction_id='p1'),
+        ImagePredictionTask(image_id='Brasov_18-05-2025_square', image_format='png', prediction_id='p2'),
+        ImagePredictionTask(image_id='Brasov_19-05-2025_square', image_format='png', prediction_id='p3'),
+        ImagePredictionTask(image_id='Brasov_21-05-2025_square', image_format='jpg', prediction_id='p4'),
+        ImagePredictionTask(image_id='Tarnaveni_05-05-2025', image_format='jpg', prediction_id='p5'),
+        ImagePredictionTask(image_id='Tarnaveni_09-05-2025_square1', image_format='jpg', prediction_id='p6'),
+        ImagePredictionTask(image_id='Tarnaveni_09-05-2025_square2', image_format='jpg', prediction_id='p7'),
     ]
 
     # --- Check if the dataset path exists ---
@@ -190,7 +193,7 @@ if __name__ == "__main__":
         # augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset.lower() == 'swimcat':
         effective_test_split_ratio_if_flat = 0.2  # Your default
-        effective_val_split_ratio = 0.1  # Your default (applied to train_val part)
+        effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
         cv_folds = 5
         augmentation_strategy = AugmentationStrategy.PAPER_CCSN
     else:
@@ -289,11 +292,12 @@ if __name__ == "__main__":
             'model_path_or_key': model_path
         }),
         ('predict_images', {
-            'image_id_format_pairs': images_to_predict_info,
+            'username': 'eugen',
+            'image_tasks_for_pipeline': images_to_predict_info,
             'experiment_run_id_of_model': saved_model_experiment_run_id,  # Used for saving prediction outputs
             'generate_lime_explanations': True,
-            'lime_num_features_to_show_plot': 5,
-            'lime_num_samples_for_explainer': 100,  # Reduce for faster testing if needed
+            'lime_num_features_to_show_plot': 20,
+            'lime_num_samples_for_explainer': 200,  # Reduce for faster testing if needed
             'results_detail_level': 3,
             'plot_level': 2  # Generate and save LIME & probability plots
         })
