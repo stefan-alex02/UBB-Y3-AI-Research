@@ -73,7 +73,6 @@ async def get_prediction_artifact_content_api(
             raise HTTPException(status_code=404, detail="Prediction artifact content not found.")
 
         media_type = "application/octet-stream"
-        # Use the same get_artifact_type_from_filename helper from prediction_service
         file_type_from_name = service.get_artifact_type_from_filename(artifact_path)
 
         if file_type_from_name == "json":

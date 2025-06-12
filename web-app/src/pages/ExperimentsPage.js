@@ -177,23 +177,45 @@ const ExperimentsPage = () => {
         setPagination(prev => ({ ...prev, page: value - 1 })); // MUI Pagination is 1-indexed
     };
 
-    const openDeleteDialog = (experimentId, experimentName) => {
-        setDeleteConfirm({ open: true, experimentId, experimentName });
+    const openDeleteDialog = (id, name) => {
+        const displayName = name || 'Unnamed Experiment'; // Fallback for name
+        console.log(`PAGE: openDeleteDialog - Setting state to open for ID: ${id}, Name: ${displayName}`);
+        setDeleteConfirm({ open: true, experimentId: id, experimentName: displayName });
     };
 
-    const handleConfirmDelete = async () => {
-        if (deleteConfirm.experimentId) {
-            setError(null); // Clear previous errors
-            try {
-                await experimentService.deleteExperiment(deleteConfirm.experimentId);
-                setDeleteConfirm({ open: false, experimentId: null, experimentName: '' });
-                fetchExperiments(); // Refresh list
-            } catch (err) {
-                setError(err.response?.data?.message || err.message || `Failed to delete experiment ${deleteConfirm.experimentName}.`);
-                setDeleteConfirm({ open: false, experimentId: null, experimentName: '' });
-            }
-        }
+    const handleCloseDeleteDialog = () => {
+        console.log("PAGE: handleCloseDeleteDialog - Setting state to close");
+        setDeleteConfirm({ open: false, experimentId: null, experimentName: '' });
     };
+
+    const handleConfirmDeletion = async () => {
+        const idToDelete = deleteConfirm.experimentId;
+        const nameToDelete = deleteConfirm.experimentName; // Use name from state for error message
+        console.log(`PAGE: handleConfirmDeletion - Confirming delete for ID: ${idToDelete}, Name: ${nameToDelete}`);
+
+        if (!idToDelete) {
+            console.warn("PAGE: handleConfirmDeletion called but no experimentId in state.");
+            handleCloseDeleteDialog(); // Ensure dialog closes
+            return;
+        }
+
+        // Optionally keep dialog open with a spinner, or close immediately
+        // For this example, we'll close it and let errors/success show via Alerts/Snackbars
+        handleCloseDeleteDialog(); // Close the dialog immediately
+
+        setError(null); // Clear previous errors
+        try {
+            await experimentService.deleteExperiment(idToDelete);
+            console.log(`PAGE: Deletion API call successful for ${idToDelete}`);
+            // Optionally show a Snackbar success message here
+            fetchExperiments(); // Refresh list after successful deletion
+        } catch (err) {
+            console.error(`PAGE: Deletion API call failed for ${idToDelete}`, err);
+            setError(err.response?.data?.message || `Failed to delete experiment "${nameToDelete}".`);
+        }
+        // No need to call setDeleteConfirm again here as it was closed at the start or in onClose
+    };
+
 
     if (!user) return <LoadingSpinner />; // Or redirect to login if AuthProvider handles it
     if (user.role !== 'METEOROLOGIST') {
@@ -315,11 +337,12 @@ const ExperimentsPage = () => {
             </Container>
             <ConfirmDialog
                 open={deleteConfirm.open}
-                onClose={() => setDeleteConfirm({ open: false, experimentId: null, experimentName: '' })}
-                onConfirm={handleConfirmDelete}
+                onClose={handleCloseDeleteDialog}
+                onConfirm={handleConfirmDeletion}
                 title="Delete Experiment?"
-                message={`Are you sure you want to delete the experiment "${deleteConfirm.experimentName}" (ID: ${deleteConfirm.experimentId})? This action cannot be undone and will also attempt to delete associated artifacts.`}
+                message={`Are you sure you want to delete the experiment "${deleteConfirm.experimentName}" (ID: ${deleteConfirm.experimentId || 'N/A'})? This action cannot be undone and will also attempt to delete associated artifacts.`}
                 confirmText="Delete"
+                cancelText="Cancel"
             />
         </LocalizationProvider>
     );

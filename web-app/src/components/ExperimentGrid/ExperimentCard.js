@@ -10,27 +10,27 @@ import { useNavigate } from 'react-router-dom';
 import ConfirmDialog from '../ConfirmDialog';
 import {formatDateSafe} from "../../utils/dateUtils";
 
-const ExperimentCard = ({ experiment, onDelete }) => {
+const ExperimentCard = ({ experiment, onDeleteRequest }) => {
     const navigate = useNavigate();
     const [anchorEl, setAnchorEl] = useState(null);
-    const [dialogOpen, setDialogOpen] = useState(false);
     const openMenu = Boolean(anchorEl);
 
     const handleMenuClick = (event) => {
+        event.stopPropagation();
         setAnchorEl(event.currentTarget);
     };
-    const handleMenuClose = () => {
+
+    const handleMenuClose = (event) => {
+        if (event) event.stopPropagation();
         setAnchorEl(null);
     };
 
-    const handleDeleteClick = () => {
-        setDialogOpen(true);
-        handleMenuClose();
-    };
-
-    const handleConfirmDelete = () => {
-        onDelete(experiment.experiment_run_id); // Use snake_case
-        setDialogOpen(false);
+    const handleDeleteInitiate = (event) => {
+        event.stopPropagation();
+        if (onDeleteRequest) {
+            onDeleteRequest(experiment.experiment_run_id, experiment.name);
+        }
+        handleMenuClose(event); // Close the menu
     };
 
     const getStatusColor = (status) => {
@@ -58,7 +58,7 @@ const ExperimentCard = ({ experiment, onDelete }) => {
                             <MenuItem onClick={() => { navigate(`/experiments/${experiment.experiment_run_id}`); handleMenuClose(); }}>
                                 <VisibilityIcon sx={{ mr: 1 }} /> View Details
                             </MenuItem>
-                            <MenuItem onClick={handleDeleteClick} sx={{ color: 'error.main' }}>
+                            <MenuItem onClick={handleDeleteInitiate} sx={{ color: 'error.main' }}>
                                 <DeleteIcon sx={{ mr: 1 }} /> Delete
                             </MenuItem>
                         </Menu>
@@ -114,14 +114,6 @@ const ExperimentCard = ({ experiment, onDelete }) => {
                     </Button>
                 </CardActions>
             </Card>
-            <ConfirmDialog
-                open={dialogOpen} // Controlled by dialogOpen state
-                onClose={() => setDialogOpen(false)}
-                onConfirm={handleConfirmDelete}
-                title="Delete Experiment?"
-                message={`Are you sure you want to delete the experiment "${experiment.name || 'N/A'}" (ID: ${experiment.experiment_run_id || 'N/A'})? This action cannot be undone and will also attempt to delete associated artifacts.`}
-                confirmText="Delete"
-            />
         </>
     );
 };
