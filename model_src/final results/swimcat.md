@@ -61,13 +61,13 @@ Swimcat
 - Hybrid-ViT: (5-Fold Cross-Validation)
 
         CV Evaluation Summary (on full data, 5 folds, 95% CI):
-        Accuracy            : 0.9895 +/- 0.0045
-        F1 Macro            : 0.9895 +/- 0.0045
-        Precision Macro     : 0.9897 +/- 0.0045
-        Recall Macro        : 0.9895 +/- 0.0045
-        Specificity Macro   : 0.9979 +/- 0.0009
-        Roc Auc Macro       : 0.9997 +/- 0.0003
-        Pr Auc Macro        : 0.9924 +/- 0.0021
+        Accuracy            : 0.9862 +/- 0.0105
+        F1 Macro            : 0.9862 +/- 0.0106
+        Precision Macro     : 0.9871 +/- 0.0093
+        Recall Macro        : 0.9862 +/- 0.0105
+        Specificity Macro   : 0.9972 +/- 0.0021
+        Roc Auc Macro       : 0.9994 +/- 0.0007
+        Pr Auc Macro        : 0.9917 +/- 0.0029
 
 ```python
 hybrid_vit_fixed_params = {
@@ -112,10 +112,10 @@ hybrid_vit_fixed_params = {
     'module__num_transformer_blocks_to_unfreeze': 2, # Fine-tune last 2 ViT blocks. Could try 1 to 4.
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
-    'module__unfreeze_patch_embedding': True,       # For ViT's own, not used in hybrid mode by ViT
+    'module__unfreeze_patch_embedding': False,       # For ViT's own, not used in hybrid mode by ViT
     'module__unfreeze_encoder_layernorm': True,
     'module__custom_head_hidden_dims': None,         # Keep head simple initially
-    'module__head_dropout_rate': 0.5,
+    'module__head_dropout_rate': 0.2,
 
     # --- Parameters for HybridViT constructor (related to image/feature sizes) ---
     'module__pipeline_img_h': 224,

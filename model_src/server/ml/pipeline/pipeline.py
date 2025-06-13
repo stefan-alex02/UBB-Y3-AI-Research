@@ -1,7 +1,6 @@
 import contextlib
-import io  # For capturing print output to a string
+import io
 import json
-import re
 from datetime import datetime
 from numbers import Number
 from pathlib import Path, PurePath
@@ -9,7 +8,6 @@ from typing import Dict, List, Tuple, Callable, Any, Type, Optional, Union
 
 import numpy as np
 import pandas as pd
-import requests
 import scipy.stats as stats
 import torch
 import torch.nn as nn
@@ -32,7 +30,7 @@ from ..architectures import ModelType
 from ..config import RANDOM_SEED, DEVICE, DEFAULT_IMG_SIZE, AugmentationStrategy
 from ..dataset_utils import ImageDatasetHandler, DatasetStructure, PathImageDataset
 from ..logger_utils import logger
-from ..plotter import _save_figure_or_show, ResultsPlotter
+from ..plotter import ResultsPlotter
 from ..skorch_utils import SkorchModelAdapter
 from ..skorch_utils import get_default_callbacks
 from ...persistence import LocalFileSystemRepository
@@ -82,78 +80,70 @@ class ClassificationPipeline:
                  batch_size: int = 32,
                  patience: int = 10,
                  module__dropout_rate: Optional[float] = None,
-
-                 # --- LR Scheduler Default Configuration ---
                  lr_scheduler_policy_default: str = 'ReduceLROnPlateau',
-
-                 # --- Catch-all for other skorch/optimizer/module params ---
-                 **kwargs  # <<< Will capture optimizer__weight_decay, optimizer__momentum, etc.
+                 **kwargs
                  ):
         """
-            Initializes the Classification Pipeline.
+        Initializes the Classification Pipeline for image classification tasks.
 
-            Args:
-                dataset_path: Path to the root of the image dataset.
-                model_type: Type of model to use for classification.
-                    Options are 'cnn', 'simple_vit', 'flexible_vit', or 'diffusion'.
-                model_load_path: Optional path to pre-trained model weights (.pt file) to load.
-                img_size: Target image size for transformations (height, width).
-                results_detail_level: Controls the verbosity of saved JSON results.
-                    This is the default level for the pipeline, which can be overridden
-                    per method call via the `results_detail_level_override` parameter in
-                    individual pipeline methods.
-                    Levels:
+        This constructor sets up the pipeline with configuration for dataset handling,
+        model architecture, training parameters, and artifact persistence. It prepares
+        the model adapter with appropriate transforms and initializes the dataset handler.
 
-                    - 0: No JSON results file is saved for any method. Only summary CSV is updated.
+        Args:
+            dataset_path: Path to the root of the image dataset directory.
+            model_type: Type of model architecture to use (CNN, ViT, etc.).
+                       Can be a ModelType enum value or string.
+            model_load_path: Optional path to pre-trained model weights to load at initialization.
+                            If provided, the model is loaded immediately.
+            img_size: Target size (height, width) for image resizing in preprocessing.
+            artifact_repository: Repository for saving/loading models, results, and plots.
+                                If None, persistence features will be limited.
+            experiment_base_key_prefix: Base prefix for organizing artifacts in the repository.
+                                       Used to group related experiment runs.
+            results_detail_level: Controls verbosity of saved JSON results (0-3):
+                                 0: No results saved
+                                 1: Basic metrics only
+                                 2: Detailed results with histories
+                                 3: Full detail including batch-level data
+            plot_level: Controls visualization behavior (0-2):
+                       0: No plots generated
+                       1: Plots saved but not displayed
+                       2: Plots saved and displayed
+            val_split_ratio: Proportion of training data to use for validation.
+            test_split_ratio_if_flat: Proportion to reserve for testing when using flat dataset structure.
+            augmentation_strategy: Data augmentation approach to use during training.
+                                  Can be enum value, string name, or custom transform function.
+            show_first_batch_augmentation_default: Whether to visualize the first batch of
+                                                  augmented training data.
+            use_offline_augmented_data: Whether to use pre-augmented images instead of
+                                       real-time augmentation.
+            force_flat_for_fixed_cv: If True, treats a structured dataset as flat for
+                                    cross-validation purposes.
+            optimizer: Optimizer to use for training (AdamW, Adam, SGD).
+                      Can be a string name or optimizer class.
+            lr: Learning rate for the optimizer.
+            max_epochs: Maximum number of training epochs.
+            batch_size: Batch size for training and inference.
+            patience: Number of epochs with no improvement before early stopping.
+            module__dropout_rate: Dropout rate to use in model architecture (if supported).
+            lr_scheduler_policy_default: Learning rate scheduler policy name.
+            **kwargs: Additional arguments passed to the model adapter.
 
-                    - 1 (Basic Summary): Saves key metrics (overall accuracy, macro averages), best
-                      parameters from tuning, summary of CV scores (e.g., mean/std test scores
-                      from GridSearchCV), and paths to saved models. Excludes detailed lists like
-                      full epoch histories, per-class metric arrays, y_true/pred/score arrays,
-                      full GridSearchCV cv_results, and per-batch training data.
+        Raises:
+            TypeError: If model_type is not a string or ModelType enum
+            ValueError: If model_type string doesn't match any supported architecture
+            RuntimeError: If dataset loading fails
 
-                    - 2 (Detailed Epoch-Level): Includes everything from Level 1, plus:
-                        - Full epoch-by-epoch training histories (without per-batch data).
-                        - Detailed per-class metrics.
-                        - Raw `y_true`, `y_pred`, `y_score` arrays from evaluations.
-                        - Data points for ROC and Precision-Recall curves.
-                        - Full `cv_results` from GridSearchCV.
-                        - `full_params_used` and `method_params_used`.
-
-                    - 3 (Full Detail including Batch Data): Includes everything from Level 2, and
-                      also preserves per-batch training/validation data (e.g., loss, batch size)
-                      if present within the skorch History objects' epoch entries.
-                plot_level: Default level for plotting results after methods run.
-                    This can be overridden per method call via the `plot_level` parameter
-                    in individual pipeline methods.
-                    Levels:
-                    - 0: No plotting is performed automatically after method execution.
-                    - 1: Plots are generated and saved to files in a subdirectory next
-                         to the results JSON.
-                    - 2: Plots are generated, saved to files, AND displayed interactively
-                         (using `plt.show()`). Requires a graphical backend.
-                val_split_ratio: Default ratio for splitting train+validation data into
-                                 training and validation sets for methods like `single_train` or
-                                 as the internal validation split within skorch/CV folds if not
-                                 otherwise specified.
-                test_split_ratio_if_flat: Ratio for splitting a FLAT dataset into
-                                          train+validation and test sets. Ignored for FIXED datasets.
-                force_flat_for_fixed_cv: If True, treats a FIXED dataset structure (train/test splits)
-                                         as a single pool of data for CV methods that operate on the
-                                         'full' dataset (e.g., nested_grid_search, cv_model_evaluation
-                                         with evaluate_on='full'). Use with caution.
-                lr: Default learning rate for the optimizer.
-                max_epochs: Default maximum number of training epochs.
-                batch_size: Default batch size for training and evaluation.
-                patience: Default patience for EarlyStopping callback.
-                module__dropout_rate: Optional default dropout rate for model modules
-                                      (if the model architecture supports it via __init__).
+        Note:
+            The pipeline uses a SkorchModelAdapter internally to integrate PyTorch models with
+            scikit-learn compatible training workflows. The dataset structure is automatically
+            detected (flat or train/val/test splits) and handled appropriately.
         """
         self.dataset_path = Path(dataset_path).resolve()
-        # Ensure model_type is an instance of ModelType Enum
         if isinstance(model_type, str):
             try:
-                self.model_type = ModelType(model_type)  # Convert string to Enum member
+                self.model_type = ModelType(model_type)
             except ValueError:
                 raise ValueError(
                     f"Invalid model_type string: '{model_type}'. "
@@ -171,8 +161,7 @@ class ClassificationPipeline:
         self.artifact_repo : Optional[ArtifactRepository] = artifact_repository
         self.experiment_run_key_prefix: Optional[str] = experiment_base_key_prefix
 
-        # --- LOGGING CAN NOW HAPPEN RELIABLY ---
-        logger.info(f"Initializing Classification Pipeline:") # This will now use the configured logger
+        logger.info(f"Initializing Classification Pipeline:")
         logger.info(f"  Dataset Path: {self.dataset_path}")
         logger.info(f"  Model Type: {self.model_type.value}")
 
@@ -181,7 +170,7 @@ class ClassificationPipeline:
         else:
             logger.info("  Artifact repository not configured or base prefix missing. File outputs might be limited.")
 
-        logger.info(f"  Default Augmentation Strategy: {str(augmentation_strategy)}") # Log received strategy
+        logger.info(f"  Default Augmentation Strategy: {str(augmentation_strategy)}")
         logger.info(f"  Default Show First Batch Aug: {show_first_batch_augmentation_default}")
 
         self.dataset_handler = ImageDatasetHandler(
@@ -194,18 +183,15 @@ class ClassificationPipeline:
         if self.artifact_repo and self.experiment_run_key_prefix:
             logger.info(
                 f"  Artifact base key prefix for this run: {self.experiment_run_key_prefix} (using {type(self.artifact_repo).__name__})")
-        elif self.artifact_repo and not self.experiment_run_key_prefix:  # Repo exists, but no prefix provided by executor
+        elif self.artifact_repo and not self.experiment_run_key_prefix:
             logger.warning(
                 "  Artifact repository configured, but no experiment_base_key_prefix provided from executor. Specific run outputs might not be grouped correctly.")
-            # You might decide to create a fallback prefix here based on timestamp if this case is valid
-            # For now, this means artifact keys will be simpler (e.g. just run_id/filename)
-        else:  # No repo
+        else:
             logger.info("  Artifact repository not configured. File outputs will be disabled.")
 
-        self.optimizer_type_config = optimizer # Store the configured optimizer (string or Type)
-        self.lr_config = lr # Store configured lr
+        self.optimizer_type_config = optimizer
+        self.lr_config = lr
 
-        # Resolve optimizer string to type if needed
         actual_optimizer_type: Type[torch.optim.Optimizer]
         if isinstance(optimizer, str):
             opt_lower = optimizer.lower()
@@ -215,10 +201,9 @@ class ClassificationPipeline:
                 actual_optimizer_type = Adam
             elif opt_lower == "sgd":
                 actual_optimizer_type = SGD
-            # Add more optimizers here
             else:
                 raise ValueError(f"Unsupported optimizer string: '{optimizer}'. Choose from 'adamw', 'adam', 'sgd'.")
-        elif issubclass(optimizer, torch.optim.Optimizer):  # Check if it's a torch.optim.Optimizer subclass
+        elif issubclass(optimizer, torch.optim.Optimizer):
             actual_optimizer_type = optimizer
         else:
             raise TypeError(f"Optimizer must be a string or a torch.optim.Optimizer type, got {type(optimizer)}")
@@ -230,9 +215,9 @@ class ClassificationPipeline:
         self.patience_default = patience
         self.lr_scheduler_policy_default = lr_scheduler_policy_default
         default_callbacks = get_default_callbacks(
-            early_stopping_patience=self.patience_default,  # patience is from __init__ arg
+            early_stopping_patience=self.patience_default,
             lr_scheduler_policy=self.lr_scheduler_policy_default,
-            patience=2,  # Default patience for LR scheduler
+            patience=2,
         )
 
         module_params = {}
@@ -250,29 +235,24 @@ class ClassificationPipeline:
             'train_transform': self.dataset_handler.get_train_transform(),
             'valid_transform': self.dataset_handler.get_eval_transform(),
             'show_first_batch_augmentation': self.show_first_batch_augmentation_default,
-            'use_offline_augmented_data': use_offline_augmented_data, # Pass to adapter
-            'dataset_handler_ref': self.dataset_handler,            # Pass reference to adapter
+            'use_offline_augmented_data': use_offline_augmented_data,
+            'dataset_handler_ref': self.dataset_handler,
             'classes': np.arange(self.dataset_handler.num_classes),
-            'verbose': 0, # Default verbosity for adapter itself
+            'verbose': 0,
             **module_params
         }
 
-        # Add any other kwargs (like optimizer__weight_decay, optimizer__momentum)
-        # These are passed directly to SkorchModelAdapter which passes them to torch.optim.Optimizer
-        self.model_adapter_config.update(kwargs) # TODO - refactor this to accept only known kwargs
+        self.model_adapter_config.update(kwargs)
 
         init_config_for_adapter = self.model_adapter_config.copy()
         init_config_for_adapter.pop('patience_cfg', None); init_config_for_adapter.pop('monitor_cfg', None)
         init_config_for_adapter.pop('lr_policy_cfg', None); init_config_for_adapter.pop('lr_patience_cfg', None)
 
-        # Important: Pass the base config to the adapter, not the processed one
-        # Skorch handles parameter setting via set_params
         self.model_adapter = SkorchModelAdapter(**init_config_for_adapter)
         logger.info(f"  Model Adapter: Initialized with {model_class.__name__}")
 
         if model_load_path:
             self.load_model(model_load_path)
-        # logger.info(f"Pipeline initialized successfully.") # Logged by executor
 
     def _get_s3_object_key(self, run_id: str, filename: str, sub_folder: Optional[str] = None) -> Optional[str]:
         """
@@ -292,28 +272,72 @@ class ClassificationPipeline:
         else:
             key_path = PurePath(self.experiment_run_key_prefix) / run_id / filename
 
-        return key_path.as_posix()  # Ensure forward slashes for S3
+        return key_path.as_posix()
 
     @staticmethod
     def _get_model_class(model_type_enum: ModelType) -> Type[nn.Module]:
+        """
+        Retrieves the model class corresponding to the specified ModelType enum.
+        :param model_type_enum: An instance of ModelType enum representing the desired model type.
+        :return: The corresponding PyTorch model class.
+        """
         model_class = model_type_enum.get_model_class()
         if model_class is None:
-            # This should ideally not happen if model_type_enum is validated
             raise ValueError(f"Unsupported model type: '{model_type_enum.value}'.")
         return model_class
 
-    # In ClassificationPipeline class:
     def _compute_metrics(self, y_true: np.ndarray, y_pred: np.ndarray,
                          y_score: Optional[np.ndarray] = None,
                          detailed: bool = False) -> Dict[str, Any]:
+        """
+        Calculates classification performance metrics from prediction results.
+
+        This internal method computes a comprehensive set of evaluation metrics based on the
+        ground truth labels and model predictions. It handles both binary and multi-class
+        classification scenarios and can optionally calculate confidence-based metrics when
+        probability scores are provided.
+
+        Args:
+            y_true: Ground truth labels as a numpy array.
+            y_pred: Predicted class labels as a numpy array.
+            y_score: Optional probability scores for each class, with shape (n_samples, n_classes).
+                    Required for computing AUC and other probability-based metrics.
+            detailed: Whether to include detailed data like raw predictions and curve points
+                    in the results. When True, includes arrays of predictions and ROC/PR curve
+                    coordinates that can be used for visualization.
+
+        Returns:
+            Dict containing organized metrics at multiple levels:
+                - overall_accuracy: Accuracy across all classes
+                - per_class: Dict mapping class names to individual metrics:
+                    - precision: Precision for this class (TP / (TP + FP))
+                    - recall: Recall/sensitivity for this class (TP / (TP + FN))
+                    - specificity: Specificity for this class (TN / (TN + FP))
+                    - f1: F1 score for this class
+                    - roc_auc: ROC AUC score (requires y_score)
+                    - pr_auc: Precision-Recall AUC score (requires y_score)
+                - macro_avg: Dict with macro-averaged metrics across all classes
+                - detailed_data: Optional detailed arrays (when detailed=True):
+                    - y_true: Original ground truth labels
+                    - y_pred: Model predictions
+                    - y_score: Probability scores for each class (if provided)
+                    - roc_curve_points: ROC curve coordinates per class
+                    - pr_curve_points: PR curve coordinates per class
+
+        Note:
+            This method intelligently handles classes that do not appear in the test data
+            by setting their metrics to NaN, allowing macro-averaging to work correctly.
+            The ROC and PR metrics are only computed when y_score contains valid probabilities
+            and the class has both positive and negative examples.
+        """
         if not isinstance(y_true, np.ndarray): y_true = np.array(y_true)
         if not isinstance(y_pred, np.ndarray): y_pred = np.array(y_pred)
         if y_score is not None and not isinstance(y_score, np.ndarray): y_score = np.array(y_score)
 
-        metrics: Dict[str, Any] = {}  # Start empty
-        class_metrics: Dict[str, Dict[str, float]] = {}  # Store per-class metrics here
-        macro_metrics: Dict[str, float] = {}  # Store macro averages here
-        detailed_data: Dict[str, Any] = {}  # Store detailed data here
+        metrics: Dict[str, Any] = {}
+        class_metrics: Dict[str, Dict[str, float]] = {}
+        macro_metrics: Dict[str, float] = {}
+        detailed_data: Dict[str, Any] = {}
 
         all_class_names = self.dataset_handler.classes
         num_classes_total = self.dataset_handler.num_classes
@@ -321,16 +345,14 @@ class ClassificationPipeline:
             logger.warning("Cannot compute metrics: class names not available.")
             return {'error': 'Class names missing'}
 
-        # --- Overall Accuracy ---
         metrics['overall_accuracy'] = accuracy_score(y_true, y_pred)
 
-        # --- Per-Class Metrics ---
-        present_class_labels = np.unique(np.concatenate((y_true, y_pred)))  # Consider labels in both true and pred
+        # Per-class metrics
+        present_class_labels = np.unique(np.concatenate((y_true, y_pred)))
         all_precisions, all_recalls, all_specificities, all_f1s = [], [], [], []
         all_roc_aucs, all_pr_aucs = [], []
-        # For detailed results
-        all_roc_curves = {}  # Store {class_name: {'fpr': list, 'tpr': list, 'thresholds': list}}
-        all_pr_curves = {}  # Store {class_name: {'precision': list, 'recall': list, 'thresholds': list}}
+        all_roc_curves = {}
+        all_pr_curves = {}
 
         can_compute_auc = y_score is not None and len(y_score.shape) == 2 and y_score.shape[
             1] == num_classes_total and len(y_score) == len(y_true)
@@ -339,13 +361,10 @@ class ClassificationPipeline:
 
         for i, class_name in enumerate(all_class_names):
             class_label = self.dataset_handler.class_to_idx.get(class_name, i)
-            # Check if class actually present in y_true for some metrics
             is_present = class_label in np.unique(y_true)
-            # Check if class present in y_true OR y_pred for basic metrics
             is_present_or_predicted = class_label in present_class_labels
 
             if not is_present_or_predicted:
-                # Class completely absent, record NaNs for basic metrics
                 class_metrics[class_name] = {'precision': np.nan, 'recall': np.nan, 'specificity': np.nan,
                                              'f1': np.nan, 'roc_auc': np.nan, 'pr_auc': np.nan}
                 all_precisions.append(np.nan)
@@ -354,7 +373,7 @@ class ClassificationPipeline:
                 all_f1s.append(np.nan)
                 all_roc_aucs.append(np.nan)
                 all_pr_aucs.append(np.nan)
-                if detailed:  # Add empty curve data if detailed
+                if detailed:
                     all_roc_curves[class_name] = {'fpr': [], 'tpr': [], 'thresholds': []}
                     all_pr_curves[class_name] = {'precision': [], 'recall': [], 'thresholds': []}
                 continue
@@ -363,33 +382,31 @@ class ClassificationPipeline:
             pred_is_class = (y_pred == class_label)
 
             precision = precision_score(true_is_class, pred_is_class, zero_division=0)
-            recall = recall_score(true_is_class, pred_is_class, zero_division=0)  # Sensitivity
+            recall = recall_score(true_is_class, pred_is_class, zero_division=0)
             f1 = f1_score(true_is_class, pred_is_class, zero_division=0)
-            # Specificity = TN / (TN + FP) = Recall of negative class
             specificity = recall_score(~true_is_class, ~pred_is_class, zero_division=0)
 
             roc_auc, pr_auc = np.nan, np.nan
             roc_curve_data = {'fpr': [], 'tpr': [], 'thresholds': []}
             pr_curve_data = {'precision': [], 'recall': [], 'thresholds': []}
 
-            if can_compute_auc and is_present:  # Need true class present for meaningful AUC/curves
+            if can_compute_auc and is_present:
                 score_for_class = y_score[:, class_label]
-                if len(np.unique(true_is_class)) > 1:  # AUC/curves require both +ve/-ve samples
+                if len(np.unique(true_is_class)) > 1:
                     try:
                         roc_auc = roc_auc_score(true_is_class, score_for_class)
                     except ValueError:
-                        pass  # Ignore if only one class present after all
+                        pass
                     except Exception as e:
                         logger.warning(f"ROC AUC Error (Class {class_name}): {e}")
 
                     try:
                         prec, rec, pr_thresh = precision_recall_curve(true_is_class, score_for_class)
-                        order = np.argsort(rec)  # Sort by recall for AUC calc
+                        order = np.argsort(rec)
                         pr_auc = auc(rec[order], prec[order])
                         if detailed:
                             pr_curve_data['precision'] = prec.tolist()
                             pr_curve_data['recall'] = rec.tolist()
-                            # Thresholds might be one less
                             pr_curve_data['thresholds'] = pr_thresh.tolist() if pr_thresh is not None else []
                     except ValueError:
                         pass
@@ -407,24 +424,21 @@ class ClassificationPipeline:
                         except Exception as e:
                             logger.warning(f"ROC Curve Error (Class {class_name}): {e}")
 
-            # Store per-class results
             class_metrics[class_name] = {
                 'precision': precision, 'recall': recall, 'specificity': specificity, 'f1': f1,
                 'roc_auc': roc_auc, 'pr_auc': pr_auc
             }
-            # Append for macro calculation
             all_precisions.append(precision)
             all_recalls.append(recall)
             all_specificities.append(specificity)
             all_f1s.append(f1)
             all_roc_aucs.append(roc_auc)
             all_pr_aucs.append(pr_auc)
-            # Store detailed curve data if requested
             if detailed:
                 all_roc_curves[class_name] = roc_curve_data
                 all_pr_curves[class_name] = pr_curve_data
 
-        # --- Macro Averages ---
+        # Macro averages
         macro_metrics['precision'] = float(np.nanmean(all_precisions))
         macro_metrics['recall'] = float(np.nanmean(all_recalls))
         macro_metrics['specificity'] = float(np.nanmean(all_specificities))
@@ -435,9 +449,9 @@ class ClassificationPipeline:
         metrics['per_class'] = class_metrics
         metrics['macro_avg'] = macro_metrics
 
-        # --- Add Detailed Data if Requested ---
+        # Detailed data
         if detailed:
-            detailed_data['y_true'] = y_true.tolist()  # Convert to list for JSON
+            detailed_data['y_true'] = y_true.tolist()
             detailed_data['y_pred'] = y_pred.tolist()
             if y_score is not None:
                 detailed_data['y_score'] = y_score.tolist()
@@ -456,6 +470,34 @@ class ClassificationPipeline:
                       method_params: Optional[Dict[str, Any]] = None,
                       results_detail_level: Optional[int] = None
                       ) -> Optional[Path]:
+        """
+        Saves method execution results to the artifact repository based on detail level.
+
+        This internal method handles persisting results from pipeline operations like training,
+        evaluation, and hyperparameter tuning. It controls which fields are included based on
+        the results detail level and ensures proper organization in the artifact repository.
+
+        Args:
+            results_data: Dictionary containing all results to potentially save.
+            method_name: Name of the pipeline method that generated these results.
+            run_id: Unique identifier for this execution run.
+            method_params: Optional dictionary of parameters used for this method execution.
+                          Used for result metadata and filtering.
+            results_detail_level: Controls verbosity of saved JSON results:
+                                - 0: No JSON results saved
+                                - 1: Basic summary metrics only
+                                - 2: Detailed results including histories
+                                - 3: Full detail with batch-level data
+                                If None, uses the pipeline's default level.
+
+        Returns:
+            Path or identifier to the saved artifact, or None if saving was disabled or failed.
+
+        Note:
+            This is an internal method used by public pipeline methods to standardize result
+            persistence. The artifact path structure follows the convention:
+            {experiment_base_key_prefix}/{run_id}/{method_name}_results.json
+        """
         if not self.artifact_repo or not self.experiment_run_key_prefix:
             logger.info(f"Artifact saving disabled for {run_id} (no repository/base_prefix). Results in memory only.")
             return None
@@ -469,37 +511,32 @@ class ClassificationPipeline:
         else:
             logger.debug(f"Using pipeline results detail level for this run: {current_detail_level}")
 
-        # --- LEVEL 0: NO JSON SAVING, ONLY SUMMARY CSV ---
         if current_detail_level == 0:
             logger.info(f"Results detail level 0: Skipping JSON artifact saving for {run_id}.")
         else:
             logger.debug(f"Saving results for {run_id} (detail level: {current_detail_level})")
             results_to_save: Dict[str, Any] = {}
 
-            # --- Level 1: Basic Information (Always included if saving JSON) ---
-            # These are generally small and essential summary items.
             level_1_keys = [
-                'method', 'run_id', 'params',  # Core identifiers and method params
-                'overall_accuracy', 'macro_avg',  # Key metrics
-                'best_params', 'best_score',  # From tuning methods
-                'best_epoch', 'best_valid_metric_value', 'valid_metric_name',  # From single_train
-                'train_loss_at_best', 'train_acc_at_best', 'valid_acc_at_best',  # From single_train best epoch
-                'best_refit_model_epoch_info',  # From non_nested search refit
-                'mean_test_accuracy', 'std_test_accuracy',  # From nested search
-                'mean_test_f1_macro', 'std_test_f1_macro',  # From nested search
-                'aggregated_metrics',  # From cv_model_evaluation
-                'outer_cv_scores',  # Summary scores from nested CV
-                'cv_fold_scores',  # Summary scores from cv_model_evaluation
+                'method', 'run_id', 'params',
+                'overall_accuracy', 'macro_avg',
+                'best_params', 'best_score',
+                'best_epoch', 'best_valid_metric_value', 'valid_metric_name',
+                'train_loss_at_best', 'train_acc_at_best', 'valid_acc_at_best',
+                'best_refit_model_epoch_info',
+                'mean_test_accuracy', 'std_test_accuracy',
+                'mean_test_f1_macro', 'std_test_f1_macro',
+                'aggregated_metrics',
+                'outer_cv_scores',
+                'cv_fold_scores',
                 'evaluated_on', 'n_folds_requested', 'n_folds_processed', 'confidence_level',
-                # Context for cv_model_eval
-                'saved_model_path',  # Path to saved model if applicable
-                'message', 'error'  # For status/error reporting
+                'saved_model_path',
+                'message', 'error'
             ]
             for key in level_1_keys:
                 if key in results_data:
                     results_to_save[key] = results_data[key]
 
-            # Special handling for cv_results_summary from GridSearchCV for Level 1
             if 'cv_results' in results_data and isinstance(results_data['cv_results'], dict):
                 summary_cv = {}
                 for k, v_list in results_data['cv_results'].items():
@@ -516,18 +553,16 @@ class ClassificationPipeline:
                 if summary_cv:
                     results_to_save['cv_results_summary'] = summary_cv
 
-            # --- Level 2: Detailed Metrics, Full Params, Epoch Histories (without batch data) ---
             if current_detail_level >= 2:
                 level_2_keys_additive = [
-                    'per_class',  # Detailed per-class metrics from _compute_metrics
-                    'detailed_data',  # y_true, y_pred, y_score, roc/pr curve points from _compute_metrics
-                    'full_params_used',  # Complete parameters used for a run
-                    'method_params_used',  # Parameters passed to the method
-                    'params_used_for_folds',  # For cv_model_evaluation
-                    'cv_results',  # Full GridSearchCV output
-                    'fold_detailed_results',  # Detailed metrics per fold from cv_model_evaluation
-                    'outer_fold_best_params_found',  # Best params per outer fold in nested CV
-                    # Histories (will be cleaned of batch data if level < 3)
+                    'per_class',
+                    'detailed_data',
+                    'full_params_used',
+                    'method_params_used',
+                    'params_used_for_folds',
+                    'cv_results',
+                    'fold_detailed_results',
+                    'outer_fold_best_params_found',
                     'training_history',
                     'best_refit_model_history',
                     'outer_fold_best_model_histories',
@@ -535,11 +570,9 @@ class ClassificationPipeline:
                     'predictions'
                 ]
                 for key in level_2_keys_additive:
-                    if key in results_data and key not in results_to_save:  # Add if not already there
+                    if key in results_data and key not in results_to_save:
                         results_to_save[key] = results_data[key]
 
-            # --- Clean Batch Data from Histories if Level < 3 ---
-            # This needs to be done *after* potentially adding history keys in Level 2
             if current_detail_level < 3:
                 history_keys_to_clean_batches_from = [
                     'training_history', 'best_refit_model_history',
@@ -548,7 +581,6 @@ class ClassificationPipeline:
                 for hist_key in history_keys_to_clean_batches_from:
                     if hist_key in results_to_save and isinstance(results_to_save[hist_key], list):
                         cleaned_history_list = []
-                        # Handle cases where history might be a list of lists (e.g. outer_fold_best_model_histories)
                         source_list = results_to_save[hist_key]
                         is_list_of_histories = all(
                             isinstance(item, list) or item is None for item in source_list) and any(
@@ -576,8 +608,6 @@ class ClassificationPipeline:
                                     cleaned_history_list.append(epoch_data)
                         results_to_save[hist_key] = cleaned_history_list
 
-            # Level 3 includes everything already collected, including batch data in histories (as it wasn't stripped).
-
             artifact_key = self._get_s3_object_key(run_id, f"{method_name}_results.json")
 
             if self.artifact_repo.save_json(results_to_save, artifact_key):
@@ -588,27 +618,76 @@ class ClassificationPipeline:
 
         return saved_artifact_identifier
 
-
-    # --- Pipeline Methods ---
-
     def non_nested_grid_search(self,
                                param_grid: Union[Dict[str, list], List[Dict[str, list]]],
                                cv: int = 5,
                                val_split_ratio: Optional[float] = None,
-                               n_iter: Optional[int] = None,  # For RandomizedSearch
-                               method: str = 'grid',  # 'grid' or 'random'
-                               scoring: str = 'accuracy',  # Sklearn scorer string or callable
+                               n_iter: Optional[int] = None,
+                               method: str = 'grid',
+                               scoring: str = 'accuracy',
                                save_best_model: bool = True,
                                results_detail_level: Optional[int] = None,
                                plot_level: Optional[int] = None) -> Dict[str, Any]:
         """
-        Performs non-nested hyperparameter search (Grid/RandomizedSearchCV)
-        using the train+validation data. Refits the best model on the train+val
-        data and updates the pipeline_v1's main adapter. Does NOT evaluate on the
-        test set itself. Works by passing paths directly.
+        Performs non-nested hyperparameter search and model selection using the train+validation data.
+
+        This method runs either GridSearchCV or RandomizedSearchCV (based on the 'method' parameter)
+        to find optimal hyperparameters. After finding the best configuration, it refits the model
+        on the entire train+validation dataset and updates the pipeline's main model adapter.
+
+        Note: Unlike nested_grid_search, this method may give optimistically biased performance
+        estimates since the same data is used for both model selection and evaluation.
+
+        Args:
+            param_grid: Hyperparameter search space defined as either:
+                - A dictionary mapping parameter names to lists of values to try
+                - A list of such dictionaries for searching different parameter combinations
+            cv: Number of cross-validation folds for the search
+            val_split_ratio: Optional ratio for internal validation split within each CV fold's
+                             training data. If None, uses the pipeline's default val_split_ratio.
+            n_iter: Number of parameter settings sampled when method='random'.
+                    Required for RandomizedSearchCV, ignored for GridSearchCV.
+            method: Search method to use:
+                    - 'grid': Exhaustive grid search (GridSearchCV)
+                    - 'random': Random sampling (RandomizedSearchCV)
+            scoring: Metric used for evaluation (string name of scikit-learn scoring metric
+                    or callable)
+            save_best_model: If True, saves the best model found to the artifact repository
+            results_detail_level: Controls verbosity of saved JSON results:
+                    - 0: No JSON results saved
+                    - 1: Basic summary (metrics, best params)
+                    - 2: Detailed (includes epoch histories)
+                    - 3: Full detail with batch data
+                    If None, uses the pipeline's default level.
+            plot_level: Controls result plotting:
+                    - 0: No plotting
+                    - 1: Generate and save plots
+                    - 2: Generate, save, and display plots
+                    If None, uses the pipeline's default level.
+
+        Returns:
+            Dict containing search results, including:
+                - method: Name of the method ('non_nested_grid_search' or 'non_nested_random_search')
+                - run_id: Unique identifier for this run
+                - params: Parameters used for this method
+                - best_params: Best hyperparameters found during search
+                - best_score: Best cross-validation score achieved
+                - cv_results: Full results from GridSearchCV/RandomizedSearchCV
+                - best_refit_model_history: Training history of the best model refit on full data
+                - best_refit_model_epoch_info: Details about the best epoch of the refit model
+                - saved_model_path: Path to the saved model (if save_best_model=True)
+
+        Raises:
+            ValueError: If n_iter is not provided when method='random'
+            ValueError: If an unsupported search method is specified
+            RuntimeError: If train+validation data is empty
+
+        Note:
+            This method does NOT evaluate on the test set. For an unbiased estimation
+            of model performance, use nested_grid_search or separately evaluate using
+            single_eval after this method.
         """
         method_lower = method.lower()
-        # --- Generate unique run_id for this execution ---
         run_id = f"non_nested_{method_lower}_{datetime.now().strftime('%H%M%S')}"
         search_type = "GridSearchCV" if method_lower == 'grid' else "RandomizedSearchCV"
         logger.info(f"Performing non-nested {search_type} with {cv}-fold CV.")
@@ -617,10 +696,9 @@ class ClassificationPipeline:
         if method_lower == 'random' and n_iter is None: raise ValueError("n_iter required for random search.")
         if method_lower not in ['grid', 'random']: raise ValueError(f"Unsupported search method: {method}.")
 
-        # --- Expand the grid (handles optimizers and LRSchedulers) ---
-        if isinstance(param_grid, dict):  # Single grid dictionary
+        if isinstance(param_grid, dict):
             expanded_param_grid_for_search = expand_hyperparameter_grid(param_grid)
-        elif isinstance(param_grid, list):  # List of grid dictionaries (for separate scenarios)
+        elif isinstance(param_grid, list):
             expanded_param_grid_for_search = [expand_hyperparameter_grid(pg_dict) for pg_dict in param_grid]
         else:
             raise TypeError("param_grid must be a dictionary or list of dictionaries.")
@@ -628,13 +706,11 @@ class ClassificationPipeline:
         logger.info(
             f"Expanded Parameter Grid/Dist (for GridSearchCV):\n{json.dumps(expanded_param_grid_for_search, indent=2, default=str)}")
 
-        # --- Get Data (Paths/Labels) ---
-        # Only need trainval data for fitting the search
         X_trainval, y_trainval = self.dataset_handler.get_train_val_paths_labels()
         if not X_trainval: raise RuntimeError("Train+validation data is empty.")
         logger.info(f"Using {len(X_trainval)} samples for Train+Validation in GridSearchCV.")
 
-        # --- Determine & Validate Internal Validation Split ---
+        # Validate internal validation split
         default_internal_val_fallback = 0.15
         val_frac_to_use = val_split_ratio if val_split_ratio is not None else self.dataset_handler.val_split_ratio
         if not 0.0 < val_frac_to_use < 1.0:
@@ -642,27 +718,25 @@ class ClassificationPipeline:
              val_frac_to_use = default_internal_val_fallback
         logger.info(f"Skorch internal validation split configured: {val_frac_to_use * 100:.1f}% of each CV fold's training data.")
         train_split_config = ValidSplit(cv=val_frac_to_use, stratified=True, random_state=RANDOM_SEED)
-        # --- End Determine & Validate ---
 
-        # --- Setup Skorch Estimator for Search ---
+        # Setup Skorch Estimator
         adapter_config = self.model_adapter_config.copy()
-        adapter_config['train_split'] = train_split_config # Always set a valid split
-        adapter_config['verbose'] = 0 # Show epoch table
+        adapter_config['train_split'] = train_split_config
+        adapter_config['verbose'] = 0
 
-        # Remove config keys not needed by SkorchModelAdapter init
-        adapter_config.pop('patience_cfg', None) # TODO remove these 4 params entirely from all methods
+        adapter_config.pop('patience_cfg', None)
         adapter_config.pop('monitor_cfg', None)
         adapter_config.pop('lr_policy_cfg', None)
         adapter_config.pop('lr_patience_cfg', None)
 
         estimator = SkorchModelAdapter(**adapter_config)
 
-        # --- Setup Search ---
+        # Setup search
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
         SearchClass = GridSearchCV if method_lower == 'grid' else RandomizedSearchCV
         search_kwargs: Dict[str, Any] = {
             'estimator': estimator, 'cv': cv_splitter, 'scoring': scoring,
-            'n_jobs': 1, 'verbose': 3, 'refit': True,  # Keep refit=True
+            'n_jobs': 1, 'verbose': 3, 'refit': True,
             'return_train_score': True, 'error_score': 'raise'
         }
 
@@ -676,7 +750,7 @@ class ClassificationPipeline:
 
         logger.info(f"Fitting {SearchClass.__name__} on train+validation data (search verbose={search.verbose})...")
 
-        # --- Describe number of combinations to search (adjusted for list of dicts) ---
+        # Number of combinations
         total_combinations = 0
         if method_lower == 'grid':
             if isinstance(param_grid, dict):
@@ -687,63 +761,50 @@ class ClassificationPipeline:
                         total_combinations += int(np.prod([len(v) for v in pg_dict.values() if isinstance(v, list)]))
             logger.info(f"Total combinations to search (GridSearchCV): {total_combinations}")
         else:  # RandomizedSearchCV
-            # If param_grid is a list of dicts for RandomizedSearchCV, n_iter applies per dict (subspace)
-            # in newer scikit-learn versions. If it's a single dict, n_iter is the total.
-            # The actual number of fits can be complex to pre-calculate precisely for RandomizedSearchCV with list of dicts
-            # as it depends on scikit-learn version behavior.
-            # The `n_candidates_` attribute of the fitted search object will tell the exact number.
             logger.info(f"Target number of iterations (RandomizedSearchCV): {n_iter}")
 
-        # --- Capture stdout for scikit-learn's CV progress ---
-        # Ensure contextlib is imported: import contextlib
-        # Ensure io is imported: import io
+        # Capture scikit-learn CV progress
         cv_progress_log = ""
-        if search.verbose > 0: # Only capture if it's going to print
+        if search.verbose > 0:
             string_io_buffer = io.StringIO()
-            with contextlib.redirect_stdout(string_io_buffer): # Requires 'import contextlib'
+            with contextlib.redirect_stdout(string_io_buffer):
                 try:
                     search.fit(X_trainval, y=np.array(y_trainval))
                 except Exception as e:
-                    # Log intermediate output even if fit fails
                     cv_progress_log = string_io_buffer.getvalue()
                     logger.error(f"Error during {SearchClass.__name__}.fit: {e}", exc_info=True)
-                    raise # Re-raise
+                    raise
             cv_progress_log = string_io_buffer.getvalue()
             string_io_buffer.close()
-        else: # If search.verbose is 0, fit normally without capture
+        else:
             search.fit(X_trainval, y=np.array(y_trainval))
-        # --- End capture ---
 
         logger.info(f"Search completed.")
 
-        # Log captured CV progress (if any)
         if cv_progress_log.strip():
             logger.info("--- GridSearchCV Internal CV Progress (Captured) ---")
             for line in cv_progress_log.strip().splitlines():
                 logger.info(f"[SKL_CV] {line}")
             logger.info("--- End GridSearchCV Internal CV Progress ---")
 
-        # --- Collect Results (Search Results Only) ---
+        # Collect results
         results = {
             'method': f"non_nested_{method_lower}_search",
             'run_id': run_id,
             'params': {'cv': cv, 'n_iter': n_iter if method_lower == 'random' else 'N/A', 'method': method_lower,
                        'scoring': scoring, 'val_split_ratio': val_frac_to_use},
             'best_params': search.best_params_,
-            'best_score': search.best_score_,  # This is the CV score on trainval
-            'cv_results': search.cv_results_, # Contains scores, fit_times, etc. for each fold/param set
+            'best_score': search.best_score_,
+            'cv_results': search.cv_results_,
             'test_set_evaluation': {'message': 'Test set evaluation not performed in this method.'},
-            'accuracy': np.nan,  # Indicate no test accuracy from this step
-            'macro_avg': {}  # Indicate no test metrics from this step
+            'accuracy': np.nan,
+            'macro_avg': {}
         }
 
-        # --- Store full config used by the winning estimator ---
+        # Store config of best estimator
         if hasattr(search, 'best_estimator_'):
-             # Store best_params found by the search itself as the primary config
              results['full_params_used'] = search.best_params_.copy()
-             # Augment with fixed params from original config that were not tuned
              for k,v in self.model_adapter_config.items():
-                  # Add fixed params if they are not part of the tuned HPs and not complex objects
                   if not k.startswith(('optimizer__', 'module__', 'lr', 'batch_size', 'callbacks', 'train_transform', 'valid_transform')) and \
                      k not in results['full_params_used'] and isinstance(v, (str, int, float, bool, type(None))):
                         results['full_params_used'][k] = v
@@ -751,8 +812,8 @@ class ClassificationPipeline:
              results['full_params_used'] = {}
 
 
-        # --- Update the pipeline's main adapter ---
-        best_estimator_refit = None # Initialize
+        # Update adapter
+        best_estimator_refit = None
         if hasattr(search, 'best_estimator_'):
             best_estimator_refit = search.best_estimator_
             logger.info("Updating main pipeline_v1 adapter with the best model found and refit by GridSearchCV.")
@@ -762,14 +823,12 @@ class ClassificationPipeline:
                  try: self.model_adapter.initialize()
                  except Exception as init_err: logger.error(f"Failed to initialize refit estimator: {init_err}", exc_info=True)
 
-            # --- Extract and log training history of best refit model (if available) ---
             if hasattr(best_estimator_refit, 'history_') and best_estimator_refit.history_:
                 results['best_refit_model_history'] = best_estimator_refit.history_.to_list()
-                # Log info about best epoch of refit model
                 try:
                     refit_history = best_estimator_refit.history_
-                    valid_loss_key_refit = 'valid_loss'  # Or whatever your early stopping monitors
-                    if refit_history and valid_loss_key_refit in refit_history[0]: # Check if validation was run for refit
+                    valid_loss_key_refit = 'valid_loss'
+                    if refit_history and valid_loss_key_refit in refit_history[0]:
                         scores_refit = [epoch.get(valid_loss_key_refit, np.inf) for epoch in refit_history]
                         best_idx_refit = np.argmin(scores_refit)
                         best_epoch_hist_refit = refit_history[int(best_idx_refit)]
@@ -797,34 +856,21 @@ class ClassificationPipeline:
         else:
             logger.warning("GridSearchCV did not produce a 'best_estimator_'. Pipeline adapter not updated.")
 
-        # --- Save Model (if requested and available) ---
+        # Save Model
         model_path_identifier = None
-        arch_config_path_identifier = None  # For the new arch_config.json
+        arch_config_path_identifier = None
 
         if save_best_model and best_estimator_refit is not None:
             if self.artifact_repo and self.experiment_run_key_prefix:
                 try:
-                    # --- NEW FILENAME LOGIC ---
                     model_type_short = self.model_type.value
                     run_type_short = "gridcv"
-                    run_id_timestamp_part = run_id.split('_')[-1]  # From "non_nested_grid_TIMESTAMP"
+                    run_id_timestamp_part = run_id.split('_')[-1]
 
                     best_cv_score = results.get('best_score', 0.0)
-                    # Format to 2 decimal places, replace dot, remove leading zero
                     score_str = f"cvsc{best_cv_score:.2f}".replace('.', 'p').replace("0p", "p")
 
-                    # Simplified param string (optional, can make filename long)
-                    # best_params_short_list = []
-                    # for k, v_param in sorted(results.get('best_params', {}).items())[:2]: # Max 2 params in name
-                    #     k_short = k.split('__')[-1][:5] # Shorten key
-                    #     v_str = str(v_param)[:5] # Shorten value
-                    #     best_params_short_list.append(f"{k_short}{v_str}")
-                    # params_filename_part = "_".join(best_params_short_list)
-                    # params_filename_part = re.sub(r'[^\w_.-]', '', params_filename_part)
-                    # model_filename_base = f"{model_type_short}_{run_type_short}_{params_filename_part}_{score_str}_{run_id_timestamp_part}"
-                    # For simplicity, let's omit complex params from filename for grid search best model:
                     model_filename_base = f"{model_type_short}_{run_type_short}_{score_str}_{run_id_timestamp_part}"
-                    # --- END NEW FILENAME LOGIC ---
 
                     model_pt_filename = f"{model_filename_base}.pt"
                     model_config_filename = f"{model_filename_base}_arch_config.json"
@@ -832,60 +878,38 @@ class ClassificationPipeline:
                     model_pt_object_key = self._get_s3_object_key(run_id, model_pt_filename)
                     model_config_object_key = self._get_s3_object_key(run_id, model_config_filename)
 
-                    # 2. Save Model State Dictionary
+                    # Save Model State Dictionary
                     model_state_dict = best_estimator_refit.module_.state_dict()
                     model_path_identifier = self.artifact_repo.save_model_state_dict(
                         model_state_dict, model_pt_object_key
                     )
                     if model_path_identifier:
                         logger.info(f"Best refit model state_dict saved via repository to: {model_path_identifier}")
-                        results['saved_model_path'] = model_path_identifier  # Update results dict
+                        results['saved_model_path'] = model_path_identifier
                     else:
                         logger.error(
                             f"Failed to save best refit model state_dict for {run_id} to key {model_pt_object_key}.")
                         results['saved_model_path'] = None
 
-                    # 3. Save Architectural Configuration
-                    if model_path_identifier:  # Proceed only if .pt was saved
-                        # The 'best_estimator_refit' is a SkorchModelAdapter instance.
-                        # Its internal nn.Module is best_estimator_refit.module_
-                        # The parameters used to *create* this specific module instance came from search.best_params_
-                        # and the fixed parts of the adapter_config used to initialize the 'estimator' for GridSearchCV.
+                    # Save Architectural Configuration
+                    if model_path_identifier:
 
                         arch_config_to_save = {
                             'model_type': self.model_type.value,
                             'num_classes': self.dataset_handler.num_classes,
                             'img_size_h': self.dataset_handler.img_size[0],
                             'img_size_w': self.dataset_handler.img_size[1],
-                            # Add all 'module__' parameters from best_estimator_refit.get_params()
-                            # These were the ones that resulted in the best model.
                         }
 
-                        # Get effective parameters of the best refit estimator
-                        # These include the 'module__xyz' parameters that defined its architecture
                         best_estimator_params = best_estimator_refit.get_params(deep=False)
 
                         for key, value in best_estimator_params.items():
                             if key.startswith('module__'):
-                                # Special handling for types that are not JSON serializable by default
                                 if isinstance(value, type):
                                     arch_config_to_save[
-                                        key] = f"<class '{value.__module__}.{value.__name__}'>"  # Store as string
-                                elif callable(value) and not isinstance(value, (nn.Module, torch.optim.Optimizer)):
-                                    # For other callables like transform functions from dataset_handler,
-                                    # it might be better to store a placeholder or a descriptive name.
-                                    # For now, let's skip non-module/non-optimizer callables from module__
-                                    # or convert them to string if simple.
-                                    # However, 'module__' params should primarily be for nn.Module's __init__ args.
-                                    # Transform functions are usually direct skorch params like 'train_transform'.
-                                    pass
+                                        key] = f"<class '{value.__module__}.{value.__name__}'>"
                                 else:
                                     arch_config_to_save[key] = value
-                            # Consider also saving key top-level skorch params if they define architecture,
-                            # e.g., 'optimizer' if it was tuned and is a type rather than string.
-                            # For now, focusing on module__ params.
-                            # For HybridViT, for example, module__cnn_model_name, module__vit_model_variant etc.
-                            # are critical.
 
                         arch_config_path_identifier = self.artifact_repo.save_json(
                             arch_config_to_save, model_config_object_key
@@ -909,17 +933,15 @@ class ClassificationPipeline:
                     f"Model saving skipped for {run_id}: no artifact repository or base key prefix configured.")
         elif save_best_model and best_estimator_refit is None:
             logger.warning(f"save_best_model=True for {run_id} but no best estimator was found/refit.")
-            results['saved_model_path'] = None  # Ensure these keys exist even if saving fails
+            results['saved_model_path'] = None
             results['saved_model_arch_config_path'] = None
 
-        # If not saving, ensure keys are present but None
         if not save_best_model:
             results['saved_model_path'] = None
             results['saved_model_arch_config_path'] = None
-        # --- End Save Model ---
 
-        # --- Save Results JSON ---
-        summary_params = results.get('params', {}).copy() # Get the method's specific params
+        # Save Results JSON
+        summary_params = results.get('params', {}).copy()
         summary_params.update({f"best_{k}": v for k, v in results.get('best_params', {}).items() if isinstance(v, (str, int, float, bool))})
         json_artifact_key_or_path = self._save_results(
                             results_data=results,
@@ -929,13 +951,13 @@ class ClassificationPipeline:
                             results_detail_level=results_detail_level
                            )
 
-        # --- Determine effective plot level ---
-        current_plot_level = self.plot_level  # Start with pipeline default
+        # Plot level
+        current_plot_level = self.plot_level
         if plot_level is not None:
-            current_plot_level = plot_level  # Use override if provided
+            current_plot_level = plot_level
             logger.debug(f"Plot level overridden for this run to: {current_plot_level}")
 
-        # --- Plot results (conditionally) ---
+        # Plot results
         if current_plot_level > 0:
             plot_save_location_base: Optional[str] = None
             if self.artifact_repo and self.experiment_run_key_prefix:
@@ -970,25 +992,76 @@ class ClassificationPipeline:
                            outer_cv: int = 5,
                            inner_cv: int = 3,
                            val_split_ratio: Optional[float] = None,
-                           n_iter: Optional[int] = None,  # For RandomizedSearch
-                           method: str = 'grid',  # 'grid' or 'random'
-                           scoring: str = 'accuracy',  # Sklearn scorer string or callable
+                           n_iter: Optional[int] = None,
+                           method: str = 'grid',
+                           scoring: str = 'accuracy',
                            results_detail_level: Optional[int] = None,
                            plot_level: Optional[int] = None) -> Dict[str, Any]:
         """
-        Performs nested cross-validation for unbiased performance estimation.
-        Uses the full dataset (respecting force_flat_for_fixed_cv).
-        Passes paths to sklearn cross_validate. Skorch adapter handles transforms.
+        Performs nested cross-validation for unbiased performance estimation and hyperparameter tuning.
+
+        Nested CV uses an outer loop for performance estimation and an inner loop for hyperparameter
+        optimization. This provides a less biased estimate of model generalization performance
+        compared to non-nested methods.
+
+        Args:
+            param_grid: Hyperparameter search space defined as either:
+                - A dictionary mapping parameter names to lists of values to try
+                - A list of such dictionaries for searching multiple parameter subspaces
+            outer_cv: Number of folds for the outer cross-validation loop (performance estimation)
+            inner_cv: Number of folds for the inner cross-validation loop (hyperparameter tuning)
+            val_split_ratio: Optional ratio for internal validation split within each inner fold's
+                             training data. If None, uses the pipeline's default val_split_ratio.
+            n_iter: Number of parameter settings sampled when method='random'.
+                    Required for RandomizedSearchCV, ignored for GridSearchCV.
+            method: Search method to use:
+                    - 'grid': Exhaustive grid search (GridSearchCV)
+                    - 'random': Random sampling (RandomizedSearchCV)
+            scoring: Metric used for evaluation. Can be:
+                    - A string specifying a scikit-learn scoring name (e.g., 'accuracy', 'f1')
+                    - A callable that takes (estimator, X, y) and returns a scalar
+            results_detail_level: Controls verbosity of saved JSON results:
+                    - 0: No JSON results saved
+                    - 1: Basic summary (metrics, best params)
+                    - 2: Detailed (includes epoch histories)
+                    - 3: Full detail with batch data
+                    If None, uses the pipeline's default level.
+            plot_level: Controls result plotting:
+                    - 0: No plotting
+                    - 1: Generate and save plots
+                    - 2: Generate, save, and display plots
+                    If None, uses the pipeline's default level.
+
+        Returns:
+            Dict containing nested CV results, including:
+                - method: Name of the method ('nested_grid_search' or 'nested_random_search')
+                - run_id: Unique identifier for this run
+                - params: Parameters used for this method
+                - outer_cv_scores: Scores for each outer fold
+                - mean_test_accuracy, std_test_accuracy: Mean and standard deviation of test accuracy
+                - mean_test_f1_macro, std_test_f1_macro: Mean and standard deviation of macro F1 score
+                - outer_fold_best_params_found: Best parameters for each outer fold
+                - aggregated_metrics: Overall performance metrics with confidence intervals
+                - best_params: Most common best parameters across outer folds
+
+        Raises:
+            ValueError: If using RandomizedSearchCV without specifying n_iter
+            ValueError: If using a FIXED dataset structure without setting force_flat_for_fixed_cv
+            RuntimeError: If no data is available
+
+        Note:
+            This method operates on the full dataset, respecting the force_flat_for_fixed_cv setting.
+            For FIXED dataset structures, force_flat_for_fixed_cv must be True.
         """
         method_lower = method.lower()
-        run_id = f"nested_{method_lower}_{datetime.now().strftime('%H%M%S')}"  # Generate ID
+        run_id = f"nested_{method_lower}_{datetime.now().strftime('%H%M%S')}"
         search_type = "GridSearchCV" if method_lower == 'grid' else "RandomizedSearchCV"
         logger.info(f"Performing nested {search_type} search.")
         logger.info(f"  Outer CV folds: {outer_cv}, Inner CV folds: {inner_cv}")
         logger.info(f"  Parameter Grid/Dist for inner search:\n{json.dumps(param_grid, indent=2)}")
         logger.info(f"  Scoring Metric: {scoring}")
 
-        # --- Expand the param_grid for the INNER search ---
+        # Expand the param_grid for the INNER search
         if isinstance(param_grid, dict):
             expanded_param_grid_for_inner_search = expand_hyperparameter_grid(param_grid)
         elif isinstance(param_grid, list):
@@ -999,38 +1072,35 @@ class ClassificationPipeline:
         logger.debug(
             f"Expanded Parameter Grid/Dist for INNER search (for GridSearchCV):\n{json.dumps(expanded_param_grid_for_inner_search, indent=2, default=str)}")
 
-        # --- Check Compatibility ---
+        # Check Compatibility
         if self.dataset_handler.structure == DatasetStructure.FIXED and not self.force_flat_for_fixed_cv:
-             # Provide a specific path for FIXED datasets without the flag
              raise ValueError(f"nested_grid_search requires a FLAT dataset structure "
                               f"or a FIXED structure with force_flat_for_fixed_cv=True.")
 
-        # --- Standard Nested CV (FLAT or FIXED with force_flat_for_fixed_cv=True) ---
+        # Standard Nested CV
         logger.info("Proceeding with standard nested CV using the full dataset.")
         try:
             X_full, y_full = self.dataset_handler.get_full_paths_labels_for_cv()
             if not X_full: raise RuntimeError("Full dataset for CV is empty.")
             logger.info(f"Using {len(X_full)} samples for outer cross-validation.")
-            y_full_np = np.array(y_full) # Needed for stratification
+            y_full_np = np.array(y_full)
         except Exception as e:
             logger.error(f"Failed to get full dataset paths/labels for nested CV: {e}", exc_info=True)
             raise
 
-        # --- Determine & Validate Internal Validation Split ---
         default_internal_val_fallback = 0.15
         val_frac_to_use = val_split_ratio if val_split_ratio is not None else self.dataset_handler.val_split_ratio
         if not 0.0 < val_frac_to_use < 1.0:
              logger.warning(f"Provided internal validation split ratio ({val_frac_to_use:.3f}) is invalid. "
                             f"Using default fallback: {default_internal_val_fallback:.3f} for inner loop fits.")
              val_frac_to_use = default_internal_val_fallback
-        # --- End Determine & Validate ---
 
         logger.info(f"Inner loop Skorch validation split configured: {val_frac_to_use * 100:.1f}% of inner CV fold's training data.")
         train_split_config = ValidSplit(cv=val_frac_to_use, stratified=True, random_state=RANDOM_SEED)
 
-        # --- Setup Inner Search Object ---
+        # Setup Inner Search Object
         adapter_config = self.model_adapter_config.copy()
-        adapter_config['train_split'] = train_split_config # Always set a valid split
+        adapter_config['train_split'] = train_split_config
         adapter_config['verbose'] = 3
 
         # Remove config keys not needed by SkorchModelAdapter init
@@ -1055,31 +1125,25 @@ class ClassificationPipeline:
             inner_search_kwargs['random_state'] = RANDOM_SEED
         inner_search = InnerSearchClass(**inner_search_kwargs)
 
-        # --- Setup Outer CV ---
+        # Setup Outer CV
         outer_cv_splitter = StratifiedKFold(n_splits=outer_cv, shuffle=True, random_state=RANDOM_SEED + 1) # Different seed
 
-        # Define multiple scorers for cross_validate
         scoring_dict = {
             'accuracy': make_scorer(accuracy_score),
             'f1_macro': make_scorer(f1_score, average='macro', zero_division=0),
-            # Add others if needed (e.g., roc_auc requires predict_proba)
-            # 'roc_auc_ovr': make_scorer(roc_auc_score, average='macro', multi_class='ovr', needs_proba=True)
         }
 
-        # --- Run Nested CV using cross_validate ---
         logger.info(
             f"Running standard nested CV using cross_validate. Inner GridSearchCV verbose: {inner_search.verbose}")
         try:
-            # --- Capture stdout ---
             cv_progress_log = ""
-            if inner_search.verbose > 0:  # Capture if inner search will print
+            if inner_search.verbose > 0:
                 string_io_buffer = io.StringIO()
                 with contextlib.redirect_stdout(string_io_buffer):
                     try:
                         cv_results = cross_validate(
                             inner_search, X_full, y_full_np, cv=outer_cv_splitter, scoring=scoring_dict,
                             return_estimator=True, n_jobs=1, error_score='raise'
-                            # cross_validate's own verbose controls joblib, not the inner_search prints directly for n_jobs=1
                         )
                     except Exception as e:
                         cv_progress_log = string_io_buffer.getvalue()
@@ -1092,7 +1156,6 @@ class ClassificationPipeline:
                     inner_search, X_full, y_full_np, cv=outer_cv_splitter, scoring=scoring_dict,
                     return_estimator=True, n_jobs=1, error_score='raise'
                 )
-            # --- End capture ---
 
             logger.info("Nested cross-validation finished.")
 
@@ -1102,7 +1165,7 @@ class ClassificationPipeline:
                     logger.info(f"[NESTED_SKL_CV] {line}")
                 logger.info("--- End Nested CV Inner Loop Progress ---")
 
-            # --- Process and Save Results ---
+            # Process and Save Results
             results: Dict[str, Any] = {
                 'method': f"nested_{method_lower}_search",
                 'run_id': run_id,
@@ -1120,28 +1183,24 @@ class ClassificationPipeline:
                 'std_test_accuracy': float(np.std(cv_results['test_accuracy'])),
                 'mean_test_f1_macro': float(np.mean(cv_results['test_f1_macro'])),
                 'std_test_f1_macro': float(np.std(cv_results['test_f1_macro'])),
-                # 'best_params_per_fold': "Estimators not returned" # Or return them if needed
             }
 
-            # --- Extract histories and best params per fold ---
+            # Extract histories and best params
             if 'estimator' in cv_results:
                 fold_histories_nested = []
                 best_params_per_fold_nested = []
                 inner_score_per_fold_nested = []
                 for fold_idx, outer_fold_search_estimator in enumerate(cv_results['estimator']):
-                    # History
                     if hasattr(outer_fold_search_estimator, 'best_estimator_') and \
                             hasattr(outer_fold_search_estimator.best_estimator_, 'history_') and \
                             outer_fold_search_estimator.best_estimator_.history_:
                         fold_histories_nested.append(outer_fold_search_estimator.best_estimator_.history_.to_list())
                     else:
                         fold_histories_nested.append(None)
-                    # Best Params
                     if hasattr(outer_fold_search_estimator, 'best_params_'):
                         best_params_per_fold_nested.append(outer_fold_search_estimator.best_params_)
                     else:
                         best_params_per_fold_nested.append(None)
-                    # Inner Best Score <<< NEW SECTION
                     if hasattr(outer_fold_search_estimator, 'best_score_'):
                         inner_score_per_fold_nested.append(outer_fold_search_estimator.best_score_)
                     else:
@@ -1156,32 +1215,27 @@ class ClassificationPipeline:
             results['macro_avg'] = {'f1': results['mean_test_f1_macro']}
             method_name = results['method']
 
-            # --- Save Results ---
+            # Save Results
             saved_json_path = self._save_results(results, f"nested_{method_lower}_search",
                                 run_id=run_id,
                                 method_params=results['params'],
                                 results_detail_level=results_detail_level)
 
-            # --- Determine effective plot level ---
-            current_plot_level = self.plot_level  # Start with pipeline default
+            current_plot_level = self.plot_level
             if plot_level is not None:
-                current_plot_level = plot_level  # Use override if provided
+                current_plot_level = plot_level
                 logger.debug(f"Plot level overridden for this run to: {current_plot_level}")
 
-            # --- Plot results (conditionally) ---
+            # Plot results
             if current_plot_level > 0:
-                # plot_save_dir_base will be the directory/S3_prefix for THIS SPECIFIC RUN's artifacts
                 plot_save_dir_base_for_run: Optional[Union[str, Path]] = None
 
                 if self.artifact_repo and self.experiment_run_key_prefix:
-                    # If using a repository, construct the base key for this run's artifacts
                     plot_save_dir_base_for_run = str((PurePath(self.experiment_run_key_prefix) / run_id).as_posix())
                 else:
                     plot_save_dir_base_for_run = None
                     logger.warning(f"No artifact repo specified for this run.")
 
-                # Condition to actually attempt saving plots to a file/repository:
-                # Level 1 (save only) or Level 2 (save and show), AND a base location must exist.
                 can_save_plots = (current_plot_level >= 1 and plot_save_dir_base_for_run is not None)
                 should_show_plots_flag = (current_plot_level == 2)
 
@@ -1189,10 +1243,10 @@ class ClassificationPipeline:
                     logger.warning(
                         f"Plot saving to file skipped for {run_id}: plot_level is 1 (save only) but no save location could be determined (e.g., no repository).")
 
-                if can_save_plots or should_show_plots_flag:  # Proceed if saving OR showing
+                if can_save_plots or should_show_plots_flag:
                     logger.info(f"Plotting {method_name} results for {run_id} (plot level {current_plot_level}).")
                     try:
-                        from ..plotter import ResultsPlotter  # Ensure correct relative import
+                        from ..plotter import ResultsPlotter
                         ResultsPlotter.plot_nested_cv_results(
                             results_input=results,
                             plot_save_dir_base=plot_save_dir_base_for_run,
@@ -1212,7 +1266,6 @@ class ClassificationPipeline:
 
         except Exception as e:
              logger.error(f"Standard nested CV failed: {e}", exc_info=True)
-             # Return error information
              return {
                 'method': f"nested_{method_lower}_search",
                 'params': {'outer_cv': outer_cv, 'inner_cv': inner_cv, 'n_iter': n_iter if method_lower=='random' else 'N/A', 'method': method_lower, 'scoring': scoring},
@@ -1221,42 +1274,79 @@ class ClassificationPipeline:
 
     def cv_model_evaluation(self,
                             cv: int = 5,
-                            evaluate_on: str = 'full',  # 'full' or 'test'
+                            evaluate_on: str = 'full',
                             val_split_ratio: Optional[float] = None,
                             params: Optional[Dict] = None,
                             confidence_level: float = 0.95,
                             results_detail_level: Optional[int] = None,
                             plot_level: Optional[int] = None) -> Dict[str, Any]:
         """
-        Performs K-Fold CV for evaluation using fixed hyperparameters.
-        Can evaluate either on the 'full' dataset (trainval or combined)
-        or only on the 'test' set. Uses Skorch adapter's internal
-        ValidSplit for monitoring within each fold's training. Calculates CIs.
+        Performs K-Fold cross-validation evaluation using fixed hyperparameters.
+
+        This method evaluates model performance by training on K-1 folds and testing on the remaining fold,
+        repeating for each fold. Unlike hyperparameter search methods, this uses fixed parameters for all
+        folds and provides statistical confidence intervals for performance metrics.
 
         Args:
             cv: Number of folds for cross-validation.
-            evaluate_on: Which data split to use ('full' or 'test'). Default 'full'.
+            evaluate_on: Which data to use for evaluation:
+                        - 'full': Use the entire dataset (or train+val in FIXED structure)
+                        - 'test': Use only the test set (only for FIXED structure)
             val_split_ratio: Fraction for internal validation split during fold training.
-                                      Defaults to handler's val_split_ratio or 0.15 fallback.
+                            If None, uses the pipeline's default val_split_ratio.
             params: Dictionary of fixed hyperparameters to use for training each fold.
-                    If None, uses defaults from pipeline_v1 config. Can be merged with
-                    best_params from a previous step using executor logic.
-            confidence_level: Confidence level for calculating CI (e.g., 0.95 for 95%).
+                    If None, uses the current pipeline configuration.
+            confidence_level: Confidence level for calculating confidence intervals
+                             (e.g., 0.95 for 95% CI).
+            results_detail_level: Controls verbosity of saved JSON results:
+                                - 0: No JSON results saved
+                                - 1: Basic summary (metrics, CI)
+                                - 2: Detailed (includes epoch histories)
+                                - 3: Full detail with all data
+                                If None, uses the pipeline's default level.
+            plot_level: Controls result plotting:
+                       - 0: No plotting
+                       - 1: Generate and save plots
+                       - 2: Generate, save, and display plots
+                       If None, uses the pipeline's default level.
+
+        Returns:
+            Dict containing evaluation results, including:
+                - method: Name of the method ('cv_model_evaluation')
+                - run_id: Unique identifier for this run
+                - params: Parameters used for this method
+                - evaluated_on: Data split used for evaluation ('full' or 'test')
+                - n_folds_requested: Number of folds requested
+                - n_folds_processed: Number of folds successfully processed
+                - cv_fold_scores: List of performance metrics for each fold
+                - fold_histories: Training histories for each fold (if detail level ≥2)
+                - aggregated_metrics: Dictionary of metrics with means, std. devs, and confidence intervals
+                - accuracy: Overall mean accuracy (for summary reporting)
+                - macro_avg: Overall mean macro F1 score (for summary reporting)
+
+        Raises:
+            ValueError: If evaluate_on is not 'full' or 'test'
+            ValueError: If confidence_level is not between 0 and 1
+            ValueError: If using 'full' with FIXED dataset structure without force_flat_for_fixed_cv=True
+            ValueError: If insufficient samples per class for the requested number of folds
+
+        Note:
+            This method works with both FLAT and FIXED dataset structures, though using 'full' with
+            a FIXED structure requires force_flat_for_fixed_cv=True to be set in the pipeline.
         """
         logger.info(f"Performing {cv}-fold CV for evaluation with fixed parameters.")
         if not 0 < confidence_level < 1:
             raise ValueError("confidence_level must be between 0 and 1 (exclusive).")
 
-        # Inside cv_model_evaluation, after initial logger info:
         valid_eval_on = ['full', 'test']
         if evaluate_on not in valid_eval_on:
             raise ValueError(f"Invalid 'evaluate_on' value: '{evaluate_on}'. Must be one of {valid_eval_on}")
         if not 0 < confidence_level < 1:
             raise ValueError("confidence_level must be between 0 and 1 (exclusive).")
 
-        run_id = f"cv_model_evaluation_{evaluate_on}_{datetime.now().strftime('%H%M%S')}"  # Include mode in ID
+        run_id = f"cv_model_evaluation_{evaluate_on}_{datetime.now().strftime('%H%M%S')}"
 
-        # --- Get Data based on 'evaluate_on' ---
+        # Get Data based on 'evaluate_on'
         if evaluate_on == 'full':
             if self.dataset_handler.structure == DatasetStructure.FIXED and not self.force_flat_for_fixed_cv:
                 raise ValueError(
@@ -1276,36 +1366,32 @@ class ClassificationPipeline:
             except Exception as e:
                 logger.error(f"Failed to get test set paths/labels for CV evaluation: {e}", exc_info=True)
                 raise
-        else:  # Should be caught by initial check
-            pass
-            # raise ValueError(f"Internal error: Unknown evaluate_on='{evaluate_on}'")
+        else:
+            raise ValueError(f"Internal error: Unknown evaluate_on='{evaluate_on}'")
 
         y_selected_np = np.array(y_selected_list)
         if len(np.unique(y_selected_np)) < 2:
             logger.warning(
                 f"Only one class present in the selected data ({evaluate_on} set). Stratification might behave unexpectedly.")
-        # --- End Get Data ---
 
-        # --- Hyperparameters for this evaluation ---
+        # Hyperparams
         eval_params = self.model_adapter_config.copy()
         if params:
             logger.info(f"Using provided parameters for CV evaluation: {params}")
-            # Parse the provided params to resolve optimizer and create LRScheduler object
             parsed_params_for_cv = parse_fixed_hyperparameters(
                 params,
                 default_max_epochs_for_cosine=eval_params.get('max_epochs')
             )
             eval_params.update(parsed_params_for_cv)
 
-        # Ensure critical module params
         eval_params['module'] = self._get_model_class(self.model_type)
         eval_params['module__num_classes'] = self.dataset_handler.num_classes
-        eval_params['classes'] = np.arange(self.dataset_handler.num_classes) # Add if missing
-        eval_params['train_transform'] = self.dataset_handler.get_train_transform() # Ensure these are not lost
+        eval_params['classes'] = np.arange(self.dataset_handler.num_classes)
+        eval_params['train_transform'] = self.dataset_handler.get_train_transform()
         eval_params['valid_transform'] = self.dataset_handler.get_eval_transform()
         eval_params.setdefault('show_first_batch_augmentation', self.show_first_batch_augmentation_default)
 
-        # --- Determine & Validate Internal Validation Split ---
+        # Validate internal validation split
         default_internal_val_fallback = 0.15
         val_frac_to_use = val_split_ratio if val_split_ratio is not None else self.dataset_handler.val_split_ratio
         if not 0.0 < val_frac_to_use < 1.0:
@@ -1315,7 +1401,7 @@ class ClassificationPipeline:
         logger.info(
             f"Skorch internal validation split configured: {val_frac_to_use * 100:.1f}% of each CV fold's training data.")
 
-        # --- Setup CV Strategy ---
+        # Setup CV Strategy
         min_samples_per_class = cv if cv > 1 else 1
         unique_labels, counts = np.unique(y_selected_np, return_counts=True)
         if K := min(counts) < min_samples_per_class:
@@ -1325,52 +1411,47 @@ class ClassificationPipeline:
                            f"StratifiedKFold may fail or produce unreliable splits.")
 
         cv_splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=RANDOM_SEED)
-        fold_results = []  # Store summary dicts like {'accuracy': 0.X, 'f1_macro': 0.Y, ...}
+        fold_results = []
         fold_histories = []
         fold_detailed_results = []
 
-        # --- Determine if detailed metrics needed based on save/plot levels ---
         compute_detailed_metrics_flag = False
         effective_detail_level_for_compute = results_detail_level or self.results_detail_level
 
-        current_plot_level = self.plot_level  # Start with pipeline default
+        current_plot_level = self.plot_level
         if plot_level is not None:
-            current_plot_level = plot_level  # Use override if provided
+            current_plot_level = plot_level
             logger.debug(f"Plot level overridden for this run to: {current_plot_level}")
 
-        # Compute if saving JSON (level > 0) AND plotting potentially detailed plots (plot_level > 0),
-        # OR if saving detailed JSON (level >= 2)
         if (effective_detail_level_for_compute > 0 and current_plot_level > 0) or effective_detail_level_for_compute >= 2:
             compute_detailed_metrics_flag = True
             logger.debug(
                 f"Will compute detailed metrics (detail_level={effective_detail_level_for_compute}, plot_level={current_plot_level})")
 
-        # --- Manual Outer CV Loop ---
+        # Manual Outer CV Loop
         for fold_idx, (outer_train_indices, outer_test_indices) in enumerate(
-                cv_splitter.split(X_selected, y_selected_np)):  # <<< USE SELECTED DATA
+                cv_splitter.split(X_selected, y_selected_np)):
             logger.info(f"--- Starting CV Evaluation Fold {fold_idx + 1}/{cv} ---")
 
-            # --- Get Outer Fold Data from the SELECTED dataset ---
             X_outer_train = [X_selected[i] for i in outer_train_indices]
             y_outer_train = y_selected_np[outer_train_indices]
-            X_fold_test = [X_selected[i] for i in outer_test_indices]  # Test set for this fold
+            X_fold_test = [X_selected[i] for i in outer_test_indices]
             y_fold_test = y_selected_np[outer_test_indices]
             logger.debug(
                 f"Outer split ({evaluate_on} set): {len(X_outer_train)} train / {len(X_fold_test)} test samples.")
 
-            if not X_outer_train or not X_fold_test: # Check the fold's train and test parts
+            if not X_outer_train or not X_fold_test:
                 logger.warning(f"Fold {fold_idx + 1} resulted in empty train ({len(X_outer_train)}) or test ({len(X_fold_test)}) set. Skipping.")
-                # Append NaNs for all potential metrics if skipping
                 fold_results.append({k: np.nan for k in ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro',
                                                          'specificity_macro', 'roc_auc_macro', 'pr_auc_macro']})
                 fold_detailed_results.append({'error': 'Skipped fold due to empty data.'})
                 continue
 
-            # Setup Estimator for this Fold
+            # Setup Estimator
             fold_adapter_config = eval_params.copy()
             fold_adapter_config['train_split'] = ValidSplit(cv=val_frac_to_use, stratified=True,
                                                             random_state=RANDOM_SEED + fold_idx)
-            fold_adapter_config['verbose'] = 0  # Show epoch table per fold
+            fold_adapter_config['verbose'] = 0
 
             n_outer_train = len(X_outer_train)
             n_inner_val = int(n_outer_train * val_frac_to_use)
@@ -1389,9 +1470,9 @@ class ClassificationPipeline:
             try:
                 estimator_fold.fit(X_outer_train, y=y_outer_train)
                 if hasattr(estimator_fold, 'history_') and estimator_fold.history_:
-                    fold_histories.append(estimator_fold.history)  # Store history if needed later
+                    fold_histories.append(estimator_fold.history)
                 else:
-                    fold_histories.append([])  # Add empty list if no history
+                    fold_histories.append([])
             except Exception as fit_err:
                 logger.error(f"Fit failed for fold {fold_idx + 1}: {fit_err}", exc_info=True)
                 fold_results.append({k: np.nan for k in ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro',
@@ -1401,13 +1482,12 @@ class ClassificationPipeline:
 
             logger.info(f"Using best model from epoch {estimator_fold.history[-1]['epoch']}")
 
-            # Evaluate on Outer Test Set
+            # Evaluate
             logger.info(f"Evaluating model on outer test set for fold {fold_idx + 1}...")
             try:
-                y_pred_fold_test = estimator_fold.predict(X_fold_test) # <<< Use X_fold_test
-                y_score_fold_test = estimator_fold.predict_proba(X_fold_test) # <<< Use X_fold_test
-                # Compute metrics using fold's test set labels
-                fold_metrics = self._compute_metrics(y_fold_test, y_pred_fold_test, y_score_fold_test, # <<< Use y_fold_test
+                y_pred_fold_test = estimator_fold.predict(X_fold_test)
+                y_score_fold_test = estimator_fold.predict_proba(X_fold_test)
+                fold_metrics = self._compute_metrics(y_fold_test, y_pred_fold_test, y_score_fold_test,
                                                   detailed=compute_detailed_metrics_flag)
 
                 fold_summary = {
@@ -1430,10 +1510,9 @@ class ClassificationPipeline:
                                                          'specificity_macro', 'roc_auc_macro', 'pr_auc_macro']})
                 fold_detailed_results.append({'error': f'Scoring failed: {score_err}'})
 
-        # --- Aggregate Results ---
+        # Aggregate results
         if not fold_results:
             logger.error("CV evaluation failed: No results from any fold.")
-            # Return minimal error dict
             return {'method': 'cv_model_evaluation', 'params': params or {},
                     'error': 'All folds failed or were skipped.'}
 
@@ -1451,7 +1530,6 @@ class ClassificationPipeline:
             'fold_training_histories': [h.to_list() if h else [] for h in fold_histories],
         }
 
-        # Calculate aggregated stats only if enough folds completed
         aggregated_metrics = {}
         K = results['n_folds_processed']
         if K > 1:
@@ -1468,7 +1546,7 @@ class ClassificationPipeline:
                 t_crit = None
 
             metrics_to_aggregate = [k for k in df_results.columns if
-                                    k != 'error']  # Aggregate all collected numeric metrics
+                                    k != 'error']
             for metric_key in metrics_to_aggregate:
                 scores = df_results[metric_key].dropna()
                 count = len(scores)
@@ -1479,7 +1557,7 @@ class ClassificationPipeline:
                     h = (t_crit * sem) if t_crit is not None and not np.isnan(sem) else np.nan
                     aggregated_metrics[metric_key] = {
                         'mean': float(mean_score), 'std_dev': float(std_dev), 'sem': float(sem),
-                        'margin_of_error': float(h) if not np.isnan(h) else None,  # Store as None if not calculable
+                        'margin_of_error': float(h) if not np.isnan(h) else None,
                         'ci_lower': float(mean_score - h) if not np.isnan(h) else None,
                         'ci_upper': float(mean_score + h) if not np.isnan(h) else None
                     }
@@ -1487,7 +1565,7 @@ class ClassificationPipeline:
                     aggregated_metrics[metric_key] = {'mean': float(scores.iloc[0]), 'std_dev': 0.0}
                 else:
                     aggregated_metrics[metric_key] = {'mean': np.nan, 'std_dev': np.nan}
-        elif K == 1:  # Only one fold processed
+        elif K == 1:
             logger.warning("Only 1 fold processed. Reporting mean scores, cannot calculate std dev or CI.")
             for metric_key in df_results.columns:
                 if metric_key != 'error':
@@ -1501,15 +1579,13 @@ class ClassificationPipeline:
 
         results['aggregated_metrics'] = aggregated_metrics
 
-        # --- Update top-level keys for summary CSV convenience ---
         results['accuracy'] = aggregated_metrics.get('accuracy', {}).get('mean', np.nan)
         results['macro_avg'] = {'f1': aggregated_metrics.get('f1_macro', {}).get('mean', np.nan)}
-        # --- End Update ---
 
-        # --- Save results ---
+        # Save results
         summary_params = {k: v for k, v in eval_params.items() if isinstance(v, (str, int, float, bool))}
         summary_params['cv'] = cv
-        summary_params['evaluated_on'] = evaluate_on  # <<< Add to summary params
+        summary_params['evaluated_on'] = evaluate_on
         summary_params['val_split_ratio'] = val_frac_to_use
         summary_params['confidence_level'] = confidence_level
         saved_json_path = self._save_results(results,
@@ -1518,20 +1594,16 @@ class ClassificationPipeline:
                                              method_params=summary_params,
                                              results_detail_level=results_detail_level)
 
-        # --- Plot results (conditionally) ---
-        if current_plot_level > 0: # Proceed only if plotting is desired (level 1 or 2)
-            # plot_save_dir_base will be the directory/S3_prefix for THIS SPECIFIC RUN's artifacts
+        # Plot results
+        if current_plot_level > 0:
             plot_save_dir_base_for_run: Optional[Union[str, Path]] = None
 
             if self.artifact_repo and self.experiment_run_key_prefix:
-                # If using a repository, construct the base key for this run's artifacts
                 plot_save_dir_base_for_run = str((PurePath(self.experiment_run_key_prefix) / run_id).as_posix())
             else:
                 plot_save_dir_base_for_run = None
                 logger.warning(f"No artifact repo specified for this run.")
 
-            # Condition to actually attempt saving plots to a file/repository:
-            # Level 1 (save only) or Level 2 (save and show), AND a base location must exist.
             can_save_plots = (current_plot_level >= 1 and plot_save_dir_base_for_run is not None)
             should_show_plots_flag = (current_plot_level == 2)
 
@@ -1539,10 +1611,10 @@ class ClassificationPipeline:
                 logger.warning(
                     f"Plot saving to file skipped for {run_id}: plot_level is 1 (save only) but no save location could be determined (e.g., no repository).")
 
-            if can_save_plots or should_show_plots_flag:  # Proceed if saving OR showing
+            if can_save_plots or should_show_plots_flag:
                 logger.info(f"Plotting cv for eval results for {run_id} (plot level {current_plot_level}).")
                 try:
-                    from ..plotter import ResultsPlotter # Corrected relative import
+                    from ..plotter import ResultsPlotter
                     ResultsPlotter.plot_cv_model_evaluation_results(
                         results_input=results,
                         class_names=self.dataset_handler.classes,
@@ -1555,11 +1627,11 @@ class ClassificationPipeline:
                 except Exception as plot_err:
                     logger.error(f"Plotting failed for {run_id} (cv for eval): {plot_err}", exc_info=True)
 
-        # --- Updated Logging ---
+        # Logging summary
         logger.info(f"CV Evaluation Summary (on {evaluate_on} data, {K} folds, {confidence_level * 100:.0f}% CI):")
         for metric_key, stats_dict in aggregated_metrics.items():
             mean_val = stats_dict.get('mean', np.nan)
-            h_val = stats_dict.get('margin_of_error')  # Can be None or NaN
+            h_val = stats_dict.get('margin_of_error')
             if not np.isnan(mean_val):
                 if h_val is not None and not np.isnan(h_val):
                     logger.info(f"  {metric_key.replace('_', ' ').title():<20}: {mean_val:.4f} +/- {h_val:.4f}")
@@ -1567,50 +1639,83 @@ class ClassificationPipeline:
                     logger.info(f"  {metric_key.replace('_', ' ').title():<20}: {mean_val:.4f} (CI not calculated)")
             else:
                 logger.info(f"  {metric_key.replace('_', ' ').title():<20}: NaN")
-        # --- End Updated Logging ---
 
         return results
 
     def single_train(self,
-                     params: Optional[Dict[str, Any]] = None, # <<< General params override
-                     # max_epochs: Optional[int] = None,
-                     # lr: Optional[float] = None,
-                     # batch_size: Optional[int] = None,
-                     # Add other tunable params like weight_decay, dropout_rate here if needed
-                     # optimizer__weight_decay: Optional[float] = None,
-                     # module__dropout_rate: Optional[float] = None,
-                     val_split_ratio: Optional[float] = None,  # Override handler's default split
+                     params: Optional[Dict[str, Any]] = None,
+                     val_split_ratio: Optional[float] = None,
                      save_model: bool = True,
                      results_detail_level: Optional[int] = None,
                      plot_level: Optional[int] = None) -> Dict[str, Any]:
         """
         Performs a single training run using a train/validation split.
-        Manually creates the split and uses Skorch with PredefinedSplit.
-        Saves model and results in a unique subdirectory for this run.
+
+        This method trains the model on the training data and evaluates on a validation set.
+        It handles the data splitting process and configures Skorch with the appropriate
+        validation strategy. The trained model becomes the pipeline's main model adapter.
+
+        Args:
+            params: Optional dictionary of hyperparameters to use for training.
+                    If None, uses the current pipeline configuration.
+            val_split_ratio: Fraction of training data to use for validation.
+                            If None, uses the pipeline's default val_split_ratio.
+            save_model: Whether to save the trained model to the artifact repository.
+                       Set to False to skip model saving.
+            results_detail_level: Controls verbosity of saved JSON results:
+                                - 0: No JSON results saved
+                                - 1: Basic summary (metrics)
+                                - 2: Detailed (includes epoch histories)
+                                - 3: Full detail with batch data
+                                If None, uses the pipeline's default level.
+            plot_level: Controls result plotting:
+                       - 0: No plotting
+                       - 1: Generate and save plots
+                       - 2: Generate, save, and display plots
+                       If None, uses the pipeline's default level.
+
+        Returns:
+            Dict containing training results, including:
+                - method: Name of the method ('single_train')
+                - run_id: Unique identifier for this run
+                - params: Parameters used for this method
+                - history: Training history data
+                - val_metrics: Validation metrics if validation set was used
+                - saved_model_path: Path to the saved model (if save_model=True)
+                - accuracy: Validation accuracy (for summary reporting)
+                - macro_avg: Validation macro F1 score (for summary reporting)
+
+        Raises:
+            RuntimeError: If train+validation data is empty
+            ValueError: If validation split ratio is invalid
+
+        Note:
+            When save_model=True, the model is saved to the artifact repository with
+            its configuration and evaluation metrics. The model becomes the pipeline's
+            active model for further use (e.g., prediction, evaluation).
         """
         logger.info("Starting single training run...")
         run_id = f"single_train_{datetime.now().strftime('%H%M%S')}"
 
-        # --- Get Train+Validation Data ---
+        # Train+Validation data
         X_trainval, y_trainval = self.dataset_handler.get_train_val_paths_labels()
         if not X_trainval: raise RuntimeError("Train+validation data is empty.")
         y_trainval_np = np.array(y_trainval)
 
-        # --- Determine Validation Split ---
+        # Validation split
         current_val_split_ratio = val_split_ratio if val_split_ratio is not None else self.dataset_handler.val_split_ratio
         train_split_config = None
-        n_train, n_val = len(y_trainval_np), 0  # Default if no split
+        n_train, n_val = len(y_trainval_np), 0
 
         if not 0.0 < current_val_split_ratio < 1.0:
             logger.warning(f"Validation split ratio ({current_val_split_ratio}) is invalid or zero. "
                            f"Training on full {len(X_trainval)} trainval samples without validation set.")
-            X_fit, y_fit = X_trainval, y_trainval_np  # Use all data
+            X_fit, y_fit = X_trainval, y_trainval_np
         elif len(np.unique(y_trainval_np)) < 2:
             logger.warning(
                 f"Only one class present in trainval data. Cannot stratify split. Training on full {len(X_trainval)} samples without validation.")
             X_fit, y_fit = X_trainval, y_trainval_np
         else:
-            # Perform the split
             try:
                 train_indices, val_indices = train_test_split(
                     np.arange(len(X_trainval)), test_size=current_val_split_ratio,
@@ -1621,114 +1726,87 @@ class ClassificationPipeline:
                     np.arange(len(X_trainval)), test_size=current_val_split_ratio,
                     random_state=RANDOM_SEED)
 
-            # Use indices to get actual paths/labels for constructing X_fit, y_fit later
             X_train_paths_list = [X_trainval[i] for i in train_indices]
             y_train_labels_np = y_trainval_np[train_indices]
             X_val_paths_list = [X_trainval[i] for i in val_indices]
             y_val_labels_np = y_trainval_np[val_indices]
             n_train, n_val = len(y_train_labels_np), len(y_val_labels_np)
 
-            # Combine for skorch fit (paths and labels separately)
-            X_fit = X_train_paths_list + X_val_paths_list  # Combine lists of paths
+            X_fit = X_train_paths_list + X_val_paths_list
             y_fit = np.concatenate((y_train_labels_np, y_val_labels_np))
 
-            # Create PredefinedSplit using indices relative to the combined X_fit/y_fit
-            test_fold = np.full(len(X_fit), -1, dtype=int)  # -1 indicates train
-            test_fold[n_train:] = 0  # 0 indicates validation fold (indices from n_train onwards)
+            test_fold = np.full(len(X_fit), -1, dtype=int)
+            test_fold[n_train:] = 0
             ps = PredefinedSplit(test_fold=test_fold)
-            # Skorch train_split requires a callable that yields train/test indices.
-            # ValidSplit handles wrapping the PredefinedSplit correctly.
-            train_split_config = ValidSplit(cv=ps,
-                                            stratified=False)  # stratified=False because ps defines the split
+            train_split_config = ValidSplit(cv=ps, stratified=False) # ps defines the split
 
         logger.info(f"Using split: {n_train} train / {n_val} validation samples.")
 
-        # --- Configure Model Adapter ---
         adapter_config = self.model_adapter_config.copy()
 
-        # Apply overrides from 'params' argument
         if params:
             logger.info(f"Applying custom parameters for this single_train run: {params}")
-            # Parse the provided params to resolve optimizer strings and create LRScheduler object
-            # Pass max_epochs from adapter_config_run as it might be needed for T_max default
             parsed_params = parse_fixed_hyperparameters(
                 params,
                 default_max_epochs_for_cosine=adapter_config.get('max_epochs')
             )
             adapter_config.update(parsed_params)
-            # TODO: use params to override specific keys in adapter_config
 
-        # Override params for this run
-        # if max_epochs is not None: adapter_config['max_epochs'] = max_epochs
-        # if lr is not None: adapter_config['lr'] = lr
-        # if batch_size is not None: adapter_config['batch_size'] = batch_size
-        # if optimizer__weight_decay is not None: adapter_config['optimizer__weight_decay'] = optimizer__weight_decay
-        # if module__dropout_rate is not None: adapter_config['module__dropout_rate'] = module__dropout_rate
-        # Set the train split strategy (None or PredefinedSplit via ValidSplit)
         adapter_config['train_split'] = train_split_config
 
-        # --- Handle Callbacks based on validation ---
-        # Start with the base callbacks list/None from the config
-        final_callbacks = adapter_config.get('callbacks', []) # Get current callbacks
-        if isinstance(final_callbacks, list): # Ensure it's a list
-             # If parse_fixed_hyperparameters put a full LRScheduler object under 'callbacks__default_lr_scheduler'
+        # Handle callbacks
+        final_callbacks = adapter_config.get('callbacks', [])
+        if isinstance(final_callbacks, list):
              if 'callbacks__default_lr_scheduler' in adapter_config and isinstance(adapter_config['callbacks__default_lr_scheduler'], LRScheduler):
-                 new_lr_scheduler_instance = adapter_config.pop('callbacks__default_lr_scheduler') # Get and remove temp key
-                 # Find and replace or add the LRScheduler in the list
+                 new_lr_scheduler_instance = adapter_config.pop('callbacks__default_lr_scheduler')
                  found_lr_scheduler = False
                  for i, (name, cb) in enumerate(final_callbacks):
                      if name == DEFAULT_LR_SCHEDULER_NAME:
                          final_callbacks[i] = (name, new_lr_scheduler_instance)
                          found_lr_scheduler = True
                          break
-                 if not found_lr_scheduler: # Should not happen if get_default_callbacks includes it
+                 if not found_lr_scheduler:
                      final_callbacks.append((DEFAULT_LR_SCHEDULER_NAME, new_lr_scheduler_instance))
                  adapter_config['callbacks'] = final_callbacks
 
         if train_split_config is None:
             logger.warning(
                 "No validation set. Callbacks monitoring validation metrics (EarlyStopping, LRScheduler) may be removed or ineffective.")
-            # Filter out callbacks that depend on validation
             adapter_config['callbacks'] = [
                 (name, cb) for name, cb in final_callbacks
-                if not isinstance(cb, (EarlyStopping, LRScheduler))  # Keep others
+                if not isinstance(cb, (EarlyStopping, LRScheduler))
             ]
         else:
-            # Keep all callbacks from base config when validation exists
             adapter_config['callbacks'] = final_callbacks
-        # --- End Callback Handling ---
 
-        adapter_config['verbose'] = 0  # Show epoch table with train_acc
+        adapter_config['verbose'] = 0
 
-        # Pop config keys not needed by SkorchModelAdapter init directly
         adapter_config.pop('patience_cfg', None)
         adapter_config.pop('monitor_cfg', None)
         adapter_config.pop('lr_policy_cfg', None)
         adapter_config.pop('lr_patience_cfg', None)
 
-        # Instantiate the adapter for this training run
+        # Instantiate the adapter
         adapter_for_train = SkorchModelAdapter(**adapter_config)
 
-        # --- Train Model ---
+        # Train model
         logger.info(f"Fitting model (run_id: {run_id})...")
-        adapter_for_train.fit(X_fit, y=y_fit)  # Pass combined data (paths, labels)
+        adapter_for_train.fit(X_fit, y=y_fit)
 
-        # --- Collect Results ---
+        # Collect results
         history = adapter_for_train.history
-        # Start results dict, store effective config used for this run
         results: Dict[str, Any] = {'method': 'single_train',
                    'run_id': run_id,
                    'full_params_used': adapter_config.copy()}
 
         best_epoch_info = {}
-        valid_loss_key = 'valid_loss'  # Default metric monitored
-        # Check if validation ran by checking train_split and history content
+        valid_loss_key = 'valid_loss'
         validation_was_run = train_split_config is not None and history and valid_loss_key in history[-1]
 
         if validation_was_run:
             try:
                 scores = [epoch.get(valid_loss_key, np.inf) for epoch in history]
-                best_idx = np.argmin(scores)  # Find index of min validation loss
+                best_idx = np.argmin(scores)
                 best_idx_int = int(best_idx)
 
                 if best_idx_int < len(history):
@@ -1747,12 +1825,12 @@ class ClassificationPipeline:
                         f"({valid_loss_key}={best_epoch_info['best_valid_metric_value']:.4f})")
                 else:
                     logger.error("Could not determine best epoch index from history scores.")
-                    validation_was_run = False  # Fallback
+                    validation_was_run = False
             except Exception as e:
                 logger.error(f"Error processing history for best epoch: {e}", exc_info=True)
-                validation_was_run = False  # Fallback
+                validation_was_run = False
 
-        if not validation_was_run:  # No validation or error processing history
+        if not validation_was_run:
             last_epoch_hist = history[-1] if history else {}
             last_epoch_num = last_epoch_hist.get('epoch', len(history) if history else 0)
             if not history: logger.error("History empty after fit.")
@@ -1764,79 +1842,57 @@ class ClassificationPipeline:
                 'train_acc_at_best': float(last_epoch_hist.get('train_acc', np.nan)),
                 'valid_acc_at_best': np.nan,
             }
-            if train_split_config is not None:  # Log warning only if split was intended but failed
+            if train_split_config is not None:
                 logger.warning(
                     f"Error finding best epoch based on validation. Reporting last epoch ({last_epoch_num}) stats.")
 
         results.update(best_epoch_info)
-        # Include full history only if detailed results are requested
         results['training_history'] = history.to_list() if history else []
 
-        # --- Save Model ---
-        model_path_identifier = None  # Will store the S3 key or local path string
+        # Save model
+        model_path_identifier = None
         if save_model:
-            # --- NEW FILENAME LOGIC ---
-            model_type_short = self.model_type.value  # e.g., "pvit", "hyvit"
+            model_type_short = self.model_type.value
             run_type_short = "sngl"
-            # Use part of the existing run_id (which contains a timestamp)
-            run_id_timestamp_part = run_id.split('_')[-1]  # Assumes run_id format like "single_train_TIMESTAMP"
+            run_id_timestamp_part = run_id.split('_')[-1]
 
             val_metric_val = results.get('best_valid_metric_value', np.nan)
-            metric_name_short = "val_loss"  # Or adapt if you monitor other things like 'val_acc'
+            metric_name_short = "val_loss"
             if not np.isnan(val_metric_val):
-                # Format to 2 decimal places, replace dot, remove leading zero if < 1
                 metric_str = f"{metric_name_short}{val_metric_val:.2f}".replace('.', 'p').replace("0p", "p")
             else:
                 metric_str = "no_val"
 
             epoch_num = results.get('best_epoch', 0)
             model_filename_base = f"{model_type_short}_{run_type_short}_ep{epoch_num}_{metric_str}_{run_id_timestamp_part}"
-            # --- END NEW FILENAME LOGIC ---
 
             model_pt_filename = f"{model_filename_base}.pt"
             model_config_filename = f"{model_filename_base}_arch_config.json"
 
-            model_pt_object_key = self._get_s3_object_key(run_id, model_pt_filename)  # run_id is still the folder name
+            model_pt_object_key = self._get_s3_object_key(run_id, model_pt_filename)
             model_config_object_key = self._get_s3_object_key(run_id, model_config_filename)
 
             state_dict = adapter_for_train.module_.state_dict()
             model_path_identifier = self.artifact_repo.save_model_state_dict(state_dict, model_pt_object_key)
 
-            # 2. Save architectural config
-            if model_path_identifier:  # Only if model saving was successful
-                # Get all relevant 'module__' parameters from the adapter's config
-                # This adapter_config was used to initialize the SkorchModelAdapter for this run
-                effective_adapter_config = adapter_for_train.get_params(
-                    deep=False)  # Get effective params of this instance
+            # Save config
+            if model_path_identifier:
+                effective_adapter_config = adapter_for_train.get_params(deep=False)
 
                 arch_config = {
-                    'model_type': self.model_type.value,  # Store the enum value
+                    'model_type': self.model_type.value,
                     'num_classes': self.dataset_handler.num_classes,
-                    'img_size_h': self.dataset_handler.img_size[0],  # Get from dataset_handler
-                    'img_size_w': self.dataset_handler.img_size[1],  # Get from dataset_handler
+                    'img_size_h': self.dataset_handler.img_size[0],
+                    'img_size_w': self.dataset_handler.img_size[1],
                 }
                 for key, value in effective_adapter_config.items():
                     if key.startswith('module__'):
                         arch_config[key] = value
-                    # Add other direct architectural params if SkorchModelAdapter has them (e.g. is_hybrid_input IF it were a direct param of module)
-                    # For PretrainedViT, is_hybrid_input is a module__ param if you set it that way, or a constructor arg
-                    # For your HybridViT, things like cnn_model_name are module__params.
-
-                # Specifically ensure architectural params of PretrainedViT/Swin/Hybrid are captured
-                # These should be retrievable from effective_adapter_config if they were set via module__
-                # Example for PretrainedViT specific params (if they are not module__ in adapter_config
-                # but rather direct constructor args to PretrainedViT that need to be known)
-                # This part depends on how your HybridViT/PretrainedViT __init__ signatures are structured
-                # and what Skorch passes as module__
-
-                # The most reliable way is to fetch them from the actual module instance if possible,
-                # but Skorch's get_params() on the adapter should give you the 'module__xyz' values.
-                # Let's assume effective_adapter_config from skorch is sufficient here.
 
                 arch_config_path_identifier = self.artifact_repo.save_json(arch_config, model_config_object_key)
                 logger.info(f"Model architectural config saved to: {model_config_object_key}")
                 results['saved_model_arch_config_path'] = arch_config_path_identifier
-        results['saved_model_path'] = model_path_identifier  # Store key/path or None
+        results['saved_model_path'] = model_path_identifier
 
         self.model_adapter = adapter_for_train
         logger.info(f"Main pipeline model adapter updated from single_train run: {run_id}")
@@ -1844,47 +1900,39 @@ class ClassificationPipeline:
         results['accuracy'] = results.get('valid_acc_at_best', np.nan)
         results['macro_avg'] = {}
 
-        # --- Save Results JSON (this call is independent of plotting the data) ---
+        # Save results
         simple_params = {k: v for k, v in adapter_config.items() if isinstance(v, (str, int, float, bool))}
         simple_params['val_split_ratio_used'] = current_val_split_ratio if train_split_config else 0.0
 
-        json_artifact_key_or_path = self._save_results(  # _save_results now uses artifact_repo
+        json_artifact_key_or_path = self._save_results(
             results_data=results,
-            method_name="single_train",  # Used for part of the artifact key
-            run_id=run_id,  # This is the specific method execution ID
+            method_name="single_train",
+            run_id=run_id,
             method_params=simple_params,
             results_detail_level=results_detail_level
         )
 
-        # --- Determine effective plot level ---
-        current_plot_level = self.plot_level  # Start with pipeline default
+        current_plot_level = self.plot_level
         if plot_level is not None: current_plot_level = plot_level
 
-        # --- Plot results (conditionally) ---
+        # Plot results
         if current_plot_level > 0:
-            # The base location for plots associated with this run.
-            # For S3, this is a prefix. For local, it's a directory path.
             plot_save_location_base: Optional[str] = None
             if self.artifact_repo and self.experiment_run_key_prefix:
-                # For S3, the plotter will append specific plot names to this base key
                 plot_save_location_base = str((PurePath(self.experiment_run_key_prefix) / run_id).as_posix())
 
-            # If only saving (level 1) but no way to save (no repo/prefix), then skip file saving part of plotting
             if current_plot_level == 1 and not plot_save_location_base:
                 logger.warning(
                     f"Plot saving to file skipped for {run_id}: plot_level is 1 but no repository/base_key configured for saving.")
-                # If show_plots was also desired, it would be level 2.
             else:
-                # Proceed if showing (level 2) OR if saving and save location exists (level 1)
                 logger.info(f"Plotting single_train results for {run_id} (plot level {current_plot_level}).")
                 show_plots_flag = (current_plot_level == 2)
                 try:
-                    from ..plotter import ResultsPlotter  # Ensure correct relative import
+                    from ..plotter import ResultsPlotter
                     ResultsPlotter.plot_single_train_results(
                         results_input=results,
-                        plot_save_dir_base=plot_save_location_base,  # Pass base key/path for plots
+                        plot_save_dir_base=plot_save_location_base,
                         repository_for_plots=self.artifact_repo if plot_save_location_base else None,
-                        # Pass repo if saving
                         show_plots=show_plots_flag
                     )
                 except ImportError:
@@ -1896,21 +1944,56 @@ class ClassificationPipeline:
     def single_eval(self,
                     results_detail_level: Optional[int] = None,
                     plot_level: Optional[int] = None) -> Dict[str, Any]:
-        """ Evaluates the current model adapter on the test set. """
+        """
+        Evaluates the current model adapter on the test set.
+
+        This method performs inference using the currently loaded model on the test data
+        and calculates performance metrics. It does not modify the model or perform any training.
+
+        Args:
+            results_detail_level: Controls verbosity of saved JSON results:
+                                - 0: No JSON results saved
+                                - 1: Basic summary (metrics)
+                                - 2: Detailed (includes predictions)
+                                - 3: Full detail with confidence scores
+                                If None, uses the pipeline's default level.
+            plot_level: Controls result plotting:
+                       - 0: No plotting
+                       - 1: Generate and save plots
+                       - 2: Generate, save, and display plots
+                       If None, uses the pipeline's default level.
+
+        Returns:
+            Dict containing evaluation results, including:
+                - method: Name of the method ('single_eval')
+                - run_id: Unique identifier for this run
+                - metrics: Computed performance metrics
+                - accuracy: Test accuracy (for summary reporting)
+                - macro_avg: Test macro F1 score (for summary reporting)
+                - confusion_matrix: Confusion matrix as a nested list
+                - detailed_results: Detailed prediction results (if detail level ≥2)
+
+        Raises:
+            RuntimeError: If the model adapter is not initialized (needs training or loading first)
+
+        Note:
+            This method is typically used after training a model with single_train or
+            non_nested_grid_search to evaluate its performance on unseen test data.
+        """
         logger.info("Starting model evaluation on the test set...")
-        run_id = f"single_eval_{datetime.now().strftime('%H%M%S')}" # Unique run ID for this execution
+        run_id = f"single_eval_{datetime.now().strftime('%H%M%S')}"
 
         if not self.model_adapter.initialized_:
              raise RuntimeError("Model adapter not initialized. Train or load first.")
 
-        # --- Get Test Data ---
+        # Test data
         X_test, y_test = self.dataset_handler.get_test_paths_labels()
         if not X_test:
              logger.warning("Test set is empty. Skipping evaluation.")
              return {'method': 'single_eval', 'message': 'Test set empty, evaluation skipped.'}
         y_test_np = np.array(y_test)
 
-        # --- Make Predictions ---
+        # Make predictions
         logger.info(f"Evaluating on {len(X_test)} test samples...")
         try:
              y_pred_test = self.model_adapter.predict(X_test)
@@ -1919,20 +2002,15 @@ class ClassificationPipeline:
              logger.error(f"Prediction failed during single_eval: {e}", exc_info=True)
              raise RuntimeError("Failed to get predictions from model adapter.") from e
 
-        # --- Compute Metrics ---
-        # Determine detail level for computing metrics based on potential plotting needs
+        # Compute metrics
         compute_detailed_metrics_flag = False
         effective_detail_level_for_compute = results_detail_level or self.results_detail_level
 
-        # --- Determine effective plot level ---
-        current_plot_level = self.plot_level  # Start with pipeline default
+        current_plot_level = self.plot_level
         if plot_level is not None:
-            current_plot_level = plot_level  # Use override if provided
+            current_plot_level = plot_level
             logger.debug(f"Plot level overridden for this run to: {current_plot_level}")
 
-        # --- Compute Metrics (pass detailed flag) ---
-        # If saving JSON (level > 0) AND plotting potentially detailed plots (plot_level > 0),
-        # OR if saving detailed JSON (level >= 2), compute detailed metrics.
         if (effective_detail_level_for_compute > 0 and current_plot_level > 0) or effective_detail_level_for_compute >= 2:
             compute_detailed_metrics_flag = True
 
@@ -1942,27 +2020,22 @@ class ClassificationPipeline:
             'params': {},
             'run_id': run_id,
             **metrics}
-        method_name = results['method']  # Used for saving
+        method_name = results['method']
 
         saved_json_path = self._save_results(results, "single_eval",
                            method_params=results['params'],
                            run_id=run_id,
                            results_detail_level=results_detail_level)
 
-        # --- Plot results (conditionally) ---
+        # Plot results
         if current_plot_level > 0:
-            # plot_save_dir_base will be the directory/S3_prefix for THIS SPECIFIC RUN's artifacts
             plot_save_dir_base_for_run: Optional[Union[str, Path]] = None
 
             if self.artifact_repo and self.experiment_run_key_prefix:
-                # If using a repository, construct the base key for this run's artifacts
                 plot_save_dir_base_for_run = str((PurePath(self.experiment_run_key_prefix) / run_id).as_posix())
             else:
                 plot_save_dir_base_for_run = None
                 logger.warning(f"No artifact repo specified for this run.")
-
-                # Condition to actually attempt saving plots to a file/repository:
-                # Level 1 (save only) or Level 2 (save and show), AND a base location must exist.
             can_save_plots = (current_plot_level >= 1 and plot_save_dir_base_for_run is not None)
             should_show_plots_flag = (current_plot_level == 2)
 
@@ -1970,7 +2043,7 @@ class ClassificationPipeline:
                 logger.warning(
                     f"Plot saving to file skipped for {run_id}: plot_level is 1 (save only) but no save location could be determined (e.g., no repository).")
 
-            if can_save_plots or should_show_plots_flag:  # Proceed if saving OR showing
+            if can_save_plots or should_show_plots_flag:
                 logger.info(f"Plotting {method_name} results for {run_id} (plot level {current_plot_level}).")
                 try:
                     from ..plotter import ResultsPlotter
@@ -1991,17 +2064,65 @@ class ClassificationPipeline:
     def predict_images(self,
                        image_tasks_for_pipeline: List[Any],
                        experiment_run_id_of_model: str,
-                       username: str = "anonymous", # Default username for artifact storage
+                       username: str = "anonymous",
                        persist_prediction_artifacts: bool = True,
                        results_detail_level: Optional[int] = None,
-                       # Still used for other things, just not LIME segments in JSON
                        plot_level: int = 0,
                        generate_lime_explanations: bool = False,
                        lime_num_features_to_show_plot: int = 5,
                        lime_num_samples_for_explainer: int = 1000,
                        prob_plot_top_k: int = -1
                        ) -> List[Dict[str, Any]]:
+        """
+        Performs inference on a list of images using the current model adapter.
 
+        This method processes each image through the model, generates predictions with confidence
+        scores, and optionally creates visualizations including LIME explanations. Results can
+        be persisted to the artifact repository.
+
+        Args:
+            image_tasks_for_pipeline: List of image task objects to predict on. Each task should
+                                     contain image data or paths that can be processed by the model.
+            experiment_run_id_of_model: Identifier of the experiment run that produced the model.
+                                       Used for organization and traceability.
+            username: Name of the user requesting prediction, for tracking purposes.
+            persist_prediction_artifacts: Whether to save prediction results and visualizations
+                                         to the artifact repository.
+            results_detail_level: Controls verbosity of saved JSON results:
+                                - 0: No JSON results saved
+                                - 1: Basic prediction results
+                                - 2: Detailed with confidence scores
+                                - 3: Full detail with intermediate activations
+                                If None, uses the pipeline's default level.
+            plot_level: Controls result plotting:
+                       - 0: No plotting
+                       - 1: Generate and save plots
+                       - 2: Generate, save, and display plots
+            generate_lime_explanations: Whether to generate LIME explanations for predictions.
+                                       Requires LIME to be installed.
+            lime_num_features_to_show_plot: Number of top features to show in LIME explanation plots.
+            lime_num_samples_for_explainer: Number of samples to use for LIME explainer.
+            prob_plot_top_k: Number of top classes to show in probability plots. If -1, shows all classes.
+
+        Returns:
+            List of dictionaries, one per image, containing:
+                - image_id: Identifier for the image
+                - predicted_class: Name of the predicted class
+                - confidence: Confidence score for the prediction
+                - all_probs: Probabilities for all classes
+                - explanation_path: Path to LIME explanation (if generated)
+                - artifact_paths: Paths to saved artifacts (if persisted)
+
+        Raises:
+            RuntimeError: If the model adapter is not initialized
+            ValueError: If image_tasks_for_pipeline is empty
+            ImportError: If generate_lime_explanations=True but LIME is not available
+
+        Note:
+            LIME explanations provide visual insight into which parts of the image most influenced
+            the prediction. These are computationally expensive and increase prediction time
+            significantly when enabled.
+        """
         predict_op_run_id = f"predict_op_{datetime.now().strftime('%Y%m%d_%H%M%S_%f')}"
         logger.info(f"Op {predict_op_run_id}: Starting prediction for {len(image_tasks_for_pipeline)} images "
                     f"by user '{username}', using model from experiment '{experiment_run_id_of_model}'.")
@@ -2082,8 +2203,8 @@ class ClassificationPipeline:
                 return len(self.pil_images)
 
             def __getitem__(self, idx):
-                img = self.pil_images[idx];
-                identifier = self.identifiers[idx];
+                img = self.pil_images[idx]
+                identifier = self.identifiers[idx]
                 label_tensor = torch.tensor(-1, dtype=torch.long)
                 try:
                     transformed_img = self.transform(img); return transformed_img, label_tensor
@@ -2111,8 +2232,6 @@ class ClassificationPipeline:
                 f"Op {predict_op_run_id}: Mismatch: predictions ({len(all_probabilities_np)}) vs valid images ({len(valid_image_ids)}).")
 
         predictions_to_return_for_api = []
-        # effective_results_detail_level is still used by _save_results for general verbosity control
-        # but we will explicitly exclude LIME segments from the JSON saved by _save_results.
         effective_results_detail_level = self.results_detail_level if results_detail_level is None else results_detail_level
 
         for i, task_object in enumerate(valid_tasks):
@@ -2131,12 +2250,8 @@ class ClassificationPipeline:
             top_k_preds_list = [(self.dataset_handler.classes[k_idx], float(probs_np[k_idx])) for k_idx in
                                 top_k_indices]
 
-            # This dictionary is what will be passed to the LIME plotter
-            # It will contain segments if LIME runs successfully.
             lime_data_for_plotter = None
 
-            # This dictionary is what will be written to the JSON file.
-            # It will NOT contain segments.
             lime_data_for_json_file = None
 
             if generate_lime_explanations and lime_explainer:
@@ -2151,30 +2266,26 @@ class ClassificationPipeline:
                     )
                     lime_weights = explanation.local_exp.get(predicted_idx, [])
 
-                    # Populate data for the plotter (always include segments if LIME ran)
                     lime_data_for_plotter = {
                         'explained_class_idx': predicted_idx,
                         'explained_class_name': predicted_name,
                         'feature_weights': lime_weights,
-                        'segments_for_render': explanation.segments.tolist(),  # For plotter
+                        'segments_for_render': explanation.segments.tolist(),
                         'num_features_from_lime_run': lime_num_features_to_show_plot
                     }
 
-                    # Populate data for the JSON file (exclude segments)
                     lime_data_for_json_file = {
                         'explained_class_idx': predicted_idx,
                         'explained_class_name': predicted_name,
                         'feature_weights': lime_weights,
                         'num_features_from_lime_run': lime_num_features_to_show_plot
-                        # 'segments_for_render' is intentionally omitted here
                     }
 
                 except Exception as lime_e:
                     logger.error(f"Op {predict_op_run_id}: LIME failed for {image_id}: {lime_e}", exc_info=False)
-                    lime_data_for_json_file = {'error': str(lime_e)}  # Also set plotter data to this error
+                    lime_data_for_json_file = {'error': str(lime_e)}
                     lime_data_for_plotter = lime_data_for_json_file
 
-                    # Prepare the full content for the individual prediction JSON file
             single_prediction_json_content = {
                 "image_id": image_id,
                 "prediction_id": prediction_id,
@@ -2185,7 +2296,7 @@ class ClassificationPipeline:
                 "predicted_class_name": predicted_name,
                 "confidence": confidence,
                 "top_k_predictions_for_plot": top_k_preds_list,
-                "lime_explanation": lime_data_for_json_file  # Use the version without segments
+                "lime_explanation": lime_data_for_json_file
             }
 
             predictions_to_return_for_api.append({
@@ -2198,19 +2309,19 @@ class ClassificationPipeline:
 
             prediction_artifact_base_path = PurePath("predictions") / username / str(image_id) / str(prediction_id)
 
-            # Save individual prediction JSON
+            # Save JSON
             if persist_prediction_artifacts and self.artifact_repo and effective_results_detail_level > 0:
                 pred_json_key = str((prediction_artifact_base_path / "prediction_details.json").as_posix())
                 self.artifact_repo.save_json(single_prediction_json_content, pred_json_key)
                 logger.info(f"Op {predict_op_run_id}: Prediction JSON for image {image_id} saved to: {pred_json_key}")
 
-            # Generate and Save LIME Plot (if enabled and data available)
+            # Generate LIME plot
             if generate_lime_explanations and lime_data_for_plotter and 'error' not in lime_data_for_plotter:
                 if persist_prediction_artifacts and self.artifact_repo and plot_level > 0:
                     lime_plot_key = str((prediction_artifact_base_path / "plots" / "lime_explanation.png").as_posix())
                     ResultsPlotter.plot_lime_explanation_image(
-                        original_pil_image=valid_pil_images[i],  # Pass the correct PIL image
-                        lime_explanation_data=lime_data_for_plotter,  # Pass data WITH segments
+                        original_pil_image=valid_pil_images[i],
+                        lime_explanation_data=lime_data_for_plotter,
                         lime_num_features_to_display=lime_num_features_to_show_plot,
                         output_path=lime_plot_key,
                         repository_for_plots=self.artifact_repo,
@@ -2221,7 +2332,7 @@ class ClassificationPipeline:
                 logger.warning(
                     f"Op {predict_op_run_id}: LIME plot generation skipped for image {image_id} due to missing LIME data or LIME error.")
 
-            # Probability Distribution Plot (as before)
+            # Probability plot
             if persist_prediction_artifacts and self.artifact_repo and plot_level > 0:
                 prob_plot_key = str(
                     (prediction_artifact_base_path / "plots" / "probability_distribution.png").as_posix())
@@ -2237,21 +2348,38 @@ class ClassificationPipeline:
 
     def load_model(self, model_path_or_key: Union[str, Path]) -> None:
         """
-        Loads a state_dict and its architectural config into the pipeline's model adapter.
-        - model_path_or_key: Path to the .pt file.
-          - For S3/MinIO: Relative path within the 'experiments/' prefix (e.g., "dataset/model/run_id/model.pt").
-          - For Local: Can be absolute or relative.
+        Loads a trained model from the artifact repository into the pipeline's model adapter.
+
+        This method loads both the model state dictionary and its architectural configuration
+        from the specified path or object key. It supports loading from both local filesystem
+        and remote storage (S3/MinIO). After loading, the model becomes the pipeline's active
+        model for inference and evaluation tasks.
+
+        Args:
+            model_path_or_key: Path or key to the saved model file (.pt):
+                              - For S3/MinIO: Relative path within the experiment prefix
+                                (e.g., "run_id/model.pt")
+                              - For local filesystem: Absolute or relative path to the model file
+
+        Returns:
+            None: Updates the pipeline's model adapter in-place
+
+        Raises:
+            FileNotFoundError: If the model file or its configuration cannot be found
+            RuntimeError: If the model state dictionary cannot be loaded
+            ValueError: If the loaded model architecture doesn't match the pipeline's configuration
+
+        Note:
+            The method automatically looks for a corresponding architecture configuration file
+            with the naming pattern "{model_name}_arch_config.json" in the same directory.
+            This config is used to ensure the correct model architecture is instantiated before
+            loading the state dictionary.
         """
         run_id_for_log = f"load_model_op_{datetime.now().strftime('%H%M%S')}"
         logger.info(f"Operation {run_id_for_log}: Attempting to load model from: {model_path_or_key}")
 
-        # Construct full paths/keys for model and its config
-        # The experiment_run_id_of_model is part of model_path_or_key
-
         base_model_path_str = str(model_path_or_key)
 
-        # For S3/MinIO, ensure the path is prefixed with 'experiments/' if not already
-        # For local repo, this prefixing isn't strictly necessary if paths are absolute or correctly relative.
         full_model_pt_key_or_path = base_model_path_str
         if self.artifact_repo and not isinstance(self.artifact_repo, LocalFileSystemRepository):
             if not base_model_path_str.startswith("experiments/"):
@@ -2267,12 +2395,12 @@ class ClassificationPipeline:
         logger.debug(f"Op {run_id_for_log}: Effective model artifact path/key: {full_model_pt_key_or_path}")
         logger.debug(f"Op {run_id_for_log}: Effective arch_config path/key: {full_arch_config_key_or_path}")
 
-        # --- 1. Load Architectural Config ---
+        # Load config
         arch_config_dict: Optional[Dict[str, Any]] = None
         if self.artifact_repo:
             arch_config_dict = self.artifact_repo.load_json(full_arch_config_key_or_path)
 
-        if arch_config_dict is None and Path(full_arch_config_key_or_path).is_file():  # Fallback
+        if arch_config_dict is None and Path(full_arch_config_key_or_path).is_file():
             logger.info(
                 f"Op {run_id_for_log}: Arch config not found via repo or no repo, trying local: {full_arch_config_key_or_path}")
             try:
@@ -2284,7 +2412,6 @@ class ClassificationPipeline:
         if arch_config_dict is None:
             logger.error(
                 f"Op {run_id_for_log}: CRITICAL: Architecture config not found. Attempting load with current pipeline defaults.")
-            # Fallback to current pipeline defaults if arch_config is missing
             if not self.model_adapter.initialized_:
                 try:
                     self.model_adapter.initialize()
@@ -2292,7 +2419,6 @@ class ClassificationPipeline:
                     raise RuntimeError(f"Op {run_id_for_log}: Default init failed (arch_config missing): {e}") from e
         else:
             logger.info(f"Op {run_id_for_log}: Loaded architecture config from: {full_arch_config_key_or_path}")
-            # Re-initialize SkorchModelAdapter with loaded architecture
             loaded_model_type_str = arch_config_dict.pop('model_type')
             loaded_num_classes = arch_config_dict.pop('num_classes')
             loaded_img_size_h = arch_config_dict.pop('img_size_h', None)
@@ -2311,34 +2437,25 @@ class ClassificationPipeline:
             for key_arch, val_arch in arch_config_dict.items():
                 current_pipeline_defaults[key_arch] = val_arch
 
-            # Clean up non-init keys & ensure necessary refs are passed
             for k_pop in ['patience_cfg', 'monitor_cfg', 'lr_policy_cfg', 'lr_patience_cfg']:
                 current_pipeline_defaults.pop(k_pop, None)
             current_pipeline_defaults['dataset_handler_ref'] = self.dataset_handler
             current_pipeline_defaults['train_transform'] = self.dataset_handler.get_train_transform()
             current_pipeline_defaults['valid_transform'] = self.dataset_handler.get_eval_transform()
-            # Ensure 'classes' is set for skorch compatibility during prediction
             current_pipeline_defaults['classes'] = np.arange(loaded_num_classes)
 
-            # === RECONFIGURE ImageDatasetHandler and Transforms ===
             if loaded_img_size_h is not None and loaded_img_size_w is not None:
                 new_img_size = (loaded_img_size_h, loaded_img_size_w)
                 if new_img_size != self.dataset_handler.img_size:
                     logger.info(f"Reconfiguring ImageDatasetHandler for loaded model's image size: {new_img_size}")
-                    # Re-initialize or update the dataset_handler with the new image size.
-                    # This might involve creating a new ImageDatasetHandler instance or updating its properties
-                    # and then re-getting the transforms.
-                    self.dataset_handler.img_size = new_img_size  # Directly update if mutable
-                    # Crucially, update the transforms in the model_adapter_config that will be used
-                    # to re-initialize the SkorchModelAdapter
+                    self.dataset_handler.img_size = new_img_size
                     current_pipeline_defaults[
-                        'train_transform'] = self.dataset_handler.get_train_transform()  # Re-get with new size
+                        'train_transform'] = self.dataset_handler.get_train_transform()
                     current_pipeline_defaults[
-                        'valid_transform'] = self.dataset_handler.get_eval_transform()  # Re-get with new size
-                    # Also update the pipeline's own model_adapter_config if it's used as a base elsewhere
+                        'valid_transform'] = self.dataset_handler.get_eval_transform()
                     self.model_adapter_config['train_transform'] = current_pipeline_defaults['train_transform']
                     self.model_adapter_config['valid_transform'] = current_pipeline_defaults['valid_transform']
-                    self.model_adapter_config['img_size'] = new_img_size  # Store it in pipeline's config too
+                    self.model_adapter_config['img_size'] = new_img_size
                 else:
                     logger.info(f"Loaded model's image size {new_img_size} matches current pipeline config.")
             else:
@@ -2357,7 +2474,7 @@ class ClassificationPipeline:
         if not self.model_adapter.module_ or not isinstance(self.model_adapter.module_, nn.Module):
             raise RuntimeError("Op {run_id_for_log}: Adapter's nn.Module not found after initialization.")
 
-        # --- 2. Load State Dict ---
+        # Load state dict
         state_dict: Optional[Dict] = None
         map_location = self.model_adapter.device
 
@@ -2367,10 +2484,10 @@ class ClassificationPipeline:
             if state_dict: logger.info(
                 f"Op {run_id_for_log}: Model state_dict loaded via repo from: {full_model_pt_key_or_path}")
 
-        if state_dict is None:  # Fallback
-            local_pt_path = Path(full_model_pt_key_or_path)  # This might be an absolute path if local repo
-            if not self.artifact_repo and not local_pt_path.is_file():  # No repo and not a file, something is wrong with path
-                local_pt_path = Path(model_path_or_key)  # Try original path if prefixing was wrong for local
+        if state_dict is None:
+            local_pt_path = Path(full_model_pt_key_or_path)
+            if not self.artifact_repo and not local_pt_path.is_file():
+                local_pt_path = Path(model_path_or_key)
 
             if local_pt_path.is_file():
                 logger.info(f"Op {run_id_for_log}: Trying local load for state_dict: {local_pt_path}")
@@ -2384,7 +2501,6 @@ class ClassificationPipeline:
 
         if state_dict:
             try:
-                # Handle Skorch "module." prefix if present
                 is_skorch_module_prefixed = all(k.startswith("module.") for k in state_dict.keys())
                 if is_skorch_module_prefixed and hasattr(self.model_adapter, 'module_') and isinstance(
                         self.model_adapter.module_, nn.Module):

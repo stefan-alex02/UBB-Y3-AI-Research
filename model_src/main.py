@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "GCDf"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "ccsn"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "pvit"
@@ -60,7 +60,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 7  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
 
     # Image size for the model
     img_size = (224, 224)  # Common size for CNNs and ViTs
@@ -71,7 +71,7 @@ if __name__ == "__main__":
     # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
     force_flat = True
 
-    save_model = True  # Whether to save the model after training
+    save_model = False  # Whether to save the model after training
 
     data_augmentation_mode_override = None
     # data_augmentation_mode_override = AugmentationStrategy.DEFAULT_STANDARD

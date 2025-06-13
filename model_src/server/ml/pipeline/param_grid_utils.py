@@ -1,20 +1,18 @@
 import importlib
-
-import torch
 import itertools
 from typing import Dict, List, Any, Union, Type, Optional
-from skorch.callbacks import LRScheduler  # Important import
+
+import torch
+from skorch.callbacks import LRScheduler
 
 from model_src.server.ml.logger_utils import logger
 
-# Optimizer mapping (could be extended)
 OPTIMIZER_MAP: Dict[str, Type[torch.optim.Optimizer]] = {
     "adamw": torch.optim.AdamW,
     "adam": torch.optim.Adam,
     "sgd": torch.optim.SGD,
 }
 
-# Default LRScheduler name (must match the name in get_default_callbacks)
 DEFAULT_LR_SCHEDULER_NAME = 'default_lr_scheduler'
 
 
@@ -41,7 +39,7 @@ def _resolve_scheduler_policy_class(policy_name_or_class: Union[str, Type]) -> T
                 raise ValueError(
                     f"Could not import scheduler class '{policy_name_or_class}': {e}"
                 )
-        else: # Simple name, assume it's a torch.optim.lr_scheduler
+        else:
             try:
                 return getattr(torch.optim.lr_scheduler, policy_name_or_class)
             except AttributeError:
@@ -59,7 +57,7 @@ def _resolve_scheduler_policy_class(policy_name_or_class: Union[str, Type]) -> T
 
 def parse_fixed_hyperparameters(
         fixed_params: Dict[str, Any],
-        default_max_epochs_for_cosine: Optional[int] = None  # For CosineAnnealingLR T_max
+        default_max_epochs_for_cosine: Optional[int] = None
 ) -> Dict[str, Any]:
     """
     Parses a dictionary of fixed hyperparameters:
@@ -94,22 +92,17 @@ def parse_fixed_hyperparameters(
     if policy_key in processed_params:
         policy_name_or_class_from_params = processed_params.pop(policy_key)
 
-        # --- MODIFICATION START ---
-        # Resolve the policy to an actual class type if it's a string
         try:
             actual_scheduler_class = _resolve_scheduler_policy_class(policy_name_or_class_from_params)
         except ValueError as e:
             logger.error(f"Error resolving scheduler policy: {e}")
-            # Decide how to handle: raise error, or skip scheduler, or use a default
-            # For now, let's re-raise as it's a configuration issue.
             raise
-        # --- MODIFICATION END ---
 
         scheduler_constructor_kwargs: Dict[str, Any] = {}
         direct_lr_scheduler_args: Dict[str, Any] = {}
 
         param_keys_for_this_scheduler = [
-            k for k in list(processed_params.keys()) if k.startswith(scheduler_key_prefix)  # Iterate over copy
+            k for k in list(processed_params.keys()) if k.startswith(scheduler_key_prefix)
         ]
 
         for key in param_keys_for_this_scheduler:
@@ -119,7 +112,6 @@ def parse_fixed_hyperparameters(
             else:
                 scheduler_constructor_kwargs[param_name] = processed_params.pop(key)
 
-        # Special handling for CosineAnnealingLR T_max (if not specified)
         if actual_scheduler_class == torch.optim.lr_scheduler.CosineAnnealingLR and 'T_max' not in scheduler_constructor_kwargs:
             if default_max_epochs_for_cosine:
                 scheduler_constructor_kwargs['T_max'] = default_max_epochs_for_cosine
@@ -131,21 +123,16 @@ def parse_fixed_hyperparameters(
                     logger.warning("CosineAnnealingLR policy specified but T_max is not set and "
                                    "cannot be inferred from max_epochs. Scheduler might fail or use skorch default.")
 
-        # Remove 'monitor' if the scheduler class doesn't use it (e.g., CosineAnnealingWarmRestarts)
-        # Most schedulers that step per epoch don't use 'monitor'. ReduceLROnPlateau does.
         if actual_scheduler_class != torch.optim.lr_scheduler.ReduceLROnPlateau and 'monitor' in direct_lr_scheduler_args:
             logger.debug(
                 f"Scheduler {actual_scheduler_class.__name__} does not use 'monitor'. Removing it from LRScheduler args.")
             direct_lr_scheduler_args.pop('monitor')
 
-        # --- MODIFICATION START ---
-        # Instantiate LRScheduler with the actual_scheduler_class
         lr_scheduler_instance = LRScheduler(
-            policy=actual_scheduler_class,  # PASS THE CLASS DIRECTLY
+            policy=actual_scheduler_class,
             **direct_lr_scheduler_args,
             **scheduler_constructor_kwargs
         )
-        # --- MODIFICATION END ---
 
         processed_params[scheduler_key_prefix.strip('_')] = lr_scheduler_instance
         logger.debug(f"Created LRScheduler instance: policy={actual_scheduler_class.__name__}, "
@@ -183,14 +170,12 @@ def expand_hyperparameter_grid(input_grid: Dict[str, List[Any]]) -> Dict[str, Li
         generated_lr_schedulers = []
 
         for policy_name_or_class_item in scheduler_policies_from_grid:
-            # --- MODIFICATION START ---
             try:
                 actual_scheduler_class_for_grid = _resolve_scheduler_policy_class(policy_name_or_class_item)
             except ValueError as e:
                 logger.error(
                     f"Error resolving scheduler policy '{policy_name_or_class_item}' in grid: {e}. Skipping this policy.")
                 continue
-            # --- MODIFICATION END ---
 
             current_policy_params_to_combine = {}
             current_policy_params_to_combine.update(direct_lr_scheduler_params_grid)
@@ -199,10 +184,8 @@ def expand_hyperparameter_grid(input_grid: Dict[str, List[Any]]) -> Dict[str, Li
             param_names = list(current_policy_params_to_combine.keys())
             param_value_lists = [current_policy_params_to_combine[name] for name in param_names]
 
-            # Add a dummy list for policies if there are no other params to combine,
-            # so itertools.product still iterates once per policy.
-            if not param_value_lists:  # No other scheduler params in the grid for this policy
-                param_value_lists_for_product = [[]]  # Will yield one empty tuple
+            if not param_value_lists:
+                param_value_lists_for_product = [[]]
                 param_names_for_product = []
             else:
                 param_value_lists_for_product = param_value_lists
@@ -220,17 +203,14 @@ def expand_hyperparameter_grid(input_grid: Dict[str, List[Any]]) -> Dict[str, Li
                     else:
                         torch_scheduler_constructor_kwargs_grid[k_arg] = v_arg
 
-                # Remove 'monitor' if the scheduler class doesn't use it
                 if actual_scheduler_class_for_grid != torch.optim.lr_scheduler.ReduceLROnPlateau and 'monitor' in lr_scheduler_direct_args_grid:
                     lr_scheduler_direct_args_grid.pop('monitor')
 
-                # --- MODIFICATION START ---
                 generated_lr_schedulers.append(
-                    LRScheduler(policy=actual_scheduler_class_for_grid,  # PASS THE CLASS
+                    LRScheduler(policy=actual_scheduler_class_for_grid,
                                 **lr_scheduler_direct_args_grid,
                                 **torch_scheduler_constructor_kwargs_grid)
                 )
-                # --- MODIFICATION END ---
 
         if generated_lr_schedulers:
             processed_grid[scheduler_key_prefix.strip('_')] = generated_lr_schedulers
