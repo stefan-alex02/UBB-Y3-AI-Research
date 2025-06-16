@@ -1,6 +1,6 @@
 import traceback
 from pathlib import Path, PurePath
-from typing import List, Tuple, Union
+from typing import List
 
 import numpy as np
 
@@ -32,9 +32,8 @@ if __name__ == "__main__":
     # --- Load Artifact Repository ---
     repo_option = "local"  # "local", "minio", or "none"
 
-    # --- Base Prefix/Directory for this set of experiments ---
-    # This will be further structured by dataset/model/timestamp by the PipelineExecutor
-    experiment_base_prefix_for_repo = "experiments"  # For S3 prefix or local subfolder
+    # --- Base Prefix/Directory for experiments ---
+    experiment_base_prefix_for_repo = "experiments"
 
     # --- Set up results directory ---
     results_base_dir = script_dir / 'results'
@@ -50,7 +49,7 @@ if __name__ == "__main__":
 
 
     # Offline Augmentation:
-    offline_augmentation = False  # Whether to use pre-augmented data (if available)
+    offline_augmentation = True
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -60,46 +59,37 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 1  # Change this to select the sequence you want to run
+    chosen_sequence_idx = 4
 
     # Image size for the model
-    img_size = (224, 224)  # Common size for CNNs and ViTs
-    # img_size = (448, 448)  # Common size for CNNs and ViTs
+    img_size = (224, 224)
+    # img_size = (448, 448)
 
     # Flag for CV methods on FIXED datasets:
-    # Set to True to allow nested_grid_search and cv_model_evaluation on FIXED datasets
-    # by treating train+test as one pool (USE WITH CAUTION - not standard evaluation).
     force_flat = True
 
     save_model = False  # Whether to save the model after training
 
-    data_augmentation_mode_override = None
-    # data_augmentation_mode_override = AugmentationStrategy.DEFAULT_STANDARD
+    # data_augmentation_mode_override = None
+    data_augmentation_mode_override = AugmentationStrategy.NO_AUGMENTATION
 
     # Flag for overriding parameters:
-    enable_debug_params = False # Set to True to use the override params for any model type
+    enable_debug_params = False
 
     # Save run log file:
     save_run_log_file = True  # Whether to save the main log file
 
     # --- MODEL TO LOAD ---
-    # Path to the .pt file RELATIVE TO THE 'experiments/' prefix if using S3/MinIO,
-    # or full/relative path if local.
-    # The load_model method will prepend "experiments/" if needed for S3.
-    saved_model_dataset = "experiments\\GCD-flat" # Dataset the model was trained on
-    saved_model_type_folder = "pvit"      # Model type folder for that experiment
-    saved_model_experiment_run_id = "20250612_234618_seed42" # The RUN_ID of the experiment that saved the model
+    saved_model_dataset = "experiments\\GCD-flat"
+    saved_model_type_folder = "pvit"
+    saved_model_experiment_run_id = "20250612_234618_seed42"
     saved_model_relative_path = "single_train_234618\\pvit_sngl_ep32_val_lossp27_234618.pt" # Actual .pt filename
 
-    # Construct the path that load_model expects
-    # For S3/MinIO, load_model internally adds "experiments/" if not present.
-    # So, provide the path starting from after "experiments/".
+    # Construct the path
     model_path = str(
         PurePath(saved_model_dataset) / saved_model_type_folder / saved_model_experiment_run_id / saved_model_relative_path
     )
-    # Example: "Swimcat-extend/hyvit/20250604_022700_seed42/hyvit_epochEllipsis.pt"
 
-    # iterate over the images in the directory (first 10)
     images_to_predict_info: List[any] = [
         ImagePredictionTask(image_id='TG Mures_25-05-2025_square', image_format='jpg', prediction_id='p1'),
         ImagePredictionTask(image_id='Brasov_18-05-2025_square', image_format='png', prediction_id='p2'),
@@ -111,7 +101,7 @@ if __name__ == "__main__":
     ]
 
     # --- Check if the dataset path exists ---
-    dataset_path = script_dir / 'data' / DATASET_DICT[selected_dataset]  # Path to the dataset
+    dataset_path = script_dir / 'data' / DATASET_DICT[selected_dataset]
     if not Path(dataset_path).exists():
          logger.error(f"Dataset path not found: {dataset_path}")
          logger.error("Please create the dataset or modify the 'dataset_path' variable.")
@@ -125,9 +115,8 @@ if __name__ == "__main__":
     elif repo_option == "none":
         repo = None
 
-    # --- Define Hyperparameter Grid / Fixed Params based on Model Type ---
+    # --- Define Params based on Model Type ---
     if enable_debug_params:
-        # Override the chosen_param_grid with the override_params
         chosen_fixed_params = debug_fixed_params
         chosen_param_grid = debug_param_grid
 
@@ -145,11 +134,11 @@ if __name__ == "__main__":
 
     elif model_type == ModelType.CNN_FEAT:
         chosen_fixed_params = paper_cnn_standalone_fixed_params
-        chosen_param_grid = None  # No grid search for standalone CNN feature extractor
+        chosen_param_grid = None
 
     elif model_type == ModelType.STANDARD_FEAT:
         chosen_fixed_params = standard_cnn_fixed_params
-        chosen_param_grid = None  # No grid search for standard CNN feature extractor
+        chosen_param_grid = None
 
     elif model_type == ModelType.SCRATCH_VIT:
         chosen_fixed_params = fixed_params_vit_scratch
@@ -165,7 +154,7 @@ if __name__ == "__main__":
 
     elif model_type == ModelType.RESNET18_CLOUD:
         chosen_fixed_params = resnet18_cloud_fixed_params
-        chosen_param_grid = None  # No grid search for ResNet18 Cloud
+        chosen_param_grid = None
 
     elif model_type == ModelType.PRETRAINED_SWIN:
         chosen_fixed_params = pretrained_swin_fixed_params
@@ -180,9 +169,8 @@ if __name__ == "__main__":
         exit()
 
     if selected_dataset.lower() == 'ccsn':
-        # Target: 80% train, 10% val, 10% test
         effective_test_split_ratio_if_flat = 0.1
-        effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)  # approx 0.222
+        effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
         cv_folds = 10
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset.lower() in ['gcd', 'gcdf', 'mgcd', 'mgcdf']:
@@ -195,13 +183,13 @@ if __name__ == "__main__":
         augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
         # augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset.lower() == 'swimcat':
-        effective_test_split_ratio_if_flat = 0.2  # Your default
+        effective_test_split_ratio_if_flat = 0.2
         effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
         cv_folds = 5
         augmentation_strategy = AugmentationStrategy.PAPER_CCSN
     else:
-        effective_test_split_ratio_if_flat = 0.2  # Your default
-        effective_val_split_ratio = 0.1  # Your default (applied to train_val part)
+        effective_test_split_ratio_if_flat = 0.2
+        effective_val_split_ratio = 0.1
         cv_folds = 5
         augmentation_strategy = AugmentationStrategy.DEFAULT_STANDARD
 
@@ -209,11 +197,10 @@ if __name__ == "__main__":
     if data_augmentation_mode_override is not None:
         augmentation_strategy = data_augmentation_mode_override
 
-    # --- Define Method Sequence ---
     # Example 1: Single Train and Eval
     methods_seq_1 = [
         ('single_train', {
-            'params': chosen_fixed_params, # Fixed hyperparams
+            'params': chosen_fixed_params,
             'save_model': save_model,
             'val_split_ratio': effective_val_split_ratio,
             'results_detail_level': 2,
@@ -236,8 +223,7 @@ if __name__ == "__main__":
             'save_best_model': save_model,
             'results_detail_level': 2,
         }),
-        # The best model is refit and stored in pipeline.model_adapter after search
-        ('single_eval', {}), # Evaluate the refit best model
+        ('single_eval', {}),
     ]
 
     # Example 3: Nested Grid Search (Requires FLAT or FIXED with force_flat=True)
@@ -254,10 +240,10 @@ if __name__ == "__main__":
     # Example 4: Simple CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     methods_seq_4 = [
          ('cv_model_evaluation', {
-             'params': chosen_fixed_params, # Pass fixed hyperparams
+             'params': chosen_fixed_params,
              'val_split_ratio': effective_val_split_ratio,
              'cv': cv_folds,
-             'evaluate_on': 'full', # Explicitly state (or rely on default)
+             'evaluate_on': 'full',
              'results_detail_level': 2,
         })
     ]
@@ -273,9 +259,8 @@ if __name__ == "__main__":
         }),
          ('cv_model_evaluation', {
              'cv': 2,
-             'use_best_params_from_step': 0, # Special key indicates using best_params from previous step (index 0)
-             # Optionally provide specific params for cv_eval to override defaults if needed
-             # 'params': {'max_epochs': 15}, # e.g., override max_epochs just for CV eval
+             'use_best_params_from_step': 0,
+             # 'params': {'max_epochs': 15},
              'evaluate_on': 'test',
              'results_detail_level': 2,
         })
@@ -285,7 +270,7 @@ if __name__ == "__main__":
     methods_seq_6 = [
         ('load_model', {'model_path_or_key': model_path}),
         ('single_eval', {
-            'plot_level': 2  # Save AND show plots after single_eval
+            'plot_level': 2
         }),
     ]
 
@@ -297,12 +282,12 @@ if __name__ == "__main__":
         ('predict_images', {
             'username': 'eugen',
             'image_tasks_for_pipeline': images_to_predict_info,
-            'experiment_run_id_of_model': saved_model_experiment_run_id,  # Used for saving prediction outputs
+            'experiment_run_id_of_model': saved_model_experiment_run_id,
             'generate_lime_explanations': True,
             'lime_num_features_to_show_plot': 20,
-            'lime_num_samples_for_explainer': 200,  # Reduce for faster testing if needed
+            'lime_num_samples_for_explainer': 200,
             'results_detail_level': 3,
-            'plot_level': 2  # Generate and save LIME & probability plots
+            'plot_level': 2
         })
     ]
 
@@ -320,12 +305,12 @@ if __name__ == "__main__":
             save_main_log_file=save_run_log_file,
             experiment_base_key_prefix=experiment_base_prefix_for_repo,
             methods=chosen_sequence,
-            force_flat_for_fixed_cv=force_flat, # Pass the flag
+            force_flat_for_fixed_cv=force_flat,
             augmentation_strategy=augmentation_strategy,
             show_first_batch_augmentation_default=True,
             use_offline_augmented_data=offline_augmentation,
 
-            # Pipeline default parameters (can be overridden by methods)
+            # Pipeline default parameters
             img_size=img_size,
             batch_size=16,
             max_epochs=10,
@@ -333,7 +318,7 @@ if __name__ == "__main__":
             lr=0.001,
             optimizer__weight_decay=0.01,
             test_split_ratio_if_flat=effective_test_split_ratio_if_flat,
-            # module__dropout_rate=0.5 # If applicable to model
+            # module__dropout_rate=0.5
             results_detail_level=3,
             plot_level=2,
         )
@@ -345,7 +330,6 @@ if __name__ == "__main__":
             if isinstance(result_data, dict) and 'error' in result_data:
                  logger.error(f"Method {method_id}: FAILED - {result_data['error']}")
             elif isinstance(result_data, dict):
-                 # Try to extract relevant metrics for summary log
                  acc = result_data.get('accuracy', result_data.get('mean_test_accuracy', np.nan))
                  f1 = result_data.get('macro_avg',{}).get('f1', result_data.get('mean_test_f1_macro', np.nan))
                  best_s = result_data.get('best_score', result_data.get('best_tuning_score', np.nan))

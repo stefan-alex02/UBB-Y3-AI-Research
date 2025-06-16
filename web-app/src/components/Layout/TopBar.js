@@ -14,9 +14,9 @@ import {
     useTheme
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import Brightness4Icon from '@mui/icons-material/Brightness4'; // Dark mode
-import Brightness7Icon from '@mui/icons-material/Brightness7'; // Light mode
-import SettingsIcon from '@mui/icons-material/Settings'; // System mode (example)
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import SettingsIcon from '@mui/icons-material/Settings';
 import useAuth from '../../hooks/useAuth';
 import {useThemeMode} from '../../contexts/ThemeContext';
 import {useNavigate} from 'react-router-dom';
@@ -24,7 +24,6 @@ import {useNavigate} from 'react-router-dom';
 const TopBar = ({
                     onMobileMenuClick,
                     isMobile,
-                    // Props for AppBar styling based on permanent drawer state (only for non-mobile)
                     isPermanentDrawerOpen,
                     permanentDrawerWidth,
                     miniDrawerWidth
@@ -52,27 +51,26 @@ const TopBar = ({
                 marginLeft: `${appBarMarginLeft}px`,
                 transition: theme.transitions.create(['width', 'margin'], {
                     easing: theme.transitions.easing.sharp,
-                    duration: isPermanentDrawerOpen // Use current state for duration hint
+                    duration: isPermanentDrawerOpen
                         ? theme.transitions.duration.enteringScreen
                         : theme.transitions.duration.leavingScreen,
                 }),
             }}
         >
             <Toolbar>
-                {/* Hamburger icon ONLY for mobile to toggle the temporary mobile drawer */}
                 {isMobile && (
                     <IconButton
                         color="inherit"
                         aria-label="open drawer"
                         edge="start"
                         onClick={onMobileMenuClick}
-                        sx={{ mr: 2 }} // No display: {sm: 'none'} needed if parent check is isMobile
+                        sx={{ mr: 2 }}
                     >
                         <MenuIcon />
                     </IconButton>
                 )}
                 <Typography variant="h6" noWrap component="div" sx={{ flexGrow: 1 }}>
-                    Cloud Classifier
+                    CloudS-R
                 </Typography>
 
                 <Select

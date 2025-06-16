@@ -8,17 +8,17 @@ from .pretrained_swin import PretrainedSwin
 from .pretrained_vit import PretrainedViT
 from .resnet import ResNet18BasedCloud
 from .scratch_vit import ScratchViT
-from .standard_cnn_extractor import StandardCNNFeatureExtractor
 from .shufflenet import ShuffleNetCloud
+from .standard_cnn_extractor import StandardCNNFeatureExtractor
 
 model_mapping = {
     "cnn": SimpleCNN,
     "pvit": PretrainedViT,
     "svit": ScratchViT,
 
-    "hyvit": HybridViT,  # New entry for dedicated hybrid model
-    "cnn_feat": PaperCNNFeatureExtractor,  # If you want to train/test CNN extractor alone
-    "stfeat": StandardCNNFeatureExtractor,  # Standard CNN feature extractor for standalone training
+    "hyvit": HybridViT,
+    "cnn_feat": PaperCNNFeatureExtractor,
+    "stfeat": StandardCNNFeatureExtractor,
 
     "xcloud": XceptionBasedCloudNet,
     "mcloud": MobileNetBasedCloudNet,
@@ -28,7 +28,7 @@ model_mapping = {
 }
 
 
-class ModelType(str, Enum):  # Inheriting from str makes it directly usable as a string
+class ModelType(str, Enum):
     CNN = "cnn"
     PRETRAINED_VIT = "pvit"
     SCRATCH_VIT = "svit"
@@ -48,12 +48,12 @@ class ModelType(str, Enum):  # Inheriting from str makes it directly usable as a
         return model_mapping.get(self.value, None)
 
     @classmethod
-    def _missing_(cls, value):  # Optional: for case-insensitive matching or aliases
+    def _missing_(cls, value):
         if isinstance(value, str):
             for member in cls:
                 if member.value == value.lower():
                     return member
         return super()._missing_(value)
 
-    def __str__(self):  # Ensures that str(ModelType.CNN) is "cnn"
+    def __str__(self):
         return self.value

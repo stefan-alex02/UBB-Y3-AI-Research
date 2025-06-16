@@ -6,5 +6,5 @@ import lombok.Data;
 public class PythonExperimentRunResponseDTO {
     private String experimentRunId;
     private String message;
-    private String status; // e.g., "SUBMITTED_TO_PYTHON"
+    private String status;
 }

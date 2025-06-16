@@ -6,16 +6,19 @@ import {
     Button,
     CardMedia,
     Chip,
-    CircularProgress, Collapse,
-    Container, FormControl,
+    CircularProgress,
+    Collapse,
+    Container,
+    FormControl,
     Grid,
-    IconButton, InputLabel,
+    IconButton,
+    InputLabel,
     List,
     ListItemButton,
-    ListItemIcon,
-    ListItemText, MenuItem,
-    Paper, Select,
-    Skeleton, Slider, Stack,
+    MenuItem,
+    Paper,
+    Select,
+    Slider,
     Tab,
     Table,
     TableBody,
@@ -24,21 +27,23 @@ import {
     TableHead,
     TableRow,
     TableSortLabel,
-    Tabs, TextField, Tooltip,
-    Typography, useMediaQuery, useTheme
+    Tabs,
+    TextField,
+    Tooltip,
+    Typography,
+    useMediaQuery,
+    useTheme
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
 import AssessmentIcon from '@mui/icons-material/Assessment';
-import BrokenImageIcon from '@mui/icons-material/BrokenImage';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import BarChartIcon from '@mui/icons-material/BarChart'; // For Probability Plot
+import BarChartIcon from '@mui/icons-material/BarChart';
 import imageService from '../services/imageService';
 import predictionService from '../services/predictionService';
-import PlotViewer from '../components/ArtifactViewer/PlotViewer'; // For direct use with plots
+import PlotViewer from '../components/ArtifactViewer/PlotViewer';
 import NewPredictionModal from '../components/Modals/NewPredictionModal';
 import InsightsIcon from '@mui/icons-material/Insights';
-import {API_BASE_URL} from "../config";
 import {getComparator, stableSort} from "../utils/tableUtils";
 import {formatDateSafe} from "../utils/dateUtils";
 import useAuth from "../hooks/useAuth";
@@ -48,11 +53,9 @@ import RefreshIcon from "@mui/icons-material/Refresh";
 import {DATASET_NAMES, MODEL_TYPES} from "./experimentConfig";
 import ModelTrainingIcon from "@mui/icons-material/ModelTraining";
 import DatasetIcon from "@mui/icons-material/Dataset";
-import EventIcon from "@mui/icons-material/Event";
 import DeleteIcon from "@mui/icons-material/Delete";
-import ConfirmDialog from "../components/ConfirmDialog"; // Assuming modal is moved
+import ConfirmDialog from "../components/ConfirmDialog";
 
-// (getArtifactType helper function - ensure it's defined or imported from a utils file)
 const getArtifactType = (filename) => {
     if (!filename) return 'unknown';
     const extension = filename.split('.').pop()?.toLowerCase();
@@ -74,43 +77,40 @@ const ViewImagePredictionsPage = () => {
     const [mainImageError, setMainImageError] = useState(false);
 
     const [predictions, setPredictions] = useState([]);
-    const [selectedPrediction, setSelectedPrediction] = useState(null); // The DTO from the list
+    const [selectedPrediction, setSelectedPrediction] = useState(null);
 
-    const [selectedPredictionDetailsJson, setSelectedPredictionDetailsJson] = useState(null); // Content of prediction_details.json
+    const [selectedPredictionDetailsJson, setSelectedPredictionDetailsJson] = useState(null);
     const [probabilityPlotUrl, setProbabilityPlotUrl] = useState(null);
     const [limePlotUrl, setLimePlotUrl] = useState(null);
-    const [predictionArtifacts, setPredictionArtifacts] = useState([]); // List of ArtifactNode for plots
+    const [predictionArtifacts, setPredictionArtifacts] = useState([]);
 
-    const [activeContentTab, setActiveContentTab] = useState(0); // 0: Probabilities, 1: LIME
+    const [activeContentTab, setActiveContentTab] = useState(0);
 
     const [newPredictionModalOpen, setNewPredictionModalOpen] = useState(false);
     const [fullscreenModal, setFullscreenModal] = useState({ open: false, src: null, title: '', type: 'url' });
 
     const [predictionFilters, setPredictionFilters] = useState({
-        experimentNameContains: '', // Renamed from modelNameContains for clarity
-        predictedClassContains: '', // New
-        modelType: '',              // New
-        confidenceOver: 0,          // New (0 to 100)
+        experimentNameContains: '',
+        predictedClassContains: '',
+        modelType: '',
+        confidenceOver: 0,
     });
     const [showPredictionFilters, setShowPredictionFilters] = useState(false);
 
-    // State for general page loading and errors
-    const [isLoadingPageData, setIsLoadingPageData] = useState(true); // <<<< ENSURE THIS IS PRESENT AND CORRECTLY NAMED
+    const [isLoadingPageData, setIsLoadingPageData] = useState(true);
     const [isLoadingPredictionsList, setIsLoadingPredictionsList] = useState(false);
     const [isLoadingSelectedPredictionContent, setIsLoadingSelectedPredictionContent] = useState(false);
     const [pageError, setPageError] = useState(null);
 
     const theme = useTheme();
-    const isMobileOrSmallScreen = useMediaQuery(theme.breakpoints.down('md')); // Breakpoint for stacking
+    const isMobileOrSmallScreen = useMediaQuery(theme.breakpoints.down('md'));
 
-    // CSV Sorting state for probabilities table
     const [probTableOrder, setProbTableOrder] = useState('desc');
-    const [probTableOrderBy, setProbTableOrderBy] = useState('probability'); // Default sort by probability
+    const [probTableOrderBy, setProbTableOrderBy] = useState('probability');
 
-    const [limeTableOrder, setLimeTableOrder] = useState('desc'); // 'asc' or 'desc'
-    const [limeTableOrderBy, setLimeTableOrderBy] = useState('weight'); // 'segmentId' or 'weight'
+    const [limeTableOrder, setLimeTableOrder] = useState('desc');
+    const [limeTableOrderBy, setLimeTableOrderBy] = useState('weight');
 
-    // State for plots (example)
     const [isLoadingProbPlot, setIsLoadingProbPlot] = useState(false);
     const [isLoadingLimePlot, setIsLoadingLimePlot] = useState(false);
 
@@ -119,7 +119,6 @@ const ViewImagePredictionsPage = () => {
 
     const [deletePredictionConfirm, setDeletePredictionConfirm] = useState({ open: false, prediction: null });
 
-    // Fetch initial page data (image, list of predictions)
     const fetchPageInitialData = useCallback(async () => {
         if (!user || !routeImageId) return;
         setIsLoadingPageData(true); setIsLoadingMainImage(true); setMainImageError(false); setPageError(null);
@@ -146,39 +145,33 @@ const ViewImagePredictionsPage = () => {
 
     useEffect(() => { fetchPageInitialData(); }, [fetchPageInitialData]);
 
-    // Fetch detailed content (JSON, plots) for a selected prediction
-    const fetchSelectedPredictionData = useCallback(async (prediction) => { // Ensure this function is async
+    const fetchSelectedPredictionData = useCallback(async (prediction) => {
         if (!user || !prediction || !imageDetails) {
             setSelectedPredictionDetailsJson(null);
-            setProbabilityPlotUrl(p => { if(p) URL.revokeObjectURL(p); return null; }); // Revoke previous before setting null
-            setLimePlotUrl(l => { if(l) URL.revokeObjectURL(l); return null; });     // Revoke previous before setting null
-            setPredictionArtifacts([]); // Clear artifacts if no valid prediction/context
+            setProbabilityPlotUrl(p => { if(p) URL.revokeObjectURL(p); return null; });
+            setLimePlotUrl(l => { if(l) URL.revokeObjectURL(l); return null; });
+            setPredictionArtifacts([]);
             return;
         }
         setIsLoadingSelectedPredictionContent(true);
         setPageError(null);
-        setSelectedPredictionDetailsJson(null); // Reset before fetching
+        setSelectedPredictionDetailsJson(null);
         setProbabilityPlotUrl(p => { if(p) URL.revokeObjectURL(p); return null; });
         setLimePlotUrl(l => { if(l) URL.revokeObjectURL(l); return null; });
-        let fetchedPlotArtifacts = []; // To store plot artifacts from listing
+        let fetchedPlotArtifacts = [];
 
         try {
-            // 1. Fetch prediction_details.json
             const jsonContentStr = await predictionService.getPredictionArtifactContent(
                 String(prediction.id), "prediction_details.json"
             );
             const parsedJson = JSON.parse(jsonContentStr);
             setSelectedPredictionDetailsJson(parsedJson);
 
-            // 2. List artifacts in the "plots" subfolder
             fetchedPlotArtifacts = await predictionService.listPredictionArtifacts(
                 String(prediction.id), "plots"
             );
-            // Keep all listed plot artifacts (not just images) for potential future use,
-            // but filter for images when trying to display them.
-            setPredictionArtifacts(fetchedPlotArtifacts); // Store the list of ArtifactNode for plots
+            setPredictionArtifacts(fetchedPlotArtifacts);
 
-            // 3. Fetch Probability Plot Blob (if listed)
             const probabilityPlotNode = fetchedPlotArtifacts.find(a => a.name === 'probability_distribution.png' && getArtifactType(a.name) === 'image');
             if (probabilityPlotNode) {
                 setIsLoadingProbPlot(true);
@@ -197,7 +190,6 @@ const ViewImagePredictionsPage = () => {
                 setProbabilityPlotUrl(null);
             }
 
-            // 4. Fetch LIME Plot Blob (if listed and LIME data exists in JSON)
             if (parsedJson?.lime_explanation && !parsedJson.lime_explanation.error) {
                 const limePlotNode = fetchedPlotArtifacts.find(a => a.name === 'lime_explanation.png' && getArtifactType(a.name) === 'image');
                 if (limePlotNode) {
@@ -217,19 +209,19 @@ const ViewImagePredictionsPage = () => {
                     setLimePlotUrl(null);
                 }
             } else {
-                setLimePlotUrl(null); // No LIME data in JSON or LIME itself errored
+                setLimePlotUrl(null);
             }
 
         } catch (err) {
             setPageError(err.response?.data?.message || err.message || `Failed to load details for prediction made with model ${prediction.model_experiment_run_id}.`);
-            setSelectedPredictionDetailsJson({ error: "Could not load prediction details." }); // Set error in JSON details
+            setSelectedPredictionDetailsJson({ error: "Could not load prediction details." });
         } finally {
             setIsLoadingSelectedPredictionContent(false);
         }
-    }, [user, imageDetails]); // Dependencies of this useCallback
+    }, [user, imageDetails]);
 
     const handlePredictionSelect = (prediction) => {
-        if (selectedPrediction?.id === prediction?.id) return; // Avoid re-fetch if same is clicked
+        if (selectedPrediction?.id === prediction?.id) return;
         setSelectedPrediction(prediction);
         setActiveContentTab(0);
         if (prediction) {
@@ -241,7 +233,6 @@ const ViewImagePredictionsPage = () => {
         }
     };
 
-    // Cleanup object URLs
     useEffect(() => { const url = probabilityPlotUrl; return () => { if (url) URL.revokeObjectURL(url); }; }, [probabilityPlotUrl]);
     useEffect(() => { const url = limePlotUrl; return () => { if (url) URL.revokeObjectURL(url); }; }, [limePlotUrl]);
 
@@ -258,45 +249,40 @@ const ViewImagePredictionsPage = () => {
         setSelectedPredictionDetailsJson(null);
         setProbabilityPlotUrl(p => { if(p) URL.revokeObjectURL(p); return null; });
         setLimePlotUrl(l => { if(l) URL.revokeObjectURL(l); return null; });
-        fetchPageInitialData(true); // Pass flag if fetchPageInitialData uses it
+        fetchPageInitialData(true);
     };
 
     const handleNewPredictionClick = () => {
-        setSelectedPrediction(null); // Deselect current prediction
+        setSelectedPrediction(null);
         setSelectedPredictionDetailsJson(null);
-        setProbabilityPlotUrl(null); // Clear plots too
+        setProbabilityPlotUrl(null);
         setLimePlotUrl(null);
         setNewPredictionModalOpen(true);
     };
 
     const handlePredictionCreated = () => {
         setNewPredictionModalOpen(false);
-        setSelectedPrediction(null); // Deselect after new one is made
+        setSelectedPrediction(null);
         setSelectedPredictionDetailsJson(null);
         setProbabilityPlotUrl(null);
         setLimePlotUrl(null);
-        fetchPageInitialData(); // Refetch all page data
+        fetchPageInitialData();
     };
 
     const filteredPredictions = useMemo(() => {
         return predictions.filter(p => {
-            // Experiment Name Filter (checks modelExperimentName or modelExperimentRunId)
             const modelExperimentIdentifier = p.model_experiment_name || p.model_experiment_run_id || "";
             const nameMatch = !predictionFilters.experimentNameContains ||
                 modelExperimentIdentifier.toLowerCase().includes(predictionFilters.experimentNameContains.toLowerCase());
 
-            // Predicted Class Filter
             const classMatch = !predictionFilters.predictedClassContains ||
                 (p.predicted_class && p.predicted_class.toLowerCase().includes(predictionFilters.predictedClassContains.toLowerCase()));
 
-            // Model Type Filter (requires PredictionDTO to have model_type from the Experiment)
-            // You'll need to ensure your Java PredictionDTO includes model_type of the experiment.
             const typeMatch = !predictionFilters.modelType || p.model_type === predictionFilters.modelType;
 
             const datasetMatch = !predictionFilters.datasetName ||
                 (p.dataset_name && p.dataset_name === predictionFilters.datasetName);
 
-            // Confidence Filter
             const confidenceMatch = p.confidence * 100 >= predictionFilters.confidenceOver;
 
             return nameMatch && classMatch && typeMatch && datasetMatch && confidenceMatch;
@@ -308,7 +294,7 @@ const ViewImagePredictionsPage = () => {
         setPredictionFilters(prev => ({ ...prev, [name]: value }));
     };
 
-    const handleConfidenceFilterChange = (event, newValue) => { // For Slider
+    const handleConfidenceFilterChange = (event, newValue) => {
         setPredictionFilters(prev => ({ ...prev, confidenceOver: newValue }));
     };
 
@@ -322,8 +308,6 @@ const ViewImagePredictionsPage = () => {
         if (!selectedPredictionDetailsJson || !selectedPredictionDetailsJson.top_k_predictions_for_plot) {
             return [];
         }
-        // top_k_predictions_for_plot is [ [className, prob], ... ]
-        // Convert to object array for easier sorting with stableSort
         const data = selectedPredictionDetailsJson.top_k_predictions_for_plot.map(p => ({ className: p[0], probability: p[1] }));
         return stableSort(data, getComparator(probTableOrder, probTableOrderBy));
     }, [selectedPredictionDetailsJson, probTableOrder, probTableOrderBy]);
@@ -338,14 +322,11 @@ const ViewImagePredictionsPage = () => {
         if (!selectedPredictionDetailsJson?.lime_explanation?.feature_weights) {
             return [];
         }
-        // LIME feature_weights is [ [segmentId, weight], ... ]
-        // Convert to object array for easier sorting
         const data = selectedPredictionDetailsJson.lime_explanation.feature_weights.map(fw => ({
             segmentId: fw[0],
             weight: fw[1]
         }));
 
-        // Custom comparator for LIME weights as 'weight' is numeric
         const limeComparator = (order, orderBy) => {
             return order === 'desc'
                 ? (a, b) => (b[orderBy] < a[orderBy] ? -1 : (b[orderBy] > a[orderBy] ? 1 : 0))
@@ -366,8 +347,7 @@ const ViewImagePredictionsPage = () => {
             try {
                 await predictionService.deletePrediction(deletePredictionConfirm.prediction.id);
                 setDeletePredictionConfirm({ open: false, prediction: null });
-                // Refresh predictions list and clear selection
-                fetchPageInitialData(); // This will deselect
+                fetchPageInitialData();
                 setSelectedPrediction(null);
                 setSelectedPredictionDetailsJson(null);
                 setProbabilityPlotUrl(null);
@@ -379,8 +359,6 @@ const ViewImagePredictionsPage = () => {
         }
     };
 
-
-    // Guard clauses for initial loading
     if (isLoadingPageData && !imageDetails) return <Container sx={{mt:2, textAlign: 'center'}}><CircularProgress size={50} sx={{mt:5}}/><Typography>Loading image details...</Typography></Container>;
     if (pageError && !imageDetails) return <Container sx={{mt:2}}><Alert severity="error" onClose={() => setPageError(null)}>{pageError}</Alert></Container>;
     if (!imageDetails) return <Container sx={{mt:2}}><Alert severity="info">Image details not available or ID not found.</Alert></Container>;
@@ -392,9 +370,8 @@ const ViewImagePredictionsPage = () => {
             sx={{
                 mt: 2, mb: 4,
                 display: 'flex', flexDirection: 'column',
-                // Try to make the container itself take up available viewport height below AppBar
                 height: `calc(100vh - ${headerAndPaddingHeight}px)`,
-                overflow: 'hidden', // Prevent this container from scrolling
+                overflow: 'hidden',
             }}
         >
             <Button
@@ -403,8 +380,8 @@ const ViewImagePredictionsPage = () => {
                 sx={{
                     mb: 2,
                     flexShrink: 0,
-                    width: 'auto', // Prevent full width expansion
-                    alignSelf: 'flex-start' // Align to left in flex container
+                    width: 'auto',
+                    alignSelf: 'flex-start'
                 }}
             >
                 Back to Images
@@ -441,7 +418,7 @@ const ViewImagePredictionsPage = () => {
                     {/* Image Details Paper */}
                     {imageDetails && (
                         <Paper elevation={3} sx={{ p: 2, mb: 2, flexShrink: 0 }}>
-                            <Typography variant={isDesktopLayout ? "h6" : "h5"} gutterBottom> {/* Smaller title on desktop left col */}
+                            <Typography variant={isDesktopLayout ? "h6" : "h5"} gutterBottom>
                                 Image: {imageDetails.id}.{imageDetails.format}
                             </Typography>
                             <Box sx={{ textAlign: 'center', mb: 1, position: 'relative' }}>
@@ -450,10 +427,10 @@ const ViewImagePredictionsPage = () => {
                                     image={mainImageDisplayUrl}
                                     alt={`Image ${imageDetails.id}`}
                                     sx={{
-                                        maxHeight: isDesktopLayout ? 260 : 280, // Slightly larger on desktop left
+                                        maxHeight: isDesktopLayout ? 260 : 280,
                                         objectFit: 'contain',
                                         borderRadius: 1,
-                                        bgcolor: 'action.hover' // Placeholder bg
+                                        bgcolor: 'action.hover'
                                     }}
                                 />
                                 <IconButton onClick={() => mainImageBlob && openFullscreen(mainImageBlob, `Image ${imageDetails.id}`, 'blob')} sx={{position:'absolute', top: 8, right: 8, bgcolor: 'rgba(0,0,0,0.3)', '&:hover':{bgcolor:'rgba(0,0,0,0.5)'}}} size="small" disabled={!mainImageBlob || mainImageError}>
@@ -566,7 +543,7 @@ const ViewImagePredictionsPage = () => {
                             </Box>
                         </Collapse>
                         {/* Predictions List */}
-                        <Box sx={{ flexGrow: 1, overflowY: 'auto', minHeight: 150 /* Ensure some min height */ }}>
+                        <Box sx={{ flexGrow: 1, overflowY: 'auto', minHeight: 150 }}>
                             {isLoadingPredictionsList && predictions.length === 0 ? <CircularProgress sx={{m:2}} /> : (
                                 <List dense sx={{py:0}}>
                                     {filteredPredictions.length === 0 && <Typography sx={{p:2, textAlign:'center'}} variant="body2">No predictions match filters or none exist.</Typography>}
@@ -575,11 +552,11 @@ const ViewImagePredictionsPage = () => {
                                             key={pred.id}
                                             selected={selectedPrediction?.id === pred.id}
                                             onClick={() => handlePredictionSelect(pred)}
-                                            sx={{ py: 0.75, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }} // Stack content vertically
+                                            sx={{ py: 0.75, display: 'flex', flexDirection: 'column', alignItems: 'flex-start' }}
                                         >
                                             <Box sx={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
                                                 <Typography
-                                                    variant="subtitle2" // Slightly smaller
+                                                    variant="subtitle2"
                                                     component="div"
                                                     sx={{
                                                         fontWeight: selectedPrediction?.id === pred.id ? 'bold' : 500,
@@ -592,10 +569,10 @@ const ViewImagePredictionsPage = () => {
                                                     {pred.predicted_class || "N/A"} ({pred.confidence !== null && pred.confidence !== undefined ? (pred.confidence * 100).toFixed(1) : 'N/A'}%)
                                                 </Typography>
                                                 <Typography variant="caption" color="text.secondary" sx={{ml:1, whiteSpace:'nowrap'}}>
-                                                    {formatDateSafe(pred.prediction_timestamp, 'MMM d, HH:mm')} {/* Shorter date format */}
+                                                    {formatDateSafe(pred.prediction_timestamp, 'MMM d, HH:mm')}
                                                 </Typography>
                                             </Box>
-                                            <Box component="div" sx={{ fontSize: '0.7rem', color: 'text.secondary', mt: 0.25, width: '100%', pl: '28px' /* Indent below icon */ }}>
+                                            <Box component="div" sx={{ fontSize: '0.7rem', color: 'text.secondary', mt: 0.25, width: '100%', pl: '28px' }}>
                                                 <Tooltip title={`Experiment: ${pred.model_experiment_name || 'Unknown'}`}>
                                                     <Typography variant="caption" component="span" sx={{ display: 'inline-flex', alignItems: 'center', mr: 1, maxWidth: '40%', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap'}}>
                                                         <InsightsIcon fontSize="inherit" sx={{ mr: 0.5, opacity: 0.7 }} />
@@ -625,13 +602,12 @@ const ViewImagePredictionsPage = () => {
                 <Grid
                     item
                     xs={12}
-                    md={7}    // Changed from md={8} to md={7}
-                    lg={8}    // Changed from lg={9} to lg={8}
+                    md={7}
+                    lg={8}
                     sx={{
                         height: isDesktopLayout ? '100%' : 'auto',
                         overflowY: isDesktopLayout ? 'auto' : 'visible',
                         pl: isDesktopLayout ? 1 : 0,
-                        // Update width constraint to match new grid sizes
                         maxWidth: isDesktopLayout ? { md: '58.333%', lg: '66.667%' } : '100%',
                         overflow: 'hidden',
                     }}
@@ -676,7 +652,7 @@ const ViewImagePredictionsPage = () => {
                             <Box role="tabpanel" hidden={activeContentTab !== 0} sx={{pt:2, flexGrow:1, overflowY:'auto', display: activeContentTab === 0 ? 'block' : 'none'}}>
                                 {activeContentTab === 0 && (
                                     <Grid container spacing={2}>
-                                        <Grid item xs={12} lg={5}> {/* Probabilities Table */}
+                                        <Grid item xs={12} lg={5}>
                                             <Typography variant="subtitle1" gutterBottom>Top Class Probabilities</Typography>
                                             <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 350 }}>
                                                 <Table stickyHeader size="small">
@@ -695,7 +671,7 @@ const ViewImagePredictionsPage = () => {
                                                 </Table>
                                             </TableContainer>
                                         </Grid>
-                                        <Grid item xs={12} md={7} sx={{ position: 'relative', minHeight: 300 /* Ensure some height */ }}>
+                                        <Grid item xs={12} md={7} sx={{ position: 'relative', minHeight: 300  }}>
                                             <Typography variant="subtitle1" gutterBottom>Probability Distribution Plot</Typography>
                                             {isLoadingProbPlot ? <CircularProgress/> : probabilityPlotUrl ? (
                                                 <PlotViewer
@@ -713,7 +689,7 @@ const ViewImagePredictionsPage = () => {
                             <Box role="tabpanel" hidden={activeContentTab !== 1} sx={{pt:2, flexGrow:1, overflowY:'auto', display: activeContentTab === 1 ? 'block' : 'none'}}>
                                 {activeContentTab === 1 && selectedPredictionDetailsJson?.lime_explanation && !selectedPredictionDetailsJson.lime_explanation.error && (
                                     <Grid container spacing={2}>
-                                        <Grid item xs={12} md={5}> {/* LIME Weights/Features Table */}
+                                        <Grid item xs={12} md={5}>
                                             <Typography variant="subtitle1" gutterBottom>LIME Feature Weights for "{selectedPredictionDetailsJson.lime_explanation.explained_class_name}"</Typography>
                                             <TableContainer component={Paper} variant="outlined" sx={{ maxHeight: 350, flexGrow: 1, overflow: 'auto', width: 'fit-content', maxWidth: '100%' }}>
                                                 <Table stickyHeader size="small">
@@ -764,7 +740,7 @@ const ViewImagePredictionsPage = () => {
                                                 </Typography>
                                             )}
                                         </Grid>
-                                        <Grid item xs={12} md={7}> {/* LIME Explanation Plot */}
+                                        <Grid item xs={12} md={7}>
                                             <Typography variant="subtitle1" gutterBottom>LIME Explanation Plot</Typography>
                                             {isLoadingLimePlot ? (
                                                 <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: 200 }}>
@@ -772,11 +748,9 @@ const ViewImagePredictionsPage = () => {
                                                 </Box>
                                             ) : limePlotUrl ? (
                                                 <PlotViewer
-                                                    artifactUrl={limePlotUrl} // Use the state variable holding the object URL
+                                                    artifactUrl={limePlotUrl}
                                                     altText="LIME Explanation Plot"
-                                                    // Pass the object URL directly to onZoom if it's already an object URL
-                                                    // or pass the original blob if ImageFullscreenModal can handle blob directly
-                                                    onZoom={() => openFullscreen(limePlotUrl, 'LIME Explanation', 'url')} // Assuming limePlotUrl is a displayable URL (like blob:)
+                                                    onZoom={() => openFullscreen(limePlotUrl, 'LIME Explanation', 'url')}
                                                 />
                                             ) : (
                                                 <Alert severity="info" variant="outlined" icon={false} sx={{textAlign:'center', mt:2}}>
@@ -791,7 +765,7 @@ const ViewImagePredictionsPage = () => {
                                         LIME explanation could not be generated: {selectedPredictionDetailsJson.lime_explanation.error}
                                     </Alert>
                                 )}
-                                {activeContentTab === 1 && !selectedPredictionDetailsJson?.lime_explanation && !isLoadingSelectedPredictionContent && ( // Handle case where lime_explanation object itself is missing
+                                {activeContentTab === 1 && !selectedPredictionDetailsJson?.lime_explanation && !isLoadingSelectedPredictionContent && (
                                     <Alert severity="info" sx={{mt:2}}>LIME explanation data not available.</Alert>
                                 )}
                             </Box>

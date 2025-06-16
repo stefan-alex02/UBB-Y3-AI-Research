@@ -1,13 +1,5 @@
 package ro.ubb.ai.javaserver.service;
 
-import ro.ubb.ai.javaserver.dto.user.RegisterRequest;
-import ro.ubb.ai.javaserver.dto.user.UserDTO;
-import ro.ubb.ai.javaserver.dto.user.UserUpdateRequest;
-import ro.ubb.ai.javaserver.entity.User;
-import ro.ubb.ai.javaserver.enums.Role;
-import ro.ubb.ai.javaserver.exception.ResourceNotFoundException;
-import ro.ubb.ai.javaserver.repository.UserRepository;
-import ro.ubb.ai.javaserver.util.MeteorologistPasscodeValidator; // Assuming you create this
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,6 +7,14 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import ro.ubb.ai.javaserver.dto.user.RegisterRequest;
+import ro.ubb.ai.javaserver.dto.user.UserDTO;
+import ro.ubb.ai.javaserver.dto.user.UserUpdateRequest;
+import ro.ubb.ai.javaserver.entity.User;
+import ro.ubb.ai.javaserver.enums.Role;
+import ro.ubb.ai.javaserver.exception.ResourceNotFoundException;
+import ro.ubb.ai.javaserver.repository.UserRepository;
+import ro.ubb.ai.javaserver.util.MeteorologistPasscodeValidator;
 
 @Service
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private final MeteorologistPasscodeValidator passcodeValidator; // Inject this
+    private final MeteorologistPasscodeValidator passcodeValidator;
 
     @Override
     @Transactional
@@ -65,10 +65,8 @@ public class UserServiceImpl implements UserService {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User", "id", userId));
 
-        // Basic authorization check (user can only update themselves, or admin can update anyone)
         String currentUsername = SecurityContextHolder.getContext().getAuthentication().getName();
         if (!user.getUsername().equals(currentUsername)) {
-            // Add admin role check if needed: && !SecurityContextHolder.getContext().getAuthentication().getAuthorities().contains("ROLE_ADMIN")
             throw new SecurityException("User not authorized to update this profile.");
         }
 

@@ -1,18 +1,17 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
-import authService from '../services/authService'; // We'll create this
+import React, {createContext, useCallback, useEffect, useState} from 'react';
+import authService from '../services/authService';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-    const [user, setUser] = useState(null); // Stores { id, username, role, token }
+    const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
 
     const initializeAuth = useCallback(async () => {
         const token = localStorage.getItem('authToken');
         if (token) {
             try {
-                // Optionally, validate token with backend here or just decode
-                const userData = await authService.getCurrentUser(token); // Assumes service handles token attachment
+                const userData = await authService.getCurrentUser(token);
                 setUser({ ...userData, token });
             } catch (error) {
                 console.error("Token validation failed or user fetch failed", error);
@@ -31,19 +30,17 @@ export const AuthProvider = ({ children }) => {
         const data = await authService.login(username, password);
         localStorage.setItem('authToken', data.token);
         setUser({ id: data.id, name: data.name, username: data.username, role: data.role, token: data.token });
-        return data; // Return full response for potential redirects
+        return data;
     };
 
     const register = async (userData) => {
-        // Register service might not return a token immediately, or might log in
         await authService.register(userData);
-        // Optionally log in the user after registration or prompt them to log in
     };
 
     const logout = () => {
         localStorage.removeItem('authToken');
         setUser(null);
-        authService.logout(); // Clear axios auth header if set
+        authService.logout();
     };
 
     const value = { user, setUser, loading, login, register, logout };

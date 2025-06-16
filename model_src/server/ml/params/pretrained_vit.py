@@ -18,13 +18,13 @@ pretrained_vit_fixed_params = {
     'callbacks__default_early_stopping__patience': 15,
 
     # --- CutMix Parameters ---
-    'cutmix_alpha': 1.0,
-    'cutmix_probability': 0.9, # for CCSN
+    # 'cutmix_alpha': 1.0,
+    # 'cutmix_probability': 0.9, # for CCSN
     # 'cutmix_probability': 0.5, # for Swimcat
     # 'cutmix_probability': 0.5, # for GCD
 
     # --- Gradient Clipping ---
-    # 'gradient_clip_value': 5.0,  # If you want to use it
+    # 'gradient_clip_value': 5.0,
 
     # --- PretrainedViT Module Parameters ---
     'module__vit_model_variant': 'vit_b_16',
@@ -39,7 +39,7 @@ pretrained_vit_fixed_params = {
     'module__head_dropout_rate': 0.50,
 
     # --- Data Loader Parameters ---
-    'iterator_train__shuffle': True,
+    'iterator_train__shuffle': False,
 }
 
 
@@ -49,7 +49,7 @@ param_dist_pretrained_vit_single_dict = {
     'batch_size': [8, 16, 32],
     'max_epochs': [15, 25, 30, 40, 50],
 
-    # --- Optimizer (AdamW) Parameters ---
+    # --- Optimizer Parameters ---
     'optimizer__weight_decay': [0.0, 0.001, 0.005, 0.01, 0.05],
 
     # --- PretrainedViT Module Parameters (module__) ---
@@ -79,7 +79,7 @@ param_dist_pretrained_vit_single_dict = {
 }
 
 param_grid_pretrained_vit_conditional = [
-    # --- Scenario 1: 'encoder_tail' - Fine-tune last N encoder blocks ---
+    # --- Scenario 1: encoder_tail ---
     {
         'module__vit_model_variant': ['vit_b_16'],
         'module__pretrained': [True],
@@ -100,7 +100,7 @@ param_grid_pretrained_vit_conditional = [
         'max_epochs': [20, 30, 50],
     },
 
-    # --- Scenario 2: 'head_only' style via 'none' strategy + specific unfreezes ---
+    # --- Scenario 2: 'head_only' ---
     {
         'module__vit_model_variant': ['vit_b_16'],
         'module__pretrained': [True],
@@ -123,7 +123,7 @@ param_grid_pretrained_vit_conditional = [
 ]
 
 param_grid_pretrained_vit_focused = [
-    # Scenario 1: Minimal fine-tuning (Head + CLS/PosEmb/EncoderLN)
+    # Scenario 1
     {
         'module__vit_model_variant': ['vit_b_16'],
         'module__pretrained': [True],
@@ -140,7 +140,7 @@ param_grid_pretrained_vit_focused = [
         'batch_size': [32],
         'max_epochs': [50],
     },
-    # Scenario 2: Fine-tune last few encoder blocks
+    # Scenario 2
     {
         'module__vit_model_variant': ['vit_b_16'],
         'module__pretrained': [True],

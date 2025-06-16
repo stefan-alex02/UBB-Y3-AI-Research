@@ -1,4 +1,3 @@
-// src/components/Modals/NewPredictionModal.js
 import React, {useCallback, useEffect, useState} from 'react';
 import {
     Alert,
@@ -16,7 +15,6 @@ import {
     FormGroup,
     Grid,
     InputLabel,
-    List,
     ListItemButton,
     ListItemIcon,
     ListItemText,
@@ -27,7 +25,7 @@ import {
     TextField,
     Typography
 } from '@mui/material';
-import experimentService from '../../services/experimentService'; // To fetch available models
+import experimentService from '../../services/experimentService';
 import predictionService from '../../services/predictionService';
 import * as PropTypes from "prop-types";
 import {format as formatDateFns} from "date-fns";
@@ -43,14 +41,11 @@ const formatDateSafe = (timestampSeconds) => {
         return 'N/A';
     }
     try {
-        const date = new Date(Number(timestampSeconds) * 1000); // Convert seconds to ms
-        if (isNaN(date.getTime())) { // Check if date is valid
+        const date = new Date(Number(timestampSeconds) * 1000);
+        if (isNaN(date.getTime())) {
             return 'Invalid Date';
         }
-        // Use date-fns format for consistency and better formatting options
-        return formatDateFns(date, 'PPpp'); // Example: 'Jul 2, 2021, 5:07:59 PM'
-        // Or a simpler custom format:
-        // return date.toLocaleString([], { year: 'numeric', month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        return formatDateFns(date, 'PPpp');
     } catch (e) {
         console.error("Error formatting date:", timestampSeconds, e);
         return 'Date Error';
@@ -78,7 +73,6 @@ const ModelSelectItem = ({ experiment, selected, onClick }) => (
             }
             secondary={
                 <Box>
-                    {/* First row: Model, Dataset, User side by side */}
                     <Box sx={{ display: 'flex', flexDirection: 'row', mb: 0.5, flexWrap: 'wrap', gap: 1 }}>
                         <Typography component="span" variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center'}}>
                             <ModelTrainingIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> Model: {experiment.model_type || 'N/A'}
@@ -88,12 +82,10 @@ const ModelSelectItem = ({ experiment, selected, onClick }) => (
                         </Typography>
                     </Box>
 
-                    {/* Second row: Completed date */}
                     <Typography component="div" variant="caption" color="text.secondary" sx={{display: 'flex', alignItems: 'center', mb: 0.25}}>
                         <EventIcon fontSize="inherit" sx={{mr:0.5, opacity:0.7}}/> {formatDateSafe(experiment.end_time)}
                     </Typography>
 
-                    {/* Third row: ID */}
                     <Box sx={{ display: 'flex', flexDirection: 'row', mb: 0.5, flexWrap: 'wrap', gap: 1 }}>
                         <Typography component="div" variant="caption" color="text.secondary" sx={{fontFamily: 'monospace', fontSize:'0.7rem'}}>
                             ID: {experiment.experiment_run_id ? experiment.experiment_run_id.slice(0, 12) : 'N/A'}...
@@ -109,13 +101,13 @@ const ModelSelectItem = ({ experiment, selected, onClick }) => (
 );
 
 ModelSelectItem.propTypes = {
-    experiment: PropTypes.shape({ // More specific PropTypes
+    experiment: PropTypes.shape({
         name: PropTypes.string,
         experiment_run_id: PropTypes.string.isRequired,
         model_type: PropTypes.string,
         dataset_name: PropTypes.string,
         user_name: PropTypes.string,
-        end_time: PropTypes.number, // Assuming it's a number (timestamp)
+        end_time: PropTypes.number,
     }).isRequired,
     selected: PropTypes.bool,
     onClick: PropTypes.func
@@ -126,7 +118,7 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
     const [selectedModelExperimentId, setSelectedModelExperimentId] = useState('');
 
     const [modelFilters, setModelFilters] = useState({
-        nameContains: '', // New filter
+        nameContains: '',
         modelType: '',
         datasetName: ''
     });
@@ -143,7 +135,7 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
     });
 
     const fetchAvailableModels = useCallback(async () => {
-        if (!open) return; // Ensure we only fetch if the modal is intended to be open
+        if (!open) return;
 
         setLoadingModels(true);
         setError('');
@@ -162,8 +154,6 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
             setAvailableModels(fetchedModels);
             setModelPagination(prev => ({ ...prev, totalPages: data.total_pages }));
 
-            // If the currently selected model is no longer in the new list, clear the selection.
-            // This check should happen *after* setting availableModels.
             if (selectedModelExperimentId && !fetchedModels.some(m => m.experiment_run_id === selectedModelExperimentId)) {
                 setSelectedModelExperimentId('');
             }
@@ -174,21 +164,16 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
         } finally {
             setLoadingModels(false);
         }
-        // `selectedModelExperimentId` is removed from here to break the loop.
-        // The logic to clear it is now inside the function, and this function will be
-        // re-called if filters/pagination change, at which point the check is still valid.
     }, [open, modelFilters, modelPagination.page, modelPagination.size]);
 
 
     useEffect(() => {
-        // This effect handles fetching when modal opens or filters/pagination change
         if (open) {
             fetchAvailableModels();
         }
-    }, [open, fetchAvailableModels]); // fetchAvailableModels is now more stable
+    }, [open, fetchAvailableModels]);
 
     useEffect(() => {
-        // This effect handles resetting state when the modal is closed
         if (!open) {
             setSelectedModelExperimentId('');
             setModelFilters({ nameContains: '', modelType: '', datasetName: '' });
@@ -197,7 +182,7 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
             setError('');
             setPredictConfig({ generateLime: false, limeNumFeatures: 5, limeNumSamples: 100, probPlotTopK: 5 });
         }
-    }, [open]); // Only depends on 'open'
+    }, [open]);
 
     const handleConfigChange = (event) => {
         const { name, value, checked, type } = event.target;
@@ -209,7 +194,7 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
     const handleModelFilterChange = (event) => {
         const { name, value } = event.target;
         setModelFilters(prev => ({ ...prev, [name]: value }));
-        setModelPagination(prev => ({ ...prev, page: 0 })); // Reset page on filter change
+        setModelPagination(prev => ({ ...prev, page: 0 }));
     };
     const handleModelPageChange = (event, value) => {
         setModelPagination(prev => ({ ...prev, page: value - 1 }));
@@ -223,11 +208,8 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
         setError('');
         setSubmitting(true);
         try {
-            // The PredictionCreateRequest on Java side expects imageId and modelExperimentRunId
-            // and the Python config params.
-            // The PythonPredictionRequestDTO built in Java service will construct the full details.
             await predictionService.createPrediction({
-                image_ids: imageIds, // imageId is passed as prop
+                image_ids: imageIds,
                 model_experiment_run_id: selectedModelExperimentId,
                 generate_lime: predictConfig.generateLime,
                 lime_num_features: predictConfig.limeNumFeatures,
@@ -235,7 +217,7 @@ const NewPredictionModal = ({ open, onClose, imageIds, onPredictionCreated }) =>
                 prob_plot_top_k: predictConfig.probPlotTopK,
             });
             if (onPredictionCreated) onPredictionCreated();
-            onClose(); // Close modal
+            onClose();
         } catch (err) {
             setError(err.response?.data?.detail || err.message || 'Failed to create prediction.');
         } finally {

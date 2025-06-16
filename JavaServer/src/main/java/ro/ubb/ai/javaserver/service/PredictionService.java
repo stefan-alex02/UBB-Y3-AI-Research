@@ -2,6 +2,7 @@ package ro.ubb.ai.javaserver.service;
 
 import ro.ubb.ai.javaserver.dto.prediction.PredictionCreateRequest;
 import ro.ubb.ai.javaserver.dto.prediction.PredictionDTO;
+
 import java.util.List;
 
 public interface PredictionService {

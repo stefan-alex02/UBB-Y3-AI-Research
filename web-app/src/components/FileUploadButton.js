@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Button, CircularProgress, Alert } from '@mui/material';
+import React, {useState} from 'react';
+import {Alert, Button, CircularProgress} from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import imageService from '../services/imageService';
 
@@ -15,7 +15,7 @@ const FileUploadButton = ({ onUploadSuccess }) => {
         setError('');
 
         try {
-            await imageService.uploadImage(file); // Assumes service gets username from context/auth
+            await imageService.uploadImage(file);
             if (onUploadSuccess) {
                 onUploadSuccess();
             }
@@ -23,7 +23,7 @@ const FileUploadButton = ({ onUploadSuccess }) => {
             setError(err.response?.data?.detail || err.message || 'Upload failed.');
         } finally {
             setUploading(false);
-            event.target.value = null; // Reset file input
+            event.target.value = null;
         }
     };
 
@@ -31,7 +31,7 @@ const FileUploadButton = ({ onUploadSuccess }) => {
         <>
             <Button
                 variant="contained"
-                component="label" // Makes the button act like a label for the hidden input
+                component="label"
                 startIcon={uploading ? <CircularProgress size={20} color="inherit" /> : <AddPhotoAlternateIcon />}
                 disabled={uploading}
             >

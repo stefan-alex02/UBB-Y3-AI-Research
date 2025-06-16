@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Paper, Box, CircularProgress, Typography, IconButton, Tooltip } from '@mui/material';
+import React, {useState} from 'react';
+import {Box, CircularProgress, IconButton, Paper, Tooltip, Typography} from '@mui/material';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import BrokenImageIcon from '@mui/icons-material/BrokenImage';
 
@@ -7,7 +7,6 @@ const PlotViewer = ({ artifactUrl, altText, title, onZoom }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(false);
 
-    // Reset loading/error state if artifactUrl changes
     React.useEffect(() => {
         setLoading(true);
         setError(false);
@@ -19,9 +18,9 @@ const PlotViewer = ({ artifactUrl, altText, title, onZoom }) => {
             sx={{
                 p: 0,
                 display: 'flex',
-                flexDirection: 'column', // Stack title and image vertically
-                alignItems: 'center',    // Center items horizontally
-                justifyContent: 'flex-start', // Align items to the start (top)
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'flex-start',
                 position: 'relative',
                 height: '100%',
                 backgroundColor: 'transparent',
@@ -30,14 +29,14 @@ const PlotViewer = ({ artifactUrl, altText, title, onZoom }) => {
             {title && (
                 <Typography
                     variant="subtitle2"
-                    gutterBottom // Adds some margin below
+                    gutterBottom
                     align="center"
                     sx={{
-                        p: 1, // Padding around the title
+                        p: 1,
                         width: '100%',
-                        flexShrink: 0, // Prevent title from shrinking
-                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`, // Optional separator
-                        mb: 1, // Margin below title/separator
+                        flexShrink: 0,
+                        borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+                        mb: 1,
                     }}
                 >
                     {title}
@@ -45,18 +44,13 @@ const PlotViewer = ({ artifactUrl, altText, title, onZoom }) => {
             )}
 
             <Box sx={{
-                position: 'relative', // For zoom button
+                position: 'relative',
                 width: '100%',
-                // flexGrow: 1, // Allow this box to take remaining space
-                // minHeight: 0, // Important for flex item to shrink if needed
-                // The image will now dictate the height of this box up to its container's limit
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                // Add padding if you want space around the image within this box
-                // p:1,
-                overflow: 'hidden', // Hide parts of image if it's too big for its allocated space before zoom
-                maxHeight: '100%', // Constrain to parent height
+                overflow: 'hidden',
+                maxHeight: '100%',
             }}>
                 {loading && !error && <CircularProgress sx={{my:2}}/>}
                 {!loading && error && (
@@ -72,7 +66,7 @@ const PlotViewer = ({ artifactUrl, altText, title, onZoom }) => {
                     alt={altText || 'Plot'}
                     sx={{
                         maxWidth: '100%',
-                        maxHeight: '100%', // Let image scale down to fit this box
+                        maxHeight: '100%',
                         objectFit: 'contain',
                         display: loading || error ? 'none' : 'block',
                     }}
@@ -93,7 +87,7 @@ const PlotViewer = ({ artifactUrl, altText, title, onZoom }) => {
                                 '&:hover': {
                                     backgroundColor: 'rgba(0,0,0,0.6)',
                                 },
-                                zIndex: 1, // Ensure it's above the image
+                                zIndex: 1,
                             }}
                         >
                             <ZoomInIcon fontSize="inherit" />

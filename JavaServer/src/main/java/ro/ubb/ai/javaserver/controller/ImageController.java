@@ -47,7 +47,6 @@ public class ImageController {
     public ResponseEntity<ImageDTO> getImage(@PathVariable Long imageId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String currentUsername = authentication.getName();
-        // Service layer will check if the current user owns the image
         return ResponseEntity.ok(imageService.getImageByIdForUser(imageId, currentUsername));
     }
 
@@ -55,28 +54,23 @@ public class ImageController {
     @PreAuthorize("isAuthenticated()")
     public ResponseEntity<byte[]> getImageContent(@PathVariable Long imageId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        String currentUsername = authentication.getName(); // Or get UserPrincipal for ID
+        String currentUsername = authentication.getName();
 
         try {
             byte[] imageBytes = imageService.getImageContent(imageId, currentUsername);
 
-            // Try to determine Content-Type from image format stored in DB
-            // This requires fetching Image metadata if not already done by imageService.getImageContent
-            // For simplicity, let's assume imageService could return a wrapper or we fetch it here.
-            ImageDTO imageDetails = imageService.getImageByIdForUser(imageId, currentUsername); // Fetch metadata for format
+            ImageDTO imageDetails = imageService.getImageByIdForUser(imageId, currentUsername);
 
             HttpHeaders headers = new HttpHeaders();
-            String contentType = "application/octet-stream"; // Default
+            String contentType = "application/octet-stream";
             if (imageDetails != null && imageDetails.getFormat() != null) {
                 String format = imageDetails.getFormat().toLowerCase();
                 if ("png".equals(format)) contentType = MediaType.IMAGE_PNG_VALUE;
                 else if ("jpg".equals(format) || "jpeg".equals(format)) contentType = MediaType.IMAGE_JPEG_VALUE;
                 else if ("gif".equals(format)) contentType = MediaType.IMAGE_GIF_VALUE;
-                // Add more as needed
             }
             headers.setContentType(MediaType.parseMediaType(contentType));
             headers.setContentLength(imageBytes.length);
-            // Optional: headers.setCacheControl("max-age=3600"); // Cache for 1 hour
 
             return new ResponseEntity<>(imageBytes, headers, HttpStatus.OK);
 

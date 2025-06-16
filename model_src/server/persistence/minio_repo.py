@@ -1,21 +1,19 @@
 import io
 import json
-import logging
 import os
-from datetime import datetime  # For JSON serializer
+from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Union, Callable, List  # Add List if not already there
+from typing import Optional, Dict, Union, Callable, List
 
 import boto3
-import numpy as np  # For JSON serializer
-import torch  # For saving/loading model state_dict
+import numpy as np
+import torch
 from botocore.exceptions import ClientError, NoCredentialsError, PartialCredentialsError
 from skorch.callbacks import Callback
 from skorch.dataset import ValidSplit
 from torch import nn
 
 from .artifact_repo import ArtifactRepository
-
 from ..ml.logger_utils import logger
 
 
@@ -27,7 +25,7 @@ class MinIORepository(ArtifactRepository):
         self.endpoint_url = endpoint_url or os.environ.get("MINIO_ENDPOINT_URL", "http://127.0.0.1:9000")
         self.access_key = access_key or os.environ.get("MINIO_ACCESS_KEY")
         self.secret_key = secret_key or os.environ.get("MINIO_SECRET_KEY")
-        self.region_name = region_name or os.environ.get("MINIO_REGION") # Can be None
+        self.region_name = region_name or os.environ.get("MINIO_REGION")
         self.secure = self.endpoint_url.startswith("https://")
 
         if not self.access_key or not self.secret_key:
@@ -41,9 +39,9 @@ class MinIORepository(ArtifactRepository):
                 aws_secret_access_key=self.secret_key,
                 region_name=self.region_name,
                 use_ssl=self.secure,
-                config=boto3.session.Config(s3={'addressing_style': 'path'}) # Often needed for MinIO
+                config=boto3.session.Config(s3={'addressing_style': 'path'})
             )
-            self.client.list_buckets() # Test connection
+            self.client.list_buckets()
             logger.info(f"Successfully connected to MinIO at {self.endpoint_url}, bucket '{self.bucket_name}' will be used.")
             self._ensure_bucket_exists(self.bucket_name)
         except (NoCredentialsError, PartialCredentialsError) as e: logger.error(f"MinIO credentials error: {e}"); raise
@@ -93,7 +91,7 @@ class MinIORepository(ArtifactRepository):
             return f"s3://{self.bucket_name}/{key}"
         except Exception as e: logger.error(f"Failed to save model state_dict to S3 (s3://{self.bucket_name}/{key}): {e}"); return None
 
-    def save_plot_figure(self, fig, key: str) -> Optional[str]: # fig from matplotlib
+    def save_plot_figure(self, fig, key: str) -> Optional[str]:
         try:
             img_buffer = io.BytesIO()
             fig.tight_layout(pad=1.5)
@@ -114,7 +112,7 @@ class MinIORepository(ArtifactRepository):
             logger.error(f"Failed to save text file to S3 (s3://{self.bucket_name}/{key}): {e}")
             return None
 
-    def download_file_to_memory(self, object_key: str) -> Optional[bytes]: # bucket_name is instance member
+    def download_file_to_memory(self, object_key: str) -> Optional[bytes]:
         """Downloads a file from MinIO into memory (bytes)."""
         try:
             response = self.client.get_object(Bucket=self.bucket_name, Key=object_key)
@@ -160,7 +158,7 @@ class MinIORepository(ArtifactRepository):
 
     def upload_file(self, local_file_path: Union[str, Path], key: str) -> Optional[str]:
         """Uploads a local file to MinIO."""
-        self._ensure_bucket_exists(self.bucket_name)  # Ensure target bucket exists
+        self._ensure_bucket_exists(self.bucket_name)
         try:
             self.client.upload_file(str(local_file_path), self.bucket_name, key)
             s3_identifier = f"s3://{self.bucket_name}/{key}"
@@ -199,7 +197,7 @@ class MinIORepository(ArtifactRepository):
             - 'objects': A list of full object keys (files).
             - 'subfolders': A list of common prefixes (simulated subfolders).
         """
-        if not prefix.endswith('/') and prefix != "":  # Add trailing slash if it's a folder prefix and not empty
+        if not prefix.endswith('/') and prefix != "":
             prefix_to_list = prefix + '/'
         else:
             prefix_to_list = prefix
@@ -219,7 +217,7 @@ class MinIORepository(ArtifactRepository):
                 if 'Contents' in page:
                     for obj in page['Contents']:
                         objects.append(obj['Key'])
-                if 'CommonPrefixes' in page:  # These are your "subfolders"
+                if 'CommonPrefixes' in page:
                     for common_prefix in page['CommonPrefixes']:
                         subfolders.append(common_prefix['Prefix'])
 
@@ -233,7 +231,7 @@ class MinIORepository(ArtifactRepository):
         except Exception as e:
             logger.error(f"Failed to list objects in prefix '{prefix_to_list}' of bucket '{self.bucket_name}': {e}")
 
-        return {'objects': [], 'subfolders': []}  # Return empty on error
+        return {'objects': [], 'subfolders': []}
 
     def delete_object(self, key: str) -> bool:
         try:
@@ -251,8 +249,6 @@ class MinIORepository(ArtifactRepository):
         if not prefix:
             logger.error("Cannot delete objects: prefix is empty.")
             return False
-        # Ensure prefix ends with / if it's meant to be a folder, but MinIO list_objects_v2 handles it.
-        # However, for deletion, you want to match keys starting with this prefix.
         try:
             objects_to_delete = []
             for obj_data in self.client.list_objects_v2(Bucket=self.bucket_name, Prefix=prefix).get('Contents', []):
@@ -260,26 +256,24 @@ class MinIORepository(ArtifactRepository):
 
             if not objects_to_delete:
                 logger.info(f"No objects found with prefix s3://{self.bucket_name}/{prefix} to delete.")
-                return True  # Nothing to delete is a success in this context
+                return True
 
             logger.info(
                 f"Attempting to delete {len(objects_to_delete)} objects with prefix s3://{self.bucket_name}/{prefix}")
-            # MinIO delete_objects can take up to 1000 keys at a time
             for i in range(0, len(objects_to_delete), 1000):
                 chunk = objects_to_delete[i:i + 1000]
                 response = self.client.delete_objects(
                     Bucket=self.bucket_name,
-                    Delete={'Objects': chunk, 'Quiet': False}  # Quiet=False returns info on deleted/errored items
+                    Delete={'Objects': chunk, 'Quiet': False}
                 )
                 if response.get('Errors'):
                     for err in response['Errors']:
                         logger.error(f"Error deleting object {err['Key']}: {err['Code']} - {err['Message']}")
-                    # Decide if one error means overall failure. For now, log and continue.
                 deleted_count = len(response.get('Deleted', []))
                 logger.info(f"Successfully deleted {deleted_count} objects in chunk.")
 
             logger.info(f"Finished deletion attempt for prefix s3://{self.bucket_name}/{prefix}")
-            return True  # Returns True if the operation was attempted. Check logs for individual errors.
+            return True
         except ClientError as e:
             logger.error(f"Failed to list or delete objects with prefix s3://{self.bucket_name}/{prefix}: {e}")
             return False

@@ -1,30 +1,30 @@
 resnet18_cloud_fixed_params = {
     # --- Skorch/Training Loop Parameters ---
-    'max_epochs': 100, # From script's num_epochs_train
-    'lr': 0.001,       # From script's optimizer_ft
-    'batch_size': 16,  # From script's config_batch_size
+    'max_epochs': 100,
+    'lr': 0.001,
+    'batch_size': 16,
 
     # --- Optimizer Configuration ---
-    'optimizer': 'SGD', # From script's optimizer_ft = optim.SGD(...)
+    'optimizer': 'SGD',
     'optimizer__momentum': 0.9,
-    'optimizer__weight_decay': 5e-4, # L2 penalty
+    'optimizer__weight_decay': 5e-4,
 
     # --- LR Scheduler ---
-    'callbacks__default_lr_scheduler__policy': 'MultiStepLR', # From script
-    'callbacks__default_lr_scheduler__milestones': [30, 50, 70], # From script
-    'callbacks__default_lr_scheduler__gamma': 0.1,             # From script
+    'callbacks__default_lr_scheduler__policy': 'MultiStepLR',
+    'callbacks__default_lr_scheduler__milestones': [30, 50, 70],
+    'callbacks__default_lr_scheduler__gamma': 0.1,
 
-    # --- Early Stopping (Script doesn't use explicit early stopping based on patience, but saves best model) ---
+    # --- Early Stopping ---
     'callbacks__default_early_stopping__patience': 15,
-    'callbacks__default_early_stopping__monitor': 'valid_acc', # Script saves based on best val_acc
+    'callbacks__default_early_stopping__monitor': 'valid_acc',
     'callbacks__default_early_stopping__lower_is_better': False,
 
     # --- CutMix Parameters ---
-    'cutmix_alpha': 1.0,  # Value for beta distribution (alpha=beta=1.0 is common)
-    'cutmix_probability': 0.5,  # Apply CutMix to 50% of training batches
+    'cutmix_alpha': 1.0,
+    'cutmix_probability': 0.5,
 
-    # --- Gradient Clipping (already discussed) ---
-    'gradient_clip_value': 5.0,  # If you want to use it
+    # --- Gradient Clipping ---
+    'gradient_clip_value': 5.0,
 
 
     # --- Module Parameters for ResNet18BasedCloud ---

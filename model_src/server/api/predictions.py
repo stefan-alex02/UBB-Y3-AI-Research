@@ -11,25 +11,23 @@ from ..core.config import APP_LOGGER_NAME
 from ..persistence import ArtifactRepository
 from ..services import prediction_service as service
 
-logger = logging.getLogger(APP_LOGGER_NAME) # Use the same name
+logger = logging.getLogger(APP_LOGGER_NAME)
 
 router = APIRouter()
 
 
-@router.post("/run", response_model=PredictionRunResponse) # Assuming PredictionRunResponse is your Pydantic model
+@router.post("/run", response_model=PredictionRunResponse)
 async def run_prediction_endpoint(
-    config: RunPredictionRequest, # This is your Pydantic model for the request body
+    config: RunPredictionRequest,
     fast_api_request: FastAPIRequest
 ):
     try:
-        # Call the async wrapper in your service
         predictions_list = await service.run_prediction_async_wrapper(fast_api_request, config)
         return PredictionRunResponse(predictions=predictions_list, message="Predictions completed successfully.")
     except HTTPException as he:
-        raise he # Re-raise HTTPExceptions to let FastAPI handle them
+        raise he
     except Exception as e:
         logger.error(f"API Error running prediction for user {config.username}: {e}", exc_info=True)
-        # This will be caught by your global exception handler if not an HTTPException
         raise HTTPException(status_code=500, detail=f"Prediction submission failed: {str(e)}")
 
 
@@ -37,7 +35,7 @@ async def run_prediction_endpoint(
 async def list_prediction_artifacts_api(
         username: str, image_id: str, prediction_id: str,
         fast_api_request: FastAPIRequest,
-        path: Optional[str] = ""  # Query parameter for sub-path, e.g., "plots"
+        path: Optional[str] = ""
 ):
     artifact_repo = fast_api_request.app.state.artifact_repo
     if not artifact_repo:

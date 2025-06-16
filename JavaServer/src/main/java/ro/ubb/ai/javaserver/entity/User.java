@@ -1,10 +1,11 @@
 package ro.ubb.ai.javaserver.entity;
 
-import ro.ubb.ai.javaserver.enums.Role;
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+import ro.ubb.ai.javaserver.enums.Role;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -25,7 +26,7 @@ public class User {
     private String username;
 
     @Column(length = 255, nullable = false)
-    private String password; // Hashed password
+    private String password;
 
     @Column(length = 255)
     private String name;
@@ -40,7 +41,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Image> images;
 
-    @OneToMany(mappedBy = "user") // REMOVED: cascade = CascadeType.SET_NULL
+    @OneToMany(mappedBy = "user")
     private List<Experiment> experiments;
 
 

@@ -1,14 +1,14 @@
 package ro.ubb.ai.javaserver.internal_api;
 
-import ro.ubb.ai.javaserver.dto.experiment.ExperimentUpdateRequest;
-import ro.ubb.ai.javaserver.dto.experiment.ExperimentDTO;
-import ro.ubb.ai.javaserver.service.ExperimentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ro.ubb.ai.javaserver.dto.experiment.ExperimentDTO;
+import ro.ubb.ai.javaserver.dto.experiment.ExperimentUpdateRequest;
+import ro.ubb.ai.javaserver.service.ExperimentService;
 
 @RestController
 @RequestMapping("/api/internal/experiments")
@@ -18,13 +18,12 @@ public class InternalExperimentController {
 
     private final ExperimentService experimentService;
 
-    @Value("${python.api.internal-key}") // Key for Python -> Java internal calls
+    @Value("${python.api.internal-key}")
     private String expectedInternalApiKey;
 
     private static final String INTERNAL_API_KEY_HEADER = "X-Internal-API-Key";
 
 
-    // Python will call this endpoint
     @PutMapping("/{experimentRunId}/update")
     public ResponseEntity<ExperimentDTO> updateExperimentStatus(
             @PathVariable String experimentRunId,
@@ -50,8 +49,7 @@ public class InternalExperimentController {
             return ResponseEntity.ok(updatedExperiment);
         } catch (RuntimeException e) {
             log.error("Error updating experiment {} internally: {}", experimentRunId, e.getMessage());
-            // Depending on the exception, you might return different status codes
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build(); // Or BAD_REQUEST if data is bad
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 }

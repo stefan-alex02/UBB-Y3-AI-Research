@@ -3,22 +3,20 @@ from datetime import datetime, timezone
 from pathlib import Path, PurePath
 from typing import Optional, List
 
-import httpx  # For asynchronous HTTP calls from the main FastAPI thread (e.g., initial FAILED if dataset not found)
-import requests  # For synchronous HTTP calls from the background task
+import httpx
+import requests
 from fastapi import Request as FastAPIRequest, BackgroundTasks, HTTPException
 
-# Assuming these are your Pydantic models from app/api/utils.py
 from ..api.utils import RunExperimentRequest, ArtifactNode
 from ..core import task_queue
 from ..core.config import settings, APP_LOGGER_NAME
 from ..ml.config import AugmentationStrategy, DATASET_DICT
-# Assuming your ML pipeline imports
 from ..ml.pipeline import PipelineExecutor
 from ..ml.pipeline.executor import ExecutorRunFailedError
 from ..persistence import ArtifactRepository, LocalFileSystemRepository, MinIORepository
 
-fastapi_app_logger = logging.getLogger(APP_LOGGER_NAME) # Your FastAPI app logger
-pipeline_logger = logging.getLogger("ImgClassPipe") # Your pipeline's logger
+fastapi_app_logger = logging.getLogger(APP_LOGGER_NAME)
+pipeline_logger = logging.getLogger("ImgClassPipe")
 
 
 def update_experiment_in_java_sync(
@@ -32,15 +30,15 @@ def update_experiment_in_java_sync(
     Synchronously updates the experiment status (and optionally model_path/error) in the Java backend.
     To be called from the background ML task.
     """
-    url = f"{settings.JAVA_INTERNAL_API_URL}/experiments/{experiment_run_id}/update" # Changed endpoint to /update
-    payload = {"status": status.upper()} # Ensure status is uppercase for enum matching in Java
+    url = f"{settings.JAVA_INTERNAL_API_URL}/experiments/{experiment_run_id}/update"
+    payload = {"status": status.upper()}
 
     if model_relative_path:
         payload["model_relative_path"] = model_relative_path
     if error_message:
         payload["error_message"] = error_message
     if set_end_time:
-        payload["set_end_time"] = True # Java will set current time if this is true
+        payload["set_end_time"] = True
 
     headers = {"X-Internal-API-Key": settings.INTERNAL_API_KEY, "Content-Type": "application/json"}
     source_logger = pipeline_logger if status in ["RUNNING", "COMPLETED", "FAILED"] else fastapi_app_logger
@@ -53,7 +51,7 @@ def update_experiment_in_java_sync(
         source_logger.error(f"HTTP error updating Java status for {experiment_run_id} to {status}: {e.response.status_code} - {e.response.text}. Payload: {payload}")
     except requests.exceptions.RequestException as e:
         source_logger.error(f"RequestException updating Java status for {experiment_run_id} to {status}: {e}. Payload: {payload}")
-    except Exception as e: # Catch any other unexpected error during the update
+    except Exception as e:
         source_logger.error(f"Unexpected error updating Java status for {experiment_run_id} to {status}: {e}. Payload: {payload}", exc_info=True)
 
 
@@ -64,39 +62,31 @@ def _execute_pipeline_task(
 ):
     pipeline_logger.info(f"Background task started for experiment: {experiment_run_id}")
     final_model_path = None
-    error_message_for_java = "Experiment execution failed."  # Default error message
+    error_message_for_java = "Experiment execution failed."
 
     try:
         update_experiment_in_java_sync(experiment_run_id, status="RUNNING")
 
         executor = PipelineExecutor(**executor_params, artifact_repository=artifact_repo)
-        final_results = executor.run()  # This call can now raise ExecutorRunFailedError
+        final_results = executor.run()
 
         pipeline_logger.info(f"PipelineExecutor run completed for experiment: {experiment_run_id}.")
 
-        if final_results:  # Check if final_results is not None
+        if final_results:
             for method_op_id_key in reversed(list(final_results.keys())):
                 result_data = final_results.get(method_op_id_key)
                 if isinstance(result_data, dict):
-                    # 'saved_model_path' from _save_results is the full S3 key or local FS path
-                    # e.g., "experiments/DATASET/MODEL_TYPE/EXPERIMENT_RUN_ID/single_train_0_timestamp/model.pt"
                     full_artifact_path_or_key = result_data.get("saved_model_path")
 
                     if full_artifact_path_or_key:
-                        # current_executor_run_artifacts_prefix is "experiments/DATASET/MODEL_TYPE/EXPERIMENT_RUN_ID"
                         base_prefix_to_strip = executor.current_executor_run_artifacts_prefix
 
-                        # Ensure consistent slashes for comparison and stripping
                         normalized_full_path = PurePath(full_artifact_path_or_key).as_posix()
                         normalized_base_prefix = PurePath(base_prefix_to_strip).as_posix()
 
                         if normalized_full_path.startswith(normalized_base_prefix + "/"):
-                            # This gives "single_train_0_timestamp/model.pt"
                             final_model_path_for_db = normalized_full_path[len(normalized_base_prefix) + 1:]
                         else:
-                            # Fallback: if path structure is unexpected, just take the last two parts
-                            # (hoping it's method_folder/model.pt) or just the filename.
-                            # This fallback might need adjustment based on actual path structures.
                             path_parts = PurePath(normalized_full_path).parts
                             if len(path_parts) >= 2:
                                 final_model_path_for_db = str(PurePath(path_parts[-2]) / path_parts[-1])
@@ -107,7 +97,7 @@ def _execute_pipeline_task(
 
                         pipeline_logger.info(
                             f"Extracted model relative path for DB: {final_model_path_for_db} from full path: {full_artifact_path_or_key}")
-                        break  # Found a model path, assume it's the primary one
+                        break
 
         update_experiment_in_java_sync(
             experiment_run_id,
@@ -116,22 +106,21 @@ def _execute_pipeline_task(
             set_end_time=True
         )
 
-    except ExecutorRunFailedError as erf_err:  # Catch the specific failure from executor.run()
+    except ExecutorRunFailedError as erf_err:
         pipeline_logger.error(
             f"ExecutorRunFailedError for experiment {experiment_run_id} in method '{erf_err.failed_method_id}': {erf_err}",
-            exc_info=False  # erf_err already contains good info; True might be too verbose if original trace is long
+            exc_info=False
         )
         if erf_err.original_exception:
             pipeline_logger.error(f"Original exception type: {type(erf_err.original_exception).__name__}")
-        # You can access erf_err.results_so_far if needed
         error_message_for_java = f"Failed at method '{erf_err.failed_method_id}': {str(erf_err.original_exception) or erf_err.message}"
         update_experiment_in_java_sync(
             experiment_run_id,
             status="FAILED",
-            error_message=error_message_for_java[:1000],  # Truncate if error message is too long for DB
+            error_message=error_message_for_java[:1000],
             set_end_time=True
         )
-    except Exception as e:  # Catch other errors (e.g., PipelineExecutor.__init__ failure)
+    except Exception as e:
         pipeline_logger.critical(
             f"CRITICAL unexpected error during background task for experiment {experiment_run_id}: {e}",
             exc_info=True
@@ -149,7 +138,7 @@ def _execute_pipeline_task(
 
 async def start_experiment(
     request_fast_api: FastAPIRequest,
-    config: RunExperimentRequest,     # Pydantic model matching JSON from Java
+    config: RunExperimentRequest,
     background_tasks_fastapi: BackgroundTasks
 ):
     fastapi_app_logger.info(
@@ -162,30 +151,25 @@ async def start_experiment(
     if not dataset_path.exists():
         error_msg = f"Dataset '{config.dataset_name}' not found at {dataset_path} for experiment {config.experiment_run_id}"
         fastapi_app_logger.error(error_msg)
-        # Use async version for calls from FastAPI main thread
         await update_experiment_in_java_async(config.experiment_run_id, "FAILED", error_message=error_msg, set_end_time=True)
         raise HTTPException(status_code=400, detail=error_msg)
 
     methods_sequence_for_executor = []
-    for method_api_config in config.methods_sequence: # method_api_config is Pydantic ExperimentMethodParams
+    for method_api_config in config.methods_sequence:
         python_method_kwargs = {}
 
         if method_api_config.method_name in ['non_nested_grid_search', 'nested_grid_search']:
             if method_api_config.param_grid is not None:
                 python_method_kwargs['param_grid'] = method_api_config.param_grid
         elif method_api_config.method_name == 'cv_model_evaluation':
-            # If use_best_params_from_step is provided, Python executor will inject best_params.
-            # The 'params' sent here can be merged/overridden by Python.
             if method_api_config.params is not None:
                 python_method_kwargs['params'] = method_api_config.params
-            if method_api_config.use_best_params_from_step is not None:  # This is now an int or None
+            if method_api_config.use_best_params_from_step is not None:
                 python_method_kwargs['use_best_params_from_step'] = method_api_config.use_best_params_from_step
         elif method_api_config.method_name == 'single_train':
             if method_api_config.params is not None:
                 python_method_kwargs['params'] = method_api_config.params
 
-        # Map other direct arguments from Pydantic model to Python method kwargs
-        # (Field names in Pydantic model are already snake_case)
         if method_api_config.save_model is not None:
             python_method_kwargs['save_model'] = method_api_config.save_model
         if method_api_config.save_best_model is not None:
@@ -203,14 +187,13 @@ async def start_experiment(
         if method_api_config.scoring is not None:
             python_method_kwargs['scoring'] = method_api_config.scoring
         if method_api_config.method_search_type is not None:
-            python_method_kwargs['method'] = method_api_config.method_search_type # Python methods expect 'method'
+            python_method_kwargs['method'] = method_api_config.method_search_type
         if method_api_config.n_iter is not None:
             python_method_kwargs['n_iter'] = method_api_config.n_iter
         if method_api_config.evaluate_on is not None:
             python_method_kwargs['evaluate_on'] = method_api_config.evaluate_on
         if method_api_config.val_split_ratio is not None:
             python_method_kwargs['val_split_ratio'] = method_api_config.val_split_ratio
-        # Pass use_best_params_from_step for cv_model_evaluation if present
         if method_api_config.method_name == 'cv_model_evaluation' and method_api_config.use_best_params_from_step is not None:
             python_method_kwargs['use_best_params_from_step'] = method_api_config.use_best_params_from_step
 
@@ -235,28 +218,26 @@ async def start_experiment(
         "save_main_log_file": True,
         "conceptual_experiment_run_name": config.experiment_run_id,
         "random_seed_override": config.random_seed,
-        "max_epochs": settings.DEFAULT_MAX_EPOCHS, # Global default Skorch max_epochs
+        "max_epochs": settings.DEFAULT_MAX_EPOCHS,
         "results_detail_level": 2,
         "plot_level": 1,
         "use_offline_augmented_data": config.offline_augmentation if config.offline_augmentation is not None else False,
         "augmentation_strategy": aug_strat_enum,
-        # NEW global params for PipelineExecutor
         "test_split_ratio_if_flat": config.test_split_ratio_if_flat,
         "force_flat_for_fixed_cv": config.force_flat_for_fixed_cv if config.force_flat_for_fixed_cv is not None else False,
     }
 
     artifact_repo_from_state = request_fast_api.app.state.artifact_repo
-    if not artifact_repo_from_state: # Ensure this check is robust
+    if not artifact_repo_from_state:
         error_msg = f"Artifact repository not configured. Cannot start experiment {config.experiment_run_id}."
         fastapi_app_logger.error(error_msg)
         await update_experiment_in_java_async(config.experiment_run_id, "FAILED", error_message=error_msg, set_end_time=True)
         raise HTTPException(status_code=500, detail=error_msg)
 
-    # Instead of FastAPI's BackgroundTasks, add to our queue
     await task_queue.add_experiment_to_queue(
         _execute_pipeline_task,
-        args=(), # No positional args for _execute_pipeline_task
-        kwargs={ # Pass arguments as keyword arguments
+        args=(),
+        kwargs={
             "executor_params": executor_params,
             "experiment_run_id": config.experiment_run_id,
             "artifact_repo": artifact_repo_from_state
@@ -289,7 +270,7 @@ async def update_experiment_in_java_async(
         payload["setEndTime"] = True
 
     headers = {"X-Internal-API-Key": settings.INTERNAL_API_KEY, "Content-Type": "application/json"}
-    source_logger = fastapi_app_logger # Use app logger for calls from main thread
+    source_logger = fastapi_app_logger
 
     try:
         async with httpx.AsyncClient() as client:
@@ -312,12 +293,12 @@ def get_artifact_type_from_filename(filename: str) -> str:
     if name_lower.endswith(".json"):
         return "json"
     if name_lower.endswith(".log") or name_lower.endswith(".txt"):
-        return "log" # Treat .txt as log for simple viewing
+        return "log"
     if name_lower.endswith(".csv"):
         return "csv"
     if name_lower.endswith(".pt") or name_lower.endswith(".pth"):
         return "model"
-    return "file" # Generic file
+    return "file"
 
 
 def list_artifacts_for_experiment(
@@ -325,7 +306,7 @@ def list_artifacts_for_experiment(
     dataset_name: str,
     model_type: str,
     experiment_run_id: str,
-    sub_path: str = "" # Relative path within the experiment's folder
+    sub_path: str = ""
 ) -> List[ArtifactNode]:
     base_experiment_prefix = PurePath("experiments", DATASET_DICT[dataset_name], model_type, experiment_run_id)
     current_scan_prefix = str((base_experiment_prefix / sub_path).as_posix()).strip("/")
@@ -336,27 +317,21 @@ def list_artifacts_for_experiment(
     nodes: List[ArtifactNode] = []
 
     if isinstance(artifact_repo, MinIORepository):
-        # Use MinIORepository's list_objects_in_prefix
-        # This method should return {'objects': [full_keys...], 'subfolders': [full_prefix_keys...]}
         listed_content = artifact_repo.list_objects_in_prefix(prefix=current_scan_prefix, delimiter='/')
 
         for folder_key in listed_content.get('subfolders', []):
-            # folder_key is like "experiments/.../run_id/sub_path/folder_name/"
             folder_name = PurePath(folder_key.rstrip('/')).name
             relative_path = str((PurePath(folder_key).relative_to(base_experiment_prefix)).as_posix())
             nodes.append(ArtifactNode(name=folder_name, path=relative_path, type="folder"))
 
         for file_key in listed_content.get('objects', []):
-            # file_key is like "experiments/.../run_id/sub_path/file.txt"
-            # Skip if the file_key is just the folder prefix itself (can happen if folder is empty)
             if file_key == current_scan_prefix and file_key.endswith('/'):
                 continue
             file_name = PurePath(file_key).name
-            if not file_name: # Should not happen for actual files
+            if not file_name:
                 continue
             relative_path = str((PurePath(file_key).relative_to(base_experiment_prefix)).as_posix())
             file_type = get_artifact_type_from_filename(file_name)
-            # Optionally get size/last_modified if repo can provide it easily
             nodes.append(ArtifactNode(name=file_name, path=relative_path, type=file_type))
 
     elif isinstance(artifact_repo, LocalFileSystemRepository):
@@ -379,7 +354,6 @@ def list_artifacts_for_experiment(
     else:
         fastapi_app_logger.warning("Artifact listing only implemented for MinIO and LocalFileSystem repositories.")
 
-    # Sort: folders first, then files, then by name
     nodes.sort(key=lambda n: (n.type != 'folder', n.name.lower()))
     return nodes
 
@@ -389,10 +363,9 @@ def get_experiment_artifact_content_bytes(
     dataset_name: str,
     model_type: str,
     experiment_run_id: str,
-    artifact_relative_path: str # Relative path like "method_0/results.json" or "executor_log.log"
+    artifact_relative_path: str
 ) -> Optional[bytes]:
 
-    # Check if requested resource is not a .pt file, which is a model file
     if artifact_relative_path.endswith(".pt") or artifact_relative_path.endswith(".pth"):
         fastapi_app_logger.warning(f"Attempted to fetch model file content directly: {artifact_relative_path}. Use /models/{dataset_name}/{model_type}/{experiment_run_id} instead.")
         return None

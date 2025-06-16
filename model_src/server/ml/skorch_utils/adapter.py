@@ -4,24 +4,30 @@ from typing import List, Tuple, Callable, Type, Optional
 import numpy as np
 import torch
 import torch.nn as nn
-from PIL import Image
 from skorch import NeuralNetClassifier
 from skorch.callbacks import Callback
 from skorch.utils import to_numpy
-from torch.utils.data import DataLoader, Dataset as PyTorchDataset
+from torch.utils.data import DataLoader
 
+from .augmentations_utils import cutmix_data
 from ..config import DEVICE
 from ..dataset_utils import PathImageDataset, ImageDatasetHandler
 from ..logger_utils import logger
-from .augmentations_utils import cutmix_data, rand_bbox
 
 
 class SkorchModelAdapter(NeuralNetClassifier):
     """
-    Skorch adapter using PathImageDataset.
-    Uses overridden get_split_datasets and get_iterator to ensure
-    correct train/eval transforms are applied during fit and predict/eval.
-    Includes train_acc logging.
+    Adapter class that extends Skorch's NeuralNetClassifier to work with image datasets.
+
+    This class provides specialized functionality for image classification tasks:
+    - Uses PathImageDataset for handling image data from file paths
+    - Supports separate train and validation transforms
+    - Handles offline augmented data
+    - Implements CutMix data augmentation
+    - Provides gradient clipping
+    - Includes debugging visualization of augmented batches
+
+    Inherits all functionality from NeuralNetClassifier while adding image-specific capabilities.
     """
 
     def __init__(
@@ -42,12 +48,41 @@ class SkorchModelAdapter(NeuralNetClassifier):
             dataset_handler_ref: Optional[ImageDatasetHandler] = None,
             train_split: Optional[Callable] = None,
             iterator_train__shuffle: bool = True,
-            cutmix_alpha: float = 0.0,       # Corresponds to 'beta'; Alpha for Beta distribution. If 0, CutMix is disabled.
-            cutmix_probability: float = 0.0, # Probability of applying CutMix per batch. If 0, CutMix is disabled.
-            gradient_clip_value: Optional[float] = None,  # For gradient clipping
+            cutmix_alpha: float = 0.0,
+            cutmix_probability: float = 0.0,
+            gradient_clip_value: Optional[float] = None,
             verbose: int = 1,
             **kwargs
     ):
+        """
+        Initializes the SkorchModelAdapter with configuration for image classification.
+
+        Args:
+            module: Neural network module to use
+            criterion: Loss function class
+            optimizer: Optimizer class
+            lr: Learning rate
+            max_epochs: Maximum number of training epochs
+            batch_size: Batch size for training and validation
+            device: Device to use ('cuda', 'cpu', etc.)
+            show_first_batch_augmentation: If True, plots first batches for debugging
+            callbacks: List of (name, callback) tuples for Skorch callback system
+            train_transform: Transform pipeline for training data
+            valid_transform: Transform pipeline for validation data
+            use_offline_augmented_data: If True, includes pre-generated augmented images
+            dataset_handler_ref: Reference to ImageDatasetHandler for offline augmentations
+            train_split: Function to split data into train/validation sets
+            iterator_train__shuffle: Whether to shuffle training data
+            cutmix_alpha: Alpha parameter for CutMix Beta distribution (0 disables CutMix)
+            cutmix_probability: Probability of applying CutMix per batch
+            gradient_clip_value: Maximum norm for gradient clipping (None disables)
+            verbose: Verbosity level
+            **kwargs: Additional arguments passed to NeuralNetClassifier
+
+        Raises:
+            ValueError: If train_transform or valid_transform is None
+            ValueError: If use_offline_augmented_data is True but dataset_handler_ref is None
+        """
         self.show_first_batch_augmentation = show_first_batch_augmentation
         self.cutmix_alpha = cutmix_alpha
         self.cutmix_probability = cutmix_probability
@@ -56,49 +91,66 @@ class SkorchModelAdapter(NeuralNetClassifier):
         if train_transform is None or valid_transform is None:
             raise ValueError("Both train_transform and valid_transform must be provided")
 
-        # Store transforms directly
         self.train_transform = train_transform
         self.valid_transform = valid_transform
 
         self.use_offline_augmented_data = use_offline_augmented_data
-        self.dataset_handler_ref = dataset_handler_ref  # Store reference
+        self.dataset_handler_ref = dataset_handler_ref
         if self.use_offline_augmented_data and self.dataset_handler_ref is None:
             raise ValueError("dataset_handler_ref must be provided if use_offline_augmented_data is True")
 
-        # Add Collate Functions to kwargs if not provided by caller
+        # Collate Functions
         kwargs.setdefault('iterator_train__collate_fn', PathImageDataset.collate_fn)
         kwargs.setdefault('iterator_valid__collate_fn', PathImageDataset.collate_fn)
 
-        # Initialize the parent class, passing callbacks list/None directly
         super().__init__(
             *args, module=module, criterion=criterion, optimizer=optimizer, lr=lr,
             max_epochs=max_epochs, batch_size=batch_size, device=device,
-            callbacks=callbacks,  # Pass the provided list/None
+            callbacks=callbacks,
             train_split=train_split, iterator_train__shuffle=iterator_train__shuffle,
             verbose=verbose, **kwargs
         )
 
         if self.gradient_clip_value is not None and self.gradient_clip_value > 0:
-            self.gradient_clip_fn_ = lambda iterator: torch.nn.utils.clip_grad_norm_( # Corrected: was self.module_.parameters()
+            self.gradient_clip_fn_ = lambda iterator: torch.nn.utils.clip_grad_norm_(
                 self.module_.parameters(), max_norm=self.gradient_clip_value
             )
         else:
             self.gradient_clip_fn_ = None
 
     def initialize(self):
+        """
+        Initializes or resets the model state at the beginning of training.
+
+        This method extends the parent's initialize method to reset flags
+        that track whether debug visualization has occurred for different
+        batch types during the current training run.
+
+        Returns:
+            self: Returns self for method chaining
+        """
         super().initialize()
-        # Flags to ensure each type of plot happens only once per fit() call
         self._first_original_train_batch_plotted_this_fit = False
         self._first_cutmixed_train_batch_plotted_this_fit = False
         self._first_validation_batch_plotted_this_fit = False
-        # logger.debug("SkorchModelAdapter plotting flags reset for new fit.")
         return self
 
     @staticmethod
     def _plot_debug_batch(images_tensor_to_plot: torch.Tensor, title: str):
+        """
+        Plots a batch of images for debugging and visualization purposes.
+
+        Args:
+            images_tensor_to_plot: Tensor containing batch of images to plot
+            title: Title for the plot
+
+        Notes:
+            - Uses ResultsPlotter.plot_image_batch from the plotter module
+            - Silently catches and logs any exceptions during plotting
+            - Detaches and clones tensor to ensure it doesn't affect training
+        """
         try:
             from ..plotter import ResultsPlotter
-            # logger.info(f"Plotting debug batch: {title}")
             ResultsPlotter.plot_image_batch(
                 images_tensor_to_plot.detach().clone().cpu(),
                 title=title, show_plots=True
@@ -107,10 +159,30 @@ class SkorchModelAdapter(NeuralNetClassifier):
             logger.error(f"Error in _plot_debug_batch: {e}", exc_info=True)
 
     def get_split_datasets(self, X, y=None, **fit_params):
-        # X here are paths from dataset_handler.get_train_val_paths_labels_orig()
-        # y are corresponding original labels
+        """
+        Creates training and validation datasets from input data.
+
+        This method handles:
+        - Creating appropriate train/validation splits based on indices
+        - Applying correct transforms to each dataset
+        - Incorporating offline augmented data if enabled
+        - Ensuring augmented samples only appear in the training set
+
+        Args:
+            X: List of image paths
+            y: List of corresponding labels
+            **fit_params: Additional parameters for dataset creation
+
+        Returns:
+            Tuple[PyTorchDataset, Optional[PyTorchDataset]]:
+                - Training dataset with appropriate transforms
+                - Validation dataset with appropriate transforms (or None)
+
+        Raises:
+            ValueError: If y is None
+        """
         if y is None: raise ValueError("y must be provided.")
-        y_arr_orig_pool = to_numpy(y)  # Labels of the current original pool (e.g., full train+val)
+        y_arr_orig_pool = to_numpy(y)
         X_paths_np_orig_pool = np.asarray(X)
 
         ds_train_final = None
@@ -123,7 +195,7 @@ class SkorchModelAdapter(NeuralNetClassifier):
 
             train_indices_for_this_fold = np.asarray(ds_train_indices_wrapper.indices)
 
-            # 1. Create VALIDATION dataset from ORIGINAL data ONLY
+            # Create VALIDATION dataset from ORIGINAL data ONLY
             if ds_valid_indices_wrapper is not None and len(ds_valid_indices_wrapper) > 0:
                 valid_indices_for_this_fold = np.asarray(ds_valid_indices_wrapper.indices)
                 valid_paths = X_paths_np_orig_pool[valid_indices_for_this_fold].tolist()
@@ -132,15 +204,12 @@ class SkorchModelAdapter(NeuralNetClassifier):
                                                   transform=self.valid_transform)
                 logger.debug(f"Validation split for fold created with {len(ds_valid_final)} original samples.")
 
-            # 2. Create TRAINING dataset
-            # Start with original images for this training fold
+            # Create TRAINING dataset
             current_fold_train_paths_orig = X_paths_np_orig_pool[train_indices_for_this_fold].tolist()
             current_fold_train_labels_orig = y_arr_orig_pool[train_indices_for_this_fold].tolist()
 
-            # Get basenames of these original training images for mapping to augmentations
             current_fold_train_original_basenames = set()
             for p_orig in current_fold_train_paths_orig:
-                # Assuming Path.stem gives the name without final extension, which should match original_basename
                 current_fold_train_original_basenames.add(Path(p_orig).stem)
 
             combined_train_paths_for_fold = current_fold_train_paths_orig[:]
@@ -164,9 +233,9 @@ class SkorchModelAdapter(NeuralNetClassifier):
                             added_aug_count += 1
 
                     # TODO maybe add param for force sorting
-                    # combined_train_paths_for_fold, combined_train_labels_for_fold = \
-                    #     zip(*sorted(zip(combined_train_paths_for_fold, combined_train_labels_for_fold),
-                    #                   key=lambda x: Path(x[0]).stem))
+                    combined_train_paths_for_fold, combined_train_labels_for_fold = \
+                        zip(*sorted(zip(combined_train_paths_for_fold, combined_train_labels_for_fold),
+                                      key=lambda x: Path(x[0]).stem))
 
                     logger.debug(
                         f"Added {added_aug_count} relevant offline augmented samples to current training fold.")
@@ -183,14 +252,14 @@ class SkorchModelAdapter(NeuralNetClassifier):
             logger.debug(
                 f"Total training split for fold created with {len(ds_train_final)} samples.")
 
-        else:  # No train_split (e.g., training on full X, y without validation, like during final refit of GridSearchCV)
+        else:  # No train_split
             logger.debug(
                 "No train_split defined by skorch. Using all provided X,y for training, plus all offline augmentations.")
             combined_train_paths = X_paths_np_orig_pool.tolist()
             combined_train_labels = y_arr_orig_pool.tolist()
             if self.use_offline_augmented_data and self.dataset_handler_ref:
                 aug_paths, aug_labels, _ = self.dataset_handler_ref.get_offline_augmented_paths_labels_with_originals()
-                if aug_paths:  # Add ALL offline augmentations here because there's no val set to protect
+                if aug_paths:
                     combined_train_paths.extend(aug_paths)
                     combined_train_labels.extend(aug_labels)
                     logger.debug(
@@ -202,22 +271,34 @@ class SkorchModelAdapter(NeuralNetClassifier):
 
     def get_iterator(self, dataset, training=False):
         """
-        Override to ensure PathImageDataset with correct transform is used,
-        and DataLoader is configured correctly.
-        Plotting of the first batch is now handled within train_step (for training)
-        and can be added to validation_step (for validation) if needed.
+        Creates and configures a DataLoader for the given dataset.
+
+        This method ensures:
+        - Correct transforms are applied based on training/validation mode
+        - Appropriate collate_fn is used based on dataset type
+        - DataLoader parameters (batch_size, num_workers, etc.) are properly set
+
+        Args:
+            dataset: The dataset to create an iterator for
+            training: Whether this is for training (True) or evaluation (False)
+
+        Returns:
+            DataLoader: Configured DataLoader for the given dataset
+
+        Raises:
+            RuntimeError: If no valid torch.utils.data.Dataset can be determined
         """
         current_dataset: Optional[torch.utils.data.Dataset] = None
 
         if isinstance(dataset, PathImageDataset):
             current_dataset = dataset
             expected_transform = self.train_transform if training else self.valid_transform
-            if current_dataset.transform != expected_transform:  # Should ideally not happen if get_split_datasets is used
+            if current_dataset.transform != expected_transform:
                 logger.debug(
                     f"get_iterator: Updating transform on existing PathImageDataset for {'training' if training else 'eval'}.")
                 current_dataset.transform = expected_transform
 
-        elif hasattr(dataset, 'X'):  # Likely a skorch.dataset.Dataset from predict/score calls
+        elif hasattr(dataset, 'X'):
             X_input = dataset.X
             y_labels = getattr(dataset, 'y', None)
 
@@ -237,33 +318,28 @@ class SkorchModelAdapter(NeuralNetClassifier):
                 transform_to_use = self.train_transform if training else self.valid_transform
                 current_dataset = PathImageDataset(paths=X_paths_list, labels=y_labels_list,
                                                    transform=transform_to_use)
-            elif isinstance(dataset,
-                            torch.utils.data.Dataset):  # X is not path data, but dataset is already a torch Dataset
+            elif isinstance(dataset, torch.utils.data.Dataset):
                 current_dataset = dataset
-            else:  # Fallback to super for unknown skorch.dataset.Dataset content
+            else:
                 logger.warning(
                     f"get_iterator received skorch Dataset with non-path X data of type {type(X_input)}. "
                     f"Falling back to super().get_iterator(). First batch plotting relies on train/validation_step.")
                 return super().get_iterator(dataset, training=training)
 
-        elif isinstance(dataset, torch.utils.data.Dataset):  # Already a torch Dataset passed directly
+        elif isinstance(dataset, torch.utils.data.Dataset):
             current_dataset = dataset
-        else:  # Truly unexpected dataset type
+        else:
             logger.warning(
                 f"get_iterator received unexpected dataset type {type(dataset)}. "
                 f"Falling back to super().get_iterator(). First batch plotting relies on train/validation_step.")
             return super().get_iterator(dataset, training=training)
 
         if current_dataset is None:
-            # This case should ideally be unreachable if logic above is complete
             raise RuntimeError("get_iterator: Could not determine or create a valid torch.utils.data.Dataset.")
 
-        # --- DataLoader Configuration ---
-        collate_fn_to_use = PathImageDataset.collate_fn  # Default for our PathImageDataset
+        # DataLoader
+        collate_fn_to_use = PathImageDataset.collate_fn
         if not isinstance(current_dataset, PathImageDataset) and not hasattr(current_dataset, 'paths'):
-            # If it's some other torch.utils.data.Dataset that isn't our PathImageDataset
-            # (e.g., a TensorDataset, or user-provided custom Dataset for predict_images)
-            # and it doesn't have a `collate_fn` attribute, use default torch collate.
             if hasattr(current_dataset, 'collate_fn') and current_dataset.collate_fn is not None:
                 collate_fn_to_use = current_dataset.collate_fn
             else:
@@ -271,27 +347,21 @@ class SkorchModelAdapter(NeuralNetClassifier):
                 logger.debug(f"Using default torch collate_fn for dataset type: {type(current_dataset)}")
 
         shuffle = self.iterator_train__shuffle if training else False
-        # batch_size is a direct attribute from __init__ or set_params
 
         loader_kwargs = {}
-        # get_params() retrieves all skorch-settable parameters
         iterator_params = self.get_params()
 
-        # Keys for num_workers and pin_memory can be specific to train/valid iterators in skorch
         num_workers_key = 'iterator_train__num_workers' if training else 'iterator_valid__num_workers'
         pin_memory_key = 'iterator_train__pin_memory' if training else 'iterator_valid__pin_memory'
 
-        # Get num_workers, falling back to a generic iterator__num_workers if specific isn't set, then 0
         loader_kwargs['num_workers'] = iterator_params.get(
             num_workers_key,
-            iterator_params.get('iterator__num_workers', 0)  # Check for generic skorch param
+            iterator_params.get('iterator__num_workers', 0)
         )
-        # Get pin_memory, similar fallback
         loader_kwargs['pin_memory'] = iterator_params.get(
             pin_memory_key,
-            iterator_params.get('iterator__pin_memory', False)  # Check for generic skorch param
+            iterator_params.get('iterator__pin_memory', False)
         )
-        # Remove None values, as DataLoader doesn't like num_workers=None
         loader_kwargs = {k: v for k, v in loader_kwargs.items() if v is not None}
 
         logger.debug(
@@ -303,29 +373,42 @@ class SkorchModelAdapter(NeuralNetClassifier):
 
         return DataLoader(
             current_dataset,
-            batch_size=self.batch_size,  # Use self.batch_size directly
+            batch_size=self.batch_size,
             shuffle=shuffle,
             collate_fn=collate_fn_to_use,
             **loader_kwargs
         )
 
     def train_step(self, batch, **fit_params):
+        """
+        Performs a single training step (forward pass, loss calculation, backward pass).
+
+        This method:
+        - Handles regular training and CutMix-augmented training
+        - Applies gradient clipping if configured
+        - Plots debug visualization of batches if enabled
+        - Properly computes mixed loss for CutMix batches
+
+        Args:
+            batch: Tuple of (inputs, targets) from the DataLoader
+            **fit_params: Additional parameters for training
+
+        Returns:
+            Dict[str, Any]: Dictionary containing 'loss' and 'y_pred' values
+        """
         self.module_.train()
-        Xi_original, yi_original = batch  # Keep original batch for potential plotting
+        Xi_original, yi_original = batch
 
         # Move to device
         Xi = Xi_original.to(self.device)
         yi = yi_original.to(self.device)
         yi = yi.to(dtype=torch.long)
 
-        inputs_for_model = Xi  # This will hold the batch actually fed to self.infer()
+        inputs_for_model = Xi
         is_cutmix_applied_this_batch = False
         loss_lambda_for_plot = 1.0
 
-        # Plot original first training batch if enabled and not yet plotted
         if self.show_first_batch_augmentation and not self._first_original_train_batch_plotted_this_fit:
-            # Use Xi_original which is on CPU from DataLoader before explicit move
-            # Or, if you always move then plot, use Xi.cpu()
             SkorchModelAdapter._plot_debug_batch(Xi_original, "First Original Training Batch (from DataLoader)")
             self._first_original_train_batch_plotted_this_fit = True
 
@@ -342,21 +425,13 @@ class SkorchModelAdapter(NeuralNetClassifier):
             loss = loss_lambda_for_plot * self.get_loss(y_pred, targets_a, X=inputs_for_model, training=True) + \
                    (1 - loss_lambda_for_plot) * self.get_loss(y_pred, targets_b, X=inputs_for_model, training=True)
         else:
-            y_pred = self.infer(inputs_for_model, **fit_params)  # inputs_for_model is original Xi here
+            y_pred = self.infer(inputs_for_model, **fit_params)
             loss = self.get_loss(y_pred, yi, X=inputs_for_model, training=True)
 
-        # Plot first CutMixed batch if it was applied and not yet plotted (and original wasn't cutmixed)
-        if self.show_first_batch_augmentation and \
-                is_cutmix_applied_this_batch and \
+        if self.show_first_batch_augmentation and is_cutmix_applied_this_batch and \
                 not self._first_cutmixed_train_batch_plotted_this_fit:
-            # If the very first batch was cutmixed, _first_original_train_batch_plotted_this_fit is True.
-            # We only want to plot cutmix separately if the *original* plot didn't already show a cutmixed version.
-            # This means if the first batch was cutmixed, the "original" plot will actually show the cutmixed one.
-            # Let's refine:
-            # The "original" plot always shows the batch *before* cutmix decision.
-            # The "cutmixed" plot *only* shows if cutmix was applied AND it's the first time cutmix was applied.
 
-            SkorchModelAdapter._plot_debug_batch(inputs_for_model,  # This is inputs_cutmix
+            SkorchModelAdapter._plot_debug_batch(inputs_for_model,
                                                  f"First CutMixed Training Batch (lam~{loss_lambda_for_plot:.2f})")
             self._first_cutmixed_train_batch_plotted_this_fit = True
 
@@ -369,8 +444,23 @@ class SkorchModelAdapter(NeuralNetClassifier):
         return {'loss': loss, 'y_pred': y_pred}
 
     def validation_step(self, batch, **fit_params):
+        """
+        Performs a single validation step (forward pass and loss calculation).
+
+        This method:
+        - Sets the model to evaluation mode
+        - Plots the first validation batch if visualization is enabled
+        - Computes loss and predictions without gradient tracking
+
+        Args:
+            batch: Tuple of (inputs, targets) from the DataLoader
+            **fit_params: Additional parameters for validation
+
+        Returns:
+            Dict[str, Any]: Dictionary containing 'loss' and 'y_pred' values
+        """
         self.module_.eval()
-        Xi_original_val, yi_original_val = batch  # Keep original
+        Xi_original_val, yi_original_val = batch
 
         Xi = Xi_original_val.to(self.device)
         yi = yi_original_val.to(self.device)
@@ -385,27 +475,19 @@ class SkorchModelAdapter(NeuralNetClassifier):
             loss = self.get_loss(y_pred, yi, X=Xi, training=False)
         return {'loss': loss, 'y_pred': y_pred}
 
-    # --- Add dummy method for the custom notification ---
     def on_train_batch_transformed(self, net, **kwargs):
         """
         Dummy method to satisfy skorch's notify trying to call this on the net itself.
-        The actual logic is in the FirstBatchPlotterCallback.
-        'net' will be self here.
         """
-        pass # Does nothing
+        pass
 
     def notify(self, method_name: str, **cb_kwargs):
-        # First, call on self if the method exists (for standard skorch behavior and your dummy method)
+        """
+        Calls the specified method on the net and all registered callbacks.
+        """
         if hasattr(self, method_name):
-            # The method on 'self' (the net) is typically called with 'self' (the net) as the first arg,
-            # and then **cb_kwargs. Skorch's internal methods might also pass the callbacks list.
-            # For simplicity, let's match the signature of callback methods: (net, **kwargs)
-            # So, self.on_train_batch_transformed(self, **cb_kwargs)
-            getattr(self, method_name)(self, **cb_kwargs) # Call the dummy method on self
+            getattr(self, method_name)(self, **cb_kwargs)
 
-        # Then, iterate through registered callbacks
-        for cb_name, cb_instance in self.callbacks_: # self.callbacks_ holds (name, instance) tuples
+        for cb_name, cb_instance in self.callbacks_:
             if hasattr(cb_instance, method_name):
-                # Call the method on the callback instance, passing self (the net) and kwargs
                 getattr(cb_instance, method_name)(self, **cb_kwargs)
-            # If a callback doesn't have the method, we simply skip it (no AttributeError)

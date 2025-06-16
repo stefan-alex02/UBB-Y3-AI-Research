@@ -7,10 +7,7 @@ import pandas as pd
 import torch
 import torchvision.utils
 from PIL import Image
-# Assuming ArtifactRepository can be imported for type hinting if needed
-# from ..artifact_repository import ArtifactRepository, LocalFileSystemRepository
 
-# --- Plotting Libraries ---
 try:
     import matplotlib.pyplot as plt
     import matplotlib.patches as mpatches
@@ -57,7 +54,6 @@ except ImportError:
     if not logger.hasHandlers(): logger.addHandler(logging.StreamHandler()); logger.setLevel(logging.INFO)
 
 
-# --- Helper Functions ---
 def _check_plotting_libs() -> bool:
     libs_ok = True
     if not MATPLOTLIB_AVAILABLE: logger.error("Matplotlib is required. `pip install matplotlib seaborn`."); libs_ok = False
@@ -67,39 +63,36 @@ def _check_plotting_libs() -> bool:
     return libs_ok
 
 
-def _save_figure_or_show(fig: Optional[plt.Figure],  # Allow fig to be None
-                         repository: Optional[Any],  # ArtifactRepository
+def _save_figure_or_show(fig: Optional[plt.Figure],
+                         repository: Optional[Any],
                          s3_key_or_local_path: Optional[Union[str, Path]],
                          show_plots: bool):
-    if not fig:  # If no figure was generated (e.g., error or libs missing)
+    if not fig:
         logger.debug("No figure object provided to _save_figure_or_show.")
         return
 
     full_path_for_log = str(s3_key_or_local_path) if s3_key_or_local_path else "Display Only"
     try:
-        # fig.tight_layout(pad=1.5) # Sometimes causes issues with complex plots, apply selectively if needed
-
         if repository and s3_key_or_local_path:
             save_id = repository.save_plot_figure(fig, str(s3_key_or_local_path))
-            # save_plot_figure should handle logging success/failure
-        elif isinstance(s3_key_or_local_path, (str, Path)):  # Local path saving
+        elif isinstance(s3_key_or_local_path, (str, Path)):
             local_path = Path(s3_key_or_local_path)
             local_path.parent.mkdir(parents=True, exist_ok=True)
             fig.savefig(local_path, dpi=300, bbox_inches='tight')
             logger.info(f"Plot saved locally to: {local_path}")
-        elif not show_plots:  # No save path/repo AND not showing
+        elif not show_plots:
             logger.debug(f"Plot '{getattr(fig, '_suptitle_text', 'Figure')}' not saved (no path/repo) and not shown.")
-            plt.close(fig)  # Close to free memory
+            plt.close(fig)
             return
 
         if show_plots:
-            plt.show()  # This blocks until plot is closed by user
+            plt.show()
 
-        plt.close(fig)  # Always close the figure object after saving/showing to free memory
+        plt.close(fig)
 
     except Exception as e:
         logger.error(f"Failed to save/show plot ({full_path_for_log}): {e}", exc_info=True)
-        if fig:  # Ensure it's closed on error too
+        if fig:
             plt.close(fig)
 
 
@@ -125,23 +118,20 @@ class ResultsPlotter:
                 return None
 
             is_standalone_plot = ax_loss_provided is None or ax_acc_provided is None
-            fig: Optional[plt.Figure] = None  # Initialize fig
+            fig: Optional[plt.Figure] = None
 
             if is_standalone_plot:
-                # Create new figure and axes
-                fig, (ax_loss, ax_acc) = plt.subplots(1, 2, figsize=(12, 4.5))  # Slightly smaller for many folds
-                fig.suptitle(title, fontsize=12)  # Standalone title
+                fig, (ax_loss, ax_acc) = plt.subplots(1, 2, figsize=(12, 4.5))
+                fig.suptitle(title, fontsize=12)
             else:
-                # Use provided axes
                 ax_loss, ax_acc = ax_loss_provided, ax_acc_provided
                 if ax_loss:
-                    fig = ax_loss.figure  # Get figure from provided axis
+                    fig = ax_loss.figure
                 elif ax_acc:
-                    fig = ax_acc.figure  # Or from the other axis
-                # If both axes are provided, they should belong to the same figure
+                    fig = ax_acc.figure
 
             if fig is None and (
-                    ax_loss is not None or ax_acc is not None):  # Should not happen if axes are from subplots
+                    ax_loss is not None or ax_acc is not None):
                 logger.error("Provided axes for learning curve plot do not have a figure.")
                 return None
 
@@ -160,7 +150,7 @@ class ResultsPlotter:
                 ax_loss.set_ylabel('Loss', fontsize=9)
                 ax_loss.set_title('Loss' if not is_standalone_plot else "Loss vs. Epoch", fontsize=10)
                 if MaxNLocator: ax_loss.xaxis.set_major_locator(MaxNLocator(integer=True))
-                ax_loss.legend(fontsize='xx-small')  # Always show legend, adjust size for subplots
+                ax_loss.legend(fontsize='xx-small')
                 ax_loss.grid(True, alpha=0.6)
                 ax_loss.tick_params(axis='both', labelsize=8)
             else:
@@ -176,13 +166,13 @@ class ResultsPlotter:
                 plot_occurred_on_acc_ax = True
                 ax_acc.set_xlabel('Epoch', fontsize=9)
                 ax_acc.set_ylabel('Accuracy', fontsize=9)
-                try:  # Set Y limits for accuracy, robustly
+                try:
                     current_ymin, current_ymax = ax_acc.get_ylim()
                     new_ymin = max(0, current_ymin if current_ymin > -float('inf') else 0)
                     new_ymax = min(1.05, current_ymax if current_ymax < float('inf') else 1.05)
                     ax_acc.set_ylim(bottom=new_ymin, top=new_ymax)
                 except Exception:
-                    ax_acc.set_ylim(bottom=0, top=1.05)  # Fallback
+                    ax_acc.set_ylim(bottom=0, top=1.05)
                 ax_acc.set_title('Accuracy' if not is_standalone_plot else "Accuracy vs. Epoch", fontsize=10)
                 if MaxNLocator: ax_acc.xaxis.set_major_locator(MaxNLocator(integer=True))
                 ax_acc.legend(fontsize='xx-small')
@@ -192,16 +182,15 @@ class ResultsPlotter:
                 ax_acc.text(0.5, 0.5, 'No Acc Data', ha='center', va='center', transform=ax_acc.transAxes)
                 ax_acc.set_title('Acc Data Missing', fontsize=10)
 
-            if not (plot_occurred_on_loss_ax or plot_occurred_on_acc_ax):  # If nothing was plotted on either axis
-                if is_standalone_plot and fig:  # Only close if we created it
+            if not (plot_occurred_on_loss_ax or plot_occurred_on_acc_ax):
+                if is_standalone_plot and fig:
                     plt.close(fig)
-                return None  # Indicate no figure to save/show
+                return None
 
-            return fig  # Return the figure object (could be newly created or passed via axes)
+            return fig
 
         except Exception as e:
             logger.error(f"Error plotting learning curves for '{title}': {e}", exc_info=True)
-            # Attempt to close figure if it was created in this function call and an error occurred
             if 'fig' in locals() and fig is not None and is_standalone_plot:
                 plt.close(fig)
             return None
@@ -211,7 +200,7 @@ class ResultsPlotter:
                                 output_path: Optional[Path] = None,
                                 repository: Optional[Any] = None,
                                 s3_key: Optional[str] = None
-                                ) -> Optional[str]:  # Returns CSV string or None
+                                ) -> Optional[str]:
         """Generates a CSV string of per-class and macro metrics."""
         per_class_metrics = metrics_data.get('per_class')
         macro_metrics = metrics_data.get('macro_avg')
@@ -239,12 +228,10 @@ class ResultsPlotter:
         acc_dict = {'Metric': "Overall Acc"}
         for cn in class_names_sorted: acc_dict[cn] = "-"
         acc_dict[
-            'Macro Avg'] = f"{overall_acc:.4f}" if overall_acc is not None else "N/A"  # Overall acc is a macro concept here
+            'Macro Avg'] = f"{overall_acc:.4f}" if overall_acc is not None else "N/A"
         data_for_df.append(acc_dict)
 
         df = pd.DataFrame(data_for_df)
-        # Set Metric as index for better CSV readability if desired, or keep as column
-        # df = df.set_index('Metric')
 
         try:
             csv_string = df.to_csv(index=False, lineterminator='\n')
@@ -336,7 +323,7 @@ class ResultsPlotter:
                 fig_to_return = fig
             else:
                 ax = ax_provided
-                fig_to_return = ax.figure  # Get figure from provided axis
+                fig_to_return = ax.figure
             disp.plot(cmap=plt.cm.Blues, ax=ax, xticks_rotation=45, colorbar=is_standalone_plot)
             ax.set_title(title, fontsize=10 if not is_standalone_plot else 12)
             return fig_to_return
@@ -447,7 +434,6 @@ class ResultsPlotter:
     def _plot_cv_aggregated_metrics(aggregated_metrics: Dict[str, Dict[str, float]], title: str) -> Optional[
         plt.Figure]:
         if not aggregated_metrics or not MATPLOTLIB_AVAILABLE: return None
-        # ... (Plotting logic for bar chart - unchanged, but returns fig) ...
         metrics_to_plot = ['accuracy', 'f1_macro', 'precision_macro', 'recall_macro', 'specificity_macro',
                            'roc_auc_macro', 'pr_auc_macro'];
         plot_data = {'metric': [], 'mean': [], 'ci_margin': [], 'ci_lower': [], 'ci_upper': []}
@@ -495,23 +481,21 @@ class ResultsPlotter:
         try:
             df = pd.DataFrame(cv_results)
 
-            # Select relevant columns, ensure they exist
             param_cols = [col for col in df.columns if col.startswith('param_')]
             score_cols = ['rank_test_score', 'mean_test_score', 'std_test_score', 'mean_train_score', 'std_train_score']
             time_cols = ['mean_fit_time', 'mean_score_time']
 
-            # Start with rank if it exists
             cols_to_show = []
             if 'rank_test_score' in df.columns:
                 cols_to_show.append('rank_test_score')
 
             cols_to_show.extend([col for col in score_cols if col in df.columns and col != 'rank_test_score'])
             cols_to_show.extend([col for col in time_cols if col in df.columns])
-            cols_to_show.extend(param_cols)  # Add all param_ columns
+            cols_to_show.extend(param_cols)
 
             if not cols_to_show: logger.warning("No relevant columns in cv_results for grid search CSV."); return None
 
-            df_filtered = df[cols_to_show]  # Create a DataFrame with only the columns to show
+            df_filtered = df[cols_to_show]
 
             df_top: pd.DataFrame
             if 'rank_test_score' in df_filtered.columns:
@@ -522,7 +506,6 @@ class ResultsPlotter:
 
             if df_top.empty: logger.warning("Grid search DataFrame is empty after filtering/ranking."); return None
 
-            # Simplify param column names for CSV header
             df_top_renamed = df_top.copy()
             df_top_renamed.columns = [col.replace('param_', '') if col.startswith('param_') else col for col in
                                       df_top.columns]
@@ -560,13 +543,11 @@ class ResultsPlotter:
 
         try:
             data_for_df = []
-            # Collect all unique parameter keys and shorten them for headers
             all_param_keys_original = set()
             for params_dict in best_params_list:
                 if isinstance(params_dict, dict):
                     all_param_keys_original.update(params_dict.keys())
 
-            # Create a mapping from shortened key to original key for data extraction
             param_key_map = {key.replace('module__', ''): key for key in all_param_keys_original}
             sorted_short_param_keys = sorted(list(param_key_map.keys()))
 
@@ -577,7 +558,7 @@ class ResultsPlotter:
                     for short_key in sorted_short_param_keys:
                         original_key = param_key_map[short_key]
                         row_dict[short_key] = params.get(original_key, "N/A")
-                else:  # If params is None for a fold
+                else:
                     for short_key in sorted_short_param_keys:
                         row_dict[short_key] = "N/A"
                 data_for_df.append(row_dict)
@@ -604,7 +585,6 @@ class ResultsPlotter:
     @staticmethod
     def _plot_macro_roc_point(macro_metrics: Dict[str, float], title: str) -> Optional[plt.Figure]:
         if not macro_metrics or not MATPLOTLIB_AVAILABLE: return None
-        # ... (Plotting logic - unchanged, but returns fig) ...
         try:
             recall = macro_metrics.get('recall', np.nan);
             specificity = macro_metrics.get('specificity', np.nan)
@@ -633,7 +613,6 @@ class ResultsPlotter:
     @staticmethod
     def _plot_cv_macro_roc_points(fold_details: List[Dict], title: str) -> Optional[plt.Figure]:
         if not fold_details or not MATPLOTLIB_AVAILABLE: return None
-        # ... (Plotting logic - unchanged, but returns fig) ...
         try:
             fpr_points = []; tpr_points = []; fold_indices = []
             for i, fold_data in enumerate(fold_details):
@@ -653,7 +632,6 @@ class ResultsPlotter:
             return fig
         except Exception as e: logger.error(f"Error plotting CV macro ROC points for '{title}': {e}", exc_info=True); return None
 
-    # --- Main Public Plotting Methods ---
 
     @staticmethod
     def plot_single_train_results(results_input: Union[Dict[str, Any], str, Path],
@@ -662,7 +640,7 @@ class ResultsPlotter:
                                   show_plots: bool = False):
         results_data = ResultsPlotter._load_results_if_path(results_input)
         if not results_data: return
-        if not _check_plotting_libs(): return  # Essential check at the start
+        if not _check_plotting_libs(): return
 
         run_id = results_data.get('run_id', "unknown_run")
         method_name = results_data.get('method', "single_train")
@@ -670,19 +648,16 @@ class ResultsPlotter:
             logger.info(f"Plotting single_train results for: {run_id}")
             history = results_data.get('training_history')
             if history:
-                # _plot_learning_curves will create its own figure here as no axes are passed
                 fig_lc = ResultsPlotter._plot_learning_curves(
                     history, f"Single Train Learning Curves ({run_id})"
                 )
-                if fig_lc:  # Check if a figure was actually returned
+                if fig_lc:
                     s3_key_or_local_path_lc: Optional[Union[str, Path]] = None
-                    if plot_save_dir_base:  # If a base location for saving is provided
+                    if plot_save_dir_base:
                         s3_key_or_local_path_lc = str(
                             (PurePath(plot_save_dir_base) / f"{method_name}_plots" / "learning_curves.png").as_posix())
 
-                    # _save_figure_or_show will handle if s3_key_or_local_path_lc is None (only show if show_plots)
                     _save_figure_or_show(fig_lc, repository_for_plots, s3_key_or_local_path_lc, show_plots)
-                # If fig_lc is None, it means _plot_learning_curves handled closing its own figure if it was empty.
             else:
                 logger.warning(f"No 'training_history' found for {run_id} learning curve plot.")
             logger.info(f"Finished plotting for single_train: {run_id}")
@@ -768,14 +743,12 @@ class ResultsPlotter:
         try:
             logger.info(f"Plotting non_nested_cv results for: {run_id}")
             title_prefix = f"Non-Nested Search ({run_id})"
-            # Learning Curves for best refit model
             history = results_data.get('best_refit_model_history')
             if history:
                 fig_lc_refit = ResultsPlotter._plot_learning_curves(history, f"{title_prefix}\nLearning Curves (Best Refit Model)")
                 if fig_lc_refit:
                     s3_key_or_local_path_lc: Optional[Union[str, Path]] = None
-                    if plot_save_dir_base:  # This is the S3 prefix for the run, or local run dir
-                        # key for the artifact repo: <plot_save_dir_base>/<method_name_plots>/<filename>
+                    if plot_save_dir_base:
                         s3_key_or_local_path_lc = str(
                             (PurePath(plot_save_dir_base) / f"{method_name}_plots" / "best_refit_learning_curves.png"
                         ).as_posix())
@@ -804,7 +777,7 @@ class ResultsPlotter:
         try:
             logger.info(f"Plotting nested_cv results for: {run_id}")
             title_prefix = f"Nested CV ({run_id})"
-            # Outer fold score distributions
+
             outer_scores = results_data.get('outer_cv_scores')
             if outer_scores and isinstance(outer_scores, dict) and sns:
                 metrics_to_plot = [k for k in outer_scores.keys() if k.startswith('test_')]; valid_metrics_data = {m: np.array(outer_scores[m]).astype(float) for m in metrics_to_plot}; valid_metrics_data = {m: v[~np.isnan(v)] for m, v in valid_metrics_data.items() if len(v[~np.isnan(v)]) > 0}; valid_metrics_to_plot = list(valid_metrics_data.keys())
@@ -815,7 +788,7 @@ class ResultsPlotter:
                     for ax_d, metric_d in zip(axes_dist, valid_metrics_to_plot): metric_data_d = valid_metrics_data[metric_d]; sns.boxplot(y=metric_data_d, ax=ax_d, showmeans=True); sns.stripplot(y=metric_data_d, ax=ax_d, color=".25", size=4); ax_d.set_ylabel("Score"); ax_d.set_xlabel(""); ax_d.set_title(metric_d.replace('test_', '').replace('_', ' ').title()); ax_d.grid(True, axis='y', linestyle='--', alpha=0.6)
                     key_dist = str((PurePath(plot_save_dir_base) / f"{method_name}_plots" / "outer_fold_score_distributions.png").as_posix()) if plot_save_dir_base else None
                     _save_figure_or_show(fig_dist, repository_for_plots, key_dist, show_plots)
-            # Learning curves for each outer fold
+
             fold_histories = results_data.get('outer_fold_best_model_histories')
             if fold_histories and isinstance(fold_histories, list):
                  for i, history in enumerate(fold_histories):
@@ -823,13 +796,12 @@ class ResultsPlotter:
                          fig_lc_fold = ResultsPlotter._plot_learning_curves(history, f"{title_prefix}\nLearning Curves (Outer Fold {i+1})")
                          if fig_lc_fold:
                              s3_key_or_local_path_lc: Optional[Union[str, Path]] = None
-                             if plot_save_dir_base:  # This is the S3 prefix for the run, or local run dir
-                                 # key for the artifact repo: <plot_save_dir_base>/<method_name_plots>/<filename>
+                             if plot_save_dir_base:
                                  s3_key_or_local_path_lc = str(
                                      (PurePath(plot_save_dir_base) / f"{method_name}_plots" / f"outer_fold_{i+1}_learning_curves.png").as_posix() if plot_save_dir_base else None
                                  )
                              _save_figure_or_show(fig_lc_fold, repository_for_plots, s3_key_or_local_path_lc, show_plots)
-            # Table of best params per fold
+
             best_params_per_fold = results_data.get('outer_fold_best_params_found'); inner_scores_per_fold = results_data.get('outer_fold_inner_cv_best_score')
             if best_params_per_fold and inner_scores_per_fold and TABULATE_AVAILABLE:
                 key_table_params = str((PurePath(plot_save_dir_base) / f"{method_name}_plots" / "nested_cv_best_params_per_fold.csv").as_posix()) if plot_save_dir_base else None
@@ -850,7 +822,7 @@ class ResultsPlotter:
         run_id = results_data.get('run_id', "unknown_run")
         method_name = results_data.get('method', "cv_model_evaluation")
 
-        plot_base_for_artifacts: Optional[str] = None  # Base S3 key or local dir string for this method's plots
+        plot_base_for_artifacts: Optional[str] = None
         if plot_save_dir_base:
             plot_base_for_artifacts = str((PurePath(plot_save_dir_base) / f"{method_name}_plots").as_posix())
 
@@ -880,7 +852,6 @@ class ResultsPlotter:
             # Fold Score Distributions
             fold_scores = results_data.get('cv_fold_scores')
             if fold_scores and isinstance(fold_scores, dict) and sns:
-                # ... (Code to create fig_dist - unchanged) ...
                 metrics_to_plot = [k for k in fold_scores.keys() if k != 'error'];
                 valid_metrics_data = {m: np.array(fold_scores[m]).astype(float) for m in metrics_to_plot};
                 valid_metrics_data = {m: v[~np.isnan(v)] for m, v in valid_metrics_data.items() if
@@ -917,14 +888,13 @@ class ResultsPlotter:
                 n_folds_actual = len(fold_details)
                 logger.info(f"Generating grouped plots per fold for {n_folds_actual} folds...")
 
-                # --- Grouped Learning Curves ---
                 if fold_histories and len(fold_histories) == n_folds_actual and any(h for h in fold_histories if h):
                     n_lc_cols = 2;
                     n_lc_rows = n_folds_actual
                     fig_lc, axes_lc = plt.subplots(n_lc_rows, n_lc_cols, figsize=(12, 4 * n_lc_rows + 1), sharex=True,
-                                                   squeeze=False)  # +1 for suptitle
+                                                   squeeze=False)
                     fig_lc.suptitle(f"{main_title_prefix} - Learning Curves per Fold", fontsize=14,
-                                    y=0.99)  # Adjust y for suptitle
+                                    y=0.99)
                     plotted_any_lc = False
                     for fold_idx, history_item in enumerate(fold_histories):
                         if fold_idx >= n_lc_rows: break
@@ -945,7 +915,7 @@ class ResultsPlotter:
                         else:
                             ax_loss.set_xlabel(''); ax_acc.set_xlabel('')
                     if plotted_any_lc:
-                        fig_lc.tight_layout(rect=[0, 0, 1, 0.97])  # Adjust for suptitle
+                        fig_lc.tight_layout(rect=[0, 0, 1, 0.97])
                         s3_key_or_local_path_lc = str(
                             (PurePath(plot_base_for_artifacts) / "learning_curves_all_folds.png"
                         ).as_posix()) if plot_base_for_artifacts else None
@@ -953,9 +923,9 @@ class ResultsPlotter:
                     else:
                         plt.close(fig_lc)
 
-                # --- Grouped Confusion Matrices (Max 2 per row) ---
+                # Grouped Confusion Matrices
                 if SKLEARN_METRICS_AVAILABLE:
-                    n_cm_cols = min(n_folds_actual, 2)  # Max 2 CMs per row
+                    n_cm_cols = min(n_folds_actual, 2)
                     n_cm_rows = (n_folds_actual + n_cm_cols - 1) // n_cm_cols
                     fig_cm, axes_cm = plt.subplots(n_cm_rows, n_cm_cols, figsize=(6 * n_cm_cols, 5.5 * n_cm_rows),
                                                    squeeze=False)
@@ -965,7 +935,7 @@ class ResultsPlotter:
                     for fold_idx, fold_data in enumerate(fold_details):
                         if fold_idx >= len(axes_cm_flat): break
                         ax = axes_cm_flat[fold_idx]
-                        det_data_cm = fold_data.get('detailed_data')  # Initialize for this scope
+                        det_data_cm = fold_data.get('detailed_data')
                         plot_success_cm = False
                         if det_data_cm and isinstance(det_data_cm, dict):
                             y_true, y_pred = det_data_cm.get('y_true'), det_data_cm.get('y_pred')
@@ -986,7 +956,6 @@ class ResultsPlotter:
                     else:
                         plt.close(fig_cm)
 
-                # Helper for grouped ROC/PR plots per fold
                 def _plot_grouped_curves_per_fold(curve_type: str):
                     data_key = f"{curve_type.lower()}_curve_points"
                     plot_title_part = curve_type.upper()
@@ -1076,8 +1045,8 @@ class ResultsPlotter:
                          output_path: Optional[Union[str, Path]] = None, # For saving the plot
                          repository_for_plots: Optional[Any] = None,
                          show_plots: bool = True,
-                         mean: Tuple[float, float, float] = (0.485, 0.456, 0.406), # For denormalization
-                         std: Tuple[float, float, float] = (0.229, 0.224, 0.225)   # For denormalization
+                         mean: Tuple[float, float, float] = (0.485, 0.456, 0.406),
+                         std: Tuple[float, float, float] = (0.229, 0.224, 0.225)
                         ):
         """
         Plots a batch of images (PyTorch tensor).
@@ -1100,19 +1069,17 @@ class ResultsPlotter:
             return
 
         try:
-            # Denormalize the images for proper display
-            # Create a denormalization transform
-            denorm_images = batch_tensor.clone() # Work on a copy
-            for i in range(denorm_images.shape[0]): # Iterate over batch
-                for c in range(denorm_images.shape[1]): # Iterate over channels
+            denorm_images = batch_tensor.clone()
+            for i in range(denorm_images.shape[0]):
+                for c in range(denorm_images.shape[1]):
                     denorm_images[i, c] = denorm_images[i, c] * std[c] + mean[c]
-            denorm_images = torch.clamp(denorm_images, 0, 1) # Clamp to [0, 1] range
+            denorm_images = torch.clamp(denorm_images, 0, 1)
 
             # Make a grid of images
-            grid_img = torchvision.utils.make_grid(denorm_images, nrow=4) # Adjust nrow as needed
+            grid_img = torchvision.utils.make_grid(denorm_images, nrow=4)
 
-            fig, ax = plt.subplots(figsize=(12, max(3, 3 * (batch_tensor.size(0) // 4 + 1 )))) # Adjust figsize
-            ax.imshow(grid_img.permute(1, 2, 0).cpu().numpy()) # Convert to HWC for matplotlib
+            fig, ax = plt.subplots(figsize=(12, max(3, 3 * (batch_tensor.size(0) // 4 + 1 ))))
+            ax.imshow(grid_img.permute(1, 2, 0).cpu().numpy())
             ax.set_title(title, fontsize=14)
             ax.axis('off')
 
@@ -1125,13 +1092,13 @@ class ResultsPlotter:
     def plot_lime_explanation_image(
             original_pil_image: Image.Image,
             lime_explanation_data: Dict[str, Any],
-            lime_num_features_to_display: int,  # Max features for positive, max for negative
+            lime_num_features_to_display: int,
             output_path: Optional[Union[str, Path]],
-            repository_for_plots: Optional[Any],  # ArtifactRepository
+            repository_for_plots: Optional[Any],
             show_plots: bool = False,
             image_identifier: Optional[str] = None,
-            positive_color_rgb: Tuple[float, float, float] = (0, 1, 0),  # Green (0-1 range)
-            negative_color_rgb: Tuple[float, float, float] = (1, 0, 0),  # Red (0-1 range)
+            positive_color_rgb: Tuple[float, float, float] = (0, 1, 0),
+            negative_color_rgb: Tuple[float, float, float] = (1, 0, 0),
             overlay_alpha: float = 0.4  # Blending strength
     ) -> None:
         """
@@ -1144,7 +1111,7 @@ class ResultsPlotter:
 
         fig_lime = None
         try:
-            img_np_original = np.array(original_pil_image.convert("RGB"))  # Ensure 3 channels
+            img_np_original = np.array(original_pil_image.convert("RGB"))
 
             segments = lime_explanation_data.get('segments_for_render')
             feature_weights_list = lime_explanation_data.get('feature_weights', [])
@@ -1155,7 +1122,7 @@ class ResultsPlotter:
                     f"LIME plot skipped for {image_identifier or 'image'}: segments or feature_weights missing.")
                 return
 
-            segments = np.array(segments)  # Ensure it's a numpy array
+            segments = np.array(segments)
 
             if not isinstance(feature_weights_list, list) or \
                     not all(isinstance(item, (tuple, list)) and len(item) == 2 for item in feature_weights_list):
@@ -1163,23 +1130,18 @@ class ResultsPlotter:
                     f"LIME feature_weights for {image_identifier or 'image'} is not a list of (segment, weight) pairs. Skipping LIME plot. Data: {feature_weights_list}")
                 return
 
-            # Prepare image for overlay (float 0-1)
-            if img_np_original.max() > 1.0 and img_np_original.dtype != np.uint8:  # If already float but not 0-1
+            if img_np_original.max() > 1.0 and img_np_original.dtype != np.uint8:
                 img_for_overlay = np.clip(img_np_original.astype(np.float32) / 255.0, 0.0, 1.0)
             elif img_np_original.dtype == np.uint8:
                 img_for_overlay = img_np_original.astype(np.float32) / 255.0
-            else:  # Already float, assume 0-1
+            else:
                 img_for_overlay = img_np_original.astype(np.float32)
 
-            if img_for_overlay.ndim == 2:  # Grayscale
-                img_for_overlay = np.stack([img_for_overlay] * 3, axis=-1)  # Convert to 3-channel RGB
+            if img_for_overlay.ndim == 2:
+                img_for_overlay = np.stack([img_for_overlay] * 3, axis=-1)
 
-            # Initialize overlay layers
-            positive_overlay_mask = np.zeros_like(img_for_overlay[:, :, 0], dtype=bool)  # Single channel boolean mask
+            positive_overlay_mask = np.zeros_like(img_for_overlay[:, :, 0], dtype=bool)
             negative_overlay_mask = np.zeros_like(img_for_overlay[:, :, 0], dtype=bool)
-
-            # Sort features by absolute weight to get top N overall influential
-            # Or, if you want top N positive AND top N negative separately:
 
             positive_influencers = sorted(
                 [(int(seg_id), float(w)) for seg_id, w in feature_weights_list if float(w) > 0],
@@ -1187,7 +1149,7 @@ class ResultsPlotter:
             )
             negative_influencers = sorted(
                 [(int(seg_id), float(w)) for seg_id, w in feature_weights_list if float(w) < 0],
-                key=lambda x: x[1], reverse=False  # Sort ascending for most negative
+                key=lambda x: x[1], reverse=False
             )
 
             num_pos_shown = 0
@@ -1208,23 +1170,20 @@ class ResultsPlotter:
 
             blended_image = img_for_overlay.copy()
 
-            # Apply positive overlay
             if np.any(positive_overlay_mask):
                 blended_image[positive_overlay_mask] = \
                     img_for_overlay[positive_overlay_mask] * (1 - overlay_alpha) + \
                     np.array(positive_color_rgb) * overlay_alpha
 
-            # Apply negative overlay (on top of potentially positive-blended areas or original)
             if np.any(negative_overlay_mask):
                 blended_image[negative_overlay_mask] = \
                     img_for_overlay[negative_overlay_mask] * (1 - overlay_alpha) + \
                     np.array(negative_color_rgb) * overlay_alpha
 
-            # Clip and convert back to uint8 for display if original wasn't float32 in [0,1]
             blended_image = np.clip(blended_image, 0, 1)
-            if original_pil_image.mode != 'F' and original_pil_image.mode != 'RGB' and img_np_original.dtype != np.float32:  # Check if original was likely uint8
+            if original_pil_image.mode != 'F' and original_pil_image.mode != 'RGB' and img_np_original.dtype != np.float32:
                 display_image = (blended_image * 255).astype(np.uint8)
-            else:  # If original was float or RGB float, keep as float for imshow
+            else:
                 display_image = blended_image
 
             if not (np.any(positive_overlay_mask) or np.any(negative_overlay_mask)):
@@ -1247,13 +1206,9 @@ class ResultsPlotter:
 
             if legend_patches:
                 ax.legend(handles=legend_patches, loc='lower center',
-                          bbox_to_anchor=(0.5, -0.1),  # Adjust position below image
+                          bbox_to_anchor=(0.5, -0.1),
                           ncol=len(legend_patches), fontsize='small', frameon=False)
-                fig_lime.subplots_adjust(bottom=0.15)  # Make space for legend
-
-            # _save_figure_or_show should handle tight_layout if needed, or apply it here
-            # fig_lime.tight_layout() # Often good, but can conflict with bbox_to_anchor for legend.
-            # subplots_adjust is often more robust with external legends.
+                fig_lime.subplots_adjust(bottom=0.15)
 
             _save_figure_or_show(fig_lime, repository_for_plots, output_path, show_plots)
 
@@ -1266,29 +1221,28 @@ class ResultsPlotter:
             probabilities: np.ndarray,
             class_names: List[str],
             image_identifier: str,
-            output_path: Optional[Union[str, Path]],  # Full path/key for saving the plot
-            repository_for_plots: Optional[Any],  # ArtifactRepository
+            output_path: Optional[Union[str, Path]],
+            repository_for_plots: Optional[Any],
             show_plots: bool = False,
-            top_n: int = -1  # -1 means show all classes
-    ) -> None:  # Changed to None as it saves/shows internally
+            top_n: int = -1
+    ) -> None:
         """
         Generates, saves, and/or shows a bar chart of class probabilities for a single prediction.
         """
-        if not MATPLOTLIB_AVAILABLE or sns is None:  # Ensure plt is also checked
+        if not MATPLOTLIB_AVAILABLE or sns is None:
             logger.warning(f"Plotting libs not available, skipping probability plot for {image_identifier}.")
             return
-        # ... (parameter validation as in your previous version) ...
         if not isinstance(probabilities, np.ndarray) or probabilities.ndim != 1 or len(probabilities) != len(
                 class_names):
             logger.warning(f"Invalid probabilities or class_names for {image_identifier}.")
             return
 
-        fig_prob = None  # Initialize
+        fig_prob = None
         try:
             if top_n == -1 or top_n >= len(class_names):
-                indices_to_plot = np.argsort(probabilities)[::-1]  # All classes, sorted
+                indices_to_plot = np.argsort(probabilities)[::-1]
             else:
-                indices_to_plot = np.argsort(probabilities)[::-1][:top_n]  # Top N
+                indices_to_plot = np.argsort(probabilities)[::-1][:top_n]
 
             probs_to_plot = probabilities[indices_to_plot]
             names_to_plot = [class_names[i] for i in indices_to_plot]
@@ -1303,12 +1257,12 @@ class ResultsPlotter:
             ax.set_title(plot_title, fontsize=14)
             ax.set_xlabel("Probability", fontsize=12)
             ax.set_ylabel("Class Name", fontsize=12)
-            ax.set_xlim(0, max(1.0, np.max(probs_to_plot) * 1.1))  # Adjust xlim slightly beyond max prob or 1.0
+            ax.set_xlim(0, max(1.0, np.max(probs_to_plot) * 1.1))
 
             for i, prob in enumerate(probs_to_plot):
                 ax.text(prob + 0.01, i, f"{prob:.3f}", va='center', fontsize=9)
 
-            fig_prob.tight_layout()  # Apply tight_layout here
+            fig_prob.tight_layout()
 
             _save_figure_or_show(fig_prob, repository_for_plots, output_path, show_plots)
 

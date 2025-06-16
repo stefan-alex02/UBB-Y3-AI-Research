@@ -1,31 +1,25 @@
-import React, {useState, useEffect, useMemo} from 'react';
+import React, {useEffect, useMemo, useState} from 'react';
 import {
-    Box,
-    Typography,
-    CircularProgress,
-    Paper,
     Alert,
-    Tabs,
-    Tab,
+    Box,
+    Paper,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
     TableRow,
-    TableSortLabel
+    TableSortLabel,
+    Typography
 } from '@mui/material';
 import JsonViewer from './JsonViewer';
 import PlotViewer from './PlotViewer';
 import Papa from 'papaparse';
 import {getComparator, stableSort} from "../../utils/tableUtils";
-// You might need a CSV parsing library like 'papaparse' if you want to render CSVs as tables nicely
-// import Papa from 'papaparse';
 
 const ArtifactViewer = ({
                             artifactName, artifactType, artifactContent, artifactUrl, title,
-                            onImageZoom, // For zoom icon on PlotViewer
-                            // CSV Sorting Props
+                            onImageZoom,
                             csvOrder,
                             csvOrderBy,
                             onCsvSortRequest,
@@ -37,11 +31,11 @@ const ArtifactViewer = ({
 
     useEffect(() => {
         if (typeLower === 'csv' && artifactContent && typeof artifactContent === 'string') {
-            setCsvError(null); // Reset CSV error
+            setCsvError(null);
             Papa.parse(artifactContent, {
                 header: true,
                 skipEmptyLines: true,
-                dynamicTyping: true, // Tries to convert numbers/booleans
+                dynamicTyping: true,
                 complete: (results) => {
                     if (results.errors.length > 0) {
                         console.error("Papaparse errors:", results.errors);
@@ -59,18 +53,16 @@ const ArtifactViewer = ({
                 }
             });
         } else {
-            setParsedCsvData(null); // Clear if not CSV or no content
+            setParsedCsvData(null);
             setCsvError(null);
         }
     }, [typeLower, artifactContent]);
 
     const sortedCsvDataForDisplay = useMemo(() => {
-        // Check if parsedCsvData and its data property exist AND data is an array
         if (typeLower === 'csv' && isSortable && csvOrderBy &&
             parsedCsvData && Array.isArray(parsedCsvData.data) && parsedCsvData.data.length > 0) {
             return stableSort(parsedCsvData.data, getComparator(csvOrder, csvOrderBy));
         }
-        // If not sorting, or not CSV, or parsedCsvData is null, or data is not an array, return original or empty
         return (parsedCsvData && Array.isArray(parsedCsvData.data)) ? parsedCsvData.data : [];
     }, [typeLower, parsedCsvData, csvOrder, csvOrderBy, isSortable]);
 
@@ -80,11 +72,11 @@ const ArtifactViewer = ({
 
     switch (typeLower) {
         case 'json':
-            console.log("ArtifactViewer received for JSON:", typeof artifactContent, artifactContent); // DEBUG
+            console.log("ArtifactViewer received for JSON:", typeof artifactContent, artifactContent);
             return <JsonViewer jsonData={artifactContent} title={title || artifactName} />;
         case 'image':
             if (!artifactUrl) return <Alert severity="warning">Image URL missing.</Alert>;
-            return <PlotViewer artifactUrl={artifactUrl} altText={artifactName} title={title || artifactName} onZoom={onImageZoom} />; // Pass onImageZoom
+            return <PlotViewer artifactUrl={artifactUrl} altText={artifactName} title={title || artifactName} onZoom={onImageZoom} />;
         case 'log':
         case 'txt':
             return (
@@ -97,9 +89,8 @@ const ArtifactViewer = ({
             );
         case 'csv':
             if (csvError) {
-                return <Alert severity="error" sx={{m:1, flexShrink:0}}>{csvError}</Alert>; // Display CSV parsing error
+                return <Alert severity="error" sx={{m:1, flexShrink:0}}>{csvError}</Alert>;
             }
-            // Ensure parsedCsvData AND parsedCsvData.headers exist before trying to render table
             if (parsedCsvData && parsedCsvData.headers && Array.isArray(sortedCsvDataForDisplay)) {
                 const createSortHandler = (property) => (event) => {
                     if (onCsvSortRequest && isSortable) {
@@ -108,7 +99,7 @@ const ArtifactViewer = ({
                 };
 
                 return (
-                    <Paper elevation={0} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow:'hidden', alignItems: 'center' /* Center table if narrower than container */ }}>
+                    <Paper elevation={0} sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow:'hidden', alignItems: 'center'}}>
                         {title && <Typography variant="subtitle2" gutterBottom sx={{px:1, pt:1, flexShrink:0, alignSelf: 'flex-start'}}>{title || artifactName}</Typography>}
                         <TableContainer sx={{ flexGrow: 1, overflow: 'auto', width: 'fit-content', maxWidth: '100%'}}>
                             <Table stickyHeader size="small">
@@ -130,7 +121,6 @@ const ArtifactViewer = ({
                                     </TableRow>
                                 </TableHead>
                                 <TableBody>
-                                    {/* sortedCsvDataForDisplay is now guaranteed to be an array here */}
                                     {sortedCsvDataForDisplay.map((row, rowIndex) => (
                                         <TableRow key={rowIndex} hover>
                                             {parsedCsvData.headers.map((header) => (
@@ -145,10 +135,9 @@ const ArtifactViewer = ({
                     </Paper>
                 );
             }
-            // If parsedCsvData or parsedCsvData.headers is null/undefined, show processing or empty state
             return <Box sx={{p:2, textAlign:'center'}}><Typography>Processing CSV data or no headers found...</Typography></Box>;
         case 'model':
-        case 'info': // Handling for .pt files
+        case 'info':
             return (
                 <Paper elevation={1} sx={{ p: 2, my: 1, backgroundColor: 'action.disabledBackground' }}>
                     <Typography variant="subtitle1" gutterBottom>{title || artifactName}</Typography>

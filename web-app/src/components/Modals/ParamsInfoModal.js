@@ -1,40 +1,35 @@
-// src/components/Modals/ParamsInfoModal.js
 import React from 'react';
 import {
-    Dialog,
-    DialogTitle,
-    DialogContent,
-    IconButton,
-    Typography,
-    Box,
     Accordion,
-    AccordionSummary,
     AccordionDetails,
+    AccordionSummary,
+    Button,
+    Chip,
+    Dialog,
+    DialogContent,
+    DialogTitle,
+    IconButton,
     List,
     ListItem,
     ListItemText,
-    Chip,
-    Button
+    Typography
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { PARAM_INFO } from '../../pages/experimentConfig';
-import DialogActions from "@mui/material/DialogActions"; // Adjust path
+import {PARAM_INFO} from '../../pages/experimentConfig';
+import DialogActions from "@mui/material/DialogActions";
 
 const ParamsInfoModal = ({ open, onClose, currentMethodName, currentModelType }) => {
-    // Filter/select relevant PARAM_INFO sections based on currentMethodName and currentModelType
     const getRelevantParams = () => {
         let relevant = [...PARAM_INFO.common_skorch];
         if (currentModelType === 'cnn' || currentModelType === 'stfeat' || currentModelType === 'cnn_feat') {
             relevant = relevant.concat(PARAM_INFO.module_cnn || []);
         } else if (currentModelType === 'pvit' || currentModelType === 'svit' || currentModelType === 'hyvit' || currentModelType === 'swin') {
-            relevant = relevant.concat(PARAM_INFO.module_vit || []); // Assuming module_vit covers these
+            relevant = relevant.concat(PARAM_INFO.module_vit || []);
         }
-        // Add params specific to the method itself (like param_grid for grid_search)
         if (currentMethodName === 'non_nested_grid_search' || currentMethodName === 'nested_grid_search') {
             relevant = relevant.concat(PARAM_INFO.grid_search_specific || []);
         }
-        // Add more conditions for other methods/models
         return relevant;
     };
 
@@ -54,7 +49,6 @@ const ParamsInfoModal = ({ open, onClose, currentMethodName, currentModelType })
                     All keys and string values must be in double quotes in raw JSON.
                 </Typography>
 
-                {/* Could group by PARAM_INFO sections if desired */}
                 <Accordion defaultExpanded>
                     <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                         <Typography variant="subtitle1">Relevant Parameters for "{currentMethodName}" with "{currentModelType}"</Typography>
@@ -75,7 +69,6 @@ const ParamsInfoModal = ({ open, onClose, currentMethodName, currentModelType })
                     </AccordionDetails>
                 </Accordion>
 
-                {/* Add more accordions for other general sections if PARAM_INFO is structured that way */}
             </DialogContent>
             <DialogActions>
                 <Button onClick={onClose}>Close</Button>

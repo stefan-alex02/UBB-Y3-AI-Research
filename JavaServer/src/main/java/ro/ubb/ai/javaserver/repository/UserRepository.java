@@ -1,8 +1,9 @@
 package ro.ubb.ai.javaserver.repository;
 
-import ro.ubb.ai.javaserver.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import ro.ubb.ai.javaserver.entity.User;
+
 import java.util.Optional;
 
 @Repository

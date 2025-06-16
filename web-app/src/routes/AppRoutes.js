@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import {Navigate, Route, Routes} from 'react-router-dom';
 import Layout from '../components/Layout/Layout';
 import HomePage from '../pages/HomePage';
 import LoginPage from '../pages/LoginPage';
@@ -21,7 +21,7 @@ const AppRoutes = () => {
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
 
-            <Route element={<Layout />}> {/* Routes within Layout will have Sidenav and TopBar */}
+            <Route element={<Layout />}>
                 <Route path="/" element={<PrivateRoute><HomePage /></PrivateRoute>} />
                 <Route path="/settings" element={<PrivateRoute><SettingsPage /></PrivateRoute>} />
                 <Route path="/images" element={<PrivateRoute><UploadedImagesPage /></PrivateRoute>} />
@@ -45,14 +45,13 @@ const AppRoutes = () => {
                     }
                 />
                 <Route
-                    path="/experiments/:experimentRunId" // Match Java's experimentRunId
+                    path="/experiments/:experimentRunId"
                     element={
                         <PrivateRoute requiredRole="METEOROLOGIST">
                             <ViewExperimentPage />
                         </PrivateRoute>
                     }
                 />
-                {/* Fallback for logged-in users if no other route matches */}
                 <Route path="*" element={<PrivateRoute><Navigate to="/" replace /></PrivateRoute>} />
             </Route>
         </Routes>

@@ -18,7 +18,7 @@ public class RegisterRequest {
     @Size(max = 255)
     private String name;
 
-    private Role role = Role.NORMAL; // Default role
+    private Role role = Role.NORMAL;
 
-    private String meteorologistPasscode; // Optional, only for METEOROLOGIST registration
+    private String meteorologistPasscode;
 }

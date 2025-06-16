@@ -1,10 +1,9 @@
 from datetime import datetime
+from typing import List, Dict, Any, Union, Optional
 
 from pydantic import BaseModel, Field
-from typing import List, Dict, Any, Tuple, Union, Optional
 
 
-# --- Experiment Related ---
 class ExperimentMethodParams(BaseModel):
     method_name: str = Field(..., description="Name of the pipeline method, e.g., 'single_train'")
     params: Dict[str, Any] = Field(default_factory=dict, description="Parameters for the method's 'params' arg (e.g., Skorch HPs or GridSearchCV config)")
@@ -25,14 +24,14 @@ class ExperimentMethodParams(BaseModel):
     use_best_params_from_step: Optional[int] = None
 
     class Config:
-        pass # Keep if needed for other Pydantic settings
+        pass
 
 
-class RunExperimentRequest(BaseModel): # This is what Python's /experiments/run endpoint expects
+class RunExperimentRequest(BaseModel):
     experiment_run_id: str = Field(..., description="System-generated unique ID from Java, used for artifact paths")
     dataset_name: str
     model_type: str
-    methods_sequence: List[ExperimentMethodParams] # List of the Pydantic model above
+    methods_sequence: List[ExperimentMethodParams]
     img_size_h: Optional[int] = None
     img_size_w: Optional[int] = None
     offline_augmentation: Optional[bool] = False
@@ -40,7 +39,6 @@ class RunExperimentRequest(BaseModel): # This is what Python's /experiments/run 
     test_split_ratio_if_flat: Optional[float] = None
     random_seed: Optional[int] = None
     force_flat_for_fixed_cv: Optional[bool] = False
-    # save_model_default: Optional[bool] = None # If you removed this global flag
 
 
 class ExperimentRunResponse(BaseModel):
@@ -51,36 +49,32 @@ class ExperimentRunResponse(BaseModel):
 
 class ArtifactNode(BaseModel):
     name: str
-    path: str # Full path relative to experiment_run_id folder for files, or relative to prefix for folders
-    type: str # 'file' or 'folder' or 'log', 'json', 'csv', 'png', 'pt' etc.
+    path: str
+    type: str
     children: Optional[List['ArtifactNode']] = None
-    size: Optional[int] = None # Optional: file size in bytes
-    last_modified: Optional[datetime] = None # Optional: last modified timestamp
+    size: Optional[int] = None
+    last_modified: Optional[datetime] = None
 ArtifactNode.model_rebuild()
 
 
-# --- Prediction Related ---
-class ImagePredictionTask(BaseModel): # NEW
-    image_id: str # From Java's Image.id
+class ImagePredictionTask(BaseModel):
+    image_id: str
     image_format: str
-    prediction_id: str # From Java's Prediction.id (newly created)
+    prediction_id: str
 
 
 class ModelLoadDetails(BaseModel):
-    # Information needed to reconstruct the model path for loading
-    # These parts form the prefix: experiments/{dataset_name_of_model}/{model_type_of_model}/{experiment_run_id_of_model_producer}/
     dataset_name_of_model: str
     model_type_of_model: str
     experiment_run_id_of_model_producer: str
-    # This is the path relative to the prefix above
-    relative_model_path_in_experiment: str # e.g., "single_train_0/cnn_epoch5_val_loss0.123.pt"
+    relative_model_path_in_experiment: str
 
 
 class RunPredictionRequest(BaseModel):
     username: str
-    image_prediction_tasks: List[ImagePredictionTask] # CHANGED
-    model_load_details: Optional[ModelLoadDetails] # Make optional if predictions can use a default model
-    experiment_run_id_of_model: Optional[str] = None # Context for which model logic to use
+    image_prediction_tasks: List[ImagePredictionTask]
+    model_load_details: Optional[ModelLoadDetails]
+    experiment_run_id_of_model: Optional[str] = None
 
     generate_lime: Optional[bool] = False
     lime_num_features: Optional[int] = 5

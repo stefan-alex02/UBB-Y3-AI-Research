@@ -8,14 +8,13 @@ from pathlib import Path, PurePath
 from typing import Dict, List, Tuple, Any, Optional, Union, Callable
 
 from .pipeline import ClassificationPipeline
-from ..architectures import ModelType  # Assuming ModelType is in architectures or config
+from ..architectures import ModelType
 from ..config import logger_name_global, DEFAULT_IMG_SIZE, RANDOM_SEED as DEFAULT_PIPELINE_SEED, \
-    AugmentationStrategy, apply_random_seed  # Assuming these are in config
-from ..logger_utils import setup_logger, logger  # Import the logger instance
+    AugmentationStrategy, apply_random_seed
+from ..logger_utils import setup_logger, logger
 from ...persistence import ArtifactRepository, LocalFileSystemRepository, MinIORepository
 
 
-# Define a custom exception for executor-level failures if you want more specific handling
 class ExecutorRunFailedError(RuntimeError):
     """Custom exception for when one or more methods in the executor fail."""
     def __init__(self, message, failed_method_id=None, original_exception=None, results_so_far=None):
@@ -33,38 +32,34 @@ class PipelineExecutor:
                  model_type: Union[str, ModelType] = ModelType.CNN,
                  model_load_path: Optional[Union[str, Path]] = None,
                  artifact_repository: Optional[ArtifactRepository] = None,
-                 experiment_base_key_prefix: str = "experiments",  # e.g., "experiments"
+                 experiment_base_key_prefix: str = "experiments",
                  results_detail_level: int = 1,
                  plot_level: int = 0,
-                 save_main_log_file: bool = True,  # <<< NEW PARAMETER
+                 save_main_log_file: bool = True,
                  methods: Optional[List[Tuple[str, Dict[str, Any]]]] = None,
                  img_size: Tuple[int, int] = DEFAULT_IMG_SIZE,
                  val_split_ratio: float = 0.2,
                  test_split_ratio_if_flat: float = 0.2,
-                 # --- Pass-through to ClassificationPipeline ---
                  augmentation_strategy: Union[
                      str, AugmentationStrategy, Callable, None] = AugmentationStrategy.DEFAULT_STANDARD,
                  show_first_batch_augmentation_default: bool = False,
-                 use_offline_augmented_data: bool = False,  # Will be passed to Pipeline
+                 use_offline_augmented_data: bool = False,
                  force_flat_for_fixed_cv: bool = False,
-                 # --- Pass-through Skorch/Module defaults to ClassificationPipeline ---
                  lr: float = 0.001,
                  max_epochs: int = 20,
                  batch_size: int = 32,
                  patience: int = 10,
                  optimizer__weight_decay: float = 0.01,
                  module__dropout_rate: Optional[float] = None,
-                 # --- Allow other kwargs to be passed to ClassificationPipeline for Skorch ---
                  **kwargs
                  ):
 
-        self.save_main_log_file = save_main_log_file  # Store the flag
+        self.save_main_log_file = save_main_log_file
         self.seed_to_use = random_seed_override if random_seed_override is not None else DEFAULT_PIPELINE_SEED
         apply_random_seed(self.seed_to_use)
 
         logger.info(f"PipelineExecutor initialized with effective random seed: {self.seed_to_use}")
 
-        # --- 1. Determine key identifiers and paths FIRST ---
         _model_type_enum: ModelType
         if isinstance(model_type, str):
             try:
@@ -80,49 +75,42 @@ class PipelineExecutor:
 
         if conceptual_experiment_run_name:
             self.conceptual_experiment_run_name = conceptual_experiment_run_name
-            # Log that we are using the provided ID
-            # The logger might not be fully set up here yet, so print or delay detailed logging
             print(
                 f"[Executor Init] Using provided conceptual_experiment_run_name: {self.conceptual_experiment_run_name}")
         else:
-            # Fallback if Java somehow didn't send it (shouldn't happen with new flow)
             timestamp_init_for_path = datetime.now().strftime('%Y%m%d_%H%M%S')
             self.conceptual_experiment_run_name = f"{timestamp_init_for_path}_seed{self.seed_to_use}"
             print(f"[Executor Init] Generating conceptual_experiment_run_name: {self.conceptual_experiment_run_name}")
 
-        # This is the top-level directory/prefix for *all* artifacts of this specific executor run
-        # e.g., "experiments/CCSN/pvit/20250605_120000_seed42"
         self.current_executor_run_artifacts_prefix = str(PurePath(
-            experiment_base_key_prefix,  # Should be "experiments"
+            experiment_base_key_prefix,
             dataset_name_for_path,
             _model_type_enum.value,
             self.conceptual_experiment_run_name
         ).as_posix())
 
-        # --- 2. Configure Logger ---
-        log_file_name_base = f"executor_run_{self.conceptual_experiment_run_name}.log"  # Renamed for clarity
+        # Configure Logger
+        log_file_name_base = f"executor_run_{self.conceptual_experiment_run_name}.log"
         log_dir_for_file_setup: Optional[Path] = None
         self.log_file_local_path: Optional[Path] = None
         self.temp_log_dir: Optional[Path] = None
 
         if self.save_main_log_file:
             if isinstance(artifact_repository, LocalFileSystemRepository):
-                # Log file goes directly into the experiment's specific local folder
                 log_dir_for_file_setup = Path(
                     artifact_repository.base_path) / self.current_executor_run_artifacts_prefix
                 log_dir_for_file_setup.mkdir(parents=True, exist_ok=True)
                 self.log_file_local_path = log_dir_for_file_setup / log_file_name_base
-            elif artifact_repository:  # MinIO or other non-local repo
+            elif artifact_repository:
                 self.temp_log_dir = Path(tempfile.mkdtemp(prefix="pipeline_run_logs_"))
                 self.log_file_local_path = self.temp_log_dir / log_file_name_base
                 log_dir_for_file_setup = self.temp_log_dir
-            # If no repo, log_dir_for_file_setup remains None -> console only for file part of logger
 
         setup_logger(
             name=logger_name_global,
-            log_dir=log_dir_for_file_setup,  # Will be None if not saving to file
+            log_dir=log_dir_for_file_setup,
             log_filename=log_file_name_base if log_dir_for_file_setup else "console_only.log",
-            level=logging.DEBUG,  # Or your desired global level
+            level=logging.DEBUG,
             use_colors=True
         )
 
@@ -147,13 +135,11 @@ class PipelineExecutor:
         else:
             logger.info("No Artifact Repository provided. Outputs will not be saved persistently by repository.")
 
-        # --- 3. Initialize Pipeline ---
-        # Combine direct params and kwargs for ClassificationPipeline
+        # Initialize Pipeline
         pipeline_init_kwargs = {
             "dataset_path": dataset_path, "model_type": _model_type_enum,
             "model_load_path": model_load_path, "artifact_repository": artifact_repository,
             "experiment_base_key_prefix": self.current_executor_run_artifacts_prefix,
-            # Pipeline uses this to create sub-folders for its methods
             "results_detail_level": results_detail_level, "plot_level": plot_level,
             "img_size": img_size, "val_split_ratio": val_split_ratio,
             "test_split_ratio_if_flat": test_split_ratio_if_flat,
@@ -165,16 +151,16 @@ class PipelineExecutor:
             "optimizer__weight_decay": optimizer__weight_decay,
             "module__dropout_rate": module__dropout_rate
         }
-        pipeline_init_kwargs.update(kwargs)  # Add any other explicit kwargs for pipeline
+        pipeline_init_kwargs.update(kwargs)
 
         self.pipeline = ClassificationPipeline(**pipeline_init_kwargs)
 
         self.methods_to_run = methods if methods is not None else []
-        self.all_results: Dict[str, Any] = {}  # Will be populated in run()
+        self.all_results: Dict[str, Any] = {}
         try:
             self._validate_methods()
         except ValueError as e:
-            logger.error(f"Method validation failed: {e}", exc_info=True)  # Log with exc_info
+            logger.error(f"Method validation failed: {e}", exc_info=True)
             raise
         if self.methods_to_run:
             logger.info(f"Executor configured to run methods: {', '.join(m[0] for m in self.methods_to_run)}")
@@ -201,20 +187,15 @@ class PipelineExecutor:
         logger.debug("Basic method validation successful.")
 
     def _get_previous_result(self, step_index: int, method_operation_id_key: str) -> Optional[Dict[str, Any]]:
-        # This helper is less used now as logic is in run()
-        # But if used, it needs the correct key
         if step_index < 0 or step_index >= len(self.methods_to_run): return None
-        # prev_method_name, _ = self.methods_to_run[step_index];
-        # run_id_key_for_results = f"{prev_method_name}_{step_index}"; # This was the old key
         return self.all_results.get(method_operation_id_key)
 
-    def _upload_and_cleanup_log_if_needed(self):  # Extracted log saving to a helper
+    def _upload_and_cleanup_log_if_needed(self):
         if self.save_main_log_file and \
                 self.pipeline.artifact_repo and \
                 self.log_file_local_path and \
                 self.log_file_local_path.exists():
 
-            # Ensure logger is flushed and handlers closed BEFORE upload if MinIO
             active_logger = logging.getLogger(logger_name_global)
             file_handler_to_close = None
             for handler in active_logger.handlers[:]:
@@ -223,10 +204,8 @@ class PipelineExecutor:
                         Path(handler.baseFilename).resolve() == self.log_file_local_path.resolve():
                     logger.debug(f"Flushing and closing log handler for: {handler.baseFilename} before upload/cleanup.")
                     handler.flush()
-                    handler.close()  # This REMOVES the handler from the logger implicitly
-                    # To re-add after upload if needed (not typical for a single run log):
-                    # active_logger.addHandler(handler)
-                    break  # Assume only one file handler for this specific path
+                    handler.close()
+                    break
 
             if isinstance(self.pipeline.artifact_repo, MinIORepository):
                 log_artifact_key = str(
@@ -250,7 +229,6 @@ class PipelineExecutor:
         if self.save_main_log_file:
             if isinstance(self.pipeline.artifact_repo, LocalFileSystemRepository) and self.log_file_local_path:
                 logger.info(f"Main executor log file available at: {self.log_file_local_path}")
-            # Other log messages for disabled/no path remain same
 
     def run(self) -> Dict[str, Any]:
         self.all_results: dict = {'executor_run_id': self.conceptual_experiment_run_name, 'seed_used': self.seed_to_use}
@@ -260,13 +238,13 @@ class PipelineExecutor:
         failed_method_id_for_exception = None
         error_message_for_exception = "Unknown error in method execution"
         original_exception_obj = None
-        try:  # Main try for the loop and subsequent success logging
+        try:
             for i, (method_name, params_from_sequence) in enumerate(self.methods_to_run):
                 method_operation_id = f"{method_name}_{i}"
                 logger.info(
                     f"--- Running Method {i + 1}/{len(self.methods_to_run)}: {method_name} (Op ID: {method_operation_id}) ---")
 
-                current_params = params_from_sequence.copy()  # These are the kwargs for the pipeline method
+                current_params = params_from_sequence.copy()
 
                 use_best_params_key = 'use_best_params_from_step'
                 step_index_to_use_params_from = current_params.pop(use_best_params_key, None)
@@ -293,11 +271,10 @@ class PipelineExecutor:
                         logger.info(
                             f"Method '{method_name}': Will use best_params from step {step_index_to_use_params_from} (Op ID: {prev_method_op_id_key}): {best_params_from_prev}")
 
-                        # Merge/Override logic: user-defined HPs for this step take precedence
                         final_skorch_hps = best_params_from_prev.copy()
-                        final_skorch_hps.update(user_defined_skorch_hps_for_this_step)  # User's override/add
+                        final_skorch_hps.update(user_defined_skorch_hps_for_this_step)
 
-                        current_params['params'] = final_skorch_hps  # Update the 'params' key in method args
+                        current_params['params'] = final_skorch_hps
                         logger.info(f"  Merged/Overridden Skorch HPs for '{method_name}': {final_skorch_hps}")
                     else:
                         err_msg = f"No 'best_params' dict found in results of step {step_index_to_use_params_from}."
@@ -306,8 +283,7 @@ class PipelineExecutor:
                             failed_method_id=method_operation_id,
                             results_so_far=self.all_results
                         )
-                        # break # Old behavior
-                elif user_defined_skorch_hps_for_this_step:  # No best_params injection, but user defined some
+                elif user_defined_skorch_hps_for_this_step:
                     current_params['params'] = user_defined_skorch_hps_for_this_step
 
                 logger.debug(f"Running method '{method_name}' with effective parameters: {current_params}")
@@ -340,7 +316,7 @@ class PipelineExecutor:
                     original_exception_obj = fnf_err
                     execution_successful = False
                     break
-                except RuntimeError as rt_err:  # Includes Skorch/PyTorch runtime errors
+                except RuntimeError as rt_err:
                     logger.error(f"!!! Runtime error during '{method_name}' (Op ID: {method_operation_id}): {rt_err}",
                                  exc_info=True)
                     self.all_results[method_operation_id] = {"error": str(rt_err), "traceback": traceback.format_exc(),
@@ -350,7 +326,7 @@ class PipelineExecutor:
                     original_exception_obj = rt_err
                     execution_successful = False
                     break
-                except Exception as e:  # Catch-all for unexpected errors
+                except Exception as e:
                     logger.critical(
                         f"!!! Unexpected critical error during '{method_name}' (Op ID: {method_operation_id}): {e}",
                         exc_info=True)
@@ -361,16 +337,12 @@ class PipelineExecutor:
                     original_exception_obj = e
                     execution_successful = False
                     break
-                # If any of the above except blocks were entered and 'break' was called,
-                # we need to propagate this failure out of the run() method.
 
-            # After the loop finishes or breaks
             total_duration = time.time() - start_time_total
             if not execution_successful:
                 logger.error(
                     f"Pipeline execution for Run ID {self.conceptual_experiment_run_name} HALTED due to failure in method '{failed_method_id_for_exception}'. Total duration before halt: {total_duration:.2f}s."
                 )
-                # This error will be caught by _execute_pipeline_task
                 raise ExecutorRunFailedError(
                     message=f"Execution failed at method '{failed_method_id_for_exception}': {error_message_for_exception}",
                     failed_method_id=failed_method_id_for_exception,
@@ -383,6 +355,6 @@ class PipelineExecutor:
 
             return self.all_results
 
-        finally: # This block will execute whether an exception occurred or not
+        finally:
             logger.info(f"Executor run for {self.conceptual_experiment_run_name} attempting final log operations.")
             self._upload_and_cleanup_log_if_needed()

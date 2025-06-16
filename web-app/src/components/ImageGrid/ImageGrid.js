@@ -1,6 +1,6 @@
 import React from 'react';
-import { Grid, Typography, Box } from '@mui/material';
-import ImageCard from './ImageCard'; // Create this component
+import {Box, Grid, Typography} from '@mui/material';
+import ImageCard from './ImageCard';
 
 const ImageGrid = ({ images, onDelete, selectedImageIds, onImageSelect }) => {
     if (!images || images.length === 0) {

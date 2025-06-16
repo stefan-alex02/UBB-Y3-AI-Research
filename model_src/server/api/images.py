@@ -1,16 +1,14 @@
-from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Request as FastAPIRequest
-from fastapi.responses import StreamingResponse
 import io
 import logging
 from pathlib import PurePath
-from pydantic import BaseModel
 
-# from app.main import artifact_repo_instance # Avoid global
-import logging
-from ..core.config import APP_LOGGER_NAME # Import the consistent name
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request as FastAPIRequest
+from fastapi.responses import StreamingResponse
+
+from ..core.config import APP_LOGGER_NAME
 from ..persistence import ArtifactRepository
 
-logger = logging.getLogger(APP_LOGGER_NAME) # Use the same name
+logger = logging.getLogger(APP_LOGGER_NAME)
 
 router = APIRouter()
 
@@ -18,12 +16,11 @@ router = APIRouter()
 @router.post("/upload")
 async def upload_image_endpoint(
     fast_api_request: FastAPIRequest,
-    username: str = Form(None), # Temporarily optional for debugging
+    username: str = Form(None),
     image_id: str = Form(None),
     image_format: str = Form(None),
     file: UploadFile = File(None)
 ):
-    # Log the raw form data
     try:
         form_data = await fast_api_request.form()
         logger.info(f"PYTHON RAW FORM DATA RECEIVED: {form_data}")
@@ -36,14 +33,9 @@ async def upload_image_endpoint(
     logger.info(f"PYTHON PROCESSED image_format: {image_format}")
     if file:
         logger.info(f"PYTHON PROCESSED file: filename='{file.filename}', content_type='{file.content_type}', size={file.size}")
-        # # To inspect first few bytes if needed (be careful with large files)
-        # content_sample = await file.read(100)
-        # logger.info(f"PYTHON file content sample (first 100 bytes): {content_sample}")
-        # await file.seek(0) # Reset read pointer if you read from it
     else:
         logger.info("PYTHON PROCESSED file: None or not recognized")
 
-    # Your original validation and logic
     if not username or not image_id or not image_format or not file:
         missing = []
         if not username: missing.append("username")
@@ -60,7 +52,6 @@ async def upload_image_endpoint(
     try:
         artifact_repo = fast_api_request.app.state.artifact_repo
         contents = await file.read()
-        # Assuming save_image_object(image_bytes, key, content_type)
         content_type = file.content_type if file.content_type else 'application/octet-stream'
         saved_path = artifact_repo.save_image_object(contents, image_key, content_type=content_type)
         if not saved_path:
@@ -77,13 +68,12 @@ async def get_image_endpoint(username: str, image_filename_with_ext: str, fast_a
     if not artifact_repo:
         raise HTTPException(status_code=500, detail="Artifact repository not configured.")
 
-    # image_filename_with_ext already includes the extension
     image_key = f"images/{username}/{image_filename_with_ext}"
-    logger.debug(f"Attempting to retrieve image from Python storage: {image_key}")  # Changed log
+    logger.debug(f"Attempting to retrieve image from Python storage: {image_key}")
     try:
         file_bytes = artifact_repo.download_file_to_memory(image_key)
         if file_bytes is None:
-            logger.warning(f"Image not found in Python storage: {image_key}")  # Added warning
+            logger.warning(f"Image not found in Python storage: {image_key}")
             raise HTTPException(status_code=404, detail="Image not found.")
 
         media_type = "application/octet-stream"
@@ -93,10 +83,9 @@ async def get_image_endpoint(username: str, image_filename_with_ext: str, fast_a
             media_type = "image/jpeg"
         elif image_filename_with_ext.lower().endswith(".gif"):
             media_type = "image/gif"
-        # Add more types as needed
 
         return StreamingResponse(io.BytesIO(file_bytes), media_type=media_type)
-    except HTTPException:  # Re-raise HTTPException (like 404)
+    except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Error retrieving image {image_key} from Python storage: {e}", exc_info=True)
@@ -106,7 +95,7 @@ async def get_image_endpoint(username: str, image_filename_with_ext: str, fast_a
 @router.delete("/{username}/{image_id_with_format}")
 async def delete_image_api(
         username: str,
-        image_id_with_format: str,  # e.g., "123.png"
+        image_id_with_format: str,
         fast_api_request: FastAPIRequest
 ):
     logger.info(f"Received request to delete image: {image_id_with_format} for user {username}")
@@ -118,8 +107,6 @@ async def delete_image_api(
 
     success = artifact_repo.delete_object(image_key)
     if success:
-        # Also delete all associated prediction folders for this image
-        # Prediction folder structure: predictions/{username}/{image_id_without_ext}/
         image_id_without_ext = PurePath(image_id_with_format).stem
         predictions_prefix_for_image = str((PurePath("predictions") / username / image_id_without_ext).as_posix()) + "/"
         logger.info(
@@ -128,9 +115,7 @@ async def delete_image_api(
         if not preds_deleted_success:
             logger.warning(
                 f"Failed to delete all prediction artifacts for image {image_id_with_format}, but image file itself might be deleted.")
-            # Decide if this should be a partial success or an error. For now, proceed.
 
         return {"message": f"Image {image_key} and associated predictions deletion process initiated."}
     else:
-        # If image deletion itself failed, it's more critical
         raise HTTPException(status_code=500, detail=f"Failed to delete image file {image_key} from artifact store.")

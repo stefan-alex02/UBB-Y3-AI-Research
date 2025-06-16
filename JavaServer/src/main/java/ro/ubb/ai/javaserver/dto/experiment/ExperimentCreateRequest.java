@@ -1,9 +1,9 @@
 package ro.ubb.ai.javaserver.dto.experiment;
 
-import lombok.Data;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.Size;
+import lombok.Data;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
 public class ExperimentCreateRequest {
     @NotBlank
     @Size(max = 255)
-    private String name; // User-friendly name - THIS IS NOW THE PRIMARY NAME
+    private String name;
 
     @NotBlank
     @Size(max = 50)
@@ -22,12 +22,10 @@ public class ExperimentCreateRequest {
     private String datasetName;
 
     @NotEmpty
-    private List<PythonExperimentMethodParamsDTO> methodsSequence; // This DTO has Map<String, Object> params
+    private List<PythonExperimentMethodParamsDTO> methodsSequence;
 
-    // Optional overrides
     private Integer imgSizeH;
     private Integer imgSizeW;
-    // private Boolean saveModelDefault; // Removed from React UI, can be removed here too if Python executor handles it
     private Boolean offlineAugmentation;
     private String augmentationStrategyOverride;
     private Float testSplitRatioIfFlat;

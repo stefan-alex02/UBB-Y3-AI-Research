@@ -17,7 +17,17 @@ DEFAULT_LR_SCHEDULER_NAME = 'default_lr_scheduler'
 
 
 def _resolve_optimizer(opt_val_or_list: Any) -> Any:
-    """Converts optimizer string(s) to type(s)."""
+    """
+    Converts optimizer string name(s) to PyTorch optimizer type(s).
+
+    Args:
+        opt_val_or_list: String name of optimizer (e.g., 'adam', 'adamw', 'sgd'),
+                         a list of such strings, or an existing optimizer type/instance.
+
+    Returns:
+        The corresponding PyTorch optimizer type(s) from the OPTIMIZER_MAP if input was string(s),
+        or the unchanged input if it wasn't a string or list of strings.
+    """
     if isinstance(opt_val_or_list, list):
         return [OPTIMIZER_MAP.get(opt.lower(), opt) if isinstance(opt, str) else opt for opt in opt_val_or_list]
     elif isinstance(opt_val_or_list, str):
@@ -26,8 +36,15 @@ def _resolve_optimizer(opt_val_or_list: Any) -> Any:
 
 def _resolve_scheduler_policy_class(policy_name_or_class: Union[str, Type]) -> Type:
     """
-    Resolves a scheduler policy string (e.g., "torch.optim.lr_scheduler.CosineAnnealingWarmRestarts")
-    or a class to the actual class type.
+    Converts optimizer string name(s) to PyTorch optimizer type(s).
+
+    Args:
+        opt_val_or_list: String name of optimizer (e.g., 'adam', 'adamw', 'sgd'),
+                         a list of such strings, or an existing optimizer type/instance.
+
+    Returns:
+        The corresponding PyTorch optimizer type(s) from the OPTIMIZER_MAP if input was string(s),
+        or the unchanged input if it wasn't a string or list of strings.
     """
     if isinstance(policy_name_or_class, str):
         if '.' in policy_name_or_class: # Fully qualified path
@@ -60,19 +77,27 @@ def parse_fixed_hyperparameters(
         default_max_epochs_for_cosine: Optional[int] = None
 ) -> Dict[str, Any]:
     """
-    Parses a dictionary of fixed hyperparameters:
-    - Resolves optimizer string to its type.
-    - Constructs the LRScheduler callback object from its policy string and params.
-    - Prepares other callback parameters if specified.
+    Processes fixed hyperparameters for use with Skorch models.
 
     Args:
-        fixed_params: Dictionary of hyperparameters.
-                      'optimizer' can be a string.
-                      'callbacks__<name>__policy' and related scheduler params are expected.
-        default_max_epochs_for_cosine: Used for T_max in CosineAnnealingLR if not specified.
+        fixed_params: Dictionary of hyperparameters where:
+                     - 'optimizer' can be a string name that will be converted to a type
+                     - LR scheduler params follow the pattern 'callbacks__default_lr_scheduler__*'
+        default_max_epochs_for_cosine: Default value for T_max when using CosineAnnealingLR
+                                      if not explicitly provided.
 
     Returns:
-        A dictionary of processed hyperparameters ready for SkorchModelAdapter.
+        Dict[str, Any]: Processed hyperparameters with:
+                       - String optimizer names converted to types
+                       - LR scheduler parameters converted to a LRScheduler instance
+
+    Raises:
+        ValueError: If an unsupported optimizer string is provided.
+        TypeError: If optimizer is neither a string nor an Optimizer type.
+
+    Notes:
+        For CosineAnnealingLR, if T_max is not provided, it tries to use default_max_epochs_for_cosine
+        or the max_epochs parameter.
     """
     processed_params = fixed_params.copy()
 
@@ -142,6 +167,24 @@ def parse_fixed_hyperparameters(
 
 
 def expand_hyperparameter_grid(input_grid: Dict[str, List[Any]]) -> Dict[str, List[Any]]:
+    """
+    Expands a hyperparameter grid for grid search, with special handling for optimizers and LR schedulers.
+
+    Args:
+        input_grid: Dictionary mapping parameter names to lists of possible values.
+                   Special handling for:
+                   - 'optimizer': Strings are converted to PyTorch optimizer types
+                   - 'callbacks__default_lr_scheduler__*': Used to generate LRScheduler instances
+
+    Returns:
+        Dict[str, List[Any]]: Processed grid with:
+                             - String optimizer names converted to types
+                             - All possible LRScheduler configurations expanded as instances
+
+    Notes:
+        This function performs a cartesian product of all scheduler parameters to create
+        all possible LRScheduler instances for the grid search.
+    """
     processed_grid = input_grid.copy()
 
     if 'optimizer' in processed_grid:

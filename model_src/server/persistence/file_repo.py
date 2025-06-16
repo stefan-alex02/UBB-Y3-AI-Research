@@ -1,12 +1,12 @@
 import json
 import logging
 import shutil
-from datetime import datetime  # For JSON serializer
+from datetime import datetime
 from pathlib import Path
-from typing import Optional, Dict, Union, Callable  # Add List if not already there
+from typing import Optional, Dict, Union, Callable
 
-import numpy as np  # For JSON serializer
-import torch  # For saving/loading model state_dict
+import numpy as np
+import torch
 from skorch.callbacks import Callback
 from skorch.dataset import ValidSplit
 from torch import nn
@@ -25,16 +25,16 @@ class LocalFileSystemRepository(ArtifactRepository):
     def _get_full_path(self, key: str) -> Path:
         return self.base_path / key
 
-    def _json_serializer(self, obj): # Moved serializer to a helper
+    def _json_serializer(self, obj):
         if isinstance(obj, (np.integer, np.int64)): return int(obj)
         elif isinstance(obj, (np.floating, np.float32, np.float64)): return float(obj) if not np.isnan(obj) else None
         elif isinstance(obj, np.ndarray): return obj.tolist()
         elif isinstance(obj, Path): return str(obj)
         elif isinstance(obj, datetime): return obj.isoformat()
-        elif isinstance(obj, (slice, type, Callable)): return None # Added Callable
+        elif isinstance(obj, (slice, type, Callable)): return None
         elif isinstance(obj, (torch.optim.Optimizer, nn.Module, Callback)): return str(type(obj).__name__)
         elif isinstance(obj, ValidSplit): return f"ValidSplit(cv={obj.cv}, stratified={obj.stratified})"
-        try: return json.JSONEncoder.default(self, obj) # Pass self to default for consistency
+        try: return json.JSONEncoder.default(self, obj)
         except TypeError: return str(obj)
 
     def save_json(self, data: Dict, key: str) -> Optional[str]:
@@ -56,7 +56,7 @@ class LocalFileSystemRepository(ArtifactRepository):
             return str(full_path)
         except Exception as e: logger.error(f"Failed to save model state_dict locally to {full_path}: {e}"); return None
 
-    def save_plot_figure(self, fig, key: str) -> Optional[str]: # fig from matplotlib
+    def save_plot_figure(self, fig, key: str) -> Optional[str]:
         full_path = self._get_full_path(key)
         try:
             full_path.parent.mkdir(parents=True, exist_ok=True)
@@ -100,7 +100,7 @@ class LocalFileSystemRepository(ArtifactRepository):
         logger.warning("Presigned URLs are not applicable for LocalFileSystemRepository. Returning local file path.")
         local_path = self._get_full_path(object_key)
         if local_path.exists():
-            return local_path.as_uri() # file:///...
+            return local_path.as_uri()
         return None
 
     def upload_file(self, local_file_path: Union[str, Path], key: str) -> Optional[str]:
@@ -112,7 +112,7 @@ class LocalFileSystemRepository(ArtifactRepository):
             return None
         try:
             destination_path.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(source_path, destination_path)  # copy2 preserves metadata
+            shutil.copy2(source_path, destination_path)
             logger.info(f"File copied locally from {source_path} to {destination_path}")
             return str(destination_path)
         except Exception as e:
@@ -138,32 +138,31 @@ class LocalFileSystemRepository(ArtifactRepository):
                 full_path.unlink()
                 logger.info(f"Local file deleted: {full_path}")
                 return True
-            elif full_path.is_dir():  # Should not happen for single object, but good to check
+            elif full_path.is_dir():
                 logger.warning(
                     f"Attempted to delete_object on a directory: {full_path}. Use delete_objects_by_prefix for directories.")
                 return False
             else:
                 logger.info(f"Local file for deletion not found: {full_path}")
-                return True  # Not finding it is like it's already deleted
+                return True
         except Exception as e:
             logger.error(f"Failed to delete local file {full_path}: {e}")
             return False
 
     def delete_objects_by_prefix(self, prefix: str) -> bool:
-        # For local file system, prefix usually corresponds to a directory
         full_prefix_path = self._get_full_path(prefix)
         try:
             if full_prefix_path.is_dir():
                 shutil.rmtree(full_prefix_path)
                 logger.info(f"Local directory and all its contents deleted: {full_prefix_path}")
                 return True
-            elif full_prefix_path.exists():  # It's a file, not a directory prefix
+            elif full_prefix_path.exists():
                 logger.warning(
                     f"Attempted to delete_objects_by_prefix on a file: {full_prefix_path}. Use delete_object.")
-                return self.delete_object(prefix)  # Try deleting it as a single file
+                return self.delete_object(prefix)
             else:
                 logger.info(f"Local directory/prefix for deletion not found: {full_prefix_path}")
-                return True  # Not finding it is like it's already deleted
+                return True
         except Exception as e:
             logger.error(f"Failed to delete local directory/prefix {full_prefix_path}: {e}")
             return False

@@ -1,11 +1,11 @@
 import React from 'react';
-import { ThemeProvider as MuiThemeProvider } from '@mui/material/styles';
+import {ThemeProvider as MuiThemeProvider} from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
-import { AuthProvider } from './contexts/AuthContext';
-import { ThemeProvider, useThemeMode } from './contexts/ThemeContext';
+import {AuthProvider} from './contexts/AuthContext';
+import {ThemeProvider, useThemeMode} from './contexts/ThemeContext';
 import AppRoutes from './routes/AppRoutes';
-import { createCustomTheme } from './theme';
-import useAuth from "./hooks/useAuth"; // We'll define this
+import {createCustomTheme} from './theme';
+import useAuth from "./hooks/useAuth";
 
 function ThemedApp() {
   const { mode } = useThemeMode();
@@ -15,7 +15,7 @@ function ThemedApp() {
 
   return (
       <MuiThemeProvider theme={theme}>
-        <CssBaseline /> {/* Normalizes styles and applies background based on theme */}
+        <CssBaseline />
         <AppRoutes />
       </MuiThemeProvider>
   );
@@ -24,7 +24,7 @@ function ThemedApp() {
 function App() {
   return (
       <AuthProvider>
-        <ThemeProvider> {/* Our custom theme provider */}
+        <ThemeProvider>
           <ThemedApp />
         </ThemeProvider>
       </AuthProvider>

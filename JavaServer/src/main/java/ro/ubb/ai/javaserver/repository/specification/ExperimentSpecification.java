@@ -1,11 +1,11 @@
 package ro.ubb.ai.javaserver.repository.specification;
 
-import ro.ubb.ai.javaserver.dto.experiment.ExperimentFilterDTO;
-import ro.ubb.ai.javaserver.entity.Experiment;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
+import ro.ubb.ai.javaserver.dto.experiment.ExperimentFilterDTO;
+import ro.ubb.ai.javaserver.entity.Experiment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +13,7 @@ import java.util.List;
 @Component
 public class ExperimentSpecification {
 
-    public static final String NAME = "name"; // User-defined name
+    public static final String NAME = "name";
     public static final String MODEL_TYPE = "modelType";
     public static final String DATASET_NAME = "datasetName";
     public static final String STATUS = "status";
@@ -22,7 +22,7 @@ public class ExperimentSpecification {
     public static final String MODEL_RELATIVE_PATH = "modelRelativePath";
 
     public static Specification<Experiment> fromFilter(ExperimentFilterDTO filter) {
-        return (root, query, cb) -> { // cb for criteriaBuilder
+        return (root, query, cb) -> {
             List<Predicate> predicates = new ArrayList<>();
 
             if (filter == null) {
@@ -31,7 +31,7 @@ public class ExperimentSpecification {
 
             if (StringUtils.hasText(filter.getNameContains())) {
                 predicates.add(cb.like(
-                        cb.lower(root.get(NAME)), // User-defined name
+                        cb.lower(root.get(NAME)),
                         "%" + filter.getNameContains().toLowerCase() + "%"
                 ));
             }
@@ -47,8 +47,8 @@ public class ExperimentSpecification {
             if (filter.getHasModelSaved() != null) {
                 if (Boolean.TRUE.equals(filter.getHasModelSaved())) {
                     predicates.add(cb.isNotNull(root.get(MODEL_RELATIVE_PATH)));
-                    predicates.add(cb.notEqual(root.get(MODEL_RELATIVE_PATH), "")); // Also check not empty string
-                } else { // hasModelSaved is false
+                    predicates.add(cb.notEqual(root.get(MODEL_RELATIVE_PATH), ""));
+                } else {
                     predicates.add(cb.or(
                             cb.isNull(root.get(MODEL_RELATIVE_PATH)),
                             cb.equal(root.get(MODEL_RELATIVE_PATH), "")
@@ -59,7 +59,7 @@ public class ExperimentSpecification {
                 predicates.add(cb.greaterThanOrEqualTo(root.get(START_TIME), filter.getStartedAfter()));
             }
             if (filter.getFinishedBefore() != null) {
-                predicates.add(cb.isNotNull(root.get(END_TIME))); // Only consider if ended
+                predicates.add(cb.isNotNull(root.get(END_TIME)));
                 predicates.add(cb.lessThanOrEqualTo(root.get(END_TIME), filter.getFinishedBefore()));
             }
 

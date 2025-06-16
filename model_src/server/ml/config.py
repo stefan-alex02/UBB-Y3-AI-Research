@@ -4,33 +4,32 @@ from enum import Enum
 import numpy as np
 import torch
 
-# --- Default Parameters ---
-DEFAULT_IMG_SIZE = (224, 224) # Default image size for the model
+# Default Parameters
+DEFAULT_IMG_SIZE = (224, 224)
 
-# --- Global Configurations ---
-NUM_WORKERS = 0 # Set to 0 for stability with image loading, especially on Windows
-logger_name_global = 'ImgClassPipe' # Define the name once
+# Global Configurations
+NUM_WORKERS = 0
+logger_name_global = 'ImgClassPipe'
 
-# --- Seed Initialization ---
+# Seed Initialization
 RANDOM_SEED = 42
 
 def apply_random_seed(seed: int = RANDOM_SEED):
     """Applies a fixed random seed for reproducibility."""
     np.random.seed(seed)
     torch.manual_seed(seed)
-    random.seed(seed) # Ensure random module is also seeded
+    random.seed(seed)
 
-    # Commenting these out might sometimes resolve unrelated CUDA errors, but reduces reproducibility
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(seed)
 
-torch.backends.cudnn.deterministic = True # This ensures that the results are reproducible
-torch.backends.cudnn.benchmark = False   # This is set to False to ensure reproducibility, but may affect performance
+torch.backends.cudnn.deterministic = True
+torch.backends.cudnn.benchmark = False
 
-# --- Device Configuration ---
+# Device Configuration
 DEVICE = 'cuda' if torch.cuda.is_available() else 'cpu'
 
-# --- ANSI Color Codes ---
+# ANSI Color Codes
 class LogColors:
     RESET = "\033[0m"
     RED = "\033[31m"
@@ -54,10 +53,9 @@ DATASET_DICT = {
 }
 
 class AugmentationStrategy(str, Enum):
-    DEFAULT_STANDARD = "default_standard" # Your current versatile one
-    SKY_ONLY_ROTATION = "sky_only_rotation" # Allows full rotation, good for GCD/Swimcat
-    CCSN_MODERATE = "ground_aware_no_rotation" # For CCSN - no vertical flips/major rotations
-    NO_AUGMENTATION = "no_augmentation" # Just resize, ToTensor, Normalize
-    PAPER_GCD = "paper_replication_gcd" # Specific to GCD paper replication
-    PAPER_CCSN = "paper_replication_ccsn" # Specific to CCSN paper replication
-    # You can add more named strategies here
+    DEFAULT_STANDARD = "default_standard"
+    SKY_ONLY_ROTATION = "sky_only_rotation"
+    CCSN_MODERATE = "ground_aware_no_rotation"
+    NO_AUGMENTATION = "no_augmentation"
+    PAPER_GCD = "paper_replication_gcd"
+    PAPER_CCSN = "paper_replication_ccsn"

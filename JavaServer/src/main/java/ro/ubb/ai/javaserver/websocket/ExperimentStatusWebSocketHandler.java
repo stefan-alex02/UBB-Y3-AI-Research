@@ -1,6 +1,5 @@
 package ro.ubb.ai.javaserver.websocket;
 
-import ro.ubb.ai.javaserver.dto.experiment.ExperimentDTO; // Your existing DTO
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +9,7 @@ import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
+import ro.ubb.ai.javaserver.dto.experiment.ExperimentDTO;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -21,25 +21,19 @@ import java.util.concurrent.CopyOnWriteArrayList;
 @RequiredArgsConstructor
 public class ExperimentStatusWebSocketHandler extends TextWebSocketHandler {
 
-    // Thread-safe list to store active sessions
     private final List<WebSocketSession> sessions = new CopyOnWriteArrayList<>();
-    private final ObjectMapper objectMapper; // For serializing ExperimentDTO to JSON
+    private final ObjectMapper objectMapper;
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         sessions.add(session);
         log.info("WebSocket connection established: Session ID {}, Remote: {}", session.getId(), session.getRemoteAddress());
-        // Optionally, send a welcome message or initial data if needed
-        // session.sendMessage(new TextMessage("Connected to experiment status updates."));
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        // Handle incoming messages from clients if any (e.g., subscription requests)
-        // For this use case, we might not need clients to send messages, only receive.
         String payload = message.getPayload();
         log.info("Received WebSocket message from {}: {}", session.getId(), payload);
-        // Example: session.sendMessage(new TextMessage("Message received: " + payload));
     }
 
     @Override
@@ -73,8 +67,6 @@ public class ExperimentStatusWebSocketHandler extends TextWebSocketHandler {
             String messagePayload = objectMapper.writeValueAsString(experimentDTO);
             TextMessage message = new TextMessage(messagePayload);
 
-            // Iterate over a copy of the sessions list to avoid ConcurrentModificationException
-            // if a session closes while broadcasting.
             for (WebSocketSession session : new ArrayList<>(sessions)) {
                 try {
                     if (session.isOpen()) {
@@ -83,7 +75,6 @@ public class ExperimentStatusWebSocketHandler extends TextWebSocketHandler {
                     }
                 } catch (IOException e) {
                     log.error("Error sending WebSocket message to session {}: {}", session.getId(), e.getMessage());
-                    // Optionally remove session if sending fails persistently
                 }
             }
             log.info("Broadcasted update for experiment: {}", experimentDTO.getExperimentRunId());

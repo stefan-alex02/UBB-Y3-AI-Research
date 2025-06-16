@@ -1,7 +1,5 @@
 package ro.ubb.ai.javaserver.security;
 
-import ro.ubb.ai.javaserver.entity.User; // Your User entity
-import ro.ubb.ai.javaserver.repository.UserRepository;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
@@ -9,9 +7,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
-
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
+import ro.ubb.ai.javaserver.entity.User;
+import ro.ubb.ai.javaserver.repository.UserRepository;
 
 import javax.crypto.SecretKey;
 import java.util.Date;
@@ -21,20 +20,20 @@ import java.util.Date;
 @RequiredArgsConstructor
 public class JwtTokenProvider {
 
-    @Value("${jwt.secret:DefaultSecretKeyForTestingPurposesOnlyReplaceInProduction}") // Provide a default or ensure it's in properties
+    @Value("${jwt.secret:DefaultSecretKeyForTestingPurposesOnlyReplaceInProduction}")
     private String jwtSecretString;
 
-    @Value("${jwt.expirationMs:86400000}") // Default 24 hours
+    @Value("${jwt.expirationMs:86400000}")
     private int jwtExpirationMs;
 
     private SecretKey jwtSecretKey;
-    private final UserRepository userRepository; // To fetch User for getUserFromAuthentication
+    private final UserRepository userRepository;
 
     @PostConstruct
     protected void init() {
-        if (jwtSecretString.length() < 32) { // HS256 requires at least 256 bits (32 bytes)
+        if (jwtSecretString.length() < 32) {
             log.warn("JWT Secret is too short! Using a default secure key for now. PLEASE CONFIGURE a strong jwt.secret in application.properties");
-            this.jwtSecretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256); // Generate a secure key
+            this.jwtSecretKey = Keys.secretKeyFor(SignatureAlgorithm.HS256);
         } else {
             this.jwtSecretKey = Keys.hmacShaKeyFor(jwtSecretString.getBytes());
         }
@@ -47,8 +46,8 @@ public class JwtTokenProvider {
 
         return Jwts.builder()
                 .setSubject(userPrincipal.getUsername())
-                .claim("id", userPrincipal.getId()) // Add user ID to claims
-                .claim("role", userPrincipal.getDomainRole().name()) // Add role
+                .claim("id", userPrincipal.getId())
+                .claim("role", userPrincipal.getDomainRole().name())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(jwtSecretKey, SignatureAlgorithm.HS256)
@@ -76,7 +75,6 @@ public class JwtTokenProvider {
         return false;
     }
 
-    // Helper to get domain User from Authentication (useful in AuthController)
     public User getUserFromAuthentication(Authentication authentication) {
         String username = authentication.getName();
         return userRepository.findByUsername(username)

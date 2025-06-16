@@ -1,8 +1,8 @@
 package ro.ubb.ai.javaserver.dto.user;
 
-import ro.ubb.ai.javaserver.enums.Role;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import ro.ubb.ai.javaserver.enums.Role;
 
 @Data
 @RequiredArgsConstructor

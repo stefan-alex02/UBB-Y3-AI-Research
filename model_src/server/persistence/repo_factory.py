@@ -15,13 +15,11 @@ def load_minio_repository(logger: logging.Logger,
                           ) -> Optional[MinIORepository]:
     try:
         load_dotenv()
-        # These could also come from a config file or CLI args
         repo: Optional[ArtifactRepository] = MinIORepository(
             bucket_name=bucket_name,
             endpoint_url=os.getenv("MINIO_ENDPOINT_URL", "http://127.0.0.1:9000"),
             access_key=os.getenv("MINIO_ACCESS_KEY", "N/A"),
             secret_key=os.getenv("MINIO_SECRET_KEY", "N/A"),
-            # region_name="us-east-1" # Often optional for MinIO
         )
         logger.info(f"Using MinIORepository, targeting bucket: {bucket_name}")
     except Exception as e:

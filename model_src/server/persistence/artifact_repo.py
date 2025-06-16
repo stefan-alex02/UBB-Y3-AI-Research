@@ -30,7 +30,6 @@ class ArtifactRepository(ABC):
 
     @abstractmethod
     def get_presigned_url(self, object_key: str, expiration: int = 3600) -> Optional[str]:
-        # Bucket name is often part of repo config, so only object_key needed here
         pass
 
     @abstractmethod

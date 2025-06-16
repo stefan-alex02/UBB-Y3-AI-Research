@@ -1,8 +1,11 @@
 package ro.ubb.ai.javaserver.service;
 
-import ro.ubb.ai.javaserver.dto.experiment.*;
-import ro.ubb.ai.javaserver.dto.prediction.*;
 import org.springframework.web.multipart.MultipartFile;
+import ro.ubb.ai.javaserver.dto.experiment.PythonExperimentRunResponseDTO;
+import ro.ubb.ai.javaserver.dto.experiment.PythonRunExperimentRequestDTO;
+import ro.ubb.ai.javaserver.dto.prediction.PythonPredictionRequestDTO;
+import ro.ubb.ai.javaserver.dto.prediction.PythonPredictionRunResponseDTO;
+
 import java.util.List;
 import java.util.Map;
 

@@ -1,4 +1,3 @@
-// src/components/ConfirmDialog.js
 import React from 'react';
 import Button from '@mui/material/Button';
 import Dialog from '@mui/material/Dialog';
@@ -9,8 +8,8 @@ import DialogTitle from '@mui/material/DialogTitle';
 
 export default function ConfirmDialog({
                                           open,
-                                          onClose,    // This is for backdrop click, Esc, or the explicit "Cancel" button
-                                          onConfirm,  // This is for the "Confirm" button
+                                          onClose,
+                                          onConfirm,
                                           title,
                                           message,
                                           confirmText = "Confirm",
@@ -19,7 +18,7 @@ export default function ConfirmDialog({
     return (
         <Dialog
             open={open}
-            onClose={onClose} // MUI calls this on backdrop/Esc
+            onClose={onClose}
             aria-labelledby="confirm-dialog-title"
             aria-describedby="confirm-dialog-description"
         >
@@ -30,11 +29,11 @@ export default function ConfirmDialog({
                 </DialogContentText>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} color="primary"> {/* Correct: This button calls onClose */}
+                <Button onClick={onClose} color="primary">
                     {cancelText}
                 </Button>
-                <Button onClick={onConfirm} color="error" autoFocus> {/* Correct: This button calls onConfirm */}
-                    {confirmText}                                   {/* onConfirm (handleConfirmDeletion) will then close the dialog */}
+                <Button onClick={onConfirm} color="error" autoFocus>
+                    {confirmText}
                 </Button>
             </DialogActions>
         </Dialog>

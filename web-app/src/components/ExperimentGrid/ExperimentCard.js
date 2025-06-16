@@ -1,13 +1,11 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardActions, Typography, Button, Chip, Box, IconButton, Menu, MenuItem } from '@mui/material';
-import ScienceIcon from '@mui/icons-material/Science'; // Assuming you might use this if modelType is generic
+import React, {useState} from 'react';
+import {Box, Button, Card, CardActions, CardContent, Chip, IconButton, Menu, MenuItem, Typography} from '@mui/material';
 import ModelTrainingIcon from '@mui/icons-material/ModelTraining';
 import DatasetIcon from '@mui/icons-material/Dataset';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
-import { useNavigate } from 'react-router-dom';
-import ConfirmDialog from '../ConfirmDialog';
+import {useNavigate} from 'react-router-dom';
 import {formatDateSafe} from "../../utils/dateUtils";
 
 const ExperimentCard = ({ experiment, onDeleteRequest }) => {
@@ -49,7 +47,7 @@ const ExperimentCard = ({ experiment, onDeleteRequest }) => {
                 <CardContent sx={{ flexGrow: 1 }}>
                     <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                         <Typography variant="h6" component="div" gutterBottom noWrap title={experiment.name}>
-                            {experiment.name || 'Unnamed Experiment'} {/* Use name directly */}
+                            {experiment.name || 'Unnamed Experiment'}
                         </Typography>
                         <IconButton size="small" onClick={handleMenuClick}>
                             <MoreVertIcon />
@@ -82,7 +80,7 @@ const ExperimentCard = ({ experiment, onDeleteRequest }) => {
                     <Typography variant="body2" color="text.secondary" sx={{ mt: 1, wordBreak: 'break-all' }}>
                         Run ID: <Typography component="span" variant="caption" sx={{ fontFamily: 'monospace' }}>{experiment.experiment_run_id || 'N/A'}</Typography>
                     </Typography>
-                    <Typography component="div" variant="body2" color="text.secondary"> {/* Ensure parent is not unintentionally clickable */}
+                    <Typography component="div" variant="body2" color="text.secondary">
                         Status:{" "}
                         <Chip
                             label={experiment.status || 'N/A'}
@@ -93,22 +91,22 @@ const ExperimentCard = ({ experiment, onDeleteRequest }) => {
                         />
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
-                        Started: {formatDateSafe(experiment.start_time)} {/* Use snake_case & formatDate */}
+                        Started: {formatDateSafe(experiment.start_time)}
                     </Typography>
                     {experiment.end_time && (
                         <Typography variant="body2" color="text.secondary">
-                            Ended: {formatDateSafe(experiment.end_time)} {/* Use snake_case & formatDate */}
+                            Ended: {formatDateSafe(experiment.end_time)}
                         </Typography>
                     )}
                     <Typography variant="body2" color="text.secondary">
-                        By: {experiment.user_name || 'N/A'} {/* Use snake_case */}
+                        By: {experiment.user_name || 'N/A'}
                     </Typography>
                 </CardContent>
                 <CardActions>
                     <Button
                         size="small"
                         startIcon={<VisibilityIcon />}
-                        onClick={() => navigate(`/experiments/${experiment.experiment_run_id}`)} // Use snake_case
+                        onClick={() => navigate(`/experiments/${experiment.experiment_run_id}`)}
                     >
                         View Results
                     </Button>

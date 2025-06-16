@@ -20,7 +20,6 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import ro.ubb.ai.javaserver.security.AuthEntryPointJwt;
 import ro.ubb.ai.javaserver.security.AuthTokenFilter;
 import ro.ubb.ai.javaserver.security.UserDetailsServiceImpl;
-// No MvcRequestMatcher import needed here for the new approach
 
 @Configuration
 @EnableWebSecurity
@@ -28,16 +27,13 @@ import ro.ubb.ai.javaserver.security.UserDetailsServiceImpl;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final UserDetailsServiceImpl userDetailsService; // Kept if still used for UserDetails loading
+    private final UserDetailsServiceImpl userDetailsService;
     private final AuthEntryPointJwt unauthorizedHandler;
     private final AuthTokenFilter authTokenFilter;
 
-    // Make expectedInternalApiKey accessible for custom access checks if needed elsewhere
-    // (e.g., if a custom filter checks the header for /api/internal/**)
     @Getter
     @Value("${python.api.internal-key}")
     private String expectedInternalApiKey;
-    // private static final String INTERNAL_API_KEY_HEADER = "X-Internal-API-Key"; // Not directly used in this config variant
 
 
     @Bean
@@ -56,13 +52,12 @@ public class SecurityConfig {
                 .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        // Allow OPTIONS requests for preflight checks globally or for specific API paths
-                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Broadest, good for development
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/internal/**").permitAll() // Still needs its own security (e.g., API key filter)
-                        .requestMatchers("/ws/experiment-status/**").permitAll() // Allow WebSocket handshake
-                        .requestMatchers("/api/**").authenticated() // All other /api paths require authentication
-                        .anyRequest().permitAll() // Or .denyAll() / .authenticated() as per your default
+                        .requestMatchers("/api/internal/**").permitAll()
+                        .requestMatchers("/ws/experiment-status/**").permitAll()
+                        .requestMatchers("/api/**").authenticated()
+                        .anyRequest().permitAll()
                 );
 
         http.addFilterBefore(authTokenFilter, UsernamePasswordAuthenticationFilter.class);

@@ -19,21 +19,17 @@ router = APIRouter()
 @router.post("/run", response_model=ExperimentRunResponse)
 async def run_experiment_endpoint(
         request: RunExperimentRequest,
-        background_tasks: BackgroundTasks,  # FastAPI's built-in
-        fast_api_request: FastAPIRequest  # To access app.state
+        background_tasks: BackgroundTasks,
+        fast_api_request: FastAPIRequest
 ):
     try:
-        # The service function now handles calling Java to update status to RUNNING
-        # and the background task itself handles COMPLETED/FAILED updates.
         response_data = await experiment_service.start_experiment(fast_api_request, request, background_tasks)
         return response_data
-    except ValueError as ve:  # e.g., dataset not found
+    except ValueError as ve:
         logger.error(f"Validation error running experiment {request.experiment_run_id}: {ve}")
         raise HTTPException(status_code=400, detail=str(ve))
     except Exception as e:
         logger.error(f"Error submitting experiment {request.experiment_run_id}: {e}", exc_info=True)
-        # Optionally call Java to mark as FAILED if submission itself fails critically
-        # await experiment_service.update_experiment_status_in_java(request.experiment_run_id, "FAILED", end_time=True)
         raise HTTPException(status_code=500, detail="Failed to submit experiment for execution.")
 
 
@@ -41,14 +37,13 @@ async def run_experiment_endpoint(
 async def list_experiment_artifacts_endpoint(
         dataset_name: str, model_type: str, experiment_run_id: str,
         fast_api_request: FastAPIRequest,
-        path: Optional[str] = ""  # Query parameter for sub-path, defaults to root
+        path: Optional[str] = ""
 ):
     artifact_repo = fast_api_request.app.state.artifact_repo
     if not artifact_repo:
         raise HTTPException(status_code=500, detail="Artifact repository not configured.")
 
     try:
-        # Sanitize path: remove leading slashes, ensure it's a relative path concept
         clean_sub_path = path.lstrip('/').lstrip('\\') if path else ""
         logger.info(f"Listing artifacts for experiment {experiment_run_id}, sub-path: '{clean_sub_path}'")
 
@@ -62,7 +57,7 @@ async def list_experiment_artifacts_endpoint(
 
 
 @router.get("/{dataset_name}/{model_type}/{experiment_run_id}/artifacts/content/{artifact_path:path}")
-async def get_experiment_artifact_content_endpoint(  # Renamed for clarity
+async def get_experiment_artifact_content_endpoint(
         dataset_name: str, model_type: str, experiment_run_id: str, artifact_path: str,
         fast_api_request: FastAPIRequest
 ):
@@ -79,13 +74,12 @@ async def get_experiment_artifact_content_endpoint(  # Renamed for clarity
         if file_bytes is None:
             raise HTTPException(status_code=404, detail="Artifact content not found.")
 
-        # Determine media type based on artifact_path extension
         media_type = "application/octet-stream"
-        file_type_from_name = get_artifact_type_from_filename(artifact_path)  # Use your helper
+        file_type_from_name = get_artifact_type_from_filename(artifact_path)
 
         if file_type_from_name == "json":
             media_type = "application/json"
-        elif file_type_from_name == "image":  # Generic image
+        elif file_type_from_name == "image":
             ext = artifact_path.split('.')[-1].lower()
             if ext == "png":
                 media_type = "image/png"
@@ -96,7 +90,7 @@ async def get_experiment_artifact_content_endpoint(  # Renamed for clarity
             elif ext == "svg":
                 media_type = "image/svg+xml"
             else:
-                media_type = "application/octet-stream"  # Fallback for unknown image types
+                media_type = "application/octet-stream"
         elif file_type_from_name == "log":
             media_type = "text/plain; charset=utf-8"
         elif file_type_from_name == "csv":

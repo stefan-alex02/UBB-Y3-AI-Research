@@ -1,23 +1,39 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, {useCallback, useEffect, useRef, useState} from 'react';
 import {
-    Container, Typography, Button, Box, Grid, TextField, Select, MenuItem,
-    FormControl, InputLabel, CircularProgress, Paper, Pagination, Alert, IconButton,
-    FormControlLabel, Checkbox, Collapse, Tooltip, Switch // Added Checkbox, Collapse
+    Alert,
+    Box,
+    Button,
+    CircularProgress,
+    Collapse,
+    Container,
+    FormControl,
+    FormControlLabel,
+    Grid,
+    IconButton,
+    InputLabel,
+    MenuItem,
+    Pagination,
+    Paper,
+    Select,
+    Switch,
+    TextField,
+    Tooltip,
+    Typography
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList';
-import RefreshIcon from '@mui/icons-material/Refresh'; // Keep for manual refresh
-import { useNavigate } from 'react-router-dom';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import {useNavigate} from 'react-router-dom';
+import {AdapterDateFns} from '@mui/x-date-pickers/AdapterDateFns';
+import {LocalizationProvider} from '@mui/x-date-pickers/LocalizationProvider';
+import {DateTimePicker} from '@mui/x-date-pickers/DateTimePicker';
 
 import ExperimentGrid from '../components/ExperimentGrid/ExperimentGrid';
 import experimentService from '../services/experimentService';
 import useAuth from '../hooks/useAuth';
 import LoadingSpinner from '../components/LoadingSpinner';
 import ConfirmDialog from '../components/ConfirmDialog';
-import { MODEL_TYPES, DATASET_NAMES } from './experimentConfig'; // Import constants
+import {DATASET_NAMES, MODEL_TYPES} from './experimentConfig';
 
 const ExperimentsPage = () => {
     const navigate = useNavigate();
@@ -31,7 +47,7 @@ const ExperimentsPage = () => {
         modelType: '',
         datasetName: '',
         status: '',
-        hasModelSaved: null, // null for 'any', true for 'yes', false for 'no'
+        hasModelSaved: null,
         startedAfter: null,
         finishedBefore: null,
     };
@@ -42,8 +58,7 @@ const ExperimentsPage = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [deleteConfirm, setDeleteConfirm] = useState({ open: false, experimentId: null, experimentName: '' });
 
-    // For WebSocket (kept for completeness, can be simplified if not core to this request)
-    const [autoUpdate, setAutoUpdate] = useState(true); // Default to off for simplicity
+    const [autoUpdate, setAutoUpdate] = useState(true);
     const [isWsConnected, setIsWsConnected] = useState(false);
     const webSocketRef = useRef(null);
     const WS_URL = `ws://${window.location.hostname}:8080/ws/experiment-status`;
@@ -59,7 +74,7 @@ const ExperimentsPage = () => {
             const activeFilters = { ...filters };
             if (activeFilters.startedAfter) activeFilters.startedAfter = new Date(activeFilters.startedAfter).toISOString();
             if (activeFilters.finishedBefore) activeFilters.finishedBefore = new Date(activeFilters.finishedBefore).toISOString();
-            // Ensure hasModelSaved is not sent if null (for 'any')
+
             if (activeFilters.hasModelSaved === null || activeFilters.hasModelSaved === "any") {
                 delete activeFilters.hasModelSaved;
             }
@@ -78,7 +93,7 @@ const ExperimentsPage = () => {
 
     const connectWebSocket = useCallback(() => {
         if (!user || user.role !== 'METEOROLOGIST' || (webSocketRef.current && webSocketRef.current.readyState === WebSocket.OPEN)) {
-            return; // Don't connect if not authorized, or already connected
+            return;
         }
 
         console.log('Attempting to connect WebSocket...');
@@ -92,14 +107,12 @@ const ExperimentsPage = () => {
         webSocketRef.current.onmessage = (event) => {
             try {
                 const updatedExperimentData = JSON.parse(event.data);
-                // Ensure keys from WebSocket match what the frontend expects (snake_case vs camelCase)
-                // If Java sends snake_case (default for DTOs with global SNAKE_CASE strategy):
                 console.log('WebSocket message received (raw):', updatedExperimentData);
 
                 setExperiments(prevExperiments =>
                     prevExperiments.map(exp =>
                         exp.experiment_run_id === updatedExperimentData.experiment_run_id
-                            ? { ...exp, ...updatedExperimentData } // Merge updates
+                            ? { ...exp, ...updatedExperimentData }
                             : exp
                     )
                 );
@@ -111,21 +124,18 @@ const ExperimentsPage = () => {
         webSocketRef.current.onclose = (event) => {
             console.log('WebSocket disconnected:', event.reason, `Code: ${event.code}`);
             setIsWsConnected(false);
-            // Optional: Implement reconnection logic if autoUpdate is still true
-            // if (autoUpdate && !event.wasClean) { setTimeout(connectWebSocket, 5000); }
         };
 
         webSocketRef.current.onerror = (error) => {
             console.error('WebSocket error:', error);
             setIsWsConnected(false);
-            // Maybe set autoUpdate to false on persistent errors
         };
-    }, [user, WS_URL]); // Removed autoUpdate from here to control connection manually
+    }, [user, WS_URL]);
 
     const disconnectWebSocket = useCallback(() => {
         if (webSocketRef.current) {
             webSocketRef.current.close();
-            webSocketRef.current = null; // Clear ref after closing
+            webSocketRef.current = null;
             setIsWsConnected(false);
             console.log('WebSocket explicitly disconnected.');
         }
@@ -137,7 +147,6 @@ const ExperimentsPage = () => {
         } else {
             disconnectWebSocket();
         }
-        // Cleanup function for when the component unmounts or autoUpdate changes
         return () => {
             disconnectWebSocket();
         };
@@ -148,13 +157,12 @@ const ExperimentsPage = () => {
         setFilters(prev => ({
             ...prev,
             [name]: type === 'checkbox' ? (checked ? true : (name === 'hasModelSaved' ? false : checked) ) : value
-            // For hasModelSaved, if unchecked after being true, set to false. If "any", it will be null.
         }));
         setPagination(prev => ({ ...prev, page: 0 }));
     };
 
     const handleHasModelSavedChange = (event) => {
-        const value = event.target.value; // "any", "true", "false"
+        const value = event.target.value;
         setFilters(prev => ({
             ...prev,
             hasModelSaved: value === "any" ? null : (value === "true")
@@ -163,22 +171,21 @@ const ExperimentsPage = () => {
     };
 
     const handleDateChange = (name, date) => {
-        setFilters(prev => ({ ...prev, [name]: date })); // Store Date object, convert to ISO on fetch
+        setFilters(prev => ({ ...prev, [name]: date }));
         setPagination(prev => ({ ...prev, page: 0 }));
     };
 
     const handleClearFilters = () => {
         setFilters({ modelType: '', datasetName: '', status: '', startedAfter: null, finishedBefore: null });
         setPagination(prev => ({ ...prev, page: 0 }));
-        // fetchExperiments will be re-triggered by useEffect due to filter state change
     };
 
     const handlePageChange = (event, value) => {
-        setPagination(prev => ({ ...prev, page: value - 1 })); // MUI Pagination is 1-indexed
+        setPagination(prev => ({ ...prev, page: value - 1 }));
     };
 
     const openDeleteDialog = (id, name) => {
-        const displayName = name || 'Unnamed Experiment'; // Fallback for name
+        const displayName = name || 'Unnamed Experiment';
         console.log(`PAGE: openDeleteDialog - Setting state to open for ID: ${id}, Name: ${displayName}`);
         setDeleteConfirm({ open: true, experimentId: id, experimentName: displayName });
     };
@@ -190,34 +197,30 @@ const ExperimentsPage = () => {
 
     const handleConfirmDeletion = async () => {
         const idToDelete = deleteConfirm.experimentId;
-        const nameToDelete = deleteConfirm.experimentName; // Use name from state for error message
+        const nameToDelete = deleteConfirm.experimentName;
         console.log(`PAGE: handleConfirmDeletion - Confirming delete for ID: ${idToDelete}, Name: ${nameToDelete}`);
 
         if (!idToDelete) {
             console.warn("PAGE: handleConfirmDeletion called but no experimentId in state.");
-            handleCloseDeleteDialog(); // Ensure dialog closes
+            handleCloseDeleteDialog();
             return;
         }
 
-        // Optionally keep dialog open with a spinner, or close immediately
-        // For this example, we'll close it and let errors/success show via Alerts/Snackbars
-        handleCloseDeleteDialog(); // Close the dialog immediately
+        handleCloseDeleteDialog();
 
-        setError(null); // Clear previous errors
+        setError(null);
         try {
             await experimentService.deleteExperiment(idToDelete);
             console.log(`PAGE: Deletion API call successful for ${idToDelete}`);
-            // Optionally show a Snackbar success message here
-            fetchExperiments(); // Refresh list after successful deletion
+            fetchExperiments();
         } catch (err) {
             console.error(`PAGE: Deletion API call failed for ${idToDelete}`, err);
             setError(err.response?.data?.message || `Failed to delete experiment "${nameToDelete}".`);
         }
-        // No need to call setDeleteConfirm again here as it was closed at the start or in onClose
     };
 
 
-    if (!user) return <LoadingSpinner />; // Or redirect to login if AuthProvider handles it
+    if (!user) return <LoadingSpinner />;
     if (user.role !== 'METEOROLOGIST') {
         return (
             <Container sx={{mt: 4}}>
@@ -241,7 +244,7 @@ const ExperimentsPage = () => {
                             />
                         </Tooltip>
                         <Tooltip title="Manually refresh the experiment list">
-                          <span> {/* Span for Tooltip when button is disabled */}
+                          <span>
                               <IconButton onClick={() => fetchExperiments(true)} disabled={isLoading} color="primary">
                               <RefreshIcon />
                             </IconButton>
@@ -324,7 +327,7 @@ const ExperimentsPage = () => {
                             <Box sx={{ display: 'flex', justifyContent: 'center', mt: 4, mb:2 }}>
                                 <Pagination
                                     count={pagination.totalPages}
-                                    page={pagination.page + 1} // MUI Pagination is 1-indexed
+                                    page={pagination.page + 1}
                                     onChange={handlePageChange}
                                     color="primary"
                                     showFirstButton

@@ -34,9 +34,6 @@ except ImportError:
 app = Flask(__name__)
 CORS(app)
 
-# If you want to be more specific (e.g., only for /predict or only from certain origins):
-# cors = CORS(app, resources={r"/predict": {"origins": "*"}}) # Allow all origins for /predict
-# For development, "*" is often fine. For production, specify allowed origins.
 
 # ... (PIPELINE_INSTANCE, MODEL_LOADED_SUCCESSFULLY, LIME_EXPLAINER_INSTANCE setup - unchanged) ...
 PIPELINE_INSTANCE: Optional[ClassificationPipeline] = None
@@ -69,7 +66,7 @@ def initialize_pipeline_server():
     DEFAULT_MODEL_TYPE_STR = os.environ.get("DEFAULT_MODEL_TYPE", "cnn")
     # DEFAULT_MODEL_PATH = os.environ.get("DEFAULT_MODEL_PATH", None)
     DEFAULT_MODEL_PATH = os.environ.get("DEFAULT_MODEL_PATH", "./results/Swimcat-extend/cnn/20250515_160130_seed42/single_train_20250515_160130_450999/cnn_epoch4_val_valid-loss0.3059.pt")
-    DEFAULT_DATASET_FOR_HANDLER = os.environ.get("DEFAULT_DATASET_PATH", "./data/Swimcat-extend")
+    DEFAULT_DATASET_FOR_HANDLER = os.environ.get("DEFAULT_DATASET_PATH", "../data/Swimcat-extend")
     logger.info(f"Attempting to initialize pipeline with model_type='{DEFAULT_MODEL_TYPE_STR}', model_path='{DEFAULT_MODEL_PATH}'")
     try:
         if not Path(DEFAULT_DATASET_FOR_HANDLER).exists(): logger.error(f"Reference dataset path for handler ('{DEFAULT_DATASET_FOR_HANDLER}') not found. Cannot initialize pipeline."); MODEL_LOADED_SUCCESSFULLY = False; PIPELINE_INSTANCE = None; return

@@ -7,23 +7,16 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
+import org.springframework.http.HttpRequest;
+import org.springframework.http.client.*;
 import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.ResourceHttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
-import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.http.converter.support.AllEncompassingFormHttpMessageConverter;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.http.HttpRequest;
-import org.springframework.http.client.BufferingClientHttpRequestFactory;
-import org.springframework.http.client.ClientHttpRequestExecution;
-import org.springframework.http.client.ClientHttpRequestInterceptor;
-import org.springframework.http.client.ClientHttpResponse;
-import org.springframework.http.client.SimpleClientHttpRequestFactory; // Or your preferred factory
-import org.springframework.util.StreamUtils;
 
 import java.io.IOException;
-
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,13 +26,11 @@ public class AppConfig {
 
     @Bean
     public RestTemplate restTemplate(RestTemplateBuilder builder, ObjectMapper objectMapper) {
-        // Wrap the default factory or your chosen factory with BufferingClientHttpRequestFactory
         SimpleClientHttpRequestFactory simpleFactory = new SimpleClientHttpRequestFactory();
-//        simpleFactory.setBufferRequestBody(false); // Important for BufferingClientHttpRequestFactory to work correctly with streaming
         BufferingClientHttpRequestFactory bufferingFactory = new BufferingClientHttpRequestFactory(simpleFactory);
 
         RestTemplate restTemplate = builder
-                .requestFactory(() -> bufferingFactory) // Use the buffering factory
+                .requestFactory(() -> bufferingFactory)
                 .build();
 
         // Add the interceptor
@@ -66,14 +57,12 @@ public class AppConfig {
     public ObjectMapper objectMapper() {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.registerModule(new JavaTimeModule());
-        // Configure Jackson to convert Java camelCase to JSON snake_case
-        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE); // <--- ADD THIS LINE
-        // objectMapper.configure(com.fasterxml.jackson.databind.DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false); // Already good
+        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategies.SNAKE_CASE);
         return objectMapper;
     }
 }
 
-@Slf4j // Add lombok @Slf4j to AppConfig if not already there
+@Slf4j
 class LoggingInterceptor implements ClientHttpRequestInterceptor {
     @Override
     public ClientHttpResponse intercept(HttpRequest request, byte[] body, ClientHttpRequestExecution execution) throws IOException {
@@ -93,15 +82,10 @@ class LoggingInterceptor implements ClientHttpRequestInterceptor {
     }
 
     private void logResponse(ClientHttpResponse response) throws IOException {
-        // Buffer the response body so it can be read multiple times (e.g., by logger and by RestTemplate)
-        // This requires BufferingClientHttpRequestFactory
         log.debug("============================response begin==========================================");
         log.debug("Status code  : {}", response.getStatusCode());
         log.debug("Status text  : {}", response.getStatusText());
         log.debug("Headers      : {}", response.getHeaders());
-        // Be careful logging response body if it's large or binary
-        // String responseBody = StreamUtils.copyToString(response.getBody(), StandardCharsets.UTF_8);
-        // log.debug("Response body: {}", responseBody);
         log.debug("=======================response end=================================================");
     }
 }

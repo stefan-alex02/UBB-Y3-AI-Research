@@ -1,9 +1,8 @@
-// src/components/Layout/Layout.js
-import React, { useState, useEffect } from 'react';
-import { Box, useTheme, useMediaQuery, CssBaseline, Toolbar } from '@mui/material'; // Added Toolbar
+import React, {useState} from 'react';
+import {Box, CssBaseline, Toolbar, useMediaQuery, useTheme} from '@mui/material';
 import TopBar from './TopBar';
 import SideNav from './SideNav';
-import { Outlet } from 'react-router-dom';
+import {Outlet} from 'react-router-dom';
 
 export const PERMANENT_DRAWER_WIDTH = 240;
 export const MINI_DRAWER_WIDTH = 72;
@@ -31,7 +30,7 @@ const Layout = () => {
             <TopBar
                 onMobileMenuClick={handleMobileDrawerToggle}
                 isMobile={isMobile}
-                isPermanentDrawerOpen={isPermanentDrawerFull} // Pass this to help TopBar decide its own state
+                isPermanentDrawerOpen={isPermanentDrawerFull}
                 permanentDrawerWidth={PERMANENT_DRAWER_WIDTH}
                 miniDrawerWidth={MINI_DRAWER_WIDTH}
             />
@@ -48,10 +47,9 @@ const Layout = () => {
                 component="main"
                 sx={{
                     flexGrow: 1,
-                    // No paddingTop needed here if we add a Toolbar component for spacing
-                    pt: 3, // Keep top padding for content below AppBar
-                    pb: 3, // Keep bottom padding
-                    px: 3, // Keep horizontal padding
+                    pt: 3,
+                    pb: 3,
+                    px: 3,
                     height: '100vh',
                     overflowY: 'auto',
                     boxSizing: 'border-box',
@@ -62,8 +60,6 @@ const Layout = () => {
                     marginLeft: isMobile ? 0 : `${currentVisibleDrawerWidth}px`,
                 }}
             >
-                {/* Add an empty Toolbar here to create space for the fixed AppBar */}
-                {/* This is the standard MUI way to offset content below a fixed AppBar */}
                 <Toolbar />
                 <Outlet />
             </Box>

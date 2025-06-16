@@ -1,5 +1,5 @@
 import React from 'react';
-import { Grid, Typography, Box } from '@mui/material';
+import {Box, Grid, Typography} from '@mui/material';
 import ExperimentCard from './ExperimentCard';
 
 const ExperimentGrid = ({ experiments, onDelete }) => {

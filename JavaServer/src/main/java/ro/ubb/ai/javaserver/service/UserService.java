@@ -8,5 +8,4 @@ public interface UserService {
     UserDTO registerUser(RegisterRequest registerRequest);
     UserDTO getCurrentUser();
     UserDTO updateUser(Long userId, UserUpdateRequest updateRequest);
-    // void changePassword(Long userId, String oldPassword, String newPassword);
 }

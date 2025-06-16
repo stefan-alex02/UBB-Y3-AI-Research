@@ -1,26 +1,23 @@
-// src/theme.js
-import { createTheme, alpha } from '@mui/material/styles';
-import { blue, green, grey, amber, lightBlue, lightGreen } from '@mui/material/colors'; // Added more colors
+import {alpha, createTheme} from '@mui/material/styles';
+import {amber, blue, green, grey, lightBlue, lightGreen} from '@mui/material/colors';
 
-// Function to get design tokens based on mode and optional userRole
-export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role if not provided
+export const getDesignTokens = (mode, userRole = 'NORMAL') => {
     const isMeteorologist = userRole === 'METEOROLOGIST';
 
-    // Define focus colors based on role and mode
     let lightFocusColor, darkFocusColor, darkFocusColor2, dividerColor, primaryColor, secondaryColor;
     if (isMeteorologist) {
-        primaryColor = green; // Use green for meteorologists
+        primaryColor = green;
         secondaryColor = amber;
         lightFocusColor = green[600];
         darkFocusColor = lightGreen[400];
-        darkFocusColor2 = green[300]; // Lighter green for dark mode primary
+        darkFocusColor2 = green[300];
         dividerColor = green[400];
     } else {
-        primaryColor = blue; // Default to blue for other roles
+        primaryColor = blue;
         secondaryColor = amber;
         lightFocusColor = blue[600];
         darkFocusColor = lightBlue[400];
-        darkFocusColor2 = blue[300]; // Lighter blue for dark mode primary
+        darkFocusColor2 = blue[300];
         dividerColor = blue[400];
     }
 
@@ -33,34 +30,34 @@ export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role 
                     primary: primaryColor,
                     secondary: secondaryColor,
                     divider: secondaryColor[200],
-                    focusRing: lightFocusColor, // Custom focus ring color for light mode
+                    focusRing: lightFocusColor,
                     text: {
                         primary: grey[900],
-                        secondary: grey[700], // Slightly darker for better contrast on light bg
+                        secondary: grey[700],
                     },
                     background: {
-                        default: grey[50], // Very light grey background
+                        default: grey[50],
                         paper: '#ffffff',
                     },
                     action: {
-                        active: lightFocusColor, // For active elements like selected NavLink
+                        active: lightFocusColor,
                         hover: alpha(lightFocusColor, 0.08),
                         selected: alpha(lightFocusColor, 0.16),
                     }
                 }
                 : {
                     // Palette values for dark mode
-                    primary: { main: darkFocusColor }, // Lighter blue for dark mode primary
+                    primary: { main: darkFocusColor },
                     secondary: { main: secondaryColor[300] },
                     divider: dividerColor,
-                    focusRing: darkFocusColor, // Custom focus ring color for dark mode
+                    focusRing: darkFocusColor,
                     background: {
-                        default: '#121212',    // Common dark mode background
-                        paper: grey[900],      // Slightly lighter paper for cards, elevation
+                        default: '#121212',
+                        paper: grey[900],
                     },
                     text: {
                         primary: '#ffffff',
-                        secondary: grey[400], // Lighter grey for secondary text on dark
+                        secondary: grey[400],
                     },
                     action: {
                         active: darkFocusColor2,
@@ -79,8 +76,7 @@ export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role 
             MuiAppBar: {
                 styleOverrides: {
                     root: ({ theme }) => ({
-                        // Keep app bar distinct in dark mode, or match paper
-                        backgroundColor: mode === 'light' ? theme.palette.primary.main : theme.palette.grey[800], // Example
+                        backgroundColor: mode === 'light' ? theme.palette.primary.main : theme.palette.grey[800],
                         color: mode === 'light' ? theme.palette.primary.contrastText : theme.palette.text.primary,
                     }),
                 },
@@ -88,21 +84,20 @@ export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role 
             MuiDrawer: {
                 styleOverrides: {
                     paper: ({ theme }) => ({
-                        backgroundColor: mode === 'light' ? theme.palette.background.paper : theme.palette.grey[800], // Consistent with AppBar dark
+                        backgroundColor: mode === 'light' ? theme.palette.background.paper : theme.palette.grey[800],
                     }),
                 },
             },
             // Global focus styles
-            MuiButtonBase: { // Targets Buttons, IconButtons, etc.
+            MuiButtonBase: {
                 defaultProps: {
-                    disableRipple: false, // Keep ripple unless specifically unwanted
+                    disableRipple: false,
                 },
                 styleOverrides: {
                     root: ({ theme }) => ({
                         '&.Mui-focusVisible': {
                             outline: `2px solid ${theme.palette.focusRing}`,
                             outlineOffset: '2px',
-                            // boxShadow: `0 0 0 2px ${alpha(theme.palette.focusRing, 0.5)}`, // Alternative focus style
                         },
                     }),
                 },
@@ -113,35 +108,34 @@ export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role 
                         '&.Mui-focusVisible': {
                             outline: `2px solid ${theme.palette.focusRing}`,
                             outlineOffset: '1px',
-                            backgroundColor: theme.palette.action.hover, // Add a subtle bg on focus
+                            backgroundColor: theme.palette.action.hover,
                         },
-                        '&.active': { // For NavLink active state
+                        '&.active': {
                             backgroundColor: theme.palette.action.selected,
-                            // color: theme.palette.primary.main, // If you want text color to change
+                            // color: theme.palette.primary.main,
                             '& .MuiListItemIcon-root': {
-                                // color: theme.palette.primary.main, // If you want icon color to change
+                                // color: theme.palette.primary.main,
                             }
                         }
                     }),
                 },
             },
-            MuiOutlinedInput: { // For TextField, Select outlined variant
+            MuiOutlinedInput: {
                 styleOverrides: {
                     root: ({ theme }) => ({
                         '&.Mui-focused .MuiOutlinedInput-notchedOutline': {
                             borderColor: theme.palette.focusRing,
-                            borderWidth: '1px', // Ensure border width doesn't jump too much
+                            borderWidth: '1px',
                         },
                     }),
                 },
             },
-            MuiChip: { // Make chips non-interactive by default if that's the desired behavior
+            MuiChip: {
                 defaultProps: {
-                    // clickable: false, // This would make it non-interactive
+                    // clickable: false,
                 },
                 styleOverrides: {
                     root: ({ theme }) => ({
-                        // If you want a focus style for chips that ARE clickable:
                         // '&.Mui-focusVisible': {
                         //   outline: `2px solid ${theme.palette.focusRing}`,
                         //   backgroundColor: alpha(theme.palette.focusRing, 0.2),
@@ -151,7 +145,7 @@ export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role 
             },
             MuiPaper: {
                 defaultProps: {
-                    elevation: mode === 'light' ? 2 : 4, // Slightly more pronounced elevation in dark mode
+                    elevation: mode === 'light' ? 2 : 4,
                 }
             },
             MuiCard: {
@@ -163,5 +157,4 @@ export const getDesignTokens = (mode, userRole = 'NORMAL') => { // Default role 
     };
 };
 
-// This function creates the theme instance
 export const createCustomTheme = (mode, userRole) => createTheme(getDesignTokens(mode, userRole));

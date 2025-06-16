@@ -2,18 +2,15 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 from pathlib import Path, PurePath
-import io
 from typing import List, Optional
 
-from ..api.utils import RunPredictionRequest, SinglePredictionResult, ArtifactNode, ImagePredictionTask
-from ..core.config import settings, APP_LOGGER_NAME
-from ..ml.config import DATASET_DICT
-from ..ml.pipeline import ClassificationPipeline # Your existing import
-from ..ml.architectures import ModelType
-from ..ml.dataset_utils import ImageDatasetHandler # For default transforms if needed
-# from app.main import artifact_repo_instance # Avoid global
 from fastapi import Request as FastAPIRequest, HTTPException
 
+from ..api.utils import RunPredictionRequest, ArtifactNode, ImagePredictionTask
+from ..core.config import settings, APP_LOGGER_NAME
+from ..ml.architectures import ModelType
+from ..ml.config import DATASET_DICT
+from ..ml.pipeline import ClassificationPipeline
 from ..persistence import ArtifactRepository, LocalFileSystemRepository, MinIORepository
 
 fastapi_app_logger = logging.getLogger(APP_LOGGER_NAME)
@@ -22,25 +19,22 @@ pipeline_logger = logging.getLogger("ImgClassPipe")
 
 def _run_prediction_sync(
     username: str,
-    image_prediction_tasks: List[ImagePredictionTask], # CHANGED
+    image_prediction_tasks: List[ImagePredictionTask],
     model_load_details_dict: Optional[dict],
-    experiment_run_id_of_model: Optional[str], # Context for model loading
+    experiment_run_id_of_model: Optional[str],
     generate_lime: bool,
     lime_num_features: int,
     lime_num_samples: int,
     prob_plot_top_k: int,
-    artifact_repo, # Pass the repo
-    # Pass dataset_path_for_model_context if needed by pipeline init
+    artifact_repo,
     dataset_path_for_model_context: Path
 ):
     fastapi_app_logger.info(f"SYNC: Batch prediction for user {username}, tasks: {len(image_prediction_tasks)}")
-    # Instantiate a lean ClassificationPipeline for prediction
     try:
         pipeline_for_prediction = ClassificationPipeline(
             dataset_path=dataset_path_for_model_context,
             model_type=ModelType(model_load_details_dict["model_type_of_model"]),
             artifact_repository=artifact_repo,
-            # Ensure img_size is passed if not handled by load_model re-init
             img_size=(settings.DEFAULT_IMG_SIZE_H, settings.DEFAULT_IMG_SIZE_W)
         )
 
@@ -53,7 +47,6 @@ def _run_prediction_sync(
             full_model_path_or_key = str(model_prefix / model_load_details_dict["relative_model_path_in_experiment"])
             pipeline_for_prediction.load_model(full_model_path_or_key)
         else:
-            # Handle case where no specific model is provided (e.g., use a default, or error out)
             raise HTTPException(status_code=400, detail="Model details not provided for prediction.")
 
         predictions_api_format = pipeline_for_prediction.predict_images(
@@ -71,17 +64,15 @@ def _run_prediction_sync(
         return predictions_api_format
     except FileNotFoundError as e:
         fastapi_app_logger.error(f"SYNC: Model file or config not found for prediction: {e}")
-        # Re-raise a specific error that the endpoint can catch and convert to HTTPException
         raise HTTPException(status_code=404, detail=f"Model or required configuration not found: {e}")
     except Exception as e:
         fastapi_app_logger.error(f"SYNC: Unexpected error during prediction: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Prediction failed internally: {str(e)}")
 
 
-# The function called by your FastAPI endpoint becomes async and uses run_in_executor
 async def run_prediction_async_wrapper(
-        request_fast_api: FastAPIRequest,  # To get artifact_repo and other app state
-        config: RunPredictionRequest  # Your Pydantic model
+        request_fast_api: FastAPIRequest,
+        config: RunPredictionRequest
 ):
     fastapi_app_logger.info(f"ASYNC WRAPPER: Received prediction request for user {config.username}")
     artifact_repo_from_state = request_fast_api.app.state.artifact_repo
@@ -89,7 +80,6 @@ async def run_prediction_async_wrapper(
         fastapi_app_logger.error("Artifact repository not available for prediction service.")
         raise HTTPException(status_code=500, detail="Artifact repository not configured.")
 
-    # Prepare dataset_path_for_model_context (as you did before)
     dataset_path_for_model_context = settings.LOCAL_STORAGE_BASE_PATH / DATASET_DICT[config.model_load_details.dataset_name_of_model]
     if not dataset_path_for_model_context.exists():
         fastapi_app_logger.error(f"Dataset context path {dataset_path_for_model_context} for model loading not found.")
@@ -98,16 +88,12 @@ async def run_prediction_async_wrapper(
 
     loop = asyncio.get_event_loop()
     try:
-        # Convert Pydantic model to dict for easier passing if _run_prediction_sync expects it
-        # or pass the Pydantic model directly if _run_prediction_sync can handle it.
-        # For simplicity, let's assume it expects primitive types or dicts for now.
         prediction_results = await loop.run_in_executor(
-            None,  # Uses default ThreadPoolExecutor
-            _run_prediction_sync,  # The synchronous function
-            # Positional arguments for _run_prediction_sync:
+            None,
+            _run_prediction_sync,
             config.username,
             config.image_prediction_tasks,
-            config.model_load_details.model_dump(),  # Convert Pydantic to dict
+            config.model_load_details.model_dump(),
             config.experiment_run_id_of_model,
             config.generate_lime,
             config.lime_num_features,
@@ -116,15 +102,14 @@ async def run_prediction_async_wrapper(
             artifact_repo_from_state,
             dataset_path_for_model_context
         )
-        return prediction_results  # This is List[SinglePredictionResult] from Pydantic
-    except HTTPException as he:  # Re-raise HTTPExceptions from _run_prediction_sync
+        return prediction_results
+    except HTTPException as he:
         raise he
     except Exception as e:
         fastapi_app_logger.error(f"ASYNC WRAPPER: Unexpected error running prediction in executor: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Prediction execution failed: {str(e)}")
 
 
-# Re-use or adapt get_artifact_type_from_filename from experiment_service.py
 def get_artifact_type_from_filename(filename: str) -> str:
     name_lower = filename.lower()
     if name_lower.endswith((".png", ".jpg", ".jpeg", ".gif", ".svg")): return "image"
@@ -137,11 +122,10 @@ def get_artifact_type_from_filename(filename: str) -> str:
 def list_artifacts_for_prediction(
     artifact_repo: ArtifactRepository,
     username: str,
-    image_id: str, # Image ID (from DB)
+    image_id: str,
     prediction_id: str,
-    sub_path: str = "" # Relative path within the prediction's folder, e.g., "plots"
+    sub_path: str = ""
 ) -> List[ArtifactNode]:
-    # Base path for this specific prediction's artifacts
     base_prediction_prefix = PurePath("predictions", username, str(image_id), prediction_id)
     current_scan_prefix = str((base_prediction_prefix / sub_path).as_posix()).strip("/")
     if current_scan_prefix and not current_scan_prefix.endswith("/"):
@@ -191,7 +175,7 @@ def get_prediction_artifact_content_bytes(
     username: str,
     image_id: str,
     prediction_id: str,
-    artifact_relative_path: str # e.g., "plots/lime.png" or "prediction_details.json"
+    artifact_relative_path: str
 ) -> Optional[bytes]:
     full_artifact_key = str(PurePath("predictions", username, str(image_id), prediction_id, artifact_relative_path).as_posix())
     fastapi_app_logger.info(f"Fetching content for prediction artifact: {full_artifact_key}")

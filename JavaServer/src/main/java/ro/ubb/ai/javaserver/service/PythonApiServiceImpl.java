@@ -40,7 +40,7 @@ public class PythonApiServiceImpl implements PythonApiService {
                                 ObjectMapper objectMapper) {
         this.restTemplate = restTemplate;
         this.pythonApiBaseUrl = pythonApiBaseUrl;
-        this.internalApiKey = internalApiKey; // Not used in current example calls to Python
+        this.internalApiKey = internalApiKey;
         this.objectMapper = objectMapper;
     }
 
@@ -51,7 +51,6 @@ public class PythonApiServiceImpl implements PythonApiService {
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
-            // If Python's /experiments/run endpoint is protected by X-Internal-API-Key:
             // headers.set("X-Internal-API-Key", internalApiKey);
 
             HttpEntity<PythonRunExperimentRequestDTO> entity = new HttpEntity<>(requestDTO, headers);
@@ -60,7 +59,6 @@ public class PythonApiServiceImpl implements PythonApiService {
             return response.getBody();
         } catch (HttpClientErrorException e) {
             log.error("Error starting Python experiment {}: {} - {}", requestDTO.getExperimentRunId(), e.getStatusCode(), e.getResponseBodyAsString());
-            // Convert Python's error to a more generic message or rethrow a custom exception
             throw new RuntimeException("Failed to start experiment in Python: " + e.getResponseBodyAsString(), e);
         } catch (Exception e) {
             log.error("Unexpected error starting Python experiment {}: {}", requestDTO.getExperimentRunId(), e.getMessage(), e);
@@ -72,7 +70,7 @@ public class PythonApiServiceImpl implements PythonApiService {
     public List<Map<String, Object>> listPythonExperimentArtifacts(String datasetName, String modelType, String experimentRunId, String path) {
         String url = String.format("%s/experiments/%s/%s/%s/artifacts/list", pythonApiBaseUrl, datasetName, modelType, experimentRunId);
         if (path != null && !path.isEmpty()) {
-            url += "?path=" + UriUtils.encodeQueryParam(path, StandardCharsets.UTF_8); // URL encode path
+            url += "?path=" + UriUtils.encodeQueryParam(path, StandardCharsets.UTF_8);
         }
         log.info("Requesting artifact list from Python: {}", url);
         try {
@@ -94,7 +92,6 @@ public class PythonApiServiceImpl implements PythonApiService {
 
     @Override
     public byte[] getPythonExperimentArtifactContent(String datasetName, String modelType, String experimentRunId, String artifactRelativePath) {
-        // artifactRelativePath already includes subfolders like "method_0_id/plots/myplot.png"
         String encodedArtifactPath = UriUtils.encodePath(artifactRelativePath, StandardCharsets.UTF_8);
         String url = String.format("%s/experiments/%s/%s/%s/artifacts/content/%s",
                 pythonApiBaseUrl, datasetName, modelType, experimentRunId, encodedArtifactPath);
@@ -208,7 +205,7 @@ public class PythonApiServiceImpl implements PythonApiService {
     public void uploadImageToPython(String username, String imageId, String imageFormat, MultipartFile file) {
         String url = pythonApiBaseUrl + "/images/upload";
         log.info("Uploading image {} (ID: {}) with format {} to Python for user {}",
-                file.getOriginalFilename(), imageId, imageFormat, username); // Added imageFormat to log
+                file.getOriginalFilename(), imageId, imageFormat, username);
         try {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -218,20 +215,17 @@ public class PythonApiServiceImpl implements PythonApiService {
             body.add("image_id", imageId);
             body.add("image_format", imageFormat);
 
-            // Wrap the MultipartFile's bytes in a ByteArrayResource.
-            // Crucially, override getFilename() so RestTemplate can set the
-            // Content-Disposition filename parameter for the file part.
             ByteArrayResource fileResource = new ByteArrayResource(file.getBytes()) {
                 @Override
                 public String getFilename() {
-                    return file.getOriginalFilename(); // Ensures the filename is part of the Content-Disposition
+                    return file.getOriginalFilename();
                 }
             };
-            body.add("file", fileResource); // "file" must match the FastAPI parameter name
+            body.add("file", fileResource);
 
             HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
-            log.debug("Sending multipart request to Python. Keys in body: {}", body.keySet()); // Log what keys Java is adding
+            log.debug("Sending multipart request to Python. Keys in body: {}", body.keySet());
 
             ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
 
@@ -255,7 +249,6 @@ public class PythonApiServiceImpl implements PythonApiService {
         String url = String.format("%s/images/%s/%s", pythonApiBaseUrl, username, imageFilenameWithExt);
         log.info("Requesting image content from Python: {}", url);
         try {
-            // Requesting as byte array directly
             ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.GET, null, byte[].class);
             if (response.getStatusCode().is2xxSuccessful() && response.getBody() != null) {
                 log.debug("Successfully received image bytes from Python for: {}", imageFilenameWithExt);

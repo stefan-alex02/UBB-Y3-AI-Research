@@ -1,9 +1,7 @@
-# server/ml/architectures/shufflenet_cloud.py
 import torch
 import torch.nn as nn
 import torchvision.models as models
 from torchvision.models import ShuffleNet_V2_X1_0_Weights
-from typing import Optional
 
 from ..logger_utils import logger
 
@@ -12,7 +10,7 @@ class ShuffleNetCloud(nn.Module):
     def __init__(self, num_classes: int, pretrained: bool = True):
         super().__init__()
 
-        weights_arg = None  # Initialize to handle older torchvision if enum fails
+        weights_arg = None
         if pretrained:
             try:
                 weights_arg = ShuffleNet_V2_X1_0_Weights.IMAGENET1K_V1
@@ -27,7 +25,7 @@ class ShuffleNetCloud(nn.Module):
         else:
             base_model = models.shufflenet_v2_x1_0(weights=weights_arg)
 
-        num_ftrs = base_model.fc.in_features  # Should be 1024
+        num_ftrs = base_model.fc.in_features
 
         # Take all layers except the final fc layer
         self.features = nn.Sequential(*list(base_model.children())[:-1])
@@ -44,8 +42,8 @@ class ShuffleNetCloud(nn.Module):
                     f"Classifier head: Linear({num_ftrs}->{num_classes})")
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        x = self.features(x)  # Output: (B, 1024, H_feat, W_feat), e.g., (B, 1024, 7, 7)
-        x = self.global_avg_pool(x)  # Output: (B, 1024, 1, 1)
-        x = torch.flatten(x, 1)  # Output: (B, 1024)
-        x = self.classifier_fc(x)  # Input: (B, 1024), Output: (B, num_classes)
+        x = self.features(x)
+        x = self.global_avg_pool(x)
+        x = torch.flatten(x, 1)
+        x = self.classifier_fc(x)
         return x

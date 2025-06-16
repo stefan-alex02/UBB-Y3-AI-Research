@@ -1,7 +1,7 @@
 package ro.ubb.ai.javaserver.dto.experiment;
 
-import lombok.Data;
 import lombok.AllArgsConstructor;
+import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.List;

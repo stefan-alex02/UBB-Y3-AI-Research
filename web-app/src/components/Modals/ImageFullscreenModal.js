@@ -1,11 +1,10 @@
 import React from 'react';
-import { Dialog, DialogContent, DialogTitle, IconButton, Box, Typography, CircularProgress } from '@mui/material';
+import {Box, CircularProgress, Dialog, DialogContent, DialogTitle, IconButton, Typography} from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 
 const ImageFullscreenModal = ({ open, onClose, imageUrl, imageBlob, title, altText = "Fullscreen Image" }) => {
-    // Can accept either a direct imageUrl string or an imageBlob
     const [displayUrl, setDisplayUrl] = React.useState(null);
-    const [isLoading, setIsLoading] = React.useState(false); // For blob conversion
+    const [isLoading, setIsLoading] = React.useState(false);
 
     React.useEffect(() => {
         let objectUrl = null;
@@ -17,13 +16,9 @@ const ImageFullscreenModal = ({ open, onClose, imageUrl, imageBlob, title, altTe
                 setIsLoading(true);
                 objectUrl = URL.createObjectURL(imageBlob);
                 setDisplayUrl(objectUrl);
-                // Image loading itself is handled by the <img> tag's onLoad
-                // but we set isLoading to false once the object URL is created
-                // A slight delay might be needed if the blob is very large before it's ready
-                // For simplicity, we assume createObjectURL is fast enough.
                 setIsLoading(false);
             } else {
-                setDisplayUrl(null); // No valid source
+                setDisplayUrl(null);
                 setIsLoading(false);
             }
         }
@@ -37,7 +32,7 @@ const ImageFullscreenModal = ({ open, onClose, imageUrl, imageBlob, title, altTe
     }, [open, imageUrl, imageBlob]);
 
 
-    if (!open || (!displayUrl && !isLoading)) return null; // Don't render if not open or no valid source
+    if (!open || (!displayUrl && !isLoading)) return null;
 
     return (
         <Dialog
@@ -47,10 +42,10 @@ const ImageFullscreenModal = ({ open, onClose, imageUrl, imageBlob, title, altTe
             fullWidth
             PaperProps={{
                 sx: {
-                    backgroundColor: 'rgba(0,0,0,0.75)', // Darker overlay for better focus on image
-                    height: '100vh', // Attempt to make dialog itself take full height
+                    backgroundColor: 'rgba(0,0,0,0.75)',
+                    height: '100vh',
                     maxHeight: '100vh',
-                    m: 0, // Remove default margins
+                    m: 0,
                     display: 'flex',
                     flexDirection: 'column'
                 }
@@ -64,7 +59,7 @@ const ImageFullscreenModal = ({ open, onClose, imageUrl, imageBlob, title, altTe
                     </IconButton>
                 </DialogTitle>
             )}
-            {!title && ( // Still provide a close button if no title
+            {!title && (
                 <IconButton
                     aria-label="close"
                     onClick={onClose}
@@ -72,7 +67,7 @@ const ImageFullscreenModal = ({ open, onClose, imageUrl, imageBlob, title, altTe
                         position: 'absolute',
                         right: 8,
                         top: 8,
-                        zIndex: 1, // Ensure it's above the image
+                        zIndex: 1,
                         color: (theme) => theme.palette.grey[300],
                         backgroundColor: 'rgba(0,0,0,0.5)',
                         '&:hover': {
@@ -93,9 +88,9 @@ const ImageFullscreenModal = ({ open, onClose, imageUrl, imageBlob, title, altTe
                         alt={altText}
                         sx={{
                             maxWidth: '100%',
-                            maxHeight: 'calc(100vh - 64px - 16px)', // Adjust for DialogTitle and padding
+                            maxHeight: 'calc(100vh - 64px - 16px)',
                             objectFit: 'contain',
-                            display: 'block', // Removes extra space below img
+                            display: 'block',
                         }}
                     />
                 ) : (

@@ -1,8 +1,19 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Formik, Form, Field } from 'formik';
+import React, {useState} from 'react';
+import {useNavigate} from 'react-router-dom';
+import {Field, Form, Formik} from 'formik';
 import * as Yup from 'yup';
-import { TextField, Button, Container, Typography, Box, Alert, CircularProgress, FormControlLabel, Checkbox, FormGroup } from '@mui/material';
+import {
+    Alert,
+    Box,
+    Button,
+    Checkbox,
+    CircularProgress,
+    Container,
+    FormControlLabel,
+    FormGroup,
+    TextField,
+    Typography
+} from '@mui/material';
 import authService from '../services/authService';
 
 const RegisterSchema = Yup.object().shape({
@@ -57,8 +68,6 @@ const RegisterPage = () => {
                             await authService.register(registrationData);
                             setSuccess('Registration successful! Please log in.');
                             resetForm();
-                            // Optionally navigate to login after a delay
-                            // setTimeout(() => navigate('/login'), 2000);
                         } catch (err) {
                             setError(err.response?.data?.message || err.message || 'Registration failed.');
                         } finally {

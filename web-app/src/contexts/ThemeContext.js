@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useMemo, useEffect } from 'react';
+import React, {createContext, useContext, useEffect, useMemo, useState} from 'react';
 
 const ThemeContext = createContext({
     mode: 'light',
@@ -33,7 +33,7 @@ export const ThemeProvider = ({ children }) => {
         mode,
         toggleThemeMode,
         setThemeMode: setTheme,
-    }), [mode, prefersDarkMode]); // Add prefersDarkMode to dependencies
+    }), [mode, prefersDarkMode]);
 
     return (
         <ThemeContext.Provider value={contextValue}>

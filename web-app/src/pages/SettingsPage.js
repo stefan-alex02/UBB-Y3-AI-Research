@@ -1,17 +1,29 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Typography, Paper, Box, TextField, Button, Alert, CircularProgress, Select, MenuItem, FormControl, InputLabel } from '@mui/material';
-import { Formik, Form, Field } from 'formik';
+import React, {useState} from 'react';
+import {
+    Alert,
+    Box,
+    Button,
+    CircularProgress,
+    Container,
+    FormControl,
+    InputLabel,
+    MenuItem,
+    Paper,
+    Select,
+    TextField,
+    Typography
+} from '@mui/material';
+import {Field, Form, Formik} from 'formik';
 import * as Yup from 'yup';
 import useAuth from '../hooks/useAuth';
 import userService from '../services/userService';
-import { useThemeMode } from '../contexts/ThemeContext';
+import {useThemeMode} from '../contexts/ThemeContext';
 
 const SettingsSchema = Yup.object().shape({
     name: Yup.string().max(100, 'Too Long!'),
     newPassword: Yup.string().min(6, 'Password must be at least 6 characters').optional(),
     confirmNewPassword: Yup.string()
         .when('newPassword', (newPassword, schema) => {
-            // Access the first element of newPassword array if it's an array
             const passwordValue = Array.isArray(newPassword) ? newPassword[0] : newPassword;
             return passwordValue ? schema.required('Confirm new password is required').oneOf([Yup.ref('newPassword')], 'Passwords must match') : schema;
         }),
@@ -31,7 +43,7 @@ const SettingsPage = () => {
         const newPreference = event.target.value;
         setCurrentThemePreference(newPreference);
         localStorage.setItem('themeModePreference', newPreference);
-        setThemeMode(newPreference); // This calls the context function
+        setThemeMode(newPreference);
     };
 
 
@@ -53,7 +65,7 @@ const SettingsPage = () => {
                         confirmNewPassword: '',
                     }}
                     validationSchema={SettingsSchema}
-                    enableReinitialize // Important to reinitialize form when user data changes
+                    enableReinitialize
                     onSubmit={async (values, { setSubmitting, resetForm }) => {
                         setError('');
                         setSuccess('');
@@ -71,7 +83,6 @@ const SettingsPage = () => {
 
                         try {
                             const updatedUserDTO = await userService.updateUserSettings(user.id, updateData);
-                            // Update user in AuthContext
                             if (setUser) {
                                 setUser(prevUser => ({...prevUser, name: updatedUserDTO.name}));
                             }

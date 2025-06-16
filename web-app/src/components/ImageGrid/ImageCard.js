@@ -1,21 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, {useEffect, useState} from 'react';
 import {
-    Card,
-    CardMedia,
-    CardContent,
-    CardActions,
-    Typography,
-    Button,
-    IconButton,
     Box,
+    Button,
+    Card,
+    CardActions,
+    CardContent,
+    CardMedia,
+    Checkbox,
+    FormControlLabel,
+    IconButton,
     Skeleton,
-    Checkbox, FormControlLabel
-} from '@mui/material'; // Added Skeleton
+    Typography
+} from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DeleteIcon from '@mui/icons-material/Delete';
-import BrokenImageIcon from '@mui/icons-material/BrokenImage'; // For error state
-import { useNavigate } from 'react-router-dom';
-import imageService from '../../services/imageService'; // Import your service
+import BrokenImageIcon from '@mui/icons-material/BrokenImage';
+import {useNavigate} from 'react-router-dom';
+import imageService from '../../services/imageService';
 import ConfirmDialog from '../ConfirmDialog';
 import {formatDateSafe} from "../../utils/dateUtils";
 
@@ -51,12 +52,11 @@ const ImageCard = ({ image, onDelete, selectedImageIds, onImageSelect }) => {
         loadImage();
 
         return () => {
-            // Cleanup: Revoke the object URL when the component unmounts or image changes
             if (objectUrl) {
                 URL.revokeObjectURL(objectUrl);
             }
         };
-    }, [image]); // Re-fetch if the image prop changes
+    }, [image]);
 
     const handleViewPredictions = () => {
         navigate(`/images/${image.id}/predictions`);

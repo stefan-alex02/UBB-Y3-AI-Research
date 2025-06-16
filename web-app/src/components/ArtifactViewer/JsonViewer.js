@@ -1,5 +1,5 @@
 import React from 'react';
-import {Paper, Typography, Box, Alert} from '@mui/material';
+import {Alert, Box, Paper, Typography} from '@mui/material';
 
 const JsonViewer = ({ jsonData, title }) => {
     let displayData = jsonData;
@@ -11,14 +11,12 @@ const JsonViewer = ({ jsonData, title }) => {
         } catch (e) {
             console.error("JsonViewer: Error parsing JSON string:", e, "Data:", jsonData);
             parseError = `Error parsing JSON: ${e.message}`;
-            displayData = jsonData; // Show raw string on error
+            displayData = jsonData;
         }
     } else if (typeof jsonData !== 'object' || jsonData === null) {
-        // If it's not a string and not an object, it's unexpected
         parseError = "Invalid data type for JSON viewer. Expected object or JSON string.";
-        displayData = String(jsonData); // Show as string
+        displayData = String(jsonData);
     }
-    // If it's already an object, displayData is already jsonData
 
     return (
         <Paper elevation={0} sx={{ p: 1, my: 0, height: '100%', display:'flex', flexDirection:'column', overflow:'hidden' }}>

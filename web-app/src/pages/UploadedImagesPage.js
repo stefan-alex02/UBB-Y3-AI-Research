@@ -1,22 +1,20 @@
-import React, { useState, useEffect } from 'react';
-import { Container, Typography, Button, Box } from '@mui/material';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import React, {useEffect, useState} from 'react';
+import {Box, Button, Container, Typography} from '@mui/material';
 import ImageGrid from '../components/ImageGrid/ImageGrid';
-import imageService from '../services/imageService'; // You'll create this
+import imageService from '../services/imageService';
 import useAuth from '../hooks/useAuth';
 import LoadingSpinner from '../components/LoadingSpinner';
 import FileUploadButton from '../components/FileUploadButton';
-import AddCircleOutlineIcon from "@mui/icons-material/AddCircleOutline";
 import NewPredictionModal from "../components/Modals/NewPredictionModal";
-import AssessmentIcon from "@mui/icons-material/Assessment"; // A new component
+import AssessmentIcon from "@mui/icons-material/Assessment";
 
 const UploadedImagesPage = () => {
     const [images, setImages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
-    const { user } = useAuth(); // To pass username if needed by service
+    const { user } = useAuth();
 
-    const [selectedImageIds, setSelectedImageIds] = useState(new Set()); // Store IDs of selected images
+    const [selectedImageIds, setSelectedImageIds] = useState(new Set());
     const [newPredictionModalOpen, setNewPredictionModalOpen] = useState(false);
 
     const fetchImages = async () => {
@@ -24,7 +22,7 @@ const UploadedImagesPage = () => {
         setError(null);
         try {
             if (user) { // Ensure user is loaded
-                const data = await imageService.getUserImages(); // Service should get username from auth context or have it passed
+                const data = await imageService.getUserImages();
                 setImages(data);
             }
         } catch (err) {
@@ -36,10 +34,10 @@ const UploadedImagesPage = () => {
 
     useEffect(() => {
         fetchImages();
-    }, [user]); // Re-fetch if user changes (e.g., after login)
+    }, [user]);
 
     const handleImageUploadSuccess = () => {
-        fetchImages(); // Refresh the list after successful upload
+        fetchImages();
     };
 
     const handleImageDelete = async (imageId) => {
@@ -48,7 +46,6 @@ const UploadedImagesPage = () => {
             setImages(prevImages => prevImages.filter(img => img.id !== imageId));
         } catch (err) {
             setError(err.message || 'Failed to delete image.');
-            // Optionally, re-fetch all images to ensure consistency
         }
     };
 
@@ -72,9 +69,7 @@ const UploadedImagesPage = () => {
 
     const handlePredictionCreated = () => {
         setNewPredictionModalOpen(false);
-        setSelectedImageIds(new Set()); // Clear selection after submitting
-        // Optionally, navigate or show a success message for batch prediction
-        // fetchImages(); // Might not be necessary as individual predictions are created
+        setSelectedImageIds(new Set());
     };
 
     if (isLoading) return <LoadingSpinner />;
@@ -100,17 +95,13 @@ const UploadedImagesPage = () => {
             <ImageGrid
                 images={images}
                 onDelete={handleImageDelete}
-                selectedImageIds={selectedImageIds} // Pass selected IDs
-                onImageSelect={handleImageSelectToggle} // Pass toggle handler
+                selectedImageIds={selectedImageIds}
+                onImageSelect={handleImageSelectToggle}
             />
             {newPredictionModalOpen && selectedImageIds.size > 0 && (
                 <NewPredictionModal
                     open={newPredictionModalOpen}
                     onClose={() => setNewPredictionModalOpen(false)}
-                    // Pass an array of image objects or just IDs and formats
-                    // Let's pass image IDs and let the modal/service fetch formats if needed,
-                    // or pass image objects if readily available and not too large for props.
-                    // For simplicity, passing IDs. Java service can fetch formats.
                     imageIds={Array.from(selectedImageIds)}
                     onPredictionCreated={handlePredictionCreated}
                 />

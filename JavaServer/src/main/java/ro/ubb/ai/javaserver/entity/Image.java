@@ -1,9 +1,10 @@
 package ro.ubb.ai.javaserver.entity;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
+
 import java.time.OffsetDateTime;
 import java.util.List;
 
@@ -16,10 +17,10 @@ public class Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // This ID is used as the filename basis
+    private Long id;
 
     @Column(length = 10, nullable = false)
-    private String format; // e.g., "png", "jpg"
+    private String format;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id", nullable = false)

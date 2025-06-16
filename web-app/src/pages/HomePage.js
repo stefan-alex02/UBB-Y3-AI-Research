@@ -1,5 +1,5 @@
 import React from 'react';
-import { Container, Typography, Paper, Box } from '@mui/material';
+import {Box, Container, Paper, Typography} from '@mui/material';
 import useAuth from '../hooks/useAuth';
 
 const HomePage = () => {
@@ -9,7 +9,7 @@ const HomePage = () => {
         <Container maxWidth="md">
             <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
                 <Typography variant="h4" component="h1" gutterBottom>
-                    Welcome to Cloud Classifier, {user?.name || user?.username}!
+                    Welcome to CloudS-R, {user?.name || user?.username}!
                 </Typography>
                 <Typography variant="body1" sx={{ mb: 2 }}>
                     This is your central dashboard. Use the navigation menu on the left to access different features of the application.

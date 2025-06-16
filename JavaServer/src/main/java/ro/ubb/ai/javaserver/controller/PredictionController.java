@@ -1,24 +1,24 @@
 package ro.ubb.ai.javaserver.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.web.util.UrlPathHelper;
-import ro.ubb.ai.javaserver.dto.prediction.PredictionCreateRequest;
-import ro.ubb.ai.javaserver.dto.prediction.PredictionDTO;
-import ro.ubb.ai.javaserver.exception.ResourceNotFoundException;
-import ro.ubb.ai.javaserver.service.PredictionService;
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.util.UrlPathHelper;
+import ro.ubb.ai.javaserver.dto.prediction.PredictionCreateRequest;
+import ro.ubb.ai.javaserver.dto.prediction.PredictionDTO;
+import ro.ubb.ai.javaserver.exception.ResourceNotFoundException;
+import ro.ubb.ai.javaserver.service.PredictionService;
 import ro.ubb.ai.javaserver.service.PythonApiService;
 
 import java.nio.file.Paths;
@@ -83,7 +83,7 @@ public class PredictionController {
             HttpServletRequest request,
             Authentication authentication) {
         String currentUsername = authentication.getName();
-        PredictionDTO prediction = predictionService.getPrediction(predictionId, currentUsername); // Fetch to get imageId
+        PredictionDTO prediction = predictionService.getPrediction(predictionId, currentUsername);
 
         String fullRequestPath = urlPathHelper.getPathWithinApplication(request);
         String basePathToTrim = String.format("/api/predictions/%d/artifacts/content/", predictionId);
