@@ -1,8 +1,8 @@
 cloudnet_fixed_params = {
     # --- Skorch/Training Loop Parameters ---
-    'max_epochs': 200,
+    'max_epochs': 70,
     'lr': 1e-3,
-    'batch_size': 64,
+    'batch_size': 16,
 
     # --- Optimizer Configuration ---
     'optimizer': 'SGD',
@@ -14,17 +14,21 @@ cloudnet_fixed_params = {
 
 
     # --- LR Scheduler ---
-    'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau',
-    'callbacks__default_lr_scheduler__monitor': 'valid_loss',
-    'callbacks__default_lr_scheduler__patience': 10,
-    'callbacks__default_lr_scheduler__factor': 0.1,
-    'callbacks__default_lr_scheduler__min_lr': 1e-6,
-    'callbacks__default_lr_scheduler__mode': 'min',
+    # 'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau',
+    # 'callbacks__default_lr_scheduler__monitor': 'valid_loss',
+    # 'callbacks__default_lr_scheduler__patience': 10,
+    # 'callbacks__default_lr_scheduler__factor': 0.1,
+    # 'callbacks__default_lr_scheduler__min_lr': 1e-6,
+    # 'callbacks__default_lr_scheduler__mode': 'min',
 
     # if max_epochs = 200:
     # 'callbacks__default_lr_scheduler__policy': 'MultiStepLR',
     # 'callbacks__default_lr_scheduler__milestones': [80, 150], # Drop at ~40% and ~75% of epochs
     # 'callbacks__default_lr_scheduler__gamma': 0.1,
+
+    'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
+    'callbacks__default_lr_scheduler__T_max': 70,
+    'callbacks__default_lr_scheduler__eta_min': 1e-06,
 
 
     # --- Early Stopping ---
