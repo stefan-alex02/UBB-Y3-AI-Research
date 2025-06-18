@@ -313,31 +313,28 @@ def get_paper_replication_augmentation_ccsn(img_size: Tuple[int, int]) -> transf
     ])
 
 
-def get_paper_replication_augmentation_gcd(img_size: Tuple[int, int]) -> transforms.Compose:
+def get_paper_replication_augmentation_cloudnet(img_size: Tuple[int, int]) -> transforms.Compose:
     """
-    Creates an augmentation pipeline replicating the one used in a specific GCD paper.
-
+    Creates an augmentation pipeline replicating the one used in a specific CloudNet paper.
     This transform pipeline applies:
     - Random resized cropping (scale 0.8-1.0)
     - Horizontal flips
-    - Rotations up to 15 degrees
-    - Color jittering (brightness, saturation, hue, but no contrast)
+    - No rotations
+    - Normalization using ImageNet statistics
 
     Args:
         img_size: Target image size as (height, width)
 
     Returns:
-        transforms.Compose: A composition of transforms matching the GCD paper's augmentation
+        transforms.Compose: A composition of transforms matching the CloudNet paper's augmentation
 
     Notes:
         This is designed to replicate the exact augmentation strategy from a specific
-        paper for comparison or reproduction purposes.
+        CloudNet paper for comparison or reproduction purposes.
     """
     return transforms.Compose([
         transforms.RandomResizedCrop(img_size, scale=(0.8, 1.0)),
         transforms.RandomHorizontalFlip(p=0.5),
-        transforms.RandomRotation(degrees=15),
-        transforms.ColorJitter(brightness=0.2, saturation=0.2, hue=0.1, contrast=0.0),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
@@ -495,8 +492,8 @@ class ImageDatasetHandler:
             self.train_transform = get_moderate_augmentations(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.SWIMCAT_MILD:
             self.train_transform = get_mild_augmentation(self.img_size)
-        elif self.augmentation_strategy_enum == AugmentationStrategy.PAPER_GCD:
-            self.train_transform = get_paper_replication_augmentation_gcd(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.PAPER_CLOUDNET:
+            self.train_transform = get_paper_replication_augmentation_cloudnet(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.PAPER_CCSN:
             self.train_transform = get_paper_replication_augmentation_ccsn(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.DEFAULT_STANDARD:

@@ -58,5 +58,5 @@ class AugmentationStrategy(str, Enum):
     CCSN_MODERATE = "ground_aware_no_rotation"
     SWIMCAT_MILD = "swimcat_mild"
     NO_AUGMENTATION = "no_augmentation"
-    PAPER_GCD = "paper_replication_gcd"
     PAPER_CCSN = "paper_replication_ccsn"
+    PAPER_CLOUDNET = "paper_replication_cloudnet"

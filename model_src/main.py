@@ -72,7 +72,7 @@ if __name__ == "__main__":
     save_model = False  # Whether to save the model after training
 
     # data_augmentation_mode_override = None
-    data_augmentation_mode_override = AugmentationStrategy.NO_AUGMENTATION
+    data_augmentation_mode_override = AugmentationStrategy.PAPER_CLOUDNET
 
     # Flag for overriding parameters:
     enable_debug_params = False
