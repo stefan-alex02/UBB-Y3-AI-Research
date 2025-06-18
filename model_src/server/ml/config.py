@@ -56,6 +56,7 @@ class AugmentationStrategy(str, Enum):
     DEFAULT_STANDARD = "default_standard"
     SKY_ONLY_ROTATION = "sky_only_rotation"
     CCSN_MODERATE = "ground_aware_no_rotation"
+    SWIMCAT_MILD = "swimcat_mild"
     NO_AUGMENTATION = "no_augmentation"
     PAPER_GCD = "paper_replication_gcd"
     PAPER_CCSN = "paper_replication_ccsn"

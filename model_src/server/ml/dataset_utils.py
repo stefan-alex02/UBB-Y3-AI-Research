@@ -259,6 +259,30 @@ def get_moderate_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
         final_transforms
     )
 
+def get_mild_augmentation(img_size: Tuple[int, int]) -> transforms.Compose:
+    """
+    Creates a mild augmentation pipeline.
+
+    This transform pipeline applies:
+    - Random resized cropping (scale 0.8-1.0)
+    - Horizontal flips
+    - Color jittering (brightness, saturation, hue, but no contrast)
+    - No rotations
+
+    Args:
+        img_size: Target image size as (height, width)
+
+    Returns:
+        transforms.Compose: A mild composition of transforms
+    """
+    return transforms.Compose([
+        transforms.RandomResizedCrop(img_size, scale=(0.8, 1.0)),
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.ColorJitter(brightness=0.2, saturation=0.2, hue=0.1, contrast=0.0),
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
 
 def get_paper_replication_augmentation_ccsn(img_size: Tuple[int, int]) -> transforms.Compose:
     """
@@ -283,7 +307,7 @@ def get_paper_replication_augmentation_ccsn(img_size: Tuple[int, int]) -> transf
     return transforms.Compose([
         transforms.RandomResizedCrop(img_size, scale=(0.8, 1.0)),
         transforms.RandomHorizontalFlip(p=0.5),
-        transforms.ColorJitter(brightness=0.2, saturation=0.2, hue=0.1, contrast=0.0),
+        transforms.RandomRotation(degrees=144),
         transforms.ToTensor(),
         transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
     ])
@@ -469,6 +493,8 @@ class ImageDatasetHandler:
             self.train_transform = get_pronounced_augmentations(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.CCSN_MODERATE:
             self.train_transform = get_moderate_augmentations(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.SWIMCAT_MILD:
+            self.train_transform = get_mild_augmentation(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.PAPER_GCD:
             self.train_transform = get_paper_replication_augmentation_gcd(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.PAPER_CCSN:

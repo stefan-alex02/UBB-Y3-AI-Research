@@ -3,7 +3,8 @@ xcloud_fixed_params = {
     'lr': 1e-4,
     'batch_size': 32,
 
-    'optimizer': 'Adam',
+    'optimizer': 'AdamW',
+    'optimizer__weight_decay': 0.2,
 
     'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau',
     'callbacks__default_lr_scheduler__monitor': 'valid_loss',
