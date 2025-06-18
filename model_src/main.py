@@ -50,7 +50,7 @@ if __name__ == "__main__":
 
 
     # Offline Augmentation:
-    offline_augmentation = True
+    offline_augmentation = False
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -191,7 +191,7 @@ if __name__ == "__main__":
         effective_test_split_ratio_if_flat = 0.2
         effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
         cv_folds = 5
-        augmentation_strategy = AugmentationStrategy.PAPER_CCSN
+        augmentation_strategy = AugmentationStrategy.SWIMCAT_MILD
     else:
         effective_test_split_ratio_if_flat = 0.2
         effective_val_split_ratio = 0.1
