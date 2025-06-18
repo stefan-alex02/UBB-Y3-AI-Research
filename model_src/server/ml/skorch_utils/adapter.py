@@ -233,9 +233,9 @@ class SkorchModelAdapter(NeuralNetClassifier):
                             added_aug_count += 1
 
                     # TODO maybe add param for force sorting
-                    combined_train_paths_for_fold, combined_train_labels_for_fold = \
-                        zip(*sorted(zip(combined_train_paths_for_fold, combined_train_labels_for_fold),
-                                      key=lambda x: Path(x[0]).stem))
+                    # combined_train_paths_for_fold, combined_train_labels_for_fold = \
+                    #     zip(*sorted(zip(combined_train_paths_for_fold, combined_train_labels_for_fold),
+                    #                   key=lambda x: Path(x[0]).stem))
 
                     logger.debug(
                         f"Added {added_aug_count} relevant offline augmented samples to current training fold.")
@@ -364,9 +364,16 @@ class SkorchModelAdapter(NeuralNetClassifier):
         )
         loader_kwargs = {k: v for k, v in loader_kwargs.items() if v is not None}
 
+        drop_last_flag = False # Default
+        if training:
+            drop_last_flag = getattr(self, 'iterator_train__drop_last', False)
+        else: # For validation/prediction
+            drop_last_flag = getattr(self, 'iterator_valid__drop_last', False)
+
         logger.debug(
             f"Creating DataLoader for {'training' if training else 'validation/evaluation'}: "
             f"dataset_len={len(current_dataset)}, batch_size={self.batch_size}, shuffle={shuffle}, "
+            f"drop_last={drop_last_flag}, "
             f"collate_fn_type='{type(collate_fn_to_use).__name__}', "
             f"loader_kwargs={loader_kwargs}"
         )
@@ -376,6 +383,7 @@ class SkorchModelAdapter(NeuralNetClassifier):
             batch_size=self.batch_size,
             shuffle=shuffle,
             collate_fn=collate_fn_to_use,
+            drop_last=drop_last_flag,
             **loader_kwargs
         )
 

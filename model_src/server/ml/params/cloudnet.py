@@ -34,6 +34,8 @@ cloudnet_fixed_params = {
     # --- Early Stopping ---
     'callbacks__default_early_stopping__patience': 20,
 
+    'iterator_train__drop_last': True,
+
     # --- Module Parameters for CloudNetPyTorch ---
     'module__dropout_p': 0.5,
 }

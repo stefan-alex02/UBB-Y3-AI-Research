@@ -259,6 +259,7 @@ def get_moderate_augmentations(img_size: Tuple[int, int]) -> transforms.Compose:
         final_transforms
     )
 
+
 def get_mild_augmentation(img_size: Tuple[int, int]) -> transforms.Compose:
     """
     Creates a mild augmentation pipeline.
