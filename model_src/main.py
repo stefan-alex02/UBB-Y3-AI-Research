@@ -5,6 +5,7 @@ from typing import List
 import numpy as np
 
 from model_src.server.api.utils import ImagePredictionTask
+from model_src.server.ml.params.cloudnet import cloudnet_fixed_params
 from model_src.server.ml.params.feature_extractors import paper_cnn_standalone_fixed_params
 from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params, hybrid_vit_param_grid
 from model_src.server.ml.params.paper_xception_mobilenet import xcloud_fixed_params, mcloud_fixed_params
@@ -44,8 +45,8 @@ if __name__ == "__main__":
     selected_dataset = "ccsn"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "pvit"
-    # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet'
+    model_type = "cloudnet"
+    # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet', 'cloudnet'
 
 
     # Offline Augmentation:
@@ -162,6 +163,10 @@ if __name__ == "__main__":
 
     elif model_type == ModelType.SHUFFLE_CLOUD:
         chosen_fixed_params = shufflenet_cloud_fixed_params
+        chosen_param_grid = None
+
+    elif model_type == ModelType.CLOUD_NET:
+        chosen_fixed_params = cloudnet_fixed_params
         chosen_param_grid = None
 
     else:

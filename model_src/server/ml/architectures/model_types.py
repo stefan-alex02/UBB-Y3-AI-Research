@@ -10,6 +10,7 @@ from .resnet import ResNet18BasedCloud
 from .scratch_vit import ScratchViT
 from .shufflenet import ShuffleNetCloud
 from .standard_cnn_extractor import StandardCNNFeatureExtractor
+from .cloudnet import CloudNet
 
 model_mapping = {
     "cnn": SimpleCNN,
@@ -25,6 +26,7 @@ model_mapping = {
     "resnet": ResNet18BasedCloud,
     "swin": PretrainedSwin,
     "shufflenet": ShuffleNetCloud,
+    'cloudnet': CloudNet,
 }
 
 
@@ -42,6 +44,7 @@ class ModelType(str, Enum):
     PRETRAINED_SWIN = "swin"
     RESNET18_CLOUD = "resnet"
     SHUFFLE_CLOUD = "shufflenet"
+    CLOUD_NET = "cloudnet"
 
     def get_model_class(self):
         """Returns the model class associated with the model type."""
