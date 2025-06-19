@@ -1,0 +1,52 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-06-19 14:46:04 | INFO     | [logger_...:setup_logger      : 130] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\cloudnet\20250619_144604_seed42\executor_run_20250619_144604_seed42.log
+2025-06-19 14:46:04 | INFO     | [executor  :__init__          : 120] | ℹ️ Local main executor log file for this run (may be temporary): C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\cloudnet\20250619_144604_seed42\executor_run_20250619_144604_seed42.log
+2025-06-19 14:46:04 | INFO     | [executor  :__init__          : 125] | ℹ️ --- Starting Executor Run (ID: 20250619_144604_seed42) ---
+2025-06-19 14:46:04 | INFO     | [executor  :__init__          : 126] | ℹ️ Executor initialized for model 'cloudnet' on dataset 'CCSN'
+2025-06-19 14:46:04 | INFO     | [executor  :__init__          : 129] | ℹ️ Local artifact storage base: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-06-19 14:46:04 | INFO     | [executor  :__init__          : 133] | ℹ️ Base key/prefix for this executor run's artifacts: experiments/CCSN/cloudnet/20250619_144604_seed42
+2025-06-19 14:46:04 | INFO     | [pipeline  :__init__          : 164] | ℹ️ Initializing Classification Pipeline:
+2025-06-19 14:46:04 | INFO     | [pipeline  :__init__          : 165] | ℹ️   Dataset Path: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN
+2025-06-19 14:46:04 | INFO     | [pipeline  :__init__          : 166] | ℹ️   Model Type: cloudnet
+2025-06-19 14:46:04 | INFO     | [pipeline  :__init__          : 169] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/cloudnet/20250619_144604_seed42 (using LocalFileSystemRepository)
+2025-06-19 14:46:04 | INFO     | [pipeline  :__init__          : 173] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.PAPER_CLOUDNET
+2025-06-19 14:46:04 | INFO     | [pipeline  :__init__          : 174] | ℹ️   Default Show First Batch Aug: True
+2025-06-19 14:46:04 | INFO     | [dataset...:__init__          : 482] | ℹ️ Using augmentation strategy: AugmentationStrategy.PAPER_CLOUDNET
+2025-06-19 14:46:04 | INFO     | [dataset...:__init__          : 509] | ℹ️ Detected dataset structure: flat
+2025-06-19 14:46:04 | INFO     | [dataset...:_load_paths_and...: 706] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN...
+2025-06-19 14:46:04 | INFO     | [dataset...:_load_paths_and...: 793] | ℹ️ Final Original Dataset sizes: 2288 original train+val, 255 original test. Offline augmented samples loaded: 0.
+2025-06-19 14:46:04 | INFO     | [dataset...:__init__          : 532] | ℹ️ Found 11 classes: Ac, As, Cb, Cc, Ci, Cs, Ct, Cu, Ns, Sc, St
+2025-06-19 14:46:04 | INFO     | [dataset...:__init__          : 535] | ℹ️ Dataset sizes: 2288 train+val, 255 test. Total: 2543
+2025-06-19 14:46:04 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/cloudnet/20250619_144604_seed42 (using LocalFileSystemRepository)
+2025-06-19 14:46:04 | INFO     | [pipeline  :__init__          : 211] | ℹ️   Using Optimizer: AdamW
+2025-06-19 14:46:04 | DEBUG    | [callbacks :get_default_cal...: 172] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-06-19 14:46:04 | INFO     | [pipeline  :__init__          : 252] | ℹ️   Model Adapter: Initialized with CloudNet
+2025-06-19 14:46:04 | DEBUG    | [executor  :_validate_methods : 187] | 🐞 Basic method validation successful.
+2025-06-19 14:46:04 | INFO     | [executor  :__init__          : 166] | ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-06-19 14:46:04 | INFO     | [executor  :run               : 235] | ℹ️ Starting execution of methods for Executor Run ID: 20250619_144604_seed42
+2025-06-19 14:46:04 | INFO     | [executor  :run               : 244] | ℹ️ --- Running Method 1/1: cv_model_evaluation (Op ID: cv_model_evaluation_0) ---
+2025-06-19 14:46:04 | DEBUG    | [executor  :run               : 289] | 🐞 Running method 'cv_model_evaluation' with effective parameters: {'params': {'max_epochs': 70, 'lr': 0.001, 'batch_size': 16, 'optimizer': 'SGD', 'optimizer__momentum': 0.9, 'optimizer__weight_decay': 0.0005, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 70, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 20, 'iterator_train__drop_last': True, 'module__dropout_p': 0.5}, 'val_split_ratio': 0.11111111111111112, 'cv': 10, 'evaluate_on': 'full', 'results_detail_level': 2}
+2025-06-19 14:46:04 | INFO     | [pipeline  :cv_model_evalua...:1337] | ℹ️ Performing 10-fold CV for evaluation with fixed parameters.
+2025-06-19 14:46:04 | INFO     | [pipeline  :cv_model_evalua...:1356] | ℹ️ Using full dataset (2543 samples) for CV evaluation.
+2025-06-19 14:46:04 | INFO     | [pipeline  :cv_model_evalua...:1380] | ℹ️ Using provided parameters for CV evaluation: {'max_epochs': 70, 'lr': 0.001, 'batch_size': 16, 'optimizer': 'SGD', 'optimizer__momentum': 0.9, 'optimizer__weight_decay': 0.0005, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 70, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 20, 'iterator_train__drop_last': True, 'module__dropout_p': 0.5}
+2025-06-19 14:46:04 | DEBUG    | [param_g...:parse_fixed_hyp...: 163] | 🐞 Created LRScheduler instance: policy=CosineAnnealingLR, direct_args={}, constructor_kwargs={'T_max': 70, 'eta_min': 1e-06}
+2025-06-19 14:46:04 | INFO     | [pipeline  :cv_model_evalua...:1401] | ℹ️ Skorch internal validation split configured: 11.1% of each CV fold's training data.
+2025-06-19 14:46:04 | DEBUG    | [pipeline  :cv_model_evalua...:1428] | 🐞 Will compute detailed metrics (detail_level=2, plot_level=2)
+2025-06-19 14:46:04 | INFO     | [pipeline  :cv_model_evalua...:1434] | ℹ️ --- Starting CV Evaluation Fold 1/10 ---
+2025-06-19 14:46:04 | DEBUG    | [pipeline  :cv_model_evalua...:1440] | 🐞 Outer split (full set): 2288 train / 255 test samples.
+2025-06-19 14:46:04 | DEBUG    | [pipeline  :cv_model_evalua...:1459] | 🐞 Fold 1: Internal split: ~2034 train / ~254 valid.
+2025-06-19 14:46:04 | INFO     | [pipeline  :cv_model_evalua...:1469] | ℹ️ Fitting model for fold 1...
+2025-06-19 14:46:04 | INFO     | [cloudnet  :__init__          :  57] | ℹ️ CloudNet initialized for 11 classes with dropout 0.5.
+2025-06-19 14:46:04 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 255 original samples.
+2025-06-19 14:46:04 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-06-19 14:46:04 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 2033 samples.
+2025-06-19 14:46:04 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=2033, batch_size=16, shuffle=True, drop_last=True, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 14:46:04 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=255, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 14:46:12 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp          lr     dur
+2025-06-19 14:46:12 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ---------  ------
+2025-06-19 14:46:12 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.1870      ▼ 2.3134     ▲ 0.2902      ▼ 2.0555        0.0009995  7.4918
+2025-06-19 14:46:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.2279      ▼ 2.2268       0.2706      ▼ 2.0234        0.00099799  6.6178
+2025-06-19 14:46:25 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.2549      ▼ 2.1712     ▲ 0.2941        2.1179        0.00099548  6.5556
+2025-06-19 14:46:32 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.2741      ▼ 2.1475     ▲ 0.3059        2.0243        0.00099197  6.6255
+2025-06-19 14:46:38 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.2761        2.1884     ▲ 0.3059      ▼ 2.0094        0.00098748  6.8059

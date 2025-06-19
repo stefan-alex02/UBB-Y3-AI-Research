@@ -1,0 +1,357 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-06-19 02:24:31 | INFO     | [logger_...:setup_logger      : 130] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\Swimcat-extend\xcloud\20250619_022431_seed42\executor_run_20250619_022431_seed42.log
+2025-06-19 02:24:31 | INFO     | [executor  :__init__          : 120] | ℹ️ Local main executor log file for this run (may be temporary): C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\Swimcat-extend\xcloud\20250619_022431_seed42\executor_run_20250619_022431_seed42.log
+2025-06-19 02:24:31 | INFO     | [executor  :__init__          : 125] | ℹ️ --- Starting Executor Run (ID: 20250619_022431_seed42) ---
+2025-06-19 02:24:31 | INFO     | [executor  :__init__          : 126] | ℹ️ Executor initialized for model 'xcloud' on dataset 'Swimcat-extend'
+2025-06-19 02:24:31 | INFO     | [executor  :__init__          : 129] | ℹ️ Local artifact storage base: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-06-19 02:24:31 | INFO     | [executor  :__init__          : 133] | ℹ️ Base key/prefix for this executor run's artifacts: experiments/Swimcat-extend/xcloud/20250619_022431_seed42
+2025-06-19 02:24:31 | INFO     | [pipeline  :__init__          : 164] | ℹ️ Initializing Classification Pipeline:
+2025-06-19 02:24:31 | INFO     | [pipeline  :__init__          : 165] | ℹ️   Dataset Path: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\Swimcat-extend
+2025-06-19 02:24:31 | INFO     | [pipeline  :__init__          : 166] | ℹ️   Model Type: xcloud
+2025-06-19 02:24:31 | INFO     | [pipeline  :__init__          : 169] | ℹ️   Artifact base key prefix for this run: experiments/Swimcat-extend/xcloud/20250619_022431_seed42 (using LocalFileSystemRepository)
+2025-06-19 02:24:31 | INFO     | [pipeline  :__init__          : 173] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.PAPER_CCSN
+2025-06-19 02:24:31 | INFO     | [pipeline  :__init__          : 174] | ℹ️   Default Show First Batch Aug: True
+2025-06-19 02:24:31 | INFO     | [dataset...:__init__          : 482] | ℹ️ Using augmentation strategy: AugmentationStrategy.PAPER_CCSN
+2025-06-19 02:24:31 | INFO     | [dataset...:__init__          : 509] | ℹ️ Detected dataset structure: flat
+2025-06-19 02:24:31 | INFO     | [dataset...:_load_paths_and...: 706] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\Swimcat-extend...
+2025-06-19 02:24:31 | INFO     | [dataset...:_load_paths_and...: 793] | ℹ️ Final Original Dataset sizes: 1680 original train+val, 420 original test. Offline augmented samples loaded: 0.
+2025-06-19 02:24:31 | INFO     | [dataset...:__init__          : 532] | ℹ️ Found 6 classes: A-Clear Sky, B-Patterned Clouds, C-Thin White Clouds, D-Thick White Clouds, E-Thick Dark Clouds, F-Veil Clouds
+2025-06-19 02:24:31 | INFO     | [dataset...:__init__          : 535] | ℹ️ Dataset sizes: 1680 train+val, 420 test. Total: 2100
+2025-06-19 02:24:31 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Artifact base key prefix for this run: experiments/Swimcat-extend/xcloud/20250619_022431_seed42 (using LocalFileSystemRepository)
+2025-06-19 02:24:31 | INFO     | [pipeline  :__init__          : 211] | ℹ️   Using Optimizer: AdamW
+2025-06-19 02:24:31 | DEBUG    | [callbacks :get_default_cal...: 172] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-06-19 02:24:31 | INFO     | [pipeline  :__init__          : 252] | ℹ️   Model Adapter: Initialized with XceptionBasedCloudNet
+2025-06-19 02:24:31 | DEBUG    | [executor  :_validate_methods : 187] | 🐞 Basic method validation successful.
+2025-06-19 02:24:31 | INFO     | [executor  :__init__          : 166] | ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-06-19 02:24:31 | INFO     | [executor  :run               : 235] | ℹ️ Starting execution of methods for Executor Run ID: 20250619_022431_seed42
+2025-06-19 02:24:31 | INFO     | [executor  :run               : 244] | ℹ️ --- Running Method 1/1: cv_model_evaluation (Op ID: cv_model_evaluation_0) ---
+2025-06-19 02:24:31 | DEBUG    | [executor  :run               : 289] | 🐞 Running method 'cv_model_evaluation' with effective parameters: {'params': {'max_epochs': 100, 'lr': 0.0001, 'batch_size': 32, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.2, 'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau', 'callbacks__default_lr_scheduler__monitor': 'valid_loss', 'callbacks__default_lr_scheduler__patience': 10, 'callbacks__default_lr_scheduler__factor': 0.2, 'callbacks__default_lr_scheduler__min_lr': 1e-08, 'callbacks__default_early_stopping__patience': 15, 'module__pretrained': True, 'module__dense_neurons1': 128}, 'val_split_ratio': 0.125, 'cv': 5, 'evaluate_on': 'full', 'results_detail_level': 2}
+2025-06-19 02:24:31 | INFO     | [pipeline  :cv_model_evalua...:1337] | ℹ️ Performing 5-fold CV for evaluation with fixed parameters.
+2025-06-19 02:24:31 | INFO     | [pipeline  :cv_model_evalua...:1356] | ℹ️ Using full dataset (2100 samples) for CV evaluation.
+2025-06-19 02:24:31 | INFO     | [pipeline  :cv_model_evalua...:1380] | ℹ️ Using provided parameters for CV evaluation: {'max_epochs': 100, 'lr': 0.0001, 'batch_size': 32, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.2, 'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau', 'callbacks__default_lr_scheduler__monitor': 'valid_loss', 'callbacks__default_lr_scheduler__patience': 10, 'callbacks__default_lr_scheduler__factor': 0.2, 'callbacks__default_lr_scheduler__min_lr': 1e-08, 'callbacks__default_early_stopping__patience': 15, 'module__pretrained': True, 'module__dense_neurons1': 128}
+2025-06-19 02:24:31 | DEBUG    | [param_g...:parse_fixed_hyp...: 163] | 🐞 Created LRScheduler instance: policy=ReduceLROnPlateau, direct_args={'monitor': 'valid_loss'}, constructor_kwargs={'patience': 10, 'factor': 0.2, 'min_lr': 1e-08}
+2025-06-19 02:24:31 | INFO     | [pipeline  :cv_model_evalua...:1401] | ℹ️ Skorch internal validation split configured: 12.5% of each CV fold's training data.
+2025-06-19 02:24:31 | DEBUG    | [pipeline  :cv_model_evalua...:1428] | 🐞 Will compute detailed metrics (detail_level=2, plot_level=2)
+2025-06-19 02:24:31 | INFO     | [pipeline  :cv_model_evalua...:1434] | ℹ️ --- Starting CV Evaluation Fold 1/5 ---
+2025-06-19 02:24:31 | DEBUG    | [pipeline  :cv_model_evalua...:1440] | 🐞 Outer split (full set): 1680 train / 420 test samples.
+2025-06-19 02:24:31 | DEBUG    | [pipeline  :cv_model_evalua...:1459] | 🐞 Fold 1: Internal split: ~1470 train / ~210 valid.
+2025-06-19 02:24:31 | INFO     | [pipeline  :cv_model_evalua...:1469] | ℹ️ Fitting model for fold 1...
+2025-06-19 02:24:32 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 210 original samples.
+2025-06-19 02:24:32 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-06-19 02:24:32 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 1470 samples.
+2025-06-19 02:24:32 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=1470, batch_size=32, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:24:32 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=210, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:24:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp       lr     dur
+2025-06-19 02:24:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ------  ------
+2025-06-19 02:24:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.8068      ▼ 1.0915     ▲ 0.8286      ▼ 0.7337        0.0001  8.0896
+2025-06-19 02:24:45 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.9347      ▼ 0.2637     ▲ 0.9333      ▼ 0.3276        0.0001  5.3354
+2025-06-19 02:24:50 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.9633      ▼ 0.1312     ▲ 0.9762      ▼ 0.1757        0.0001  5.2752
+2025-06-19 02:24:56 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.9721      ▼ 0.1071     ▲ 0.9857      ▼ 0.1137        0.0001  5.2618
+2025-06-19 02:25:01 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5       0.9633        0.1182       0.9429        0.1518        0.0001  5.2632
+2025-06-19 02:25:06 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6     ▲ 0.9789      ▼ 0.0870       0.9667        0.1272        0.0001  5.2413
+2025-06-19 02:25:11 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7       0.9782      ▼ 0.0703       0.9714      ▼ 0.1135        0.0001  5.2782
+2025-06-19 02:25:17 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8     ▲ 0.9823      ▼ 0.0550       0.9714      ▼ 0.1044        0.0001  5.2807
+2025-06-19 02:25:22 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9     ▲ 0.9830      ▼ 0.0491       0.9762      ▼ 0.0976        0.0001  5.2737
+2025-06-19 02:25:27 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10     ▲ 0.9857      ▼ 0.0471       0.9667        0.1093        0.0001  5.2522
+2025-06-19 02:25:33 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11       0.9844        0.0483       0.9714      ▼ 0.0838        0.0001  5.2468
+2025-06-19 02:25:38 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12     ▲ 0.9912      ▼ 0.0299     ▲ 0.9857         0.088        0.0001  5.2735
+2025-06-19 02:25:43 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13       0.9891        0.0333       0.9762        0.1199        0.0001  5.2836
+2025-06-19 02:25:48 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14       0.9905        0.0384       0.9619        0.1216        0.0001  5.2687
+2025-06-19 02:25:54 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15        0.983        0.0553       0.9476        0.2306        0.0001  5.3281
+2025-06-19 02:25:59 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16       0.9905        0.0357       0.9714        0.1221        0.0001  5.4945
+2025-06-19 02:26:05 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17       0.9905        0.0325       0.9762        0.1172        0.0001  5.2918
+2025-06-19 02:26:10 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18     ▲ 0.9925      ▼ 0.0261       0.9762        0.1373        0.0001  5.5502
+2025-06-19 02:26:15 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19     ▲ 0.9952      ▼ 0.0195       0.9714        0.1323        0.0001  5.3279
+2025-06-19 02:26:21 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20       0.9918        0.0294        0.981        0.1276        0.0001  5.2953
+2025-06-19 02:26:26 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21     ▲ 0.9952         0.023       0.9762        0.0904        0.0001  5.3839
+2025-06-19 02:26:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22       0.9939        0.0202     ▲ 0.9857        0.0942        2e-05  5.3538
+2025-06-19 02:26:37 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23       0.9918        0.0213       0.9762        0.1173        2e-05  5.4108
+2025-06-19 02:26:42 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24     ▲ 0.9980      ▼ 0.0137       0.9714        0.1134        2e-05  5.3003
+2025-06-19 02:26:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25     ▲ 0.9993      ▼ 0.0071        0.981        0.0944        2e-05  5.2941
+2025-06-19 02:26:53 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26       0.9986      ▼ 0.0045        0.981      ▼ 0.0824        2e-05  5.5179
+2025-06-19 02:26:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27       0.9973        0.0078        0.981        0.0868        2e-05  5.2819
+2025-06-19 02:27:04 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      28       0.9986        0.0077     ▲ 0.9905      ▼ 0.0754        2e-05  5.279
+2025-06-19 02:27:09 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      29       0.9986        0.0077       0.9857         0.079        2e-05  5.404
+2025-06-19 02:27:14 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      30       0.9959        0.0135     ▲ 0.9905        0.0827        2e-05  5.3064
+2025-06-19 02:27:20 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      31        0.998        0.0065       0.9857        0.0831        2e-05  5.3127
+2025-06-19 02:27:25 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      32       0.9986        0.0052       0.9857        0.0856        2e-05   5.52
+2025-06-19 02:27:30 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      33        0.998        0.0062     ▲ 0.9905        0.0768        2e-05  5.2675
+2025-06-19 02:27:36 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      34        0.998        0.0086     ▲ 0.9905        0.0775        2e-05  5.2282
+2025-06-19 02:27:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      35       0.9986        0.0053     ▲ 0.9905        0.0781        2e-05  5.4795
+2025-06-19 02:27:46 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      36        0.998        0.0106     ▲ 0.9905        0.0781        2e-05  5.2504
+2025-06-19 02:27:52 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      37     ▲ 1.0000      ▼ 0.0029     ▲ 0.9905      ▼ 0.0718        2e-05  5.3844
+2025-06-19 02:27:57 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      38        0.998        0.0061     ▲ 0.9905        0.0759        2e-05  5.2312
+2025-06-19 02:28:02 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      39       0.9993         0.003     ▲ 0.9952        0.0786        2e-05  5.2609
+2025-06-19 02:28:08 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      40       0.9986        0.0083       0.9905         0.083        2e-05  5.3667
+2025-06-19 02:28:13 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      41       0.9993        0.0067       0.9905        0.0772        2e-05  5.2545
+2025-06-19 02:28:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      42        0.998        0.0079       0.9905        0.0792        2e-05  5.2804
+2025-06-19 02:28:24 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      43        0.998        0.0069     ▲ 0.9952        0.0829        2e-05  5.488
+2025-06-19 02:28:29 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      44       0.9993        0.0071       0.9905        0.0793        2e-05  5.2453
+2025-06-19 02:28:34 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      45       0.9973         0.009       0.9857        0.0856        2e-05  5.2727
+2025-06-19 02:28:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      46       0.9993        0.0046       0.9905        0.0826        2e-05  5.4022
+2025-06-19 02:28:45 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      47     ▲ 1.0000      ▼ 0.0029       0.9857        0.0803        2e-05  5.2835
+2025-06-19 02:28:50 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      48     ▲ 1.0000      ▼ 0.0022       0.9857        0.0869        4e-06   5.26
+2025-06-19 02:28:56 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      49        0.998        0.0044       0.9905        0.0818        4e-06  5.4468
+2025-06-19 02:29:01 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      50       0.9986        0.0051       0.9905        0.0809        4e-06  5.2775
+2025-06-19 02:29:06 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      51       0.9986        0.0056       0.9905        0.0798        4e-06  5.2746
+2025-06-19 02:29:12 | INFO     | [pipeline  :cv_model_evalua...:1483] | ℹ️ Using best model from epoch 52
+2025-06-19 02:29:12 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Evaluating model on outer test set for fold 1...
+2025-06-19 02:29:12 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:29:13 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:29:14 | DEBUG    | [pipeline  :_compute_metrics  : 462] | 🐞 Computed Metrics: Acc=0.9738, Macro F1=0.9739
+2025-06-19 02:29:14 | INFO     | [pipeline  :cv_model_evalua...:1505] | ℹ️ Fold 1 Test Scores: Acc=0.9738, F1=0.9739
+2025-06-19 02:29:14 | INFO     | [pipeline  :cv_model_evalua...:1434] | ℹ️ --- Starting CV Evaluation Fold 2/5 ---
+2025-06-19 02:29:14 | DEBUG    | [pipeline  :cv_model_evalua...:1440] | 🐞 Outer split (full set): 1680 train / 420 test samples.
+2025-06-19 02:29:14 | DEBUG    | [pipeline  :cv_model_evalua...:1459] | 🐞 Fold 2: Internal split: ~1470 train / ~210 valid.
+2025-06-19 02:29:14 | INFO     | [pipeline  :cv_model_evalua...:1469] | ℹ️ Fitting model for fold 2...
+2025-06-19 02:29:14 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 210 original samples.
+2025-06-19 02:29:14 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-06-19 02:29:14 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 1470 samples.
+2025-06-19 02:29:14 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=1470, batch_size=32, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:29:14 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=210, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:29:21 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp       lr     dur
+2025-06-19 02:29:21 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ------  ------
+2025-06-19 02:29:21 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.7048      ▼ 1.1405     ▲ 0.8476      ▼ 0.7996        0.0001  7.2445
+2025-06-19 02:29:26 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.9442      ▼ 0.2308     ▲ 0.9286      ▼ 0.2606        0.0001  5.3661
+2025-06-19 02:29:32 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.9599      ▼ 0.1487     ▲ 0.9429      ▼ 0.1703        0.0001  5.2734
+2025-06-19 02:29:37 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.9653      ▼ 0.1264        0.919        0.2338        0.0001  5.5081
+2025-06-19 02:29:43 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.9755      ▼ 0.0907     ▲ 0.9476        0.1792        0.0001  5.268
+2025-06-19 02:29:48 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6       0.9728        0.0908     ▲ 0.9667      ▼ 0.0974        0.0001  5.2707
+2025-06-19 02:29:53 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7     ▲ 0.9776      ▼ 0.0830       0.9429        0.1376        0.0001  5.3375
+2025-06-19 02:29:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8     ▲ 0.9830      ▼ 0.0530     ▲ 0.9667        0.1279        0.0001  5.2222
+2025-06-19 02:30:04 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9        0.981        0.0646       0.9571        0.1261        0.0001  5.2694
+2025-06-19 02:30:09 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10       0.9803        0.0719     ▲ 0.9667        0.1153        0.0001  5.4699
+2025-06-19 02:30:14 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11     ▲ 0.9837      ▼ 0.0528       0.9619        0.1029        0.0001  5.3229
+2025-06-19 02:30:20 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12     ▲ 0.9844      ▼ 0.0473     ▲ 0.9714      ▼ 0.0904        0.0001  5.3037
+2025-06-19 02:30:25 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13     ▲ 0.9871      ▼ 0.0452       0.9667      ▼ 0.0709        0.0001  5.3869
+2025-06-19 02:30:30 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14       0.9837        0.0528     ▲ 0.9857        0.0794        0.0001  5.2496
+2025-06-19 02:30:36 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15       0.9816        0.0562        0.981        0.0892        0.0001  5.2752
+2025-06-19 02:30:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9898      ▼ 0.0405       0.9762        0.0854        0.0001  5.4879
+2025-06-19 02:30:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17     ▲ 0.9932      ▼ 0.0241        0.981      ▼ 0.0603        0.0001  5.2736
+2025-06-19 02:30:52 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18     ▲ 0.9939        0.0247     ▲ 0.9857        0.0818        0.0001  5.4836
+2025-06-19 02:30:57 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19       0.9891        0.0322        0.981        0.0663        0.0001  5.2806
+2025-06-19 02:31:03 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20       0.9878        0.0353       0.9667         0.065        0.0001  5.2947
+2025-06-19 02:31:08 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21       0.9932      ▼ 0.0182        0.981      ▼ 0.0434        0.0001  5.468
+2025-06-19 02:31:13 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22       0.9932        0.0327     ▲ 0.9857        0.0526        0.0001  5.2967
+2025-06-19 02:31:19 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23     ▲ 0.9986      ▼ 0.0095     ▲ 0.9905      ▼ 0.0424        0.0001  5.3033
+2025-06-19 02:31:24 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24       0.9959        0.0139       0.9857      ▼ 0.0359        0.0001  5.3988
+2025-06-19 02:31:29 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25       0.9952        0.0177     ▲ 0.9905        0.0367        0.0001  5.2804
+2025-06-19 02:31:35 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26       0.9946        0.0147       0.9857        0.0606        0.0001  5.2923
+2025-06-19 02:31:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27       0.9952        0.0098       0.9857        0.0522        0.0001  5.412
+2025-06-19 02:31:45 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      28       0.9952        0.0149       0.9714        0.1092        0.0001  5.3076
+2025-06-19 02:31:51 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      29       0.9925        0.0255       0.9714        0.1094        0.0001  5.2795
+2025-06-19 02:31:56 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      30       0.9959        0.0154       0.9857        0.0465        0.0001  5.4846
+2025-06-19 02:32:01 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      31       0.9939        0.0167       0.9857        0.0476        0.0001  5.2599
+2025-06-19 02:32:07 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      32     ▲ 0.9986        0.0108       0.9857      ▼ 0.0249        0.0001  5.3951
+2025-06-19 02:32:12 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      33     ▲ 0.9993      ▼ 0.0043        0.981        0.0376        0.0001  5.2891
+2025-06-19 02:32:17 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      34       0.9986        0.0067       0.9762        0.0534        0.0001  5.2897
+2025-06-19 02:32:23 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      35       0.9973        0.0099       0.9857        0.0519        0.0001  5.4566
+2025-06-19 02:32:28 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      36       0.9891        0.0403     ▲ 0.9905        0.0385        0.0001  5.2887
+2025-06-19 02:32:34 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      37       0.9966        0.0148     ▲ 0.9905        0.0319        0.0001  5.2739
+2025-06-19 02:32:39 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      38       0.9959         0.016       0.9857        0.0272        0.0001  5.4516
+2025-06-19 02:32:44 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      39       0.9925        0.0261       0.9857        0.0553        0.0001  5.2662
+2025-06-19 02:32:50 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      40       0.9952        0.0169     ▲ 0.9905        0.0654        0.0001  5.2955
+2025-06-19 02:32:55 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      41        0.998        0.0051       0.9857        0.0565        0.0001  5.3861
+2025-06-19 02:33:00 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      42       0.9925        0.0171       0.9857        0.0656        0.0001  5.2884
+2025-06-19 02:33:05 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      43       0.9952         0.014     ▲ 0.9905        0.0529        2e-05  5.2589
+2025-06-19 02:33:11 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      44       0.9966        0.0155     ▲ 0.9905        0.0499        2e-05  5.3733
+2025-06-19 02:33:16 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      45       0.9966        0.0087     ▲ 0.9905        0.0498        2e-05  5.3052
+2025-06-19 02:33:21 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      46        0.998        0.0058     ▲ 0.9905        0.0518        2e-05  5.2495
+2025-06-19 02:33:27 | INFO     | [pipeline  :cv_model_evalua...:1483] | ℹ️ Using best model from epoch 47
+2025-06-19 02:33:27 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Evaluating model on outer test set for fold 2...
+2025-06-19 02:33:27 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:33:28 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:33:29 | DEBUG    | [pipeline  :_compute_metrics  : 462] | 🐞 Computed Metrics: Acc=0.9881, Macro F1=0.9882
+2025-06-19 02:33:29 | INFO     | [pipeline  :cv_model_evalua...:1505] | ℹ️ Fold 2 Test Scores: Acc=0.9881, F1=0.9882
+2025-06-19 02:33:29 | INFO     | [pipeline  :cv_model_evalua...:1434] | ℹ️ --- Starting CV Evaluation Fold 3/5 ---
+2025-06-19 02:33:29 | DEBUG    | [pipeline  :cv_model_evalua...:1440] | 🐞 Outer split (full set): 1680 train / 420 test samples.
+2025-06-19 02:33:29 | DEBUG    | [pipeline  :cv_model_evalua...:1459] | 🐞 Fold 3: Internal split: ~1470 train / ~210 valid.
+2025-06-19 02:33:29 | INFO     | [pipeline  :cv_model_evalua...:1469] | ℹ️ Fitting model for fold 3...
+2025-06-19 02:33:29 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 210 original samples.
+2025-06-19 02:33:29 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-06-19 02:33:29 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 1470 samples.
+2025-06-19 02:33:29 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=1470, batch_size=32, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:33:29 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=210, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:33:36 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp       lr     dur
+2025-06-19 02:33:36 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ------  ------
+2025-06-19 02:33:36 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.6810      ▼ 1.1696     ▲ 0.7762      ▼ 0.7907        0.0001  7.2921
+2025-06-19 02:33:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.9429      ▼ 0.2588     ▲ 0.9429      ▼ 0.2098        0.0001  5.4107
+2025-06-19 02:33:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.9544      ▼ 0.1539     ▲ 0.9667      ▼ 0.1273        0.0001  5.2787
+2025-06-19 02:33:52 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.9646      ▼ 0.1378     ▲ 0.9762      ▼ 0.1135        0.0001  5.5205
+2025-06-19 02:33:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.9694      ▼ 0.1045       0.9524        0.1525        0.0001  5.2667
+2025-06-19 02:34:03 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6     ▲ 0.9748      ▼ 0.0818     ▲ 0.9810      ▼ 0.0852        0.0001  5.2609
+2025-06-19 02:34:08 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7     ▲ 0.9748        0.0879     ▲ 0.9857      ▼ 0.0528        0.0001  5.426
+2025-06-19 02:34:14 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8     ▲ 0.9857      ▼ 0.0493     ▲ 0.9857        0.0578        0.0001  5.3018
+2025-06-19 02:34:19 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9       0.9776        0.0686        0.981        0.0618        0.0001  5.3424
+2025-06-19 02:34:25 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10        0.983        0.0581     ▲ 0.9857      ▼ 0.0382        0.0001  5.5016
+2025-06-19 02:34:30 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11     ▲ 0.9912      ▼ 0.0320     ▲ 0.9905        0.0401        0.0001  5.3164
+2025-06-19 02:34:35 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12       0.9898        0.0405     ▲ 0.9905      ▼ 0.0299        0.0001  5.2866
+2025-06-19 02:34:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13       0.9823         0.046     ▲ 0.9905      ▼ 0.0292        0.0001  5.4149
+2025-06-19 02:34:46 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14       0.9878        0.0338     ▲ 0.9905        0.0349        0.0001  5.3112
+2025-06-19 02:34:51 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15       0.9891        0.0403     ▲ 0.9905        0.0512        0.0001  5.2907
+2025-06-19 02:34:57 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9912        0.0384     ▲ 0.9905        0.0383        0.0001  5.4553
+2025-06-19 02:35:02 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17       0.9823        0.0494       0.9857        0.0588        0.0001  5.2785
+2025-06-19 02:35:07 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18        0.985        0.0443     ▲ 0.9905        0.0514        0.0001  5.4155
+2025-06-19 02:35:13 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19     ▲ 0.9912      ▼ 0.0276     ▲ 0.9905        0.0431        0.0001  5.2512
+2025-06-19 02:35:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20     ▲ 0.9959      ▼ 0.0143     ▲ 0.9905         0.048        0.0001  5.2485
+2025-06-19 02:35:23 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21       0.9925        0.0244        0.981        0.0762        0.0001  5.4775
+2025-06-19 02:35:29 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22     ▲ 0.9959      ▼ 0.0109       0.9857         0.053        0.0001  5.2701
+2025-06-19 02:35:34 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23       0.9946        0.0224       0.9857        0.0601        0.0001  5.2515
+2025-06-19 02:35:39 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24       0.9939        0.0196       0.9857        0.0629        2e-05  5.3362
+2025-06-19 02:35:44 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25     ▲ 0.9966         0.016       0.9857        0.0661        2e-05  5.2397
+2025-06-19 02:35:50 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26     ▲ 0.9966        0.0173        0.981        0.0709        2e-05  5.2756
+2025-06-19 02:35:55 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27     ▲ 0.9980      ▼ 0.0084        0.981        0.0602        2e-05  5.4579
+2025-06-19 02:36:00 | INFO     | [pipeline  :cv_model_evalua...:1483] | ℹ️ Using best model from epoch 28
+2025-06-19 02:36:00 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Evaluating model on outer test set for fold 3...
+2025-06-19 02:36:00 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:36:01 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:36:02 | DEBUG    | [pipeline  :_compute_metrics  : 462] | 🐞 Computed Metrics: Acc=0.9619, Macro F1=0.9617
+2025-06-19 02:36:02 | INFO     | [pipeline  :cv_model_evalua...:1505] | ℹ️ Fold 3 Test Scores: Acc=0.9619, F1=0.9617
+2025-06-19 02:36:02 | INFO     | [pipeline  :cv_model_evalua...:1434] | ℹ️ --- Starting CV Evaluation Fold 4/5 ---
+2025-06-19 02:36:02 | DEBUG    | [pipeline  :cv_model_evalua...:1440] | 🐞 Outer split (full set): 1680 train / 420 test samples.
+2025-06-19 02:36:02 | DEBUG    | [pipeline  :cv_model_evalua...:1459] | 🐞 Fold 4: Internal split: ~1470 train / ~210 valid.
+2025-06-19 02:36:02 | INFO     | [pipeline  :cv_model_evalua...:1469] | ℹ️ Fitting model for fold 4...
+2025-06-19 02:36:02 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 210 original samples.
+2025-06-19 02:36:02 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-06-19 02:36:02 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 1470 samples.
+2025-06-19 02:36:02 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=1470, batch_size=32, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:36:02 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=210, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:36:10 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp       lr     dur
+2025-06-19 02:36:10 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ------  ------
+2025-06-19 02:36:10 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.7218      ▼ 1.1528     ▲ 0.8476      ▼ 0.7736        0.0001  7.1921
+2025-06-19 02:36:15 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.9367      ▼ 0.2552     ▲ 0.9286      ▼ 0.3457        0.0001  5.3089
+2025-06-19 02:36:20 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.9612      ▼ 0.1389     ▲ 0.9619      ▼ 0.1756        0.0001  5.3021
+2025-06-19 02:36:26 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4       0.9551        0.1456     ▲ 0.9667      ▼ 0.1528        0.0001  5.5108
+2025-06-19 02:36:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.9714      ▼ 0.1112       0.9619        0.1739        0.0001  5.2659
+2025-06-19 02:36:36 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6     ▲ 0.9844      ▼ 0.0703       0.9619      ▼ 0.1376        0.0001  5.2745
+2025-06-19 02:36:42 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7        0.981      ▼ 0.0609     ▲ 0.9762      ▼ 0.0964        0.0001  5.4029
+2025-06-19 02:36:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8       0.9762        0.0737       0.9714        0.1176        0.0001  5.2941
+2025-06-19 02:36:53 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9     ▲ 0.9844      ▼ 0.0513       0.9714        0.1056        0.0001  5.5369
+2025-06-19 02:36:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10     ▲ 0.9850      ▼ 0.0500     ▲ 0.9810      ▼ 0.0881        0.0001  5.2702
+2025-06-19 02:37:03 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11       0.9837      ▼ 0.0474       0.9714         0.097        0.0001  5.2953
+2025-06-19 02:37:09 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12     ▲ 0.9850        0.0481     ▲ 0.9810      ▼ 0.0723        0.0001  5.3741
+2025-06-19 02:37:14 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13     ▲ 0.9884      ▼ 0.0368       0.9762        0.0976        0.0001  5.3228
+2025-06-19 02:37:19 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14       0.9878      ▼ 0.0317     ▲ 0.9857        0.0936        0.0001  5.317
+2025-06-19 02:37:25 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15     ▲ 0.9912        0.0371     ▲ 0.9857        0.0821        0.0001  5.4853
+2025-06-19 02:37:30 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9918        0.0361       0.9762         0.084        0.0001  5.297
+2025-06-19 02:37:35 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17       0.9898      ▼ 0.0317       0.9762        0.1183        0.0001  5.2834
+2025-06-19 02:37:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18       0.9884      ▼ 0.0311       0.9762        0.1204        0.0001  5.3927
+2025-06-19 02:37:46 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19     ▲ 0.9939      ▼ 0.0214       0.9714         0.102        0.0001  5.2915
+2025-06-19 02:37:51 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20     ▲ 0.9939      ▼ 0.0177        0.981         0.096        0.0001  5.2705
+2025-06-19 02:37:57 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21     ▲ 0.9946      ▼ 0.0169       0.9714        0.1137        0.0001  5.425
+2025-06-19 02:38:02 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22     ▲ 0.9973      ▼ 0.0121       0.9762      ▼ 0.0687        0.0001  5.2594
+2025-06-19 02:38:07 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23       0.9946        0.0232       0.9667        0.0971        0.0001  5.4316
+2025-06-19 02:38:13 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24       0.9891        0.0284        0.981        0.0971        0.0001  5.2712
+2025-06-19 02:38:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25       0.9959        0.0139       0.9667        0.1265        0.0001  5.2824
+2025-06-19 02:38:23 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26       0.9959        0.0136        0.981        0.1287        0.0001  5.4837
+2025-06-19 02:38:29 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27       0.9912        0.0216        0.981        0.0862        0.0001  5.2736
+2025-06-19 02:38:34 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      28       0.9932        0.0298        0.981        0.1047        0.0001  5.2939
+2025-06-19 02:38:39 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      29       0.9912        0.0314     ▲ 0.9857         0.109        0.0001  5.3468
+2025-06-19 02:38:45 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      30       0.9952        0.0198        0.981        0.0814        0.0001  5.294
+2025-06-19 02:38:50 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      31       0.9946        0.0132        0.981        0.0959        0.0001  5.2796
+2025-06-19 02:38:55 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      32       0.9932        0.0184        0.981        0.1253        0.0001  5.516
+2025-06-19 02:39:01 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      33       0.9952        0.0185     ▲ 0.9905        0.0805        2e-05  5.2612
+2025-06-19 02:39:06 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      34       0.9932        0.0179     ▲ 0.9905        0.0788        2e-05  5.2689
+2025-06-19 02:39:11 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      35       0.9966      ▼ 0.0094     ▲ 0.9905        0.0842        2e-05  5.3789
+2025-06-19 02:39:17 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      36     ▲ 0.9986      ▼ 0.0072       0.9857        0.0889        2e-05  5.2892
+2025-06-19 02:39:22 | INFO     | [pipeline  :cv_model_evalua...:1483] | ℹ️ Using best model from epoch 37
+2025-06-19 02:39:22 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Evaluating model on outer test set for fold 4...
+2025-06-19 02:39:22 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:39:23 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:39:24 | DEBUG    | [pipeline  :_compute_metrics  : 462] | 🐞 Computed Metrics: Acc=0.9881, Macro F1=0.9881
+2025-06-19 02:39:24 | INFO     | [pipeline  :cv_model_evalua...:1505] | ℹ️ Fold 4 Test Scores: Acc=0.9881, F1=0.9881
+2025-06-19 02:39:24 | INFO     | [pipeline  :cv_model_evalua...:1434] | ℹ️ --- Starting CV Evaluation Fold 5/5 ---
+2025-06-19 02:39:24 | DEBUG    | [pipeline  :cv_model_evalua...:1440] | 🐞 Outer split (full set): 1680 train / 420 test samples.
+2025-06-19 02:39:24 | DEBUG    | [pipeline  :cv_model_evalua...:1459] | 🐞 Fold 5: Internal split: ~1470 train / ~210 valid.
+2025-06-19 02:39:24 | INFO     | [pipeline  :cv_model_evalua...:1469] | ℹ️ Fitting model for fold 5...
+2025-06-19 02:39:24 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 210 original samples.
+2025-06-19 02:39:24 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-06-19 02:39:24 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 1470 samples.
+2025-06-19 02:39:24 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=1470, batch_size=32, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:39:24 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=210, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:39:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp       lr     dur
+2025-06-19 02:39:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ------  ------
+2025-06-19 02:39:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.7197      ▼ 1.2017     ▲ 0.8476      ▼ 0.7688        0.0001  7.2148
+2025-06-19 02:39:37 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.9388      ▼ 0.2594     ▲ 0.9571      ▼ 0.2373        0.0001  5.2747
+2025-06-19 02:39:42 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.9517      ▼ 0.1538     ▲ 0.9619      ▼ 0.1429        0.0001  5.3547
+2025-06-19 02:39:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.9612      ▼ 0.1206     ▲ 0.9667      ▼ 0.1302        0.0001  5.2814
+2025-06-19 02:39:53 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5       0.9599      ▼ 0.1127     ▲ 0.9667      ▼ 0.1021        0.0001  5.4464
+2025-06-19 02:39:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6     ▲ 0.9714      ▼ 0.0990       0.9619        0.1036        0.0001  5.2271
+2025-06-19 02:40:03 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7     ▲ 0.9884      ▼ 0.0545     ▲ 0.9714      ▼ 0.0930        0.0001  5.271
+2025-06-19 02:40:09 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8       0.9816      ▼ 0.0496     ▲ 0.9810      ▼ 0.0748        0.0001  5.4335
+2025-06-19 02:40:14 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9        0.981        0.0592     ▲ 0.9857        0.0777        0.0001  5.2818
+2025-06-19 02:40:19 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10       0.9864      ▼ 0.0439     ▲ 0.9905      ▼ 0.0299        0.0001  5.3033
+2025-06-19 02:40:25 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11        0.985         0.046     ▲ 0.9905        0.0442        0.0001  5.451
+2025-06-19 02:40:30 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12       0.9878      ▼ 0.0373        0.981        0.0445        0.0001  5.2594
+2025-06-19 02:40:35 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13       0.9864        0.0476     ▲ 0.9905      ▼ 0.0233        0.0001  5.2891
+2025-06-19 02:40:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14     ▲ 0.9884        0.0403     ▲ 0.9905        0.0326        0.0001  5.3928
+2025-06-19 02:40:46 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15     ▲ 0.9898          0.04       0.9667        0.0577        0.0001  5.2718
+2025-06-19 02:40:51 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9918      ▼ 0.0301       0.9857        0.0317        0.0001  5.3156
+2025-06-19 02:40:57 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17     ▲ 0.9946      ▼ 0.0157       0.9857        0.0407        0.0001  5.4538
+2025-06-19 02:41:02 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18       0.9891        0.0319       0.9857        0.0339        0.0001  5.2886
+2025-06-19 02:41:08 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19       0.9864        0.0351     ▲ 0.9905        0.0286        0.0001  5.3776
+2025-06-19 02:41:13 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20       0.9898        0.0293        0.981        0.0395        0.0001  5.2702
+2025-06-19 02:41:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21       0.9932        0.0253     ▲ 1.0000      ▼ 0.0127        0.0001  5.2566
+2025-06-19 02:41:24 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22     ▲ 0.9952        0.0176       0.9857        0.0225        0.0001  5.4702
+2025-06-19 02:41:29 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23       0.9932        0.0347       0.9905        0.0346        0.0001  5.2512
+2025-06-19 02:41:34 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24       0.9918        0.0285       0.9857        0.0357        0.0001  5.2593
+2025-06-19 02:41:39 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25       0.9918        0.0264       0.9714        0.0893        0.0001  5.3527
+2025-06-19 02:41:45 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26     ▲ 0.9952      ▼ 0.0136       0.9762        0.0599        0.0001  5.2476
+2025-06-19 02:41:50 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27       0.9925        0.0193       0.9952        0.0137        0.0001  5.263
+2025-06-19 02:41:55 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      28       0.9939        0.0178     ▲ 1.0000      ▼ 0.0117        0.0001  5.4604
+2025-06-19 02:42:01 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      29       0.9925        0.0329       0.9905        0.0402        0.0001  5.2378
+2025-06-19 02:42:06 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      30       0.9918        0.0225       0.9905        0.0338        0.0001  5.2773
+2025-06-19 02:42:11 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      31       0.9925        0.0214       0.9952         0.016        0.0001  5.3229
+2025-06-19 02:42:17 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      32       0.9912        0.0345       0.9762        0.0828        0.0001  5.2899
+2025-06-19 02:42:22 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      33     ▲ 0.9980      ▼ 0.0116     ▲ 1.0000      ▼ 0.0098        0.0001  5.2976
+2025-06-19 02:42:27 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      34       0.9959        0.0147       0.9905        0.0262        0.0001  5.4572
+2025-06-19 02:42:33 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      35     ▲ 0.9980        0.0125       0.9905        0.0318        0.0001  5.2593
+2025-06-19 02:42:38 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      36       0.9952        0.0166        0.981        0.0471        0.0001  5.395
+2025-06-19 02:42:43 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      37     ▲ 0.9986      ▼ 0.0078       0.9905        0.0194        0.0001  5.2674
+2025-06-19 02:42:49 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      38        0.998      ▼ 0.0049       0.9905        0.0201        0.0001  5.2915
+2025-06-19 02:42:54 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      39       0.9966        0.0082       0.9905        0.0491        0.0001  5.4588
+2025-06-19 02:42:59 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      40        0.998      ▼ 0.0047       0.9905        0.0268        0.0001  5.2731
+2025-06-19 02:43:05 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      41     ▲ 0.9993        0.0078       0.9857        0.0596        0.0001  5.2706
+2025-06-19 02:43:10 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      42       0.9966        0.0138       0.9762         0.086        0.0001  5.3997
+2025-06-19 02:43:15 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      43       0.9952        0.0147        0.981        0.0626        0.0001  5.2846
+2025-06-19 02:43:21 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      44       0.9966        0.0112       0.9857        0.0548        2e-05  5.2712
+2025-06-19 02:43:26 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      45       0.9986         0.006       0.9952        0.0244        2e-05  5.5694
+2025-06-19 02:43:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      46     ▲ 0.9993      ▼ 0.0039       0.9952        0.0241        2e-05  5.2927
+2025-06-19 02:43:37 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      47        0.998         0.008       0.9952        0.0288        2e-05  5.2556
+2025-06-19 02:43:42 | INFO     | [pipeline  :cv_model_evalua...:1483] | ℹ️ Using best model from epoch 48
+2025-06-19 02:43:42 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Evaluating model on outer test set for fold 5...
+2025-06-19 02:43:42 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:43:43 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=420, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 02:43:44 | DEBUG    | [pipeline  :_compute_metrics  : 462] | 🐞 Computed Metrics: Acc=0.9857, Macro F1=0.9857
+2025-06-19 02:43:44 | INFO     | [pipeline  :cv_model_evalua...:1505] | ℹ️ Fold 5 Test Scores: Acc=0.9857, F1=0.9857
+2025-06-19 02:43:44 | DEBUG    | [pipeline  :_save_results     : 510] | 🐞 Results detail level overridden for this run to: 2
+2025-06-19 02:43:44 | DEBUG    | [pipeline  :_save_results     : 517] | 🐞 Saving results for cv_model_evaluation_full_022431 (detail level: 2)
+2025-06-19 02:43:44 | INFO     | [pipeline  :_save_results     : 615] | ℹ️ Results JSON saved via repository to: experiments/Swimcat-extend/xcloud/20250619_022431_seed42/cv_model_evaluation_full_022431/cv_model_evaluation_results.json
+2025-06-19 02:43:44 | INFO     | [pipeline  :cv_model_evalua...:1615] | ℹ️ Plotting cv for eval results for cv_model_evaluation_full_022431 (plot level 2).
+2025-06-19 02:43:44 | INFO     | [plotter   :plot_cv_model_e...: 834] | ℹ️ Plotting cv_model_evaluation results for: cv_model_evaluation_full_022431
+2025-06-19 02:43:44 | INFO     | [plotter   :_generate_aggre...: 296] | ℹ️ Aggregated metrics CSV saved via repository to: experiments/Swimcat-extend/xcloud/20250619_022431_seed42/cv_model_evaluation_full_022431/cv_model_evaluation_plots/aggregated_metrics_table.csv
+2025-06-19 02:43:45 | INFO     | [plotter   :plot_cv_model_e...: 889] | ℹ️ Generating grouped plots per fold for 5 folds...
+2025-06-19 02:43:51 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/Swimcat-extend/xcloud/20250619_022431_seed42/cv_model_evaluation_full_022431/cv_model_evaluation_plots/fold_1_metrics_table.csv
+2025-06-19 02:43:51 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/Swimcat-extend/xcloud/20250619_022431_seed42/cv_model_evaluation_full_022431/cv_model_evaluation_plots/fold_2_metrics_table.csv
+2025-06-19 02:43:51 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/Swimcat-extend/xcloud/20250619_022431_seed42/cv_model_evaluation_full_022431/cv_model_evaluation_plots/fold_3_metrics_table.csv
+2025-06-19 02:43:51 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/Swimcat-extend/xcloud/20250619_022431_seed42/cv_model_evaluation_full_022431/cv_model_evaluation_plots/fold_4_metrics_table.csv
+2025-06-19 02:43:51 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/Swimcat-extend/xcloud/20250619_022431_seed42/cv_model_evaluation_full_022431/cv_model_evaluation_plots/fold_5_metrics_table.csv
+2025-06-19 02:43:51 | INFO     | [plotter   :plot_cv_model_e...:1038] | ℹ️ Finished plotting for cv_model_evaluation: cv_model_evaluation_full_022431
+2025-06-19 02:43:51 | INFO     | [pipeline  :cv_model_evalua...:1631] | ℹ️ CV Evaluation Summary (on full data, 5 folds, 95% CI):
+2025-06-19 02:43:51 | INFO     | [pipeline  :cv_model_evalua...:1637] | ℹ️   Accuracy            : 0.9795 +/- 0.0143
+2025-06-19 02:43:51 | INFO     | [pipeline  :cv_model_evalua...:1637] | ℹ️   F1 Macro            : 0.9795 +/- 0.0144
+2025-06-19 02:43:51 | INFO     | [pipeline  :cv_model_evalua...:1637] | ℹ️   Precision Macro     : 0.9805 +/- 0.0134
+2025-06-19 02:43:51 | INFO     | [pipeline  :cv_model_evalua...:1637] | ℹ️   Recall Macro        : 0.9795 +/- 0.0143
+2025-06-19 02:43:51 | INFO     | [pipeline  :cv_model_evalua...:1637] | ℹ️   Specificity Macro   : 0.9959 +/- 0.0029
+2025-06-19 02:43:51 | INFO     | [pipeline  :cv_model_evalua...:1637] | ℹ️   Roc Auc Macro       : 0.9988 +/- 0.0021
+2025-06-19 02:43:51 | INFO     | [pipeline  :cv_model_evalua...:1637] | ℹ️   Pr Auc Macro        : 0.9903 +/- 0.0065
+2025-06-19 02:43:51 | INFO     | [executor  :run               : 296] | ℹ️ --- Method cv_model_evaluation (Op ID: cv_model_evaluation_0) completed successfully in 1159.98s ---
+2025-06-19 02:43:51 | INFO     | [executor  :run               : 353] | ℹ️ Pipeline execution finished successfully in 1159.98s for Executor Run ID: 20250619_022431_seed42.
+2025-06-19 02:43:51 | INFO     | [executor  :run               : 359] | ℹ️ Executor run for 20250619_022431_seed42 attempting final log operations.
+2025-06-19 02:43:51 | DEBUG    | [executor  :_upload_and_cle...: 205] | 🐞 Flushing and closing log handler for: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\Swimcat-extend\xcloud\20250619_022431_seed42\executor_run_20250619_022431_seed42.log before upload/cleanup.
+2025-06-19 02:43:51 | INFO     | [executor  :_upload_and_cle...: 231] | ℹ️ Main executor log file available at: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\Swimcat-extend\xcloud\20250619_022431_seed42\executor_run_20250619_022431_seed42.log
+2025-06-19 02:43:51 | INFO     | [main      :<module>          : 333] | ℹ️ --- Final Execution Results Summary ---
+2025-06-19 02:43:51 | INFO     | [main      :<module>          : 344] | ℹ️ Method executor_run_id: Completed. Result: 20250619_022431_seed42
+2025-06-19 02:43:51 | INFO     | [main      :<module>          : 344] | ℹ️ Method seed_used: Completed. Result: 42
+2025-06-19 02:43:51 | INFO     | [main      :<module>          : 341] | ℹ️ Method cv_model_evaluation_0: Completed. (Acc: 0.9795, F1: 0.9795, BestScore: nan)
