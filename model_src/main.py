@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "ccsn"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "swimcat"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
     model_type = "cloudnet"
