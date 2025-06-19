@@ -1,0 +1,105 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-06-19 18:22:48 | INFO     | [logger_...:setup_logger      : 130] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD\xcloud\20250619_182248_seed42\executor_run_20250619_182248_seed42.log
+2025-06-19 18:22:48 | INFO     | [executor  :__init__          : 120] | ℹ️ Local main executor log file for this run (may be temporary): C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD\xcloud\20250619_182248_seed42\executor_run_20250619_182248_seed42.log
+2025-06-19 18:22:48 | INFO     | [executor  :__init__          : 125] | ℹ️ --- Starting Executor Run (ID: 20250619_182248_seed42) ---
+2025-06-19 18:22:48 | INFO     | [executor  :__init__          : 126] | ℹ️ Executor initialized for model 'xcloud' on dataset 'GCD'
+2025-06-19 18:22:48 | INFO     | [executor  :__init__          : 129] | ℹ️ Local artifact storage base: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-06-19 18:22:48 | INFO     | [executor  :__init__          : 133] | ℹ️ Base key/prefix for this executor run's artifacts: experiments/GCD/xcloud/20250619_182248_seed42
+2025-06-19 18:22:48 | INFO     | [pipeline  :__init__          : 164] | ℹ️ Initializing Classification Pipeline:
+2025-06-19 18:22:48 | INFO     | [pipeline  :__init__          : 165] | ℹ️   Dataset Path: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\GCD
+2025-06-19 18:22:48 | INFO     | [pipeline  :__init__          : 166] | ℹ️   Model Type: xcloud
+2025-06-19 18:22:48 | INFO     | [pipeline  :__init__          : 169] | ℹ️   Artifact base key prefix for this run: experiments/GCD/xcloud/20250619_182248_seed42 (using LocalFileSystemRepository)
+2025-06-19 18:22:48 | INFO     | [pipeline  :__init__          : 173] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.PAPER_CCSN
+2025-06-19 18:22:48 | INFO     | [pipeline  :__init__          : 174] | ℹ️   Default Show First Batch Aug: True
+2025-06-19 18:22:48 | INFO     | [dataset...:__init__          : 482] | ℹ️ Using augmentation strategy: AugmentationStrategy.PAPER_CCSN
+2025-06-19 18:22:48 | INFO     | [dataset...:__init__          : 509] | ℹ️ Detected dataset structure: fixed
+2025-06-19 18:22:48 | WARNING  | [dataset...:__init__          : 511] | ⚠️ Dataset is FIXED, but force_flat_for_fixed_cv=True. CV methods will treat train+test as a single dataset. Results might not reflect standard fixed-test evaluation.
+2025-06-19 18:22:48 | INFO     | [dataset...:_load_paths_and...: 740] | ℹ️ Scanning FIXED dataset from C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\GCD\train (train) and C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\GCD\test (test)...
+2025-06-19 18:22:48 | INFO     | [dataset...:_load_paths_and...: 793] | ℹ️ Final Original Dataset sizes: 10000 original train+val, 9000 original test. Offline augmented samples loaded: 0.
+2025-06-19 18:22:48 | INFO     | [dataset...:__init__          : 532] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-06-19 18:22:48 | INFO     | [dataset...:__init__          : 535] | ℹ️ Dataset sizes: 10000 train+val, 9000 test. Total: 19000
+2025-06-19 18:22:48 | INFO     | [dataset...:__init__          : 537] | ℹ️ Total combined size (for forced CV): 19000
+2025-06-19 18:22:48 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Artifact base key prefix for this run: experiments/GCD/xcloud/20250619_182248_seed42 (using LocalFileSystemRepository)
+2025-06-19 18:22:48 | INFO     | [pipeline  :__init__          : 211] | ℹ️   Using Optimizer: AdamW
+2025-06-19 18:22:48 | DEBUG    | [callbacks :get_default_cal...: 172] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-06-19 18:22:48 | INFO     | [pipeline  :__init__          : 252] | ℹ️   Model Adapter: Initialized with XceptionBasedCloudNet
+2025-06-19 18:22:48 | DEBUG    | [executor  :_validate_methods : 187] | 🐞 Basic method validation successful.
+2025-06-19 18:22:48 | INFO     | [executor  :__init__          : 166] | ℹ️ Executor configured to run methods: single_train, single_eval
+2025-06-19 18:22:48 | INFO     | [executor  :run               : 235] | ℹ️ Starting execution of methods for Executor Run ID: 20250619_182248_seed42
+2025-06-19 18:22:48 | INFO     | [executor  :run               : 244] | ℹ️ --- Running Method 1/2: single_train (Op ID: single_train_0) ---
+2025-06-19 18:22:48 | DEBUG    | [executor  :run               : 289] | 🐞 Running method 'single_train' with effective parameters: {'params': {'max_epochs': 100, 'lr': 0.0001, 'batch_size': 32, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.2, 'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau', 'callbacks__default_lr_scheduler__monitor': 'valid_loss', 'callbacks__default_lr_scheduler__patience': 10, 'callbacks__default_lr_scheduler__factor': 0.2, 'callbacks__default_lr_scheduler__min_lr': 1e-08, 'callbacks__default_early_stopping__patience': 15, 'module__pretrained': True, 'module__dense_neurons1': 128}, 'save_model': False, 'val_split_ratio': 0.1, 'results_detail_level': 2}
+2025-06-19 18:22:48 | INFO     | [pipeline  :single_train      :1697] | ℹ️ Starting single training run...
+2025-06-19 18:22:48 | INFO     | [pipeline  :single_train      :1743] | ℹ️ Using split: 9000 train / 1000 validation samples.
+2025-06-19 18:22:48 | INFO     | [pipeline  :single_train      :1748] | ℹ️ Applying custom parameters for this single_train run: {'max_epochs': 100, 'lr': 0.0001, 'batch_size': 32, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.2, 'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau', 'callbacks__default_lr_scheduler__monitor': 'valid_loss', 'callbacks__default_lr_scheduler__patience': 10, 'callbacks__default_lr_scheduler__factor': 0.2, 'callbacks__default_lr_scheduler__min_lr': 1e-08, 'callbacks__default_early_stopping__patience': 15, 'module__pretrained': True, 'module__dense_neurons1': 128}
+2025-06-19 18:22:48 | DEBUG    | [param_g...:parse_fixed_hyp...: 163] | 🐞 Created LRScheduler instance: policy=ReduceLROnPlateau, direct_args={'monitor': 'valid_loss'}, constructor_kwargs={'patience': 10, 'factor': 0.2, 'min_lr': 1e-08}
+2025-06-19 18:22:48 | INFO     | [pipeline  :single_train      :1793] | ℹ️ Fitting model (run_id: single_train_182248)...
+2025-06-19 18:22:48 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 1000 original samples.
+2025-06-19 18:22:48 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-06-19 18:22:48 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 9000 samples.
+2025-06-19 18:22:48 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=9000, batch_size=32, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 18:22:48 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=1000, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 18:23:29 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp       lr      dur
+2025-06-19 18:23:29 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ------  -------
+2025-06-19 18:23:29 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.7773      ▼ 0.6407     ▲ 0.8600      ▼ 0.3375        0.0001  40.5046
+2025-06-19 18:24:08 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.8743      ▼ 0.3389     ▲ 0.8960      ▼ 0.2753        0.0001  38.9492
+2025-06-19 18:24:46 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.8963      ▼ 0.2684     ▲ 0.9040        0.2911        0.0001  38.5801
+2025-06-19 18:25:25 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.9034      ▼ 0.2569     ▲ 0.9070      ▼ 0.2542        0.0001  38.3548
+2025-06-19 18:26:03 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.9212      ▼ 0.2161        0.896        0.2608        0.0001  38.3563
+2025-06-19 18:26:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6       0.9154        0.2171        0.903        0.2612        0.0001  38.3553
+2025-06-19 18:27:20 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7       0.9192      ▼ 0.2037     ▲ 0.9130      ▼ 0.2231        0.0001  38.222
+2025-06-19 18:27:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8     ▲ 0.9262      ▼ 0.1877     ▲ 0.9160        0.2365        0.0001  38.1373
+2025-06-19 18:28:36 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9     ▲ 0.9311      ▼ 0.1706        0.896        0.2855        0.0001  38.3094
+2025-06-19 18:29:14 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10     ▲ 0.9356      ▼ 0.1641        0.902        0.2528        0.0001  38.172
+2025-06-19 18:29:52 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11     ▲ 0.9360      ▼ 0.1636        0.902        0.2607        0.0001  38.1599
+2025-06-19 18:30:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12     ▲ 0.9434      ▼ 0.1433         0.91        0.2447        0.0001  38.2222
+2025-06-19 18:31:09 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13       0.9409        0.1449     ▲ 0.9170        0.2491        0.0001  38.3558
+2025-06-19 18:31:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14     ▲ 0.9444      ▼ 0.1418     ▲ 0.9220      ▼ 0.2141        0.0001  38.3803
+2025-06-19 18:32:26 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15     ▲ 0.9492      ▼ 0.1328        0.908         0.265        0.0001  38.3713
+2025-06-19 18:33:04 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9502      ▼ 0.1291     ▲ 0.9220        0.2397        0.0001  38.2409
+2025-06-19 18:33:42 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17     ▲ 0.9542      ▼ 0.1236        0.916        0.2479        0.0001  38.1793
+2025-06-19 18:34:21 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18     ▲ 0.9557      ▼ 0.1115        0.918        0.2494        0.0001  38.2618
+2025-06-19 18:34:59 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19       0.9533         0.121     ▲ 0.9260        0.2341        0.0001  38.2855
+2025-06-19 18:35:37 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20     ▲ 0.9581        0.1128        0.925        0.2369        0.0001  38.1202
+2025-06-19 18:36:15 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21     ▲ 0.9637      ▼ 0.0986     ▲ 0.9260        0.2558        0.0001  38.2018
+2025-06-19 18:36:54 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22     ▲ 0.9640      ▼ 0.0942        0.919        0.2408        0.0001  38.2837
+2025-06-19 18:37:32 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23       0.9637      ▼ 0.0921        0.907        0.2921        0.0001  38.2642
+2025-06-19 18:38:10 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24       0.9633        0.0962     ▲ 0.9260        0.2352        0.0001  38.327
+2025-06-19 18:38:48 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25     ▲ 0.9671      ▼ 0.0873        0.925        0.2452        2e-05  38.2069
+2025-06-19 18:39:27 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26     ▲ 0.9763      ▼ 0.0616     ▲ 0.9340         0.216        2e-05  38.2234
+2025-06-19 18:40:05 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27     ▲ 0.9807      ▼ 0.0492     ▲ 0.9350        0.2221        2e-05  38.2158
+2025-06-19 18:40:43 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      28     ▲ 0.9847      ▼ 0.0425        0.932        0.2237        2e-05  38.2764
+2025-06-19 18:41:21 | INFO     | [pipeline  :single_train      :1823] | ℹ️ Training finished. Best validation performance found at Epoch 14 (valid_loss=0.2141)
+2025-06-19 18:41:21 | INFO     | [pipeline  :single_train      :1898] | ℹ️ Main pipeline model adapter updated from single_train run: single_train_182248
+2025-06-19 18:41:21 | DEBUG    | [pipeline  :_save_results     : 510] | 🐞 Results detail level overridden for this run to: 2
+2025-06-19 18:41:21 | DEBUG    | [pipeline  :_save_results     : 517] | 🐞 Saving results for single_train_182248 (detail level: 2)
+2025-06-19 18:41:21 | INFO     | [pipeline  :_save_results     : 615] | ℹ️ Results JSON saved via repository to: experiments/GCD/xcloud/20250619_182248_seed42/single_train_182248/single_train_results.json
+2025-06-19 18:41:21 | INFO     | [pipeline  :single_train      :1928] | ℹ️ Plotting single_train results for single_train_182248 (plot level 2).
+2025-06-19 18:41:21 | INFO     | [plotter   :plot_single_tra...: 648] | ℹ️ Plotting single_train results for: single_train_182248
+2025-06-19 18:41:22 | INFO     | [plotter   :plot_single_tra...: 663] | ℹ️ Finished plotting for single_train: single_train_182248
+2025-06-19 18:41:22 | INFO     | [executor  :run               : 296] | ℹ️ --- Method single_train (Op ID: single_train_0) completed successfully in 1114.13s ---
+2025-06-19 18:41:22 | INFO     | [executor  :run               : 244] | ℹ️ --- Running Method 2/2: single_eval (Op ID: single_eval_1) ---
+2025-06-19 18:41:22 | DEBUG    | [executor  :run               : 289] | 🐞 Running method 'single_eval' with effective parameters: {'plot_level': 2}
+2025-06-19 18:41:22 | INFO     | [pipeline  :single_eval       :1983] | ℹ️ Starting model evaluation on the test set...
+2025-06-19 18:41:22 | INFO     | [pipeline  :single_eval       :1997] | ℹ️ Evaluating on 9000 test samples...
+2025-06-19 18:41:22 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=9000, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 18:41:52 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=9000, batch_size=32, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-19 18:42:22 | DEBUG    | [pipeline  :single_eval       :2012] | 🐞 Plot level overridden for this run to: 2
+2025-06-19 18:42:22 | DEBUG    | [pipeline  :_compute_metrics  : 462] | 🐞 Computed Metrics: Acc=0.7641, Macro F1=0.7489
+2025-06-19 18:42:22 | DEBUG    | [pipeline  :_save_results     : 512] | 🐞 Using pipeline results detail level for this run: 3
+2025-06-19 18:42:22 | DEBUG    | [pipeline  :_save_results     : 517] | 🐞 Saving results for single_eval_184122 (detail level: 3)
+2025-06-19 18:42:22 | INFO     | [pipeline  :_save_results     : 615] | ℹ️ Results JSON saved via repository to: experiments/GCD/xcloud/20250619_182248_seed42/single_eval_184122/single_eval_results.json
+2025-06-19 18:42:22 | INFO     | [pipeline  :single_eval       :2047] | ℹ️ Plotting single_eval results for single_eval_184122 (plot level 2).
+2025-06-19 18:42:22 | INFO     | [plotter   :plot_single_eva...: 680] | ℹ️ Plotting single_eval results for: single_eval_184122
+2025-06-19 18:42:22 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/GCD/xcloud/20250619_182248_seed42/single_eval_184122/single_eval_plots/metrics_table.csv
+2025-06-19 18:42:23 | INFO     | [plotter   :plot_single_eva...: 728] | ℹ️ Finished plotting for single_eval: single_eval_184122
+2025-06-19 18:42:23 | INFO     | [executor  :run               : 296] | ℹ️ --- Method single_eval (Op ID: single_eval_1) completed successfully in 61.34s ---
+2025-06-19 18:42:23 | INFO     | [executor  :run               : 353] | ℹ️ Pipeline execution finished successfully in 1175.47s for Executor Run ID: 20250619_182248_seed42.
+2025-06-19 18:42:23 | INFO     | [executor  :run               : 359] | ℹ️ Executor run for 20250619_182248_seed42 attempting final log operations.
+2025-06-19 18:42:23 | DEBUG    | [executor  :_upload_and_cle...: 205] | 🐞 Flushing and closing log handler for: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD\xcloud\20250619_182248_seed42\executor_run_20250619_182248_seed42.log before upload/cleanup.
+2025-06-19 18:42:23 | INFO     | [executor  :_upload_and_cle...: 231] | ℹ️ Main executor log file available at: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD\xcloud\20250619_182248_seed42\executor_run_20250619_182248_seed42.log
+2025-06-19 18:42:23 | INFO     | [main      :<module>          : 333] | ℹ️ --- Final Execution Results Summary ---
+2025-06-19 18:42:23 | INFO     | [main      :<module>          : 344] | ℹ️ Method executor_run_id: Completed. Result: 20250619_182248_seed42
+2025-06-19 18:42:23 | INFO     | [main      :<module>          : 344] | ℹ️ Method seed_used: Completed. Result: 42
+2025-06-19 18:42:23 | INFO     | [main      :<module>          : 341] | ℹ️ Method single_train_0: Completed. (Acc: 0.9220, F1: nan, BestScore: nan)
+2025-06-19 18:42:23 | INFO     | [main      :<module>          : 341] | ℹ️ Method single_eval_1: Completed. (Acc: nan, F1: 0.7489, BestScore: nan)
