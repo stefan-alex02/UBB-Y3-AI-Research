@@ -19,7 +19,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import ro.ubb.ai.javaserver.security.AuthEntryPointJwt;
 import ro.ubb.ai.javaserver.security.AuthTokenFilter;
-import ro.ubb.ai.javaserver.security.UserDetailsServiceImpl;
 
 @Configuration
 @EnableWebSecurity
@@ -27,7 +26,6 @@ import ro.ubb.ai.javaserver.security.UserDetailsServiceImpl;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final UserDetailsServiceImpl userDetailsService;
     private final AuthEntryPointJwt unauthorizedHandler;
     private final AuthTokenFilter authTokenFilter;
 
