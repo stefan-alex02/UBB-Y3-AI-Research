@@ -1,0 +1,5 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-06-30 18:30:57 | INFO     | [logger_...:setup_logger      : 130] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: logs\pipeline_main.log
+2025-06-30 18:35:04 | INFO     | [minio_repo:save_image_object : 179] | ℹ️ Image object saved to S3: s3://clouds/images/m1/1.png
+2025-06-30 18:35:19 | INFO     | [minio_repo:save_image_object : 179] | ℹ️ Image object saved to S3: s3://clouds/images/m1/2.jpg

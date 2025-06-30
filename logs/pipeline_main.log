@@ -1725,3 +1725,9 @@ Timestamp           | Level    | Location                             | Message
 2025-06-16 07:42:28 | INFO     | [experim...:_execute_pipeli...:  63] | ℹ️ Background task started for experiment: 21a570e3-c0ee-470f-a883-19edf63ab279
 2025-06-16 07:42:28 | INFO     | [experim...:update_experime...:  49] | ℹ️ Successfully updated experiment 21a570e3-c0ee-470f-a883-19edf63ab279 to RUNNING in Java. Payload: {'status': 'RUNNING'}
 2025-06-16 07:42:28 | INFO     | [executor  :__init__          :  61] | ℹ️ PipelineExecutor initialized with effective random seed: 42
+2025-06-30 18:39:56 | INFO     | [experim...:_execute_pipeli...:  63] | ℹ️ Background task started for experiment: f08ea1af-e879-472c-87a0-3dfb2ea5e386
+2025-06-30 18:39:56 | ERROR    | [experim...:update_experime...:  51] | ❌ HTTP error updating Java status for f08ea1af-e879-472c-87a0-3dfb2ea5e386 to RUNNING: 404 - . Payload: {'status': 'RUNNING'}
+2025-06-30 18:39:56 | INFO     | [executor  :__init__          :  61] | ℹ️ PipelineExecutor initialized with effective random seed: 42
+2025-06-30 18:53:24 | INFO     | [experim...:_execute_pipeli...:  63] | ℹ️ Background task started for experiment: 89c4828e-85a8-4935-b7f0-8d65a1b23bb5
+2025-06-30 18:53:25 | ERROR    | [experim...:update_experime...:  51] | ❌ HTTP error updating Java status for 89c4828e-85a8-4935-b7f0-8d65a1b23bb5 to RUNNING: 404 - . Payload: {'status': 'RUNNING'}
+2025-06-30 18:53:25 | INFO     | [executor  :__init__          :  61] | ℹ️ PipelineExecutor initialized with effective random seed: 42
