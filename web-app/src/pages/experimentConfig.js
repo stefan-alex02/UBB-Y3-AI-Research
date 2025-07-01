@@ -48,7 +48,7 @@ export const EXPERIMENT_MODES = [
 export const METHOD_DEFAULTS = {
     single_train: {
         method_name: 'single_train',
-        params: { lr: 0.001, batch_size: 32, max_epochs: 20 },
+        params: { lr: 0.001, batch_size: 32, max_epochs: 2 },
         save_model: true,
         plot_level: 1,
         results_detail_level: 2,
