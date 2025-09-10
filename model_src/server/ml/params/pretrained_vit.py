@@ -39,7 +39,7 @@ pretrained_vit_fixed_params = {
     'module__head_dropout_rate': 0.50,
 
     # --- Data Loader Parameters ---
-    'iterator_train__shuffle': False,
+    'iterator_train__shuffle': True,
 }
 
 

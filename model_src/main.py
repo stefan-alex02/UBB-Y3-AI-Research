@@ -45,7 +45,7 @@ if __name__ == "__main__":
     selected_dataset = "GCD"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
 
     # Select Model:
-    model_type = "xcloud"
+    model_type = "pvit"
     # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet', 'cloudnet'
 
 
@@ -69,10 +69,10 @@ if __name__ == "__main__":
     # Flag for CV methods on FIXED datasets:
     force_flat = True
 
-    save_model = False  # Whether to save the model after training
+    save_model = True  # Whether to save the model after training
 
-    # data_augmentation_mode_override = None
-    data_augmentation_mode_override = AugmentationStrategy.PAPER_CCSN
+    data_augmentation_mode_override = None
+    # data_augmentation_mode_override = AugmentationStrategy.PAPER_CCSN
 
     # Flag for overriding parameters:
     enable_debug_params = False
