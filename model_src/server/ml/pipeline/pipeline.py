@@ -81,6 +81,7 @@ class ClassificationPipeline:
                  patience: int = 10,
                  module__dropout_rate: Optional[float] = None,
                  lr_scheduler_policy_default: str = 'ReduceLROnPlateau',
+                 use_weighted_loss: bool = False,
                  **kwargs
                  ):
         """
@@ -220,13 +221,26 @@ class ClassificationPipeline:
             patience=2,
         )
 
+        criterion_to_use = nn.CrossEntropyLoss
+        criterion_params = {}
+
+        if use_weighted_loss:
+            class_weights = self.dataset_handler.get_class_weights()
+            if class_weights is not None:
+                logger.info("Weighted loss is enabled. Passing class weights to criterion.")
+                # The weights need to be on the correct device
+                criterion_params['weight'] = class_weights.to(DEVICE)
+            else:
+                logger.warning("use_weighted_loss=True, but could not get class weights. Using unweighted loss.")
+
         module_params = {}
         if module__dropout_rate is not None: module_params['module__dropout_rate'] = module__dropout_rate
         module_params["module__num_classes"] = self.dataset_handler.num_classes
 
         self.model_adapter_config = {
             'module': model_class,
-            'criterion': nn.CrossEntropyLoss,
+            'criterion': criterion_to_use,
+            'criterion__weight': criterion_params.get('weight'),
             'optimizer': actual_optimizer_type,
             'lr': lr, 'max_epochs': max_epochs, 'batch_size': batch_size, 'device': DEVICE,
             'callbacks': default_callbacks,
@@ -243,6 +257,9 @@ class ClassificationPipeline:
         }
 
         self.model_adapter_config.update(kwargs)
+
+        if 'criterion__weight' in self.model_adapter_config and self.model_adapter_config['criterion__weight'] is None:
+            del self.model_adapter_config['criterion__weight']
 
         init_config_for_adapter = self.model_adapter_config.copy()
         init_config_for_adapter.pop('patience_cfg', None); init_config_for_adapter.pop('monitor_cfg', None)

@@ -51,6 +51,7 @@ class PipelineExecutor:
                  patience: int = 10,
                  optimizer__weight_decay: float = 0.01,
                  module__dropout_rate: Optional[float] = None,
+                 use_weighted_loss: bool = False,
                  **kwargs
                  ):
 
@@ -149,7 +150,8 @@ class PipelineExecutor:
             "force_flat_for_fixed_cv": force_flat_for_fixed_cv,
             "lr": lr, "max_epochs": max_epochs, "batch_size": batch_size, "patience": patience,
             "optimizer__weight_decay": optimizer__weight_decay,
-            "module__dropout_rate": module__dropout_rate
+            "module__dropout_rate": module__dropout_rate,
+            "use_weighted_loss": use_weighted_loss,
         }
         pipeline_init_kwargs.update(kwargs)
 

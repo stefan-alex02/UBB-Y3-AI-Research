@@ -9,6 +9,7 @@ from PIL import Image
 from sklearn.model_selection import (
     train_test_split
 )
+from sklearn.utils.class_weight import compute_class_weight
 from torch.utils.data import Dataset
 from torchvision import transforms
 
@@ -525,11 +526,17 @@ class ImageDatasetHandler:
         self.classes: List[str] = []
         self.class_to_idx: Dict[str, int] = {}
 
+        # Class weights for handling imbalance
+        self.class_weights: Optional[torch.Tensor] = None
+
         self._load_paths_and_labels()
         if not self.classes:
              raise ValueError(f"Could not determine classes for dataset at {self.root_path}")
         self.num_classes = len(self.classes)
         logger.info(f"Found {self.num_classes} classes: {', '.join(self.classes)}")
+
+        if self.classes and self._train_val_labels:
+            self._calculate_class_weights()
 
         # Dataset sizes
         logger.info(f"Dataset sizes: {len(self._train_val_paths)} train+val, {len(self._test_paths)} test. Total: {len(self._all_paths)}")
@@ -613,6 +620,30 @@ class ImageDatasetHandler:
                     paths.append(img_path)
                     labels.append(class_idx)
         return paths, labels, class_names, class_to_idx
+
+    def _calculate_class_weights(self):
+        """Calculates class weights for the training data to handle imbalance."""
+        logger.info("Calculating class weights for the training set...")
+
+        if not self._train_val_labels:
+            logger.warning("Cannot calculate class weights: original training label list is empty.")
+            return
+
+        try:
+            weights = compute_class_weight(
+                class_weight='balanced',
+                classes=np.arange(self.num_classes),
+                y=self._train_val_labels
+            )
+
+            self.class_weights = torch.tensor(weights, dtype=torch.float32)
+            logger.info(f"Calculated class weights (for classes 0 to {self.num_classes - 1}):")
+            for i, class_name in enumerate(self.classes):
+                logger.info(f"  - {class_name} (Class {i}): {self.class_weights[i]:.4f}")
+
+        except Exception as e:
+            logger.error(f"Failed to compute class weights: {e}", exc_info=True)
+            self.class_weights = None
 
     @staticmethod
     def _get_original_basename(augmented_path: Path) -> Optional[str]:
@@ -794,6 +825,9 @@ class ImageDatasetHandler:
                     f"{len(self._train_val_paths)} original train+val, "
                     f"{len(self._test_paths)} original test. "
                     f"Offline augmented samples loaded: {len(self._offline_aug_paths)}.")
+
+    def get_class_weights(self) -> Optional[torch.Tensor]:
+        return self.class_weights
 
     def get_train_val_paths_labels(self) -> Tuple[List[Path], List[int]]:
         """

@@ -48,6 +48,9 @@ if __name__ == "__main__":
     model_type = "pvit"
     # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet', 'cloudnet'
 
+    # Weights for class imbalance
+    use_weighted_loss_for_run = True
+
 
     # Offline Augmentation:
     offline_augmentation = False
@@ -314,6 +317,7 @@ if __name__ == "__main__":
             augmentation_strategy=augmentation_strategy,
             show_first_batch_augmentation_default=True,
             use_offline_augmented_data=offline_augmentation,
+            use_weighted_loss=use_weighted_loss_for_run,
 
             # Pipeline default parameters
             img_size=img_size,
