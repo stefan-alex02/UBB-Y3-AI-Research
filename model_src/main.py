@@ -94,14 +94,19 @@ if __name__ == "__main__":
         PurePath(saved_model_dataset) / saved_model_type_folder / saved_model_experiment_run_id / saved_model_relative_path
     )
 
+    username: str = 'eugen2'
+
     images_to_predict_info: List[any] = [
-        ImagePredictionTask(image_id='TG Mures_25-05-2025_square', image_format='jpg', prediction_id='p1'),
-        ImagePredictionTask(image_id='Brasov_18-05-2025_square', image_format='png', prediction_id='p2'),
-        ImagePredictionTask(image_id='Brasov_19-05-2025_square', image_format='png', prediction_id='p3'),
-        ImagePredictionTask(image_id='Brasov_21-05-2025_square', image_format='jpg', prediction_id='p4'),
-        ImagePredictionTask(image_id='Tarnaveni_05-05-2025', image_format='jpg', prediction_id='p5'),
-        ImagePredictionTask(image_id='Tarnaveni_09-05-2025_square1', image_format='jpg', prediction_id='p6'),
-        ImagePredictionTask(image_id='Tarnaveni_09-05-2025_square2', image_format='jpg', prediction_id='p7'),
+        # ImagePredictionTask(image_id='TG Mures_25-05-2025_square', image_format='jpg', prediction_id='p1'),
+        # ImagePredictionTask(image_id='Brasov_18-05-2025_square', image_format='png', prediction_id='p2'),
+        # ImagePredictionTask(image_id='Brasov_19-05-2025_square', image_format='png', prediction_id='p3'),
+        # ImagePredictionTask(image_id='Brasov_21-05-2025_square', image_format='jpg', prediction_id='p4'),
+        # ImagePredictionTask(image_id='Tarnaveni_05-05-2025', image_format='jpg', prediction_id='p5'),
+        # ImagePredictionTask(image_id='Tarnaveni_09-05-2025_square1', image_format='jpg', prediction_id='p6'),
+        # ImagePredictionTask(image_id='Tarnaveni_09-05-2025_square2', image_format='jpg', prediction_id='p7'),
+        ImagePredictionTask(image_id='tarnaveni 11-08', image_format='png', prediction_id='p8'),
+        ImagePredictionTask(image_id='tarnaveni 17-08', image_format='png', prediction_id='p9'),
+        ImagePredictionTask(image_id='tarnaveni 21-08-2025', image_format='png', prediction_id='p10'),
     ]
 
     # --- Check if the dataset path exists ---
@@ -288,7 +293,7 @@ if __name__ == "__main__":
             'model_path_or_key': model_path
         }),
         ('predict_images', {
-            'username': 'eugen',
+            'username': username,
             'image_tasks_for_pipeline': images_to_predict_info,
             'experiment_run_id_of_model': saved_model_experiment_run_id,
             'generate_lime_explanations': True,
