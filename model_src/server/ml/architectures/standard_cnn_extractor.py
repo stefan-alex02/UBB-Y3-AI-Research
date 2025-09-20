@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torchvision import models
-from typing import Optional, Tuple
+from typing import Optional, Tuple, Dict
 
 from ..logger_utils import logger
 
@@ -73,6 +73,17 @@ class StandardCNNFeatureExtractor(nn.Module):
                 param.requires_grad = False
         elif num_frozen_stages > 0:
             self._freeze_stages(num_frozen_stages)
+
+    def get_parameter_counts(self) -> Dict[str, int]:
+        """
+        Calculates the total and trainable parameters for this module instance.
+
+        Returns:
+            A dictionary containing 'total_params' and 'trainable_params'.
+        """
+        total_params = sum(p.numel() for p in self.parameters())
+        trainable_params = sum(p.numel() for p in self.parameters() if p.requires_grad)
+        return {'total_params': total_params, 'trainable_params': trainable_params}
 
     def _freeze_stages(self, num_frozen_stages: int):
         if not hasattr(self.features, 'children') or not isinstance(self.features, nn.Sequential):

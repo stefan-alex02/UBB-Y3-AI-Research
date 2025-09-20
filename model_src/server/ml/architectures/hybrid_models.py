@@ -53,6 +53,12 @@ class HybridViT(nn.Module):
 
         cnn_out_channels_actual = self.feature_extractor.current_output_channels
 
+        cnn_params = self.feature_extractor.get_parameter_counts()
+        cnn_total_params = cnn_params['total_params']
+        cnn_trainable_params = cnn_params['trainable_params']
+        logger.info(f"CNN Feature Extractor ({self.feature_extractor.model_name}) part: "
+                    f"Trainable params: {cnn_trainable_params / 1e6:.2f}M / Total params: {cnn_total_params / 1e6:.2f}M")
+
         # Determine CNN output H, W
         try:
             with torch.no_grad():
@@ -82,6 +88,19 @@ class HybridViT(nn.Module):
             hybrid_cnn_output_w=cnn_output_w_feat,
             **vit_kwargs
         )
+
+        vit_backend_total_params = sum(p.numel() for p in self.transformer_backend.parameters())
+        vit_backend_trainable_params = sum(p.numel() for p in self.transformer_backend.parameters() if p.requires_grad)
+        logger.info(f"ViT Backend part: "
+                    f"Trainable params: {vit_backend_trainable_params / 1e6:.2f}M / Total params: {vit_backend_total_params / 1e6:.2f}M")
+
+        total_params = cnn_total_params + vit_backend_total_params
+        trainable_params = cnn_trainable_params + vit_backend_trainable_params
+        percentage_trainable = (100 * trainable_params / total_params) if total_params > 0 else 0.0
+
+        logger.info(f"HybridViT Total: "
+                    f"Trainable params: {trainable_params / 1e6:.2f}M / Total params: {total_params / 1e6:.2f}M "
+                    f"({percentage_trainable:.2f}%)")
 
     def forward(self, x):
         features = self.feature_extractor(x)
