@@ -42,14 +42,15 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "GCD"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = "ccsn"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
+    selected_dataset = selected_dataset.lower()
 
     # Select Model:
     model_type = "pvit"
     # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet', 'cloudnet'
 
     # Weights for class imbalance
-    use_weighted_loss_for_run = True
+    use_weighted_loss_for_run = False
 
 
     # Offline Augmentation:
@@ -63,16 +64,16 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 1
+    chosen_sequence_idx = 4
 
     # Image size for the model
     img_size = (224, 224)
     # img_size = (448, 448)
 
     # Flag for CV methods on FIXED datasets:
-    force_flat = True
+    force_flat = False
 
-    save_model = True  # Whether to save the model after training
+    save_model = False  # Whether to save the model after training
 
     data_augmentation_mode_override = None
     # data_augmentation_mode_override = AugmentationStrategy.PAPER_CCSN
@@ -181,13 +182,13 @@ if __name__ == "__main__":
         logger.error(f"Model type '{model_type}' not recognized. Supported: {[m.value for m in ModelType]}")
         exit()
 
-    if selected_dataset.lower() == 'ccsn':
+    if selected_dataset == 'ccsn':
         effective_test_split_ratio_if_flat = 0.1
         effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
         cv_folds = 10
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
-    elif selected_dataset.lower() in ['gcd', 'gcdf', 'mgcd', 'mgcdf']:
-        if selected_dataset.lower() == 'gcdf':
+    elif selected_dataset in ['gcd', 'gcdf', 'mgcd', 'mgcdf']:
+        if selected_dataset == 'gcdf':
             effective_test_split_ratio_if_flat = 0.2
         else:
             effective_test_split_ratio_if_flat = 9000 / 19000
@@ -195,7 +196,7 @@ if __name__ == "__main__":
         cv_folds = 5
         augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
         # augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
-    elif selected_dataset.lower() == 'swimcat':
+    elif selected_dataset == 'swimcat':
         effective_test_split_ratio_if_flat = 0.2
         effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
         cv_folds = 5
