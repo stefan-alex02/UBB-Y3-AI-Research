@@ -34,7 +34,7 @@ hybrid_vit_fixed_params = {
     'module__cnn_output_channels_target': 192,
 
     'module__cnn_freeze_extractor': False,
-    'module__cnn_num_frozen_stages': 5,
+    'module__cnn_num_frozen_stages': 2,
     'module__cnn_fine_tuned_weights_path': None,
     # 'module__cnn_fine_tuned_weights_path': 'experiments/CCSN/stfeat/20250606_053320_seed42/single_train_053320/stfeat_sngl_ep13_val_loss1p54_053320.pt',
 
