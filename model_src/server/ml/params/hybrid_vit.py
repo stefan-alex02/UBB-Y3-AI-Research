@@ -19,8 +19,8 @@ hybrid_vit_fixed_params = {
     'criterion__label_smoothing': 0.1,
 
     # --- CutMix Parameters ---
-    # 'cutmix_alpha': 1.0,
-    # 'cutmix_probability': 0.9,  # for CCSN
+    'cutmix_alpha': 1.0,
+    'cutmix_probability': 0.9,  # for CCSN
     # 'cutmix_probability': 0.3, # for Swimcat
     # 'cutmix_probability': 0.5, # for GCD
 
@@ -34,7 +34,7 @@ hybrid_vit_fixed_params = {
     'module__cnn_output_channels_target': 192,
 
     'module__cnn_freeze_extractor': False,
-    'module__cnn_num_frozen_stages': 2,
+    'module__cnn_num_frozen_stages': 5,
     'module__cnn_fine_tuned_weights_path': None,
     # 'module__cnn_fine_tuned_weights_path': 'experiments/CCSN/stfeat/20250606_053320_seed42/single_train_053320/stfeat_sngl_ep13_val_loss1p54_053320.pt',
 
@@ -42,7 +42,7 @@ hybrid_vit_fixed_params = {
     'module__vit_model_variant': 'vit_b_16',
     'module__vit_pretrained_imagenet': True,
     'module__unfreeze_strategy': 'encoder_tail',
-    'module__num_transformer_blocks_to_unfreeze': 1,
+    'module__num_transformer_blocks_to_unfreeze': 6,
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
     'module__unfreeze_patch_embedding': False,
