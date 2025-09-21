@@ -42,7 +42,7 @@ hybrid_vit_fixed_params = {
     'module__vit_model_variant': 'vit_b_16',
     'module__vit_pretrained_imagenet': True,
     'module__unfreeze_strategy': 'encoder_tail',
-    'module__num_transformer_blocks_to_unfreeze': 6,
+    'module__num_transformer_blocks_to_unfreeze': 2,
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
     'module__unfreeze_patch_embedding': False,

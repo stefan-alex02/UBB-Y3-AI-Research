@@ -46,7 +46,7 @@ if __name__ == "__main__":
     selected_dataset = selected_dataset.lower()
 
     # Select Model:
-    model_type = "hyvit"
+    model_type = "pvit"
     # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet', 'cloudnet'
 
     # Weights for class imbalance
