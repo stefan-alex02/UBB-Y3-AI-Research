@@ -80,7 +80,7 @@ hybrid_vit_fixed_params = {
 
     # --- Optimizer Configuration ---
     'optimizer': 'AdamW',
-    'optimizer__weight_decay': 0.1, # Good default for AdamW, helps with regularization.
+    'optimizer__weight_decay': 0.1,
 
     # --- LR Scheduler ---
     'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
@@ -90,7 +90,7 @@ hybrid_vit_fixed_params = {
     # --- Early Stopping ---
     'callbacks__default_early_stopping__patience': 15,
 
-    'criterion__label_smoothing': 0.1, # Common value for label smoothing
+    'criterion__label_smoothing': 0.1,
 
     # --- CutMix Parameters ---
     'cutmix_alpha': 1.0,
@@ -99,7 +99,7 @@ hybrid_vit_fixed_params = {
     # 'cutmix_probability': 0.5, # for GCD
 
     # --- Gradient Clipping---
-    'gradient_clip_value': 5.0,  # If you want to use it
+    'gradient_clip_value': 5.0,
 
     # --- HybridViT Module Parameters ---
     'module__cnn_extractor_type': "standard_cnn",
@@ -114,14 +114,14 @@ hybrid_vit_fixed_params = {
 
     # --- ViT Backend Parameters (passed to PretrainedViT within HybridViT) ---
     'module__vit_model_variant': 'vit_b_16',
-    'module__vit_pretrained_imagenet': True, # ViT backend uses its ImageNet pretraining
+    'module__vit_pretrained_imagenet': True,
     'module__unfreeze_strategy': 'encoder_tail',
-    'module__num_transformer_blocks_to_unfreeze': 2, # Fine-tune last 2 ViT blocks. Could try 1 to 4.
+    'module__num_transformer_blocks_to_unfreeze': 2,
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
-    'module__unfreeze_patch_embedding': False,       # For ViT's own, not used in hybrid mode by ViT
+    'module__unfreeze_patch_embedding': False,
     'module__unfreeze_encoder_layernorm': True,
-    'module__custom_head_hidden_dims': None,         # Keep head simple initially
+    'module__custom_head_hidden_dims': None,
     'module__head_dropout_rate': 0.2,
 
     # --- Parameters for HybridViT constructor (related to image/feature sizes) ---

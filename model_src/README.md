@@ -1,54 +1,47 @@
-
 # Pipeline description
 
 The given dataset (by path) may be structured in the file system in 2 variants:
-  - root folder with multiple folders with images, each folder representing a class. In this case any combination of steps (1), (2) or alternatives is possible.
-  - root folder with train and test folders, each one having multiple subfolders (the same number) with images, each subfolder representing a class. This means that the test dataset is already fixed. As mentioned above, this means that step (2) cannot be performed, only a fixed split with a single training and eval process.
 
-Disclaimer: 
+  - root folder with multiple folders with images, each folder representing a class.
+  - root folder with train and test folders, each one having multiple subfolders (the same number) with images, each subfolder representing a class. This means that the test dataset is already fixed.
 
-  - All operations/functions that use randomness of any kind (e.g. shuffling, splitting, etc.) are set to a fixed random seed (e.g. 42) in order to ensure reproducibility of the results. The random seed can be changed in the `config.json` file.
+### Important notes: 
+
+  - All operations/functions that use randomness of any kind (e.g. shuffling, splitting, etc.) are set to a fixed random seed (e.g. 42) in order to ensure reproducibility of the results. The random seed can be changed in the `config.py` file.
   - The purpose of (somewhat complex) logic is to ensure decoupling of the dataset loading and the model training. This allows for easy switching between different datasets, different loading methods, and different models. The pipeline is designed to be flexible and extensible, so that new datasets, loading methods, and models can be added easily. The pipeline is also designed to be easy to use, so that users can easily switch between different datasets, loading methods, and models without having to modify the code.
 
-In general, the pipeline provides three possible methods of loading a dataset:
+## In general, the pipeline provides four possible methods of training:
 
  - fixed train-test split: the dataset is split into training, validation and test subsets (e.g. 70% train, 20% validation, 10% test)
- - cross-validation on the training set: the dataset will have a fixed test set, and the rest of the dataset will be split into k folds, where k is a hyper-parameter. The training set will have k-1 folds, and the validation set will have 1 fold. The process is repeated k times, each time using a different fold as validation set.
- - cross-validation for evaluation: the dataset will be split into k folds, where k is a hyper-parameter. The test set will have 1 fold, and for the rest of the dataset a split between training and validation will be done (e.g. 70% train, 30% validation). The process is repeated k times, each time using a different fold as test set.
+ - cross-validation: the dataset will be split into k folds, where k is a hyperparameter. The test set will have 1 fold, and for the rest of the dataset a split between training and validation will be done (e.g. 70% train, 30% validation). Traniing is performed, then the model is evaluated on the test subset. The process is repeated k times, each time using a different fold as test set. All results are centralized and averaged.
+ - grid/random hyperparam search: search in the hyperparameter space to find the combination that yields best results. Exploration is done by taking every possible combination (grid) or randomly sampling a few. The dataset will have a fixed test set (kept for later testing), and the rest of the dataset is split into k folds, where k is a hyperparameter. The training and validation set will have k-1 folds, and the search-specific test subset will have 1 fold. Similarly to CV, the process is repeated k times, and at the end of each iteration the model is evaluated on the k test fold. Results are averaged, and the same process goes for the other hyperparameter combinations. At the end, the best hyperparameter combination is selected. A final training may also be performed on the whole designated training set and evaluated on the initial test set.
+ - nested grid/random-search: (experimental) CV is performed as the outer loop, and for each fold a hyperparameter search is performed as the inner loop. This assesses the stability of the hyperparameter search process, by checking if the same hyperparameter combination is selected for each outer fold. This is a very expensive process.
 
-Loading operations/steps: When loading, a dataset may be processed in these steps:
+For testing, a previously model can be loaded back and given new unseen instances. It can also perform LIME explainability on the predictions.
 
-  - 0: A function that loads the dataset from a given path, and returns it as a custom dataset object, while also detecting the type of dataset (e.g. folder-based or split-based).
-  - 1: A function that takes a dataset (or a subset), and splits into two subsets: training and validation, or training and test (depending on the situation). The split is done in a stratified way, so that the distribution of classes is preserved in both subsets. The split is done using the `train_test_split` function from `sklearn.model_selection`, with a fixed ratio.
-  - 2: A function that takes a dataset (or a subset), and performs a cross-validation split. The split is done in a stratified way, so that the distribution of classes is preserved in both subsets. The split is done using the `StratifiedKFold` function from `sklearn.model_selection`, with a fixed number of folds.
+# Using the pipeline:
 
-For a folder-based dataset, the three methods of loading a dataset can be viewed as a pipeline of the above-mentioned steps:
-  - fixed train-test split: 0 -> 1 -> 1
-  - cross-validation on the training set: 0 -> 1 -> 2
-  - cross-validation for evaluation: 0 -> 2 -> 1
+In `model_src/main.py` there are multiple variables that can be set to control the pipeline. The main ones are:
 
-For a split-based dataset, the three methods of loading a dataset can be viewed as a pipeline of the above-mentioned steps:
-  - fixed train-test split: 0 -> 1
-  - cross-validation on the training set: 0 -> 2
-  - cross-validation for evaluation: not possible
+ - `selected_dataset`: the name of the dataset to be used. It should match one of the datasets defined in `model_src/data/`. A custom dataset can also be added (make sure that a valid online augmentation strategy is also assigned)
+ - `model_type`: the name of the model to be used. It should match one of the models defined in `model_src/ml/architectures/model_types.py`
+ - `use_weighted_loss_for_run`: whether to use weighted loss for training. This is useful for imbalanced datasets. The weights are computed based on the class distribution in the training set.
+ - `offline_augmentation`: (experimental) whether to use offline augmentation (additional synthesized images). If True, the dataset is required to have an additional folder with augmented images. If False, only online augmentation is used.
+ - `chosen_sequence_idx`: the index of the pipeline example sequence to be used. A sequence is made of steps (presented above). Custom sequences can be made, but corectness is not guaranteed.
+ - `img_size`: the size of the images to be used. The images will be resized to this size before being fed to the model.
+ - `force_flat`: if dataset has a fixed test set, this forces the pipeline to integrate test within the entire dataset. Useful for CV-based sequences.
+ - `save_model`: whether to save the trained model after training. The model is saved in the `experiments/` folder, with a timestamp and a unique identifier.
+ - `data_augmentation_mode_override`: if set, this overrides the default online augmentation strategy defined for the dataset.
 
-Pipeline methodologies: The rest of the pipeline will have the following operations:
+For testing a previously trained model, consider updating the following variables:
 
-  - it can take a train 
+ - `username`: the username folder under which the images are stored. The folder should be in the `images/` folder.
+ - `images_to_predict_info`: a list of tuples, each tuple containing the image filename, extension and a manually assigned prediction id (for tracking purposes).
+ - `saved_model_dataset`: the name of the dataset used for training the saved model, along with the parent folder for experiments.
+ - `saved_model_type_folder`: the name of the model type used for training the saved model.
+ - `saved_model_experiment_run_id`: the unique identifier of the experiment run used for training the saved model. This can be found in the `experiments/` folder.
+ - `saved_model_relative_path`: the relative path to the saved model file within the experiment run folder.
 
+Other variables can be modified for more fine-grained control of the pipeline, but the above ones should be sufficient for most use cases.
 
-Depending on the mode the dataset is loaded in, the pipeline will behave as follows:
-
-  - fixed train-test split: the dataset is loaded as a whole, and then split into training and validation sets. The training set is used to train the model, and the validation set is used to evaluate the model.
-
-
-## Setup instructions
-When creating a new .venv for the project, make sure to install the following dependencies using the following command (do not install pytorch before running this command):
-
-- For CUDA 12.x:
-
-        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-
-- For CUDA 11.8:
-
-        pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+This python project is configured to also work as a FastAPI app for the frontend React app, which demonstrates the model training and testing process, as well as image and prediction management and visualization.
