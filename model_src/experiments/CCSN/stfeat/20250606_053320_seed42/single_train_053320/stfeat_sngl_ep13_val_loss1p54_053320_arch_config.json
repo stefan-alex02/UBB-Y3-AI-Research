@@ -1,0 +1,10 @@
+{
+    "model_type": "stfeat",
+    "num_classes": 11,
+    "module__num_classes": 11,
+    "module__model_name": "efficientnet_b0",
+    "module__pretrained": true,
+    "module__output_channels_target": null,
+    "module__freeze_extractor": false,
+    "module__num_frozen_stages": 3
+}

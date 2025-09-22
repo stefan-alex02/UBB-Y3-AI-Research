@@ -1,0 +1,21 @@
+2025-03-31 01:49:43 | INFO | CUDA is available.
+2025-03-31 01:49:43 | INFO | Number of GPUs: 1
+2025-03-31 01:49:43 | INFO | Current device index: 0
+2025-03-31 01:49:43 | INFO | Current device name: NVIDIA GeForce GTX 1080 Ti
+
+2025-03-31 01:49:43 | INFO | Dataset: mini-GCD
+2025-03-31 01:49:43 | INFO | ==============================
+2025-03-31 01:49:43 | INFO | Train samples: 272
+2025-03-31 01:49:43 | INFO | Validation samples: 78
+2025-03-31 01:49:43 | INFO | Test samples: 84
+2025-03-31 01:49:43 | INFO | ==============================
+2025-03-31 01:49:48 | INFO | Epoch 1/10 - Train Loss: 1.3683, Train Acc: 0.5294, Val Loss: 10.8650, Val Acc: 0.2051
+2025-03-31 01:49:50 | INFO | Epoch 2/10 - Train Loss: 0.9478, Train Acc: 0.6618, Val Loss: 1.9600, Val Acc: 0.5513
+2025-03-31 01:49:52 | INFO | Epoch 3/10 - Train Loss: 0.8363, Train Acc: 0.7169, Val Loss: 1.5590, Val Acc: 0.5385
+2025-03-31 01:49:55 | INFO | Epoch 4/10 - Train Loss: 0.8075, Train Acc: 0.6985, Val Loss: 0.9455, Val Acc: 0.7179
+2025-03-31 01:49:57 | INFO | Epoch 5/10 - Train Loss: 0.7718, Train Acc: 0.7132, Val Loss: 0.8184, Val Acc: 0.6667
+2025-03-31 01:49:59 | INFO | Epoch 6/10 - Train Loss: 0.5800, Train Acc: 0.8125, Val Loss: 5.1302, Val Acc: 0.5128
+2025-03-31 01:50:02 | INFO | Epoch 7/10 - Train Loss: 0.7501, Train Acc: 0.7426, Val Loss: 1.2922, Val Acc: 0.6154
+2025-03-31 01:50:05 | INFO | Epoch 8/10 - Train Loss: 0.5115, Train Acc: 0.7941, Val Loss: 1.0812, Val Acc: 0.6538
+2025-03-31 01:50:05 | INFO | Early stopping triggered after 8 epochs.
+2025-03-31 01:50:05 | INFO | Final Test Loss: 3.0556, Test Accuracy: 0.4048

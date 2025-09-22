@@ -1,0 +1,154 @@
+CCSN - Pretrained ViT:
+
+- 10-Fold CV
+
+      CV Evaluation Summary (on full data, 10 folds, 95% CI):
+        Accuracy            : 0.5328 +/- 0.0229
+        F1 Macro            : 0.5137 +/- 0.0245
+        Precision Macro     : 0.5224 +/- 0.0253
+        Recall Macro        : 0.5236 +/- 0.0238
+        Specificity Macro   : 0.9529 +/- 0.0023
+        Roc Auc Macro       : 0.8941 +/- 0.0143
+        Pr Auc Macro        : 0.5485 +/- 0.0289
+    
+    AugmentationStrategy.CCSN_MODERATE
+
+```python
+pretrained_vit_fixed_params = {
+    'max_epochs': 70,
+    'lr': 5e-5,
+    'batch_size': 16,
+
+    'optimizer': 'AdamW',
+    'optimizer__weight_decay': 0.2, # Start with original, can reduce later
+
+    'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
+    'callbacks__default_lr_scheduler__T_max': 70,
+
+    # 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingWarmRestarts',
+    # 'callbacks__default_lr_scheduler__T_0': 15,      # Epochs for the first cycle
+    # 'callbacks__default_lr_scheduler__T_mult': 1,     # Subsequent cycles are same length as T_0
+
+    'callbacks__default_lr_scheduler__eta_min': 1e-06,
+
+    'callbacks__default_early_stopping__patience': 15,
+
+    # --- CutMix Parameters ---
+    'cutmix_alpha': 1.0,
+    'cutmix_probability': 0.9, # for CCSN
+    # 'cutmix_probability': 0.3, # for Swimcat
+    # 'cutmix_probability': 0.5, # for GCD
+
+    # --- Gradient Clipping ---
+    # 'gradient_clip_value': 5.0,  # If you want to use it
+
+    'module__vit_model_variant': 'vit_b_16',
+    'module__pretrained': True,
+    'module__unfreeze_strategy': 'encoder_tail',
+    'module__num_transformer_blocks_to_unfreeze': 1,
+    'module__unfreeze_cls_token': True,
+    'module__unfreeze_pos_embedding': True,
+    'module__unfreeze_patch_embedding': False,
+    'module__unfreeze_encoder_layernorm': True,
+    'module__custom_head_hidden_dims': None,
+    'module__head_dropout_rate': 0.50
+}
+```
+
+
+
+
+- HyViT (10-Fold CV)
+
+     Using augmentation strategy: AugmentationStrategy.CCSN_MODERATE
+
+      CV Evaluation Summary (on full data, 10 folds, 95% CI):
+        Accuracy            : 0.5277 +/- 0.0313
+        F1 Macro            : 0.5039 +/- 0.0344
+        Precision Macro     : 0.5176 +/- 0.0307
+        Recall Macro        : 0.5143 +/- 0.0315
+        Specificity Macro   : 0.9524 +/- 0.0031
+        Roc Auc Macro       : 0.8906 +/- 0.0074
+        Pr Auc Macro        : 0.5378 +/- 0.0230
+
+```python
+hybrid_vit_fixed_params = {
+    # --- Skorch/Training Loop Parameters ---
+    'max_epochs': 60,
+    'lr': 5e-5,
+    'batch_size': 32,
+
+    # --- Optimizer Configuration ---
+    'optimizer': 'AdamW',
+    'optimizer__weight_decay': 0.1,
+
+    # --- LR Scheduler ---
+    'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR',
+    'callbacks__default_lr_scheduler__T_max': 60, # Match max_epochs
+    'callbacks__default_lr_scheduler__eta_min': 1e-6,
+
+    # --- Early Stopping ---
+    'callbacks__default_early_stopping__patience': 15,
+
+    'criterion__label_smoothing': 0.1,
+
+    # --- CutMix Parameters ---
+    'cutmix_alpha': 1.0,
+    'cutmix_probability': 0.9,  # for CCSN
+    # 'cutmix_probability': 0.3, # for Swimcat
+    # 'cutmix_probability': 0.5, # for GCD
+
+    # --- Gradient Clipping---
+    'gradient_clip_value': 5.0,
+
+    # --- HybridViT Module Parameters ---
+    'module__cnn_extractor_type': "standard_cnn",
+    'module__cnn_model_name': "efficientnet_b0",
+    'module__cnn_pretrained_imagenet': True,
+    'module__cnn_output_channels_target': 192,
+
+    'module__cnn_freeze_extractor': False,
+    'module__cnn_num_frozen_stages': 2,
+    'module__cnn_fine_tuned_weights_path': None,
+    # 'module__cnn_fine_tuned_weights_path': 'experiments/CCSN/stfeat/20250606_053320_seed42/single_train_053320/stfeat_sngl_ep13_val_loss1p54_053320.pt',
+
+    # --- ViT Backend Parameters (passed to PretrainedViT within HybridViT) ---
+    'module__vit_model_variant': 'vit_b_16',
+    'module__vit_pretrained_imagenet': True,
+    'module__unfreeze_strategy': 'encoder_tail',
+    'module__num_transformer_blocks_to_unfreeze': 2,
+    'module__unfreeze_cls_token': True,
+    'module__unfreeze_pos_embedding': True,
+    'module__unfreeze_patch_embedding': False,
+    'module__unfreeze_encoder_layernorm': True,
+    'module__custom_head_hidden_dims': None,
+    'module__head_dropout_rate': 0.2,
+
+    # --- Parameters for HybridViT constructor (related to image/feature sizes) ---
+    'module__pipeline_img_h': 224,
+    'module__pipeline_img_w': 224,
+
+    # --- Data Loader Parameters ---
+    'iterator_train__shuffle': True,
+}
+```
+
+
+
+
+- Pretrained ViT: 10-Fold CV (Offline Augmentation)
+
+      CV Evaluation Summary (on full data, 10 folds, 95% CI):
+        Accuracy            : 0.5179 +/- 0.0246
+        F1 Macro            : 0.4930 +/- 0.0182
+        Precision Macro     : 0.5070 +/- 0.0150
+        Recall Macro        : 0.5063 +/- 0.0231
+        Specificity Macro   : 0.9513 +/- 0.0025
+        Roc Auc Macro       : 0.8884 +/- 0.0145
+        Pr Auc Macro        : 0.5345 +/- 0.0319
+
+    
+  augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
+
+  Params: same as the ones without augmentation
+  

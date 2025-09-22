@@ -1,0 +1,126 @@
+package ro.ubb.ai.javaserver.service;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.FilenameUtils;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
+import ro.ubb.ai.javaserver.dto.image.ImageDTO;
+import ro.ubb.ai.javaserver.entity.Image;
+import ro.ubb.ai.javaserver.entity.User;
+import ro.ubb.ai.javaserver.exception.ResourceNotFoundException;
+import ro.ubb.ai.javaserver.repository.ImageRepository;
+import ro.ubb.ai.javaserver.repository.UserRepository;
+
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+@Slf4j
+public class ImageServiceImpl implements ImageService {
+
+    private final ImageRepository imageRepository;
+    private final UserRepository userRepository;
+    private final PythonApiService pythonApiService;
+
+    @Override
+    @Transactional
+    public ImageDTO uploadImage(MultipartFile file, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+
+        String originalFilename = file.getOriginalFilename();
+        String extension = FilenameUtils.getExtension(originalFilename);
+        if (extension == null || extension.isEmpty()) {
+            throw new IllegalArgumentException("File must have an extension (e.g., .png, .jpg).");
+        }
+
+        Image image = new Image();
+        image.setFormat(extension.toLowerCase());
+        image.setUser(user);
+
+        Image savedImage = imageRepository.save(image);
+        log.info("Image metadata saved to DB for user {}, image ID: {}", username, savedImage.getId());
+
+        try {
+            pythonApiService.uploadImageToPython(username, String.valueOf(savedImage.getId()), savedImage.getFormat(), file);
+            log.info("Image {} (ID: {}) sent to Python service for upload.", originalFilename, savedImage.getId());
+        } catch (Exception e) {
+            log.error("Failed to send image {} to Python service for user {}: {}. Rolling back DB transaction.",
+                    originalFilename, username, e.getMessage());
+            throw new RuntimeException("Failed to process image upload with Python service.", e);
+        }
+
+        return convertToDTO(savedImage);
+    }
+
+    @Override
+    public List<ImageDTO> getImagesForUser(String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        return imageRepository.findByUserIdOrderByIdDesc(user.getId())
+                .stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public ImageDTO getImageByIdForUser(Long imageId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image", "id", imageId));
+        if (!image.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("User not authorized to access this image.");
+        }
+        return convertToDTO(image);
+    }
+
+    @Override
+    public byte[] getImageContent(Long imageId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image metadata", "id", imageId));
+
+        if (!image.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("User not authorized to access this image content.");
+        }
+
+        String imageFilenameWithExt = image.getId() + "." + image.getFormat();
+        log.debug("Fetching image content for {} from Python service for user {}", imageFilenameWithExt, username);
+        return pythonApiService.downloadImageFromPython(username, imageFilenameWithExt);
+    }
+
+    @Override
+    @Transactional
+    public void deleteImage(Long imageId, String username) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        Image image = imageRepository.findById(imageId)
+                .orElseThrow(() -> new ResourceNotFoundException("Image", "id", imageId));
+
+        if (!image.getUser().getId().equals(user.getId())) {
+            throw new SecurityException("User not authorized to delete this image.");
+        }
+
+        String imageIdWithFormat = image.getId() + "." + image.getFormat();
+
+        pythonApiService.deletePythonImage(username, imageIdWithFormat);
+
+        imageRepository.delete(image);
+        log.info("Image with ID {} deleted from DB for user {}.", imageId, username);
+    }
+
+    private ImageDTO convertToDTO(Image image) {
+        ImageDTO dto = new ImageDTO();
+        dto.setId(image.getId());
+        dto.setFormat(image.getFormat());
+        dto.setUserId(image.getUser().getId());
+        dto.setUploadedAt(image.getUploadedAt());
+        return dto;
+    }
+}

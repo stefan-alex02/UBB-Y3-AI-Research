@@ -1,4 +1,31 @@
 DiffusionClassifier_initial/mini-GCD.zip
-models/GCD.zip
+model_src/GCD.zip
 *.pth
-models/datasets/GCD.zip
+model_src/data/GCD.zip
+/model_src/data/GCD/
+*.pt
+
+
+# IDE specific
+.idea/ # For JetBrains IDEs
+.vscode/ # For VS Code
+/model_src/.idea/
+/model_src/.vscode/
+
+# Environments
+.env
+.venv/
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class$
+model_src/data/gcd-test-real-guidance.zip
+model_src/data/gcd-train-real-guidance.zip
+model_src/data/swimcat-real-guidance.zip
+/model_src/data/GCD-flat/

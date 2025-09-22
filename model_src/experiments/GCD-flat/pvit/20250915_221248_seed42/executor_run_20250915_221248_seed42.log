@@ -1,0 +1,80 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-09-15 22:12:48 | INFO     | [logger_...:setup_logger      : 130] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD-flat\pvit\20250915_221248_seed42\executor_run_20250915_221248_seed42.log
+2025-09-15 22:12:48 | INFO     | [executor  :__init__          : 121] | ℹ️ Local main executor log file for this run (may be temporary): C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD-flat\pvit\20250915_221248_seed42\executor_run_20250915_221248_seed42.log
+2025-09-15 22:12:48 | INFO     | [executor  :__init__          : 126] | ℹ️ --- Starting Executor Run (ID: 20250915_221248_seed42) ---
+2025-09-15 22:12:48 | INFO     | [executor  :__init__          : 127] | ℹ️ Executor initialized for model 'pvit' on dataset 'GCD-flat'
+2025-09-15 22:12:48 | INFO     | [executor  :__init__          : 130] | ℹ️ Local artifact storage base: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-09-15 22:12:48 | INFO     | [executor  :__init__          : 134] | ℹ️ Base key/prefix for this executor run's artifacts: experiments/GCD-flat/pvit/20250915_221248_seed42
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 165] | ℹ️ Initializing Classification Pipeline:
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 166] | ℹ️   Dataset Path: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\GCD-flat
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 167] | ℹ️   Model Type: pvit
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 170] | ℹ️   Artifact base key prefix for this run: experiments/GCD-flat/pvit/20250915_221248_seed42 (using LocalFileSystemRepository)
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 174] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.SKY_ONLY_ROTATION
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 175] | ℹ️   Default Show First Batch Aug: True
+2025-09-15 22:12:48 | INFO     | [dataset...:__init__          : 483] | ℹ️ Using augmentation strategy: AugmentationStrategy.SKY_ONLY_ROTATION
+2025-09-15 22:12:48 | INFO     | [dataset...:__init__          : 510] | ℹ️ Detected dataset structure: flat
+2025-09-15 22:12:48 | INFO     | [dataset...:_load_paths_and...: 737] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\GCD-flat...
+2025-09-15 22:12:48 | INFO     | [dataset...:_load_paths_and...: 824] | ℹ️ Final Original Dataset sizes: 15200 original train+val, 3800 original test. Offline augmented samples loaded: 0.
+2025-09-15 22:12:48 | INFO     | [dataset...:__init__          : 536] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-09-15 22:12:48 | INFO     | [dataset...:_calculate_clas...: 626] | ℹ️ Calculating class weights for the training set...
+2025-09-15 22:12:48 | INFO     | [dataset...:_calculate_clas...: 640] | ℹ️ Calculated class weights (for classes 0 to 6):
+2025-09-15 22:12:48 | INFO     | [dataset...:_calculate_clas...: 642] | ℹ️   - 1_cumulus (Class 0): 1.7799
+2025-09-15 22:12:48 | INFO     | [dataset...:_calculate_clas...: 642] | ℹ️   - 2_altocumulus (Class 1): 1.8402
+2025-09-15 22:12:48 | INFO     | [dataset...:_calculate_clas...: 642] | ℹ️   - 3_cirrus (Class 2): 1.4239
+2025-09-15 22:12:48 | INFO     | [dataset...:_calculate_clas...: 642] | ℹ️   - 4_clearsky (Class 3): 0.7260
+2025-09-15 22:12:48 | INFO     | [dataset...:_calculate_clas...: 642] | ℹ️   - 5_stratocumulus (Class 4): 0.7465
+2025-09-15 22:12:48 | INFO     | [dataset...:_calculate_clas...: 642] | ℹ️   - 6_cumulonimbus (Class 5): 0.4709
+2025-09-15 22:12:48 | INFO     | [dataset...:_calculate_clas...: 642] | ℹ️   - 7_mixed (Class 6): 2.8422
+2025-09-15 22:12:48 | INFO     | [dataset...:__init__          : 542] | ℹ️ Dataset sizes: 15200 train+val, 3800 test. Total: 19000
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Artifact base key prefix for this run: experiments/GCD-flat/pvit/20250915_221248_seed42 (using LocalFileSystemRepository)
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 212] | ℹ️   Using Optimizer: AdamW
+2025-09-15 22:12:48 | DEBUG    | [callbacks :get_default_cal...: 172] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 230] | ℹ️ Weighted loss is enabled. Passing class weights to criterion.
+2025-09-15 22:12:48 | INFO     | [pipeline  :__init__          : 269] | ℹ️   Model Adapter: Initialized with PretrainedViT
+2025-09-15 22:12:48 | DEBUG    | [executor  :_validate_methods : 189] | 🐞 Basic method validation successful.
+2025-09-15 22:12:48 | INFO     | [executor  :__init__          : 168] | ℹ️ Executor configured to run methods: load_model, predict_images
+2025-09-15 22:12:48 | INFO     | [executor  :run               : 237] | ℹ️ Starting execution of methods for Executor Run ID: 20250915_221248_seed42
+2025-09-15 22:12:48 | INFO     | [executor  :run               : 246] | ℹ️ --- Running Method 1/2: load_model (Op ID: load_model_0) ---
+2025-09-15 22:12:48 | DEBUG    | [executor  :run               : 291] | 🐞 Running method 'load_model' with effective parameters: {'model_path_or_key': 'experiments\\GCD-flat\\pvit\\20250612_234618_seed42\\single_train_234618\\pvit_sngl_ep32_val_lossp27_234618.pt'}
+2025-09-15 22:12:48 | INFO     | [pipeline  :load_model        :2396] | ℹ️ Operation load_model_op_221248: Attempting to load model from: experiments\GCD-flat\pvit\20250612_234618_seed42\single_train_234618\pvit_sngl_ep32_val_lossp27_234618.pt
+2025-09-15 22:12:48 | DEBUG    | [pipeline  :load_model        :2412] | 🐞 Op load_model_op_221248: Effective model artifact path/key: experiments\GCD-flat\pvit\20250612_234618_seed42\single_train_234618\pvit_sngl_ep32_val_lossp27_234618.pt
+2025-09-15 22:12:48 | DEBUG    | [pipeline  :load_model        :2413] | 🐞 Op load_model_op_221248: Effective arch_config path/key: experiments\GCD-flat\pvit\20250612_234618_seed42\single_train_234618\pvit_sngl_ep32_val_lossp27_234618_arch_config.json
+2025-09-15 22:12:48 | INFO     | [pipeline  :load_model        :2438] | ℹ️ Op load_model_op_221248: Loaded architecture config from: experiments\GCD-flat\pvit\20250612_234618_seed42\single_train_234618\pvit_sngl_ep32_val_lossp27_234618_arch_config.json
+2025-09-15 22:12:48 | INFO     | [pipeline  :load_model        :2477] | ℹ️ Loaded model's image size (224, 224) matches current pipeline config.
+2025-09-15 22:12:48 | INFO     | [pipeline  :load_model        :2482] | ℹ️ Op load_model_op_221248: Re-initializing SkorchModelAdapter for PretrainedViT with 7 classes.
+2025-09-15 22:12:48 | DEBUG    | [pretrai...:__init__          :  75] | 🐞 Initializing PretrainedViT:
+2025-09-15 22:12:48 | DEBUG    | [pretrai...:__init__          :  76] | 🐞   Model Variant: vit_b_16, Pretrained: True
+2025-09-15 22:12:48 | DEBUG    | [pretrai...:__init__          :  77] | 🐞   Is Hybrid Input: False
+2025-09-15 22:12:48 | DEBUG    | [pretrai...:__init__          :  80] | 🐞   Unfreeze Strategy (Encoder Blocks): encoder_tail
+2025-09-15 22:12:48 | DEBUG    | [pretrai...:__init__          :  82] | 🐞   Num Transformer Blocks to Unfreeze: 1
+2025-09-15 22:12:48 | DEBUG    | [pretrai...:__init__          :  83] | 🐞   Unfreeze CLS: True, PosEmb: True, PatchEmb: False, EncoderLN: True
+2025-09-15 22:12:48 | DEBUG    | [pretrai...:__init__          :  85] | 🐞   Custom Head Hidden Dims: None, Head Dropout: 0.5
+2025-09-15 22:12:49 | DEBUG    | [pretrai...:__init__          : 106] | 🐞 Loaded vit_b_16 from torchvision.
+2025-09-15 22:12:49 | DEBUG    | [pretrai...:__init__          : 283] | 🐞 Created simple linear head (dropout: 0.5), in_feat=768.
+2025-09-15 22:12:49 | INFO     | [pretrai...:__init__          : 293] | ℹ️ PretrainedViT (standard) - Trainable: CLS Token, Positional Embeddings, 1 Encoder Blocks, Encoder LayerNorm, Classification Head.
+2025-09-15 22:12:49 | INFO     | [pretrai...:__init__          : 313] | ℹ️ PretrainedViT (standard): Trainable params: 7.25M / Total params: 85.80M (8.45%)
+2025-09-15 22:12:49 | INFO     | [pipeline  :load_model        :2501] | ℹ️ Op load_model_op_221248: Model state_dict loaded via repo from: experiments\GCD-flat\pvit\20250612_234618_seed42\single_train_234618\pvit_sngl_ep32_val_lossp27_234618.pt
+2025-09-15 22:12:49 | INFO     | [pipeline  :load_model        :2529] | ℹ️ Op load_model_op_221248: Model state_dict applied successfully from: experiments\GCD-flat\pvit\20250612_234618_seed42\single_train_234618\pvit_sngl_ep32_val_lossp27_234618.pt. Model image size context: (224, 224)
+2025-09-15 22:12:49 | INFO     | [executor  :run               : 298] | ℹ️ --- Method load_model (Op ID: load_model_0) completed successfully in 0.68s ---
+2025-09-15 22:12:49 | INFO     | [executor  :run               : 246] | ℹ️ --- Running Method 2/2: predict_images (Op ID: predict_images_1) ---
+2025-09-15 22:12:49 | DEBUG    | [executor  :run               : 291] | 🐞 Running method 'predict_images' with effective parameters: {'username': 'eugen2', 'image_tasks_for_pipeline': [ImagePredictionTask(image_id='tarnaveni 11-08', image_format='png', prediction_id='p8'), ImagePredictionTask(image_id='tarnaveni 17-08', image_format='png', prediction_id='p9'), ImagePredictionTask(image_id='tarnaveni 21-08-2025', image_format='png', prediction_id='p10')], 'experiment_run_id_of_model': '20250612_234618_seed42', 'generate_lime_explanations': True, 'lime_num_features_to_show_plot': 20, 'lime_num_samples_for_explainer': 200, 'results_detail_level': 3, 'plot_level': 2}
+2025-09-15 22:12:49 | INFO     | [pipeline  :predict_images    :2144] | ℹ️ Op predict_op_20250915_221249_402892: Starting prediction for 3 images by user 'eugen2', using model from experiment '20250612_234618_seed42'.
+2025-09-15 22:12:49 | INFO     | [pipeline  :predict_images    :2213] | ℹ️ Op predict_op_20250915_221249_402892: Loaded 3 images.
+2025-09-15 22:12:49 | DEBUG    | [pipeline  :predict_images    :2276] | 🐞 Op predict_op_20250915_221249_402892: Generating LIME for image_id: tarnaveni 11-08 (Pred: 5_stratocumulus)
+2025-09-15 22:12:51 | INFO     | [pipeline  :predict_images    :2333] | ℹ️ Op predict_op_20250915_221249_402892: Prediction JSON for image tarnaveni 11-08 saved to: predictions/eugen2/tarnaveni 11-08/p8/prediction_details.json
+2025-09-15 22:12:52 | DEBUG    | [pipeline  :predict_images    :2276] | 🐞 Op predict_op_20250915_221249_402892: Generating LIME for image_id: tarnaveni 17-08 (Pred: 5_stratocumulus)
+2025-09-15 22:12:55 | INFO     | [pipeline  :predict_images    :2333] | ℹ️ Op predict_op_20250915_221249_402892: Prediction JSON for image tarnaveni 17-08 saved to: predictions/eugen2/tarnaveni 17-08/p9/prediction_details.json
+2025-09-15 22:12:55 | DEBUG    | [pipeline  :predict_images    :2276] | 🐞 Op predict_op_20250915_221249_402892: Generating LIME for image_id: tarnaveni 21-08-2025 (Pred: 2_altocumulus)
+2025-09-15 22:12:58 | INFO     | [pipeline  :predict_images    :2333] | ℹ️ Op predict_op_20250915_221249_402892: Prediction JSON for image tarnaveni 21-08-2025 saved to: predictions/eugen2/tarnaveni 21-08-2025/p10/prediction_details.json
+2025-09-15 22:12:58 | INFO     | [pipeline  :predict_images    :2363] | ℹ️ Op predict_op_20250915_221249_402892: Finished predictions for 3 images.
+2025-09-15 22:12:58 | INFO     | [executor  :run               : 298] | ℹ️ --- Method predict_images (Op ID: predict_images_1) completed successfully in 9.35s ---
+2025-09-15 22:12:58 | INFO     | [executor  :run               : 355] | ℹ️ Pipeline execution finished successfully in 10.03s for Executor Run ID: 20250915_221248_seed42.
+2025-09-15 22:12:58 | INFO     | [executor  :run               : 361] | ℹ️ Executor run for 20250915_221248_seed42 attempting final log operations.
+2025-09-15 22:12:58 | DEBUG    | [executor  :_upload_and_cle...: 207] | 🐞 Flushing and closing log handler for: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD-flat\pvit\20250915_221248_seed42\executor_run_20250915_221248_seed42.log before upload/cleanup.
+2025-09-15 22:12:58 | INFO     | [executor  :_upload_and_cle...: 233] | ℹ️ Main executor log file available at: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD-flat\pvit\20250915_221248_seed42\executor_run_20250915_221248_seed42.log
+2025-09-15 22:12:58 | INFO     | [main      :<module>          : 342] | ℹ️ --- Final Execution Results Summary ---
+2025-09-15 22:12:58 | INFO     | [main      :<module>          : 353] | ℹ️ Method executor_run_id: Completed. Result: 20250915_221248_seed42
+2025-09-15 22:12:58 | INFO     | [main      :<module>          : 353] | ℹ️ Method seed_used: Completed. Result: 42
+2025-09-15 22:12:58 | INFO     | [main      :<module>          : 353] | ℹ️ Method load_model_0: Completed. Result: None
+2025-09-15 22:12:58 | INFO     | [main      :<module>          : 353] | ℹ️ Method predict_images_1: Completed. Result: [{'image_id': 'tarnaveni 11-08', 'prediction_id': 'p8', 'experiment_id': '20250612_234618_seed42', 'predicted_class': '5_stratocumulus', 'confidence': 0.4782077372074127}, {'image_id': 'tarnaveni 17-08', 'prediction_id': 'p9', 'experiment_id': '20250612_234618_seed42', 'predicted_class': '5_stratocumulus', 'confidence': 0.4128350615501404}, {'image_id': 'tarnaveni 21-08-2025', 'prediction_id': 'p10', 'experiment_id': '20250612_234618_seed42', 'predicted_class': '2_altocumulus', 'confidence': 0.44868865609169006}]

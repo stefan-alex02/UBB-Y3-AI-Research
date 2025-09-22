@@ -1,0 +1,105 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-06-06 05:33:20 | INFO     | [logger_...:setup_logger      : 153] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\stfeat\20250606_053320_seed42\executor_run_20250606_053320_seed42.log
+2025-06-06 05:33:20 | INFO     | [executor  :__init__          : 106] | ℹ️ Local main executor log file for this run (may be temporary): C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\stfeat\20250606_053320_seed42\executor_run_20250606_053320_seed42.log
+2025-06-06 05:33:20 | INFO     | [executor  :__init__          : 111] | ℹ️ --- Starting Executor Run (ID: 20250606_053320_seed42) ---
+2025-06-06 05:33:20 | INFO     | [executor  :__init__          : 112] | ℹ️ Executor initialized for model 'stfeat' on dataset 'CCSN'
+2025-06-06 05:33:20 | INFO     | [executor  :__init__          : 115] | ℹ️ Local artifact storage base: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-06-06 05:33:20 | INFO     | [executor  :__init__          : 119] | ℹ️ Base key/prefix for this executor run's artifacts: experiments/CCSN/stfeat/20250606_053320_seed42
+2025-06-06 05:33:20 | INFO     | [pipeline  :__init__          : 175] | ℹ️ Initializing Classification Pipeline:
+2025-06-06 05:33:20 | INFO     | [pipeline  :__init__          : 176] | ℹ️   Dataset Path: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN
+2025-06-06 05:33:20 | INFO     | [pipeline  :__init__          : 177] | ℹ️   Model Type: stfeat
+2025-06-06 05:33:20 | INFO     | [pipeline  :__init__          : 180] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/stfeat/20250606_053320_seed42 (using LocalFileSystemRepository)
+2025-06-06 05:33:20 | INFO     | [pipeline  :__init__          : 184] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.CCSN_MODERATE
+2025-06-06 05:33:20 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Default Show First Batch Aug: True
+2025-06-06 05:33:20 | INFO     | [dataset...:__init__          : 271] | ℹ️ Using augmentation strategy: AugmentationStrategy.CCSN_MODERATE
+2025-06-06 05:33:20 | INFO     | [dataset...:__init__          : 296] | ℹ️ Detected dataset structure: flat
+2025-06-06 05:33:20 | INFO     | [dataset...:_load_paths_and...: 424] | ℹ️ Scanning FLAT dataset from C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\CCSN...
+2025-06-06 05:33:20 | INFO     | [dataset...:_load_paths_and...: 518] | ℹ️ Final Original Dataset sizes: 2288 original train+val, 255 original test. Offline augmented samples loaded: 0.
+2025-06-06 05:33:20 | INFO     | [dataset...:__init__          : 319] | ℹ️ Found 11 classes: Ac, As, Cb, Cc, Ci, Cs, Ct, Cu, Ns, Sc, St
+2025-06-06 05:33:20 | INFO     | [dataset...:__init__          : 322] | ℹ️ Dataset sizes: 2288 train+val, 255 test. Total: 2543
+2025-06-06 05:33:20 | INFO     | [pipeline  :__init__          : 195] | ℹ️   Artifact base key prefix for this run: experiments/CCSN/stfeat/20250606_053320_seed42 (using LocalFileSystemRepository)
+2025-06-06 05:33:20 | INFO     | [pipeline  :__init__          : 226] | ℹ️   Using Optimizer: AdamW
+2025-06-06 05:33:20 | DEBUG    | [callbacks :get_default_cal...: 194] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-06-06 05:33:20 | INFO     | [pipeline  :__init__          : 271] | ℹ️   Model Adapter: Initialized with StandardCNNFeatureExtractor
+2025-06-06 05:33:20 | DEBUG    | [executor  :_validate_methods : 175] | 🐞 Basic method validation successful.
+2025-06-06 05:33:20 | INFO     | [executor  :__init__          : 154] | ℹ️ Executor configured to run methods: single_train, single_eval
+2025-06-06 05:33:20 | INFO     | [executor  :run               : 187] | ℹ️ Starting execution of methods for Executor Run ID: 20250606_053320_seed42
+2025-06-06 05:33:20 | INFO     | [executor  :run               : 192] | ℹ️ --- Running Method 1/2: single_train (Op ID: single_train_0) ---
+2025-06-06 05:33:20 | DEBUG    | [executor  :run               : 224] | 🐞 Running method 'single_train' with effective parameters: {'params': {'max_epochs': 60, 'lr': 0.0001, 'batch_size': 32, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.05, 'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau', 'callbacks__default_lr_scheduler__monitor': 'valid_loss', 'callbacks__default_lr_scheduler__patience': 5, 'callbacks__default_lr_scheduler__factor': 0.2, 'callbacks__default_lr_scheduler__min_lr': 1e-07, 'callbacks__default_lr_scheduler__mode': 'min', 'callbacks__default_early_stopping__patience': 15, 'cutmix_alpha': 1.0, 'cutmix_probability': 0.9, 'criterion__label_smoothing': 0.1, 'module__model_name': 'efficientnet_b0', 'module__pretrained': True, 'module__output_channels_target': None, 'module__freeze_extractor': False, 'module__num_frozen_stages': 3}, 'save_model': True, 'val_split_ratio': 0.11111111111111112, 'results_detail_level': 2}
+2025-06-06 05:33:20 | INFO     | [pipeline  :single_train      :1589] | ℹ️ Starting single training run...
+2025-06-06 05:33:20 | INFO     | [pipeline  :single_train      :1642] | ℹ️ Using split: 2033 train / 255 validation samples.
+2025-06-06 05:33:20 | INFO     | [pipeline  :single_train      :1649] | ℹ️ Applying custom parameters for this single_train run: {'max_epochs': 60, 'lr': 0.0001, 'batch_size': 32, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.05, 'callbacks__default_lr_scheduler__policy': 'ReduceLROnPlateau', 'callbacks__default_lr_scheduler__monitor': 'valid_loss', 'callbacks__default_lr_scheduler__patience': 5, 'callbacks__default_lr_scheduler__factor': 0.2, 'callbacks__default_lr_scheduler__min_lr': 1e-07, 'callbacks__default_lr_scheduler__mode': 'min', 'callbacks__default_early_stopping__patience': 15, 'cutmix_alpha': 1.0, 'cutmix_probability': 0.9, 'criterion__label_smoothing': 0.1, 'module__model_name': 'efficientnet_b0', 'module__pretrained': True, 'module__output_channels_target': None, 'module__freeze_extractor': False, 'module__num_frozen_stages': 3}
+2025-06-06 05:33:20 | DEBUG    | [param_g...:parse_fixed_hyp...: 151] | 🐞 Created LRScheduler instance: policy=ReduceLROnPlateau, direct_args={'monitor': 'valid_loss'}, constructor_kwargs={'patience': 5, 'factor': 0.2, 'min_lr': 1e-07, 'mode': 'min'}
+2025-06-06 05:33:20 | INFO     | [pipeline  :single_train      :1711] | ℹ️ Fitting model (run_id: single_train_053320)...
+2025-06-06 05:33:20 | INFO     | [standar...:__init__          :  44] | ℹ️ Loaded efficientnet_b0 as feature extractor. ImageNet Pretrained: True. Natural output channels: 1280
+2025-06-06 05:33:20 | INFO     | [standar...:__init__          :  70] | ℹ️ Added standalone classification head for 11 classes.
+2025-06-06 05:33:20 | INFO     | [standar...:_freeze_stages    :  93] | ℹ️ Freezing stage 0 of efficientnet_b0 features.
+2025-06-06 05:33:20 | INFO     | [standar...:_freeze_stages    :  93] | ℹ️ Freezing stage 1 of efficientnet_b0 features.
+2025-06-06 05:33:20 | INFO     | [standar...:_freeze_stages    :  93] | ℹ️ Freezing stage 2 of efficientnet_b0 features.
+2025-06-06 05:33:20 | DEBUG    | [adapter   :get_split_datasets: 133] | 🐞 Validation split for fold created with 255 original samples.
+2025-06-06 05:33:20 | DEBUG    | [adapter   :get_split_datasets: 176] | 🐞 No offline augmentations will be applied.
+2025-06-06 05:33:20 | DEBUG    | [adapter   :get_split_datasets: 183] | 🐞 Total training split for fold created with 2033 samples.
+2025-06-06 05:33:20 | DEBUG    | [adapter   :get_iterator      : 297] | 🐞 Creating DataLoader for training: dataset_len=2033, batch_size=32, shuffle=True, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-06 05:33:20 | DEBUG    | [adapter   :get_iterator      : 297] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=255, batch_size=32, shuffle=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-06 05:33:36 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp       lr      dur
+2025-06-06 05:33:36 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ------  -------
+2025-06-06 05:33:36 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       1     ▲ 0.1805      ▼ 2.3263     ▲ 0.3608      ▼ 2.1498        0.0001  15.3277
+2025-06-06 05:33:48 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       2     ▲ 0.3143      ▼ 2.1391     ▲ 0.4471      ▼ 1.8843        0.0001  12.6339
+2025-06-06 05:34:00 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       3     ▲ 0.3483      ▼ 2.0366     ▲ 0.4667      ▼ 1.7632        0.0001  11.8371
+2025-06-06 05:34:12 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       4     ▲ 0.3896      ▼ 1.9412     ▲ 0.5098      ▼ 1.6645        0.0001  11.9145
+2025-06-06 05:34:24 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       5     ▲ 0.4166      ▼ 1.8912       0.5059      ▼ 1.6410        0.0001  12.0848
+2025-06-06 05:34:36 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       6     ▲ 0.4358      ▼ 1.8822     ▲ 0.5137      ▼ 1.5975        0.0001  11.6634
+2025-06-06 05:34:48 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       7     ▲ 0.4358      ▼ 1.8224     ▲ 0.5373      ▼ 1.5808        0.0001  11.8357
+2025-06-06 05:35:00 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       8     ▲ 0.4402        1.8236       0.5216      ▼ 1.5784        0.0001  11.6724
+2025-06-06 05:35:11 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️       9     ▲ 0.4904      ▼ 1.7518       0.5255      ▼ 1.5676        0.0001  11.6286
+2025-06-06 05:35:23 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      10       0.4634        1.7656       0.5176      ▼ 1.5494        0.0001  11.7667
+2025-06-06 05:35:35 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      11       0.4673      ▼ 1.7353     ▲ 0.5490      ▼ 1.5366        0.0001  11.7177
+2025-06-06 05:35:46 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      12     ▲ 0.5160      ▼ 1.7033       0.5373          1.54        0.0001  11.6903
+2025-06-06 05:35:58 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      13     ▲ 0.5755      ▼ 1.6274       0.5451      ▼ 1.5354        0.0001  11.768
+2025-06-06 05:36:10 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      14       0.5366         1.669       0.5098        1.5594        0.0001  11.7753
+2025-06-06 05:36:22 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      15       0.5362        1.6547       0.5255        1.5653        0.0001  11.6528
+2025-06-06 05:36:33 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      16     ▲ 0.5848      ▼ 1.5783       0.5373        1.5665        0.0001  11.7401
+2025-06-06 05:36:45 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      17       0.5701        1.6255       0.5412        1.5753        0.0001  11.7377
+2025-06-06 05:36:57 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      18     ▲ 0.6006      ▼ 1.5434       0.5373        1.5934        0.0001  11.791
+2025-06-06 05:37:09 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      19       0.5878        1.6038       0.5333        1.6098        2e-05  11.7228
+2025-06-06 05:37:20 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      20     ▲ 0.6060        1.5633       0.5333        1.6046        2e-05  11.7163
+2025-06-06 05:37:32 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      21       0.5991      ▼ 1.5405       0.5294        1.5996        2e-05  11.7491
+2025-06-06 05:37:44 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      22       0.5509      ▼ 1.4923       0.5451        1.6121        2e-05  11.8532
+2025-06-06 05:37:56 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      23       0.5898        1.5604       0.5412        1.6064        2e-05  12.3511
+2025-06-06 05:38:08 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      24     ▲ 0.6517        1.5009       0.5373        1.6041        2e-05  12.0073
+2025-06-06 05:38:20 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      25       0.5834        1.5039       0.5176        1.6029        4e-06  11.9778
+2025-06-06 05:38:32 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      26       0.6419        1.4981       0.5451        1.5884        4e-06  11.8464
+2025-06-06 05:38:44 | INFO     | [callbacks :on_epoch_end      : 147] | ℹ️      27     ▲ 0.6562      ▼ 1.4650       0.5176        1.6009        4e-06  11.828
+2025-06-06 05:38:56 | INFO     | [pipeline  :single_train      :1743] | ℹ️ Training finished. Best validation performance found at Epoch 13 (valid_loss=1.5354)
+2025-06-06 05:38:56 | INFO     | [pipeline  :single_train      :1833] | ℹ️ Model architectural config saved to: experiments/CCSN/stfeat/20250606_053320_seed42/single_train_053320/stfeat_sngl_ep13_val_loss1p54_053320_arch_config.json
+2025-06-06 05:38:56 | INFO     | [pipeline  :single_train      :1838] | ℹ️ Main pipeline model adapter updated from single_train run: single_train_053320
+2025-06-06 05:38:56 | DEBUG    | [pipeline  :_save_results     : 468] | 🐞 Results detail level overridden for this run to: 2
+2025-06-06 05:38:56 | DEBUG    | [pipeline  :_save_results     : 476] | 🐞 Saving results for single_train_053320 (detail level: 2)
+2025-06-06 05:38:56 | INFO     | [pipeline  :_save_results     : 585] | ℹ️ Results JSON saved via repository to: experiments/CCSN/stfeat/20250606_053320_seed42/single_train_053320/single_train_results.json
+2025-06-06 05:38:56 | INFO     | [pipeline  :single_train      :1875] | ℹ️ Plotting single_train results for single_train_053320 (plot level 2).
+2025-06-06 05:38:56 | INFO     | [plotter   :plot_single_tra...: 670] | ℹ️ Plotting single_train results for: single_train_053320
+2025-06-06 05:38:56 | INFO     | [plotter   :plot_single_tra...: 688] | ℹ️ Finished plotting for single_train: single_train_053320
+2025-06-06 05:38:56 | INFO     | [executor  :run               : 231] | ℹ️ --- Method single_train (Op ID: single_train_0) completed successfully in 336.04s ---
+2025-06-06 05:38:56 | INFO     | [executor  :run               : 192] | ℹ️ --- Running Method 2/2: single_eval (Op ID: single_eval_1) ---
+2025-06-06 05:38:56 | DEBUG    | [executor  :run               : 224] | 🐞 Running method 'single_eval' with effective parameters: {'plot_level': 2}
+2025-06-06 05:38:56 | INFO     | [pipeline  :single_eval       :1896] | ℹ️ Starting model evaluation on the test set...
+2025-06-06 05:38:56 | INFO     | [pipeline  :single_eval       :1910] | ℹ️ Evaluating on 255 test samples...
+2025-06-06 05:38:56 | DEBUG    | [adapter   :get_iterator      : 297] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=255, batch_size=32, shuffle=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-06 05:38:57 | DEBUG    | [adapter   :get_iterator      : 297] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=255, batch_size=32, shuffle=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-06-06 05:38:58 | DEBUG    | [pipeline  :single_eval       :1927] | 🐞 Plot level overridden for this run to: 2
+2025-06-06 05:38:58 | DEBUG    | [pipeline  :_compute_metrics  : 448] | 🐞 Computed Metrics: Acc=0.5647, Macro F1=0.5283
+2025-06-06 05:38:58 | DEBUG    | [pipeline  :_save_results     : 470] | 🐞 Using pipeline results detail level for this run: 3
+2025-06-06 05:38:58 | DEBUG    | [pipeline  :_save_results     : 476] | 🐞 Saving results for single_eval_053856 (detail level: 3)
+2025-06-06 05:38:58 | INFO     | [pipeline  :_save_results     : 585] | ℹ️ Results JSON saved via repository to: experiments/CCSN/stfeat/20250606_053320_seed42/single_eval_053856/single_eval_results.json
+2025-06-06 05:38:58 | INFO     | [pipeline  :single_eval       :1970] | ℹ️ Plotting single_eval results for single_eval_053856 (plot level 2).
+2025-06-06 05:38:58 | INFO     | [plotter   :plot_single_eva...: 705] | ℹ️ Plotting single_eval results for: single_eval_053856
+2025-06-06 05:38:58 | INFO     | [plotter   :_generate_metri...: 254] | ℹ️ Metrics CSV saved via repository to: experiments/CCSN/stfeat/20250606_053320_seed42/single_eval_053856/single_eval_plots/metrics_table.csv
+2025-06-06 05:38:59 | INFO     | [plotter   :plot_single_eva...: 753] | ℹ️ Finished plotting for single_eval: single_eval_053856
+2025-06-06 05:38:59 | INFO     | [executor  :run               : 231] | ℹ️ --- Method single_eval (Op ID: single_eval_1) completed successfully in 2.59s ---
+2025-06-06 05:38:59 | INFO     | [executor  :run               : 257] | ℹ️ Pipeline execution finished in 338.63s for Executor Run ID: 20250606_053320_seed42.
+2025-06-06 05:38:59 | INFO     | [executor  :run               : 300] | ℹ️ Main executor log file available at: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\CCSN\stfeat\20250606_053320_seed42\executor_run_20250606_053320_seed42.log
+2025-06-06 05:38:59 | INFO     | [main      :<module>          : 345] | ℹ️ --- Final Execution Results Summary ---
+2025-06-06 05:38:59 | INFO     | [main      :<module>          : 357] | ℹ️ Method executor_run_id: Completed. Result: 20250606_053320_seed42
+2025-06-06 05:38:59 | INFO     | [main      :<module>          : 354] | ℹ️ Method single_train_0: Completed. (Acc: 0.5451, F1: nan, BestScore: nan)
+2025-06-06 05:38:59 | INFO     | [main      :<module>          : 354] | ℹ️ Method single_eval_1: Completed. (Acc: nan, F1: 0.5283, BestScore: nan)
