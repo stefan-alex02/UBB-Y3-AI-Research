@@ -1,4 +1,4 @@
-# A new perspective on using generative learning and multimodal data fusion for the classification of severe weather phenomena
+# An in-depth study on using vision transformer-based models for classification of cloud images
 
 ## Abstract
 
