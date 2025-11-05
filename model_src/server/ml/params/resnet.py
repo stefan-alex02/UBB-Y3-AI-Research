@@ -31,4 +31,6 @@ resnet18_cloud_fixed_params = {
     'module__pretrained': True,
     'module__dropout_rate_fc': 0.3,
     'module__fc_hidden_neurons': 128,
+
+    'iterator_train__drop_last': True, # To avoid batchnorm issues with one-sample batches
 }

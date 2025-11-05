@@ -50,6 +50,7 @@ DATASET_DICT = {
     'mGCDf': "mini-GCD-flat",
     'swimcat': "Swimcat-extend",
     'ccsn': "CCSN",
+    'eurosat': "EuroSAT",
 }
 
 class AugmentationStrategy(str, Enum):
