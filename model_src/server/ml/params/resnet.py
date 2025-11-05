@@ -58,7 +58,7 @@ resnet18_finetune_best_practice_params = {
 
     # --- Advanced Regularization (Keep these as they are very effective) ---
     'criterion__label_smoothing': 0.1,
-    'use_cutmix': True,  # Keep CutMix enabled
+
     'cutmix_alpha': 1.0,
     'cutmix_probability': 0.5,
     # A more standard probability. 0.9 is very high and might be over-regularizing. Start with 0.5.
@@ -73,7 +73,4 @@ resnet18_finetune_best_practice_params = {
 
     # --- DataLoader Parameters ---
     'iterator_train__drop_last': True,  # Keep this to prevent BatchNorm errors
-
-    # --- Mixed Precision ---
-    'use_amp': True,  # Recommended for speed and memory savings
 }
