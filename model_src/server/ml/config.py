@@ -61,3 +61,6 @@ class AugmentationStrategy(str, Enum):
     NO_AUGMENTATION = "no_augmentation"
     PAPER_CCSN = "paper_replication_ccsn"
     PAPER_CLOUDNET = "paper_replication_cloudnet"
+
+    CCSN_RESNET = "ccsn_resnet_augmentation"
+    EUROSAT_RESNET = "eurosat_resnet_augmentation"

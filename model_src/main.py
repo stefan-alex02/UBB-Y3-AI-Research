@@ -10,7 +10,7 @@ from model_src.server.ml.params.feature_extractors import paper_cnn_standalone_f
 from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params, hybrid_vit_param_grid
 from model_src.server.ml.params.paper_xception_mobilenet import xcloud_fixed_params, mcloud_fixed_params
 from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_params
-from model_src.server.ml.params.resnet import resnet18_cloud_fixed_params
+from model_src.server.ml.params.resnet import resnet18_cloud_fixed_params, resnet18_finetune_best_practice_params
 from model_src.server.ml.params.shufflenet import shufflenet_cloud_fixed_params
 from model_src.server.ml.params.standard_cnn_extractor import standard_cnn_fixed_params
 from server.ml import ModelType
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     save_model = False  # Whether to save the model after training
 
     # data_augmentation_mode_override = None
-    data_augmentation_mode_override = AugmentationStrategy.CCSN_MODERATE
+    data_augmentation_mode_override = AugmentationStrategy.EUROSAT_RESNET
 
     # Flag for overriding parameters:
     enable_debug_params = False
@@ -164,7 +164,8 @@ if __name__ == "__main__":
         chosen_param_grid = None
 
     elif model_type == ModelType.RESNET18_CLOUD:
-        chosen_fixed_params = resnet18_cloud_fixed_params
+        # chosen_fixed_params = resnet18_cloud_fixed_params
+        chosen_fixed_params = resnet18_finetune_best_practice_params
         chosen_param_grid = None
 
     elif model_type == ModelType.PRETRAINED_SWIN:
