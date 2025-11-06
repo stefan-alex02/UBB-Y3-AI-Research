@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "eurosat"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
+    selected_dataset = "GCDf"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
     selected_dataset = selected_dataset.lower()
 
     # Select Model:
@@ -67,8 +67,8 @@ if __name__ == "__main__":
     chosen_sequence_idx = 4
 
     # Image size for the model
-    # img_size = (224, 224)
-    img_size = (64, 64)
+    img_size = (224, 224)
+    # img_size = (64, 64)
     # img_size = (448, 448)
 
     # Flag for CV methods on FIXED datasets:
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     save_model = False  # Whether to save the model after training
 
     # data_augmentation_mode_override = None
-    data_augmentation_mode_override = AugmentationStrategy.EUROSAT_RESNET
+    data_augmentation_mode_override = AugmentationStrategy.CCSN_RESNET
 
     # Flag for overriding parameters:
     enable_debug_params = False
