@@ -42,15 +42,15 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "GCDf"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
+    selected_dataset = "ccsn"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
     selected_dataset = selected_dataset.lower()
 
     # Select Model:
-    model_type = "resnet"
+    model_type = "pvit"
     # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet', 'cloudnet'
 
     # Weights for class imbalance
-    use_weighted_loss_for_run = True
+    use_weighted_loss_for_run = False
 
 
     # Offline Augmentation:
@@ -76,8 +76,8 @@ if __name__ == "__main__":
 
     save_model = False  # Whether to save the model after training
 
-    # data_augmentation_mode_override = None
-    data_augmentation_mode_override = AugmentationStrategy.CCSN_RESNET
+    data_augmentation_mode_override = None
+    # data_augmentation_mode_override = AugmentationStrategy.CCSN_RESNET
 
     # Flag for overriding parameters:
     enable_debug_params = False
