@@ -42,8 +42,8 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "swimcat"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
-    selected_dataset = selected_dataset.lower()
+    selected_dataset = "GCD"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
+    # selected_dataset = selected_dataset.lower()
 
     # Select Model:
     model_type = "pvit"
@@ -72,7 +72,7 @@ if __name__ == "__main__":
     # img_size = (448, 448)
 
     # Flag for CV methods on FIXED datasets:
-    force_flat = False
+    force_flat = True
 
     save_model = False  # Whether to save the model after training
 
@@ -184,13 +184,13 @@ if __name__ == "__main__":
         logger.error(f"Model type '{model_type}' not recognized. Supported: {[m.value for m in ModelType]}")
         exit()
 
-    if selected_dataset == 'ccsn':
+    if selected_dataset.lower() == 'ccsn':
         effective_test_split_ratio_if_flat = 0.1
         effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
         cv_folds = 10
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
-    elif selected_dataset in ['gcd', 'gcdf', 'mgcd', 'mgcdf']:
-        if selected_dataset == 'gcdf':
+    elif selected_dataset.lower() in ['gcd', 'gcdf', 'mgcd', 'mgcdf']:
+        if selected_dataset.lower() == 'gcdf':
             effective_test_split_ratio_if_flat = 0.2
         else:
             effective_test_split_ratio_if_flat = 9000 / 19000
@@ -198,7 +198,7 @@ if __name__ == "__main__":
         cv_folds = 5
         augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
         # augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
-    elif selected_dataset == 'swimcat':
+    elif selected_dataset.lower() == 'swimcat':
         effective_test_split_ratio_if_flat = 0.2
         # effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
         effective_val_split_ratio = 0.1
