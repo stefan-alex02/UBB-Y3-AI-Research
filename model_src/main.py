@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "ccsn"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
+    selected_dataset = "swimcat"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
     selected_dataset = selected_dataset.lower()
 
     # Select Model:
@@ -200,7 +200,8 @@ if __name__ == "__main__":
         # augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
     elif selected_dataset == 'swimcat':
         effective_test_split_ratio_if_flat = 0.2
-        effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
+        # effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
+        effective_val_split_ratio = 0.1
         cv_folds = 5
         augmentation_strategy = AugmentationStrategy.SWIMCAT_MILD
     else:

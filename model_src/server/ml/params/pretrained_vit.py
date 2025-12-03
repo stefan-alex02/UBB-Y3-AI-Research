@@ -19,8 +19,8 @@ pretrained_vit_fixed_params = {
 
     # --- CutMix Parameters ---
     'cutmix_alpha': 1.0,
-    'cutmix_probability': 0.9, # for CCSN
-    # 'cutmix_probability': 0.5, # for Swimcat
+    # 'cutmix_probability': 0.9, # for CCSN
+    'cutmix_probability': 0.5, # for Swimcat
     # 'cutmix_probability': 0.5, # for GCD
 
     # --- Gradient Clipping ---
@@ -30,7 +30,7 @@ pretrained_vit_fixed_params = {
     'module__vit_model_variant': 'vit_b_16',
     'module__pretrained': True,
     'module__unfreeze_strategy': 'encoder_tail',
-    'module__num_transformer_blocks_to_unfreeze': 7,
+    'module__num_transformer_blocks_to_unfreeze': 6,
     'module__unfreeze_cls_token': True,
     'module__unfreeze_pos_embedding': True,
     'module__unfreeze_patch_embedding': False,
