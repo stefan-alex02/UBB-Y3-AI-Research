@@ -1,16 +1,16 @@
-# Pipeline description
+# Research Pipeline Description
 
 The given dataset (by path) may be structured in the file system in 2 variants:
 
   - root folder with multiple folders with images, each folder representing a class.
   - root folder with train and test folders, each one having multiple subfolders (the same number) with images, each subfolder representing a class. This means that the test dataset is already fixed.
 
-### Important notes: 
+### Important Notes: 
 
   - All operations/functions that use randomness of any kind (e.g. shuffling, splitting, etc.) are set to a fixed random seed (e.g. 42) in order to ensure reproducibility of the results. The random seed can be changed in the `config.py` file.
   - The purpose of (somewhat complex) logic is to ensure decoupling of the dataset loading and the model training. This allows for easy switching between different datasets, different loading methods, and different models. The pipeline is designed to be flexible and extensible, so that new datasets, loading methods, and models can be added easily. The pipeline is also designed to be easy to use, so that users can easily switch between different datasets, loading methods, and models without having to modify the code.
 
-## In general, the pipeline provides four possible methods of training:
+### In general, the pipeline provides four possible methods of training:
 
  - fixed train-test split: the dataset is split into training, validation and test subsets (e.g. 70% train, 20% validation, 10% test)
  - cross-validation: the dataset will be split into k folds, where k is a hyperparameter. The test set will have 1 fold, and for the rest of the dataset a split between training and validation will be done (e.g. 70% train, 30% validation). Traniing is performed, then the model is evaluated on the test subset. The process is repeated k times, each time using a different fold as test set. All results are centralized and averaged.
@@ -19,7 +19,7 @@ The given dataset (by path) may be structured in the file system in 2 variants:
 
 For testing, a previously model can be loaded back and given new unseen instances. It can also perform LIME explainability on the predictions.
 
-# Using the pipeline:
+# Using the Pipeline:
 
 In `model_src/main.py` there are multiple variables that can be set to control the pipeline. The main ones are:
 
@@ -45,3 +45,7 @@ For testing a previously trained model, consider updating the following variable
 Other variables can be modified for more fine-grained control of the pipeline, but the above ones should be sufficient for most use cases.
 
 This python project is configured to also work as a FastAPI app for the frontend React app, which demonstrates the model training and testing process, as well as image and prediction management and visualization.
+
+### See Also 
+
+Sub-folder for ML research source code: [model_src](model_src/server/ml/)
