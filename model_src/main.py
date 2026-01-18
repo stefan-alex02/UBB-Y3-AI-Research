@@ -10,7 +10,7 @@ from model_src.server.ml.params.feature_extractors import paper_cnn_standalone_f
 from model_src.server.ml.params.hybrid_vit import hybrid_vit_fixed_params, hybrid_vit_param_grid
 from model_src.server.ml.params.paper_xception_mobilenet import xcloud_fixed_params, mcloud_fixed_params
 from model_src.server.ml.params.pretrained_swin import pretrained_swin_fixed_params
-from model_src.server.ml.params.resnet import resnet18_cloud_fixed_params
+from model_src.server.ml.params.resnet import resnet18_cloud_fixed_params, resnet18_finetune_best_practice_params
 from model_src.server.ml.params.shufflenet import shufflenet_cloud_fixed_params
 from model_src.server.ml.params.standard_cnn_extractor import standard_cnn_fixed_params
 from server.ml import ModelType
@@ -42,8 +42,8 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "ccsn"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn'
-    selected_dataset = selected_dataset.lower()
+    selected_dataset = "GCD"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
+    # selected_dataset = selected_dataset.lower()
 
     # Select Model:
     model_type = "pvit"
@@ -68,15 +68,16 @@ if __name__ == "__main__":
 
     # Image size for the model
     img_size = (224, 224)
+    # img_size = (64, 64)
     # img_size = (448, 448)
 
     # Flag for CV methods on FIXED datasets:
-    force_flat = False
+    force_flat = True
 
     save_model = False  # Whether to save the model after training
 
     data_augmentation_mode_override = None
-    # data_augmentation_mode_override = AugmentationStrategy.SKY_ONLY_ROTATION
+    # data_augmentation_mode_override = AugmentationStrategy.CCSN_RESNET
 
     # Flag for overriding parameters:
     enable_debug_params = False
@@ -163,7 +164,8 @@ if __name__ == "__main__":
         chosen_param_grid = None
 
     elif model_type == ModelType.RESNET18_CLOUD:
-        chosen_fixed_params = resnet18_cloud_fixed_params
+        # chosen_fixed_params = resnet18_cloud_fixed_params
+        chosen_fixed_params = resnet18_finetune_best_practice_params
         chosen_param_grid = None
 
     elif model_type == ModelType.PRETRAINED_SWIN:
@@ -182,13 +184,13 @@ if __name__ == "__main__":
         logger.error(f"Model type '{model_type}' not recognized. Supported: {[m.value for m in ModelType]}")
         exit()
 
-    if selected_dataset == 'ccsn':
+    if selected_dataset.lower() == 'ccsn':
         effective_test_split_ratio_if_flat = 0.1
         effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
         cv_folds = 10
         augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
-    elif selected_dataset in ['gcd', 'gcdf', 'mgcd', 'mgcdf']:
-        if selected_dataset == 'gcdf':
+    elif selected_dataset.lower() in ['gcd', 'gcdf', 'mgcd', 'mgcdf']:
+        if selected_dataset.lower() == 'gcdf':
             effective_test_split_ratio_if_flat = 0.2
         else:
             effective_test_split_ratio_if_flat = 9000 / 19000
@@ -196,9 +198,10 @@ if __name__ == "__main__":
         cv_folds = 5
         augmentation_strategy = AugmentationStrategy.SKY_ONLY_ROTATION
         # augmentation_strategy = AugmentationStrategy.CCSN_MODERATE
-    elif selected_dataset == 'swimcat':
+    elif selected_dataset.lower() == 'swimcat':
         effective_test_split_ratio_if_flat = 0.2
-        effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
+        # effective_val_split_ratio = 0.1 / (1.0 - effective_test_split_ratio_if_flat)
+        effective_val_split_ratio = 0.1
         cv_folds = 5
         augmentation_strategy = AugmentationStrategy.SWIMCAT_MILD
     else:

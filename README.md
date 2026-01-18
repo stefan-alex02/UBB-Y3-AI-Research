@@ -1,4 +1,4 @@
-# An in-depth study on using vision transformer-based models for classification of cloud images
+# X-CViT: An explainable vision transformer architecture for classification of cloud images
 
 ## Abstract
 
@@ -14,15 +14,16 @@ the literature. In terms of the Area Under the Receiver Operator Characteristic 
 our approach outperforms by 0.3%-7.2% three other methods from the literature that were replicated and
 tested using our proposed methodology.
 
-## Short description of the repository
+## Short Description of the Repository
 
 This repository contains the code and resources for training and evaluating machine learning models for cloud classification using vision transformer-based architectures.
  
 The main components of the repository are:
-- `model_src/`: contains the source code for data loading, preprocessing, model architectures, training, evaluation, and utilities. Manual training and testing of models can be done through the `main.py` script.
+- `model_src/`: contains the Machine Learning (ML)-oriented backend server, along with the source code ML-research (i.e., data loading, preprocessing, model architectures, training, evaluation, and utilities). Manual training and testing of models can be done through the `main.py` script.
 - `JavaServer`: contains the backend server code for handling requests and serving the frontend application, as well as managing user data and resource metadata.
 - `web-app/`: contains the React frontend application code for user interaction, visualization, and management of images, predictions and models.
 
 ## See Also
 
-Machine Learning pipeline and models used for research: [model_src](model_src/)
+Parent folder for the ML server: [model_src](model_src/)
+Sub-folder for ML research source code: [model_src](model_src/server/ml/)

@@ -1,0 +1,388 @@
+Timestamp           | Level    | Location                             | Message
+--------------------+----------+--------------------------------------+---------------------------------------------------
+2025-12-03 02:51:51 | INFO     | [logger_...:setup_logger      : 130] | ℹ️ Logger 'ImgClassPipe' initialized. Log file: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD\pvit\20251203_025151_seed42\executor_run_20251203_025151_seed42.log
+2025-12-03 02:51:51 | INFO     | [executor  :__init__          : 121] | ℹ️ Local main executor log file for this run (may be temporary): C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD\pvit\20251203_025151_seed42\executor_run_20251203_025151_seed42.log
+2025-12-03 02:51:51 | INFO     | [executor  :__init__          : 126] | ℹ️ --- Starting Executor Run (ID: 20251203_025151_seed42) ---
+2025-12-03 02:51:51 | INFO     | [executor  :__init__          : 127] | ℹ️ Executor initialized for model 'pvit' on dataset 'GCD'
+2025-12-03 02:51:51 | INFO     | [executor  :__init__          : 130] | ℹ️ Local artifact storage base: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src
+2025-12-03 02:51:51 | INFO     | [executor  :__init__          : 134] | ℹ️ Base key/prefix for this executor run's artifacts: experiments/GCD/pvit/20251203_025151_seed42
+2025-12-03 02:51:51 | INFO     | [pipeline  :__init__          : 165] | ℹ️ Initializing Classification Pipeline:
+2025-12-03 02:51:51 | INFO     | [pipeline  :__init__          : 166] | ℹ️   Dataset Path: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\GCD
+2025-12-03 02:51:51 | INFO     | [pipeline  :__init__          : 167] | ℹ️   Model Type: pvit
+2025-12-03 02:51:51 | INFO     | [pipeline  :__init__          : 170] | ℹ️   Artifact base key prefix for this run: experiments/GCD/pvit/20251203_025151_seed42 (using LocalFileSystemRepository)
+2025-12-03 02:51:51 | INFO     | [pipeline  :__init__          : 174] | ℹ️   Default Augmentation Strategy: AugmentationStrategy.SKY_ONLY_ROTATION
+2025-12-03 02:51:51 | INFO     | [pipeline  :__init__          : 175] | ℹ️   Default Show First Batch Aug: True
+2025-12-03 02:51:51 | INFO     | [dataset...:__init__          : 529] | ℹ️ Using augmentation strategy: AugmentationStrategy.SKY_ONLY_ROTATION
+2025-12-03 02:51:51 | INFO     | [dataset...:__init__          : 560] | ℹ️ Detected dataset structure: fixed
+2025-12-03 02:51:51 | WARNING  | [dataset...:__init__          : 562] | ⚠️ Dataset is FIXED, but force_flat_for_fixed_cv=True. CV methods will treat train+test as a single dataset. Results might not reflect standard fixed-test evaluation.
+2025-12-03 02:51:51 | INFO     | [dataset...:_load_paths_and...: 821] | ℹ️ Scanning FIXED dataset from C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\GCD\train (train) and C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\data\GCD\test (test)...
+2025-12-03 02:51:51 | INFO     | [dataset...:_load_paths_and...: 874] | ℹ️ Final Original Dataset sizes: 10000 original train+val, 9000 original test. Offline augmented samples loaded: 0.
+2025-12-03 02:51:51 | INFO     | [dataset...:__init__          : 586] | ℹ️ Found 7 classes: 1_cumulus, 2_altocumulus, 3_cirrus, 4_clearsky, 5_stratocumulus, 6_cumulonimbus, 7_mixed
+2025-12-03 02:51:51 | INFO     | [dataset...:_calculate_clas...: 676] | ℹ️ Calculating class weights for the training set...
+2025-12-03 02:51:51 | INFO     | [dataset...:_calculate_clas...: 690] | ℹ️ Calculated class weights (for classes 0 to 6):
+2025-12-03 02:51:51 | INFO     | [dataset...:_calculate_clas...: 692] | ℹ️   - 1_cumulus (Class 0): 1.8433
+2025-12-03 02:51:51 | INFO     | [dataset...:_calculate_clas...: 692] | ℹ️   - 2_altocumulus (Class 1): 1.9704
+2025-12-03 02:51:51 | INFO     | [dataset...:_calculate_clas...: 692] | ℹ️   - 3_cirrus (Class 2): 1.2390
+2025-12-03 02:51:51 | INFO     | [dataset...:_calculate_clas...: 692] | ℹ️   - 4_clearsky (Class 3): 0.6645
+2025-12-03 02:51:51 | INFO     | [dataset...:_calculate_clas...: 692] | ℹ️   - 5_stratocumulus (Class 4): 0.7739
+2025-12-03 02:51:51 | INFO     | [dataset...:_calculate_clas...: 692] | ℹ️   - 6_cumulonimbus (Class 5): 0.4757
+2025-12-03 02:51:51 | INFO     | [dataset...:_calculate_clas...: 692] | ℹ️   - 7_mixed (Class 6): 4.1051
+2025-12-03 02:51:51 | INFO     | [dataset...:__init__          : 592] | ℹ️ Dataset sizes: 10000 train+val, 9000 test. Total: 19000
+2025-12-03 02:51:51 | INFO     | [dataset...:__init__          : 594] | ℹ️ Total combined size (for forced CV): 19000
+2025-12-03 02:51:51 | INFO     | [pipeline  :__init__          : 185] | ℹ️   Artifact base key prefix for this run: experiments/GCD/pvit/20251203_025151_seed42 (using LocalFileSystemRepository)
+2025-12-03 02:51:51 | INFO     | [pipeline  :__init__          : 212] | ℹ️   Using Optimizer: AdamW
+2025-12-03 02:51:51 | DEBUG    | [callbacks :get_default_cal...: 172] | 🐞 Default LRScheduler callback instance created with policy: ReduceLROnPlateau, kwargs: {'patience': 2, 'mode': 'min', 'factor': 0.1, 'min_lr': 1e-06, 'verbose': False}, monitor: valid_loss
+2025-12-03 02:51:51 | INFO     | [pipeline  :__init__          : 269] | ℹ️   Model Adapter: Initialized with PretrainedViT
+2025-12-03 02:51:51 | DEBUG    | [executor  :_validate_methods : 189] | 🐞 Basic method validation successful.
+2025-12-03 02:51:51 | INFO     | [executor  :__init__          : 168] | ℹ️ Executor configured to run methods: cv_model_evaluation
+2025-12-03 02:51:51 | INFO     | [executor  :run               : 237] | ℹ️ Starting execution of methods for Executor Run ID: 20251203_025151_seed42
+2025-12-03 02:51:51 | INFO     | [executor  :run               : 246] | ℹ️ --- Running Method 1/1: cv_model_evaluation (Op ID: cv_model_evaluation_0) ---
+2025-12-03 02:51:51 | DEBUG    | [executor  :run               : 291] | 🐞 Running method 'cv_model_evaluation' with effective parameters: {'params': {'max_epochs': 70, 'lr': 5e-05, 'batch_size': 16, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.2, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 70, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 15, 'module__vit_model_variant': 'vit_b_16', 'module__pretrained': True, 'module__unfreeze_strategy': 'encoder_tail', 'module__num_transformer_blocks_to_unfreeze': 6, 'module__unfreeze_cls_token': True, 'module__unfreeze_pos_embedding': True, 'module__unfreeze_patch_embedding': False, 'module__unfreeze_encoder_layernorm': True, 'module__custom_head_hidden_dims': None, 'module__head_dropout_rate': 0.5, 'iterator_train__shuffle': True}, 'val_split_ratio': 0.1, 'cv': 5, 'evaluate_on': 'full', 'results_detail_level': 2}
+2025-12-03 02:51:51 | INFO     | [pipeline  :cv_model_evalua...:1354] | ℹ️ Performing 5-fold CV for evaluation with fixed parameters.
+2025-12-03 02:51:51 | DEBUG    | [dataset...:get_full_paths_...: 943] | 🐞 Providing combined train+test paths/labels for forced flat CV.
+2025-12-03 02:51:51 | INFO     | [pipeline  :cv_model_evalua...:1373] | ℹ️ Using full dataset (19000 samples) for CV evaluation.
+2025-12-03 02:51:51 | INFO     | [pipeline  :cv_model_evalua...:1397] | ℹ️ Using provided parameters for CV evaluation: {'max_epochs': 70, 'lr': 5e-05, 'batch_size': 16, 'optimizer': 'AdamW', 'optimizer__weight_decay': 0.2, 'callbacks__default_lr_scheduler__policy': 'CosineAnnealingLR', 'callbacks__default_lr_scheduler__T_max': 70, 'callbacks__default_lr_scheduler__eta_min': 1e-06, 'callbacks__default_early_stopping__patience': 15, 'module__vit_model_variant': 'vit_b_16', 'module__pretrained': True, 'module__unfreeze_strategy': 'encoder_tail', 'module__num_transformer_blocks_to_unfreeze': 6, 'module__unfreeze_cls_token': True, 'module__unfreeze_pos_embedding': True, 'module__unfreeze_patch_embedding': False, 'module__unfreeze_encoder_layernorm': True, 'module__custom_head_hidden_dims': None, 'module__head_dropout_rate': 0.5, 'iterator_train__shuffle': True}
+2025-12-03 02:51:51 | DEBUG    | [param_g...:parse_fixed_hyp...: 163] | 🐞 Created LRScheduler instance: policy=CosineAnnealingLR, direct_args={}, constructor_kwargs={'T_max': 70, 'eta_min': 1e-06}
+2025-12-03 02:51:51 | INFO     | [pipeline  :cv_model_evalua...:1418] | ℹ️ Skorch internal validation split configured: 10.0% of each CV fold's training data.
+2025-12-03 02:51:51 | DEBUG    | [pipeline  :cv_model_evalua...:1445] | 🐞 Will compute detailed metrics (detail_level=2, plot_level=2)
+2025-12-03 02:51:51 | INFO     | [pipeline  :cv_model_evalua...:1451] | ℹ️ --- Starting CV Evaluation Fold 1/5 ---
+2025-12-03 02:51:51 | DEBUG    | [pipeline  :cv_model_evalua...:1457] | 🐞 Outer split (full set): 15200 train / 3800 test samples.
+2025-12-03 02:51:51 | DEBUG    | [pipeline  :cv_model_evalua...:1476] | 🐞 Fold 1: Internal split: ~13680 train / ~1520 valid.
+2025-12-03 02:51:51 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Fitting model for fold 1...
+2025-12-03 02:51:51 | DEBUG    | [pretrai...:__init__          :  75] | 🐞 Initializing PretrainedViT:
+2025-12-03 02:51:51 | DEBUG    | [pretrai...:__init__          :  76] | 🐞   Model Variant: vit_b_16, Pretrained: True
+2025-12-03 02:51:51 | DEBUG    | [pretrai...:__init__          :  77] | 🐞   Is Hybrid Input: False
+2025-12-03 02:51:51 | DEBUG    | [pretrai...:__init__          :  80] | 🐞   Unfreeze Strategy (Encoder Blocks): encoder_tail
+2025-12-03 02:51:51 | DEBUG    | [pretrai...:__init__          :  82] | 🐞   Num Transformer Blocks to Unfreeze: 6
+2025-12-03 02:51:51 | DEBUG    | [pretrai...:__init__          :  83] | 🐞   Unfreeze CLS: True, PosEmb: True, PatchEmb: False, EncoderLN: True
+2025-12-03 02:51:51 | DEBUG    | [pretrai...:__init__          :  85] | 🐞   Custom Head Hidden Dims: None, Head Dropout: 0.5
+2025-12-03 02:51:52 | DEBUG    | [pretrai...:__init__          : 106] | 🐞 Loaded vit_b_16 from torchvision.
+2025-12-03 02:51:52 | DEBUG    | [pretrai...:__init__          : 283] | 🐞 Created simple linear head (dropout: 0.5), in_feat=768.
+2025-12-03 02:51:52 | INFO     | [pretrai...:__init__          : 293] | ℹ️ PretrainedViT (standard) - Trainable: CLS Token, Positional Embeddings, 6 Encoder Blocks, Encoder LayerNorm, Classification Head.
+2025-12-03 02:51:52 | INFO     | [pretrai...:__init__          : 313] | ℹ️ PretrainedViT (standard): Trainable params: 42.69M / Total params: 85.80M (49.75%)
+2025-12-03 02:51:52 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 1520 original samples.
+2025-12-03 02:51:52 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-12-03 02:51:52 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 13680 samples.
+2025-12-03 02:51:52 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=13680, batch_size=16, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 02:51:52 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=1520, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 02:55:13 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp           lr      dur
+2025-12-03 02:55:13 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ----------  -------
+2025-12-03 02:55:13 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.7962      ▼ 0.5260     ▲ 0.8329      ▼ 0.4478        4.9975e-05  201.083
+2025-12-03 02:58:29 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.8473      ▼ 0.3903     ▲ 0.8546      ▼ 0.3494        4.9901e-05  195.369
+2025-12-03 03:01:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.8634      ▼ 0.3512     ▲ 0.8559        0.3526        4.9778e-05  198.168
+2025-12-03 03:05:05 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.8731      ▼ 0.3261     ▲ 0.8717      ▼ 0.3214        4.9606e-05  197.714
+2025-12-03 03:08:24 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.8781      ▼ 0.3110       0.8638        0.3622        4.9386e-05  198.419
+2025-12-03 03:11:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6     ▲ 0.8848      ▼ 0.2951     ▲ 0.8783      ▼ 0.3036        4.9117e-05  196.327
+2025-12-03 03:14:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7     ▲ 0.8898      ▼ 0.2820       0.8757        0.3348        4.8801e-05  197.859
+2025-12-03 03:18:16 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8     ▲ 0.8958      ▼ 0.2695       0.8664        0.3588        4.8438e-05  197.621
+2025-12-03 03:21:32 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9     ▲ 0.8984      ▼ 0.2608     ▲ 0.8855        0.3048        4.8028e-05  196.203
+2025-12-03 03:24:52 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10     ▲ 0.9057      ▼ 0.2486       0.8822        0.3233        4.7574e-05  199.133
+2025-12-03 03:28:07 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11     ▲ 0.9082      ▼ 0.2434       0.8796      ▼ 0.2971        4.7075e-05  195.358
+2025-12-03 03:31:27 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12       0.9075        0.2439       0.8796         0.317        4.6532e-05  199.532
+2025-12-03 03:34:42 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13     ▲ 0.9126      ▼ 0.2300       0.8816        0.3283        4.5947e-05  194.842
+2025-12-03 03:38:00 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14     ▲ 0.9164      ▼ 0.2218       0.8789        0.3084        4.5321e-05  198.401
+2025-12-03 03:41:17 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15     ▲ 0.9186      ▼ 0.2131       0.8757          0.33        4.4655e-05  196.824
+2025-12-03 03:44:35 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9196      ▼ 0.2108     ▲ 0.8882      ▼ 0.2777        4.395e-05  197.295
+2025-12-03 03:47:52 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17     ▲ 0.9221      ▼ 0.2017       0.8842        0.2968        4.3208e-05  197.236
+2025-12-03 03:51:09 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18       0.9217      ▼ 0.1987     ▲ 0.8888        0.2983        4.2431e-05  197.154
+2025-12-03 03:54:28 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19     ▲ 0.9270      ▼ 0.1906     ▲ 0.8967        0.2784        4.1619e-05  198.682
+2025-12-03 03:57:44 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20     ▲ 0.9305      ▼ 0.1838       0.8836        0.2987        4.0776e-05  195.725
+2025-12-03 04:01:05 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21       0.9283        0.1866       0.8809        0.3128        3.9901e-05  201.086
+2025-12-03 04:04:20 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22       0.9302      ▼ 0.1784       0.8809        0.3339        3.8997e-05  194.871
+2025-12-03 04:07:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23     ▲ 0.9329      ▼ 0.1772       0.8809        0.3369        3.8066e-05  199.399
+2025-12-03 04:10:56 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24     ▲ 0.9357      ▼ 0.1664       0.8882        0.3003        3.711e-05  196.514
+2025-12-03 04:14:15 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25     ▲ 0.9365      ▼ 0.1651       0.8941         0.306        3.613e-05  198.608
+2025-12-03 04:17:32 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26     ▲ 0.9381      ▼ 0.1587       0.8836        0.3012        3.5129e-05  196.724
+2025-12-03 04:20:49 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27        0.938        0.1587       0.8921        0.3064        3.4109e-05  197.155
+2025-12-03 04:24:08 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      28     ▲ 0.9411      ▼ 0.1544       0.8882        0.3009        3.3071e-05  199.229
+2025-12-03 04:27:25 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      29     ▲ 0.9433      ▼ 0.1490     ▲ 0.8967         0.286        3.2018e-05  196.107
+2025-12-03 04:30:43 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      30       0.9403      ▼ 0.1489       0.8875        0.3348        3.0952e-05  198.477
+2025-12-03 04:33:57 | INFO     | [pipeline  :cv_model_evalua...:1500] | ℹ️ Using best model from epoch 31
+2025-12-03 04:33:57 | INFO     | [pipeline  :cv_model_evalua...:1503] | ℹ️ Evaluating model on outer test set for fold 1...
+2025-12-03 04:33:57 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 04:34:19 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 04:34:38 | DEBUG    | [pipeline  :_compute_metrics  : 479] | 🐞 Computed Metrics: Acc=0.8939, Macro F1=0.8886
+2025-12-03 04:34:38 | INFO     | [pipeline  :cv_model_evalua...:1522] | ℹ️ Fold 1 Test Scores: Acc=0.8939, F1=0.8886
+2025-12-03 04:34:38 | INFO     | [pipeline  :cv_model_evalua...:1451] | ℹ️ --- Starting CV Evaluation Fold 2/5 ---
+2025-12-03 04:34:38 | DEBUG    | [pipeline  :cv_model_evalua...:1457] | 🐞 Outer split (full set): 15200 train / 3800 test samples.
+2025-12-03 04:34:38 | DEBUG    | [pipeline  :cv_model_evalua...:1476] | 🐞 Fold 2: Internal split: ~13680 train / ~1520 valid.
+2025-12-03 04:34:38 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Fitting model for fold 2...
+2025-12-03 04:34:38 | DEBUG    | [pretrai...:__init__          :  75] | 🐞 Initializing PretrainedViT:
+2025-12-03 04:34:38 | DEBUG    | [pretrai...:__init__          :  76] | 🐞   Model Variant: vit_b_16, Pretrained: True
+2025-12-03 04:34:38 | DEBUG    | [pretrai...:__init__          :  77] | 🐞   Is Hybrid Input: False
+2025-12-03 04:34:38 | DEBUG    | [pretrai...:__init__          :  80] | 🐞   Unfreeze Strategy (Encoder Blocks): encoder_tail
+2025-12-03 04:34:38 | DEBUG    | [pretrai...:__init__          :  82] | 🐞   Num Transformer Blocks to Unfreeze: 6
+2025-12-03 04:34:38 | DEBUG    | [pretrai...:__init__          :  83] | 🐞   Unfreeze CLS: True, PosEmb: True, PatchEmb: False, EncoderLN: True
+2025-12-03 04:34:38 | DEBUG    | [pretrai...:__init__          :  85] | 🐞   Custom Head Hidden Dims: None, Head Dropout: 0.5
+2025-12-03 04:34:39 | DEBUG    | [pretrai...:__init__          : 106] | 🐞 Loaded vit_b_16 from torchvision.
+2025-12-03 04:34:39 | DEBUG    | [pretrai...:__init__          : 283] | 🐞 Created simple linear head (dropout: 0.5), in_feat=768.
+2025-12-03 04:34:39 | INFO     | [pretrai...:__init__          : 293] | ℹ️ PretrainedViT (standard) - Trainable: CLS Token, Positional Embeddings, 6 Encoder Blocks, Encoder LayerNorm, Classification Head.
+2025-12-03 04:34:39 | INFO     | [pretrai...:__init__          : 313] | ℹ️ PretrainedViT (standard): Trainable params: 42.69M / Total params: 85.80M (49.75%)
+2025-12-03 04:34:39 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 1520 original samples.
+2025-12-03 04:34:39 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-12-03 04:34:39 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 13680 samples.
+2025-12-03 04:34:39 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=13680, batch_size=16, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 04:34:39 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=1520, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 04:37:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp           lr     dur
+2025-12-03 04:37:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ----------  ------
+2025-12-03 04:37:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.7961      ▼ 0.5228     ▲ 0.8474      ▼ 0.3803        4.9975e-05  198.93
+2025-12-03 04:41:14 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.8466      ▼ 0.3872     ▲ 0.8599      ▼ 0.3446        4.9901e-05  196.454
+2025-12-03 04:44:33 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.8654      ▼ 0.3489     ▲ 0.8783      ▼ 0.3351        4.9778e-05  198.581
+2025-12-03 04:47:51 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.8681      ▼ 0.3316       0.8724      ▼ 0.3126        4.9606e-05  197.973
+2025-12-03 04:51:08 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.8771      ▼ 0.3153        0.875      ▼ 0.3056        4.9386e-05  196.298
+2025-12-03 04:54:28 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6     ▲ 0.8831      ▼ 0.3000       0.8605        0.3356        4.9117e-05  200.652
+2025-12-03 04:57:51 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7     ▲ 0.8863      ▼ 0.2911     ▲ 0.8941      ▼ 0.2833        4.8801e-05  202.106
+2025-12-03 05:01:11 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8     ▲ 0.8933      ▼ 0.2739       0.8776        0.3036        4.8438e-05  199.882
+2025-12-03 05:04:26 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9     ▲ 0.8955      ▼ 0.2654       0.8829        0.3237        4.8028e-05  195.279
+2025-12-03 05:07:45 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10     ▲ 0.8997      ▼ 0.2545     ▲ 0.9000      ▼ 0.2640        4.7574e-05  199.265
+2025-12-03 05:11:03 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11     ▲ 0.9008      ▼ 0.2514       0.8803        0.3159        4.7075e-05  197.445
+2025-12-03 05:14:22 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12     ▲ 0.9042      ▼ 0.2398       0.8895         0.267        4.6532e-05  198.942
+2025-12-03 05:17:39 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13     ▲ 0.9083      ▼ 0.2361     ▲ 0.9079      ▼ 0.2575        4.5947e-05  196.566
+2025-12-03 05:20:57 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14     ▲ 0.9131      ▼ 0.2236       0.9072        0.2631        4.5321e-05  197.896
+2025-12-03 05:24:14 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15     ▲ 0.9131        0.2249       0.9007        0.2639        4.4655e-05  197.395
+2025-12-03 05:27:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9199      ▼ 0.2125       0.8974        0.2893        4.395e-05  196.436
+2025-12-03 05:30:50 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17     ▲ 0.9213      ▼ 0.2048       0.9039        0.2701        4.3208e-05  199.047
+2025-12-03 05:34:07 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18       0.9205        0.2061       0.8908        0.2688        4.2431e-05  196.446
+2025-12-03 05:37:28 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19     ▲ 0.9220      ▼ 0.1960        0.898        0.2843        4.1619e-05  200.871
+2025-12-03 05:40:44 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20     ▲ 0.9251      ▼ 0.1904       0.9046        0.2607        4.0776e-05  196.734
+2025-12-03 05:44:03 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21     ▲ 0.9260      ▼ 0.1895       0.9033        0.2915        3.9901e-05  198.031
+2025-12-03 05:47:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22     ▲ 0.9298      ▼ 0.1810       0.8987        0.2838        3.8997e-05  195.529
+2025-12-03 05:50:36 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23     ▲ 0.9300      ▼ 0.1765       0.8789        0.3459        3.8066e-05  198.013
+2025-12-03 05:53:54 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24     ▲ 0.9306      ▼ 0.1746       0.8921        0.3016        3.711e-05  197.783
+2025-12-03 05:57:11 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25     ▲ 0.9309        0.1749       0.8928        0.3025        3.613e-05  196.959
+2025-12-03 06:00:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26     ▲ 0.9362      ▼ 0.1667        0.902      ▼ 0.2549        3.5129e-05  199.825
+2025-12-03 06:03:46 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27     ▲ 0.9368      ▼ 0.1565       0.9039        0.2791        3.4109e-05  194.346
+2025-12-03 06:07:05 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      28     ▲ 0.9392      ▼ 0.1560       0.9007        0.2809        3.3071e-05  199.403
+2025-12-03 06:10:22 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      29     ▲ 0.9396        0.1562       0.9033        0.2845        3.2018e-05  196.404
+2025-12-03 06:13:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      30       0.9374      ▼ 0.1538       0.8967        0.2945        3.0952e-05  198.851
+2025-12-03 06:16:57 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      31     ▲ 0.9425      ▼ 0.1479       0.8987        0.3051        2.9875e-05  195.596
+2025-12-03 06:20:14 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      32     ▲ 0.9431      ▼ 0.1400       0.8934        0.3505        2.8789e-05  196.819
+2025-12-03 06:23:30 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      33       0.9417        0.1488       0.9066        0.2783        2.7696e-05  196.832
+2025-12-03 06:26:48 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      34     ▲ 0.9460      ▼ 0.1391       0.9033        0.2978        2.6599e-05  197.233
+2025-12-03 06:30:07 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      35     ▲ 0.9494      ▼ 0.1300       0.9066        0.2701        2.55e-05  199.09
+2025-12-03 06:33:23 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      36       0.9468        0.1341       0.9046        0.2666        2.4401e-05  195.829
+2025-12-03 06:36:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      37     ▲ 0.9519      ▼ 0.1236       0.9039        0.2872        2.3304e-05  198.126
+2025-12-03 06:39:56 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      38       0.9501        0.1266       0.9066        0.2789        2.2211e-05  194.748
+2025-12-03 06:43:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      39       0.9516         0.126       0.9039         0.277        2.1125e-05  201.346
+2025-12-03 06:46:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      40     ▲ 0.9545      ▼ 0.1175       0.9026        0.2746        2.0048e-05  202.52
+2025-12-03 06:49:57 | INFO     | [pipeline  :cv_model_evalua...:1500] | ℹ️ Using best model from epoch 41
+2025-12-03 06:49:57 | INFO     | [pipeline  :cv_model_evalua...:1503] | ℹ️ Evaluating model on outer test set for fold 2...
+2025-12-03 06:49:57 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 06:50:17 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 06:50:35 | DEBUG    | [pipeline  :_compute_metrics  : 479] | 🐞 Computed Metrics: Acc=0.8984, Macro F1=0.8979
+2025-12-03 06:50:35 | INFO     | [pipeline  :cv_model_evalua...:1522] | ℹ️ Fold 2 Test Scores: Acc=0.8984, F1=0.8979
+2025-12-03 06:50:35 | INFO     | [pipeline  :cv_model_evalua...:1451] | ℹ️ --- Starting CV Evaluation Fold 3/5 ---
+2025-12-03 06:50:35 | DEBUG    | [pipeline  :cv_model_evalua...:1457] | 🐞 Outer split (full set): 15200 train / 3800 test samples.
+2025-12-03 06:50:35 | DEBUG    | [pipeline  :cv_model_evalua...:1476] | 🐞 Fold 3: Internal split: ~13680 train / ~1520 valid.
+2025-12-03 06:50:35 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Fitting model for fold 3...
+2025-12-03 06:50:35 | DEBUG    | [pretrai...:__init__          :  75] | 🐞 Initializing PretrainedViT:
+2025-12-03 06:50:35 | DEBUG    | [pretrai...:__init__          :  76] | 🐞   Model Variant: vit_b_16, Pretrained: True
+2025-12-03 06:50:35 | DEBUG    | [pretrai...:__init__          :  77] | 🐞   Is Hybrid Input: False
+2025-12-03 06:50:35 | DEBUG    | [pretrai...:__init__          :  80] | 🐞   Unfreeze Strategy (Encoder Blocks): encoder_tail
+2025-12-03 06:50:35 | DEBUG    | [pretrai...:__init__          :  82] | 🐞   Num Transformer Blocks to Unfreeze: 6
+2025-12-03 06:50:35 | DEBUG    | [pretrai...:__init__          :  83] | 🐞   Unfreeze CLS: True, PosEmb: True, PatchEmb: False, EncoderLN: True
+2025-12-03 06:50:35 | DEBUG    | [pretrai...:__init__          :  85] | 🐞   Custom Head Hidden Dims: None, Head Dropout: 0.5
+2025-12-03 06:50:36 | DEBUG    | [pretrai...:__init__          : 106] | 🐞 Loaded vit_b_16 from torchvision.
+2025-12-03 06:50:36 | DEBUG    | [pretrai...:__init__          : 283] | 🐞 Created simple linear head (dropout: 0.5), in_feat=768.
+2025-12-03 06:50:36 | INFO     | [pretrai...:__init__          : 293] | ℹ️ PretrainedViT (standard) - Trainable: CLS Token, Positional Embeddings, 6 Encoder Blocks, Encoder LayerNorm, Classification Head.
+2025-12-03 06:50:36 | INFO     | [pretrai...:__init__          : 313] | ℹ️ PretrainedViT (standard): Trainable params: 42.69M / Total params: 85.80M (49.75%)
+2025-12-03 06:50:36 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 1520 original samples.
+2025-12-03 06:50:36 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-12-03 06:50:36 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 13680 samples.
+2025-12-03 06:50:36 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=13680, batch_size=16, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 06:50:36 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=1520, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 06:53:56 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp           lr      dur
+2025-12-03 06:53:56 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ----------  -------
+2025-12-03 06:53:56 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.7931      ▼ 0.5346     ▲ 0.8349      ▼ 0.4004        4.9975e-05  199.684
+2025-12-03 06:57:12 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.8492      ▼ 0.3857     ▲ 0.8572      ▼ 0.3520        4.9901e-05  196.255
+2025-12-03 07:00:32 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.8567      ▼ 0.3555     ▲ 0.8658      ▼ 0.3438        4.9778e-05  199.025
+2025-12-03 07:03:48 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.8683      ▼ 0.3330     ▲ 0.8836      ▼ 0.3022        4.9606e-05  196.835
+2025-12-03 07:07:09 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.8740      ▼ 0.3197     ▲ 0.8875      ▼ 0.2917        4.9386e-05  200.029
+2025-12-03 07:10:24 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6     ▲ 0.8795      ▼ 0.3062       0.8776        0.3352        4.9117e-05  194.832
+2025-12-03 07:13:43 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7     ▲ 0.8857      ▼ 0.2919     ▲ 0.9007      ▼ 0.2699        4.8801e-05  199.388
+2025-12-03 07:17:00 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8     ▲ 0.8940      ▼ 0.2732       0.8789        0.3184        4.8438e-05  197.148
+2025-12-03 07:20:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9     ▲ 0.8963      ▼ 0.2639       0.8836        0.2978        4.8028e-05  197.337
+2025-12-03 07:23:35 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10       0.8944      ▼ 0.2619       0.8928        0.2722        4.7574e-05  196.565
+2025-12-03 07:26:52 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11     ▲ 0.9012      ▼ 0.2465       0.8921        0.2919        4.7075e-05  197.119
+2025-12-03 07:30:10 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12     ▲ 0.9080      ▼ 0.2376       0.8829         0.319        4.6532e-05  198.416
+2025-12-03 07:33:27 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13       0.9046        0.2381       0.8914        0.3115        4.5947e-05  196.226
+2025-12-03 07:36:45 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14     ▲ 0.9100      ▼ 0.2274       0.8829        0.3134        4.5321e-05  198.356
+2025-12-03 07:39:59 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15     ▲ 0.9110      ▼ 0.2230       0.8882        0.3167        4.4655e-05  194.011
+2025-12-03 07:43:17 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9167      ▼ 0.2143       0.8809        0.3119        4.395e-05  197.203
+2025-12-03 07:46:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17       0.9164      ▼ 0.2090       0.8901        0.2941        4.3208e-05  194.661
+2025-12-03 07:49:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18     ▲ 0.9195      ▼ 0.2030       0.8954          0.31        4.2431e-05  195.301
+2025-12-03 07:53:01 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19     ▲ 0.9244      ▼ 0.1928     ▲ 0.9138      ▼ 0.2464        4.1619e-05  193.972
+2025-12-03 07:56:16 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20     ▲ 0.9266        0.1943       0.8993        0.2931        4.0776e-05  195.35
+2025-12-03 07:59:31 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21       0.9244      ▼ 0.1903       0.9072        0.2779        3.9901e-05  194.81
+2025-12-03 08:02:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22     ▲ 0.9279      ▼ 0.1833        0.902        0.2686        3.8997e-05  195.815
+2025-12-03 08:06:04 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23     ▲ 0.9298      ▼ 0.1750       0.9013        0.3012        3.8066e-05  196.222
+2025-12-03 08:09:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24     ▲ 0.9326        0.1772       0.8901        0.3142        3.711e-05  193.986
+2025-12-03 08:12:35 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25     ▲ 0.9330      ▼ 0.1656       0.9013        0.3032        3.613e-05  196.703
+2025-12-03 08:15:49 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26     ▲ 0.9333        0.1683       0.9066        0.2785        3.5129e-05  194.024
+2025-12-03 08:19:06 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27        0.933        0.1711        0.902        0.2832        3.4109e-05  197.095
+2025-12-03 08:22:20 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      28     ▲ 0.9364      ▼ 0.1628        0.902        0.2837        3.3071e-05  194.062
+2025-12-03 08:25:37 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      29     ▲ 0.9401      ▼ 0.1532     ▲ 0.9204      ▼ 0.2353        3.2018e-05  196.457
+2025-12-03 08:28:50 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      30     ▲ 0.9405      ▼ 0.1478       0.9086        0.2708        3.0952e-05  193.332
+2025-12-03 08:32:06 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      31     ▲ 0.9433      ▼ 0.1444       0.9039         0.286        2.9875e-05  196.025
+2025-12-03 08:35:22 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      32       0.9426      ▼ 0.1443        0.902        0.2886        2.8789e-05  195.098
+2025-12-03 08:38:38 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      33     ▲ 0.9452      ▼ 0.1431       0.9053        0.3018        2.7696e-05  196.67
+2025-12-03 08:41:55 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      34       0.9426      ▼ 0.1423       0.9112        0.2554        2.6599e-05  196.139
+2025-12-03 08:45:11 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      35     ▲ 0.9458      ▼ 0.1352       0.9184        0.2688        2.55e-05  196.132
+2025-12-03 08:48:27 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      36     ▲ 0.9506      ▼ 0.1239       0.8947        0.3359        2.4401e-05  195.874
+2025-12-03 08:51:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      37       0.9492         0.132       0.9079         0.274        2.3304e-05  192.944
+2025-12-03 08:54:58 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      38     ▲ 0.9512        0.1287        0.902        0.3074        2.2211e-05  197.61
+2025-12-03 08:58:12 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      39     ▲ 0.9512      ▼ 0.1235       0.9092        0.2784        2.1125e-05  194.181
+2025-12-03 09:01:28 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      40     ▲ 0.9552      ▼ 0.1135       0.9079        0.3191        2.0048e-05  196.039
+2025-12-03 09:04:43 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      41       0.9528        0.1152       0.9079        0.3004        1.8982e-05  195.028
+2025-12-03 09:08:01 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      42     ▲ 0.9554      ▼ 0.1090       0.9053        0.3269        1.7929e-05  198.106
+2025-12-03 09:11:16 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      43       0.9552         0.111       0.9158        0.2924        1.6891e-05  194.275
+2025-12-03 09:14:31 | INFO     | [pipeline  :cv_model_evalua...:1500] | ℹ️ Using best model from epoch 44
+2025-12-03 09:14:31 | INFO     | [pipeline  :cv_model_evalua...:1503] | ℹ️ Evaluating model on outer test set for fold 3...
+2025-12-03 09:14:31 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 09:14:50 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 09:15:09 | DEBUG    | [pipeline  :_compute_metrics  : 479] | 🐞 Computed Metrics: Acc=0.9126, Macro F1=0.9151
+2025-12-03 09:15:09 | INFO     | [pipeline  :cv_model_evalua...:1522] | ℹ️ Fold 3 Test Scores: Acc=0.9126, F1=0.9151
+2025-12-03 09:15:09 | INFO     | [pipeline  :cv_model_evalua...:1451] | ℹ️ --- Starting CV Evaluation Fold 4/5 ---
+2025-12-03 09:15:09 | DEBUG    | [pipeline  :cv_model_evalua...:1457] | 🐞 Outer split (full set): 15200 train / 3800 test samples.
+2025-12-03 09:15:09 | DEBUG    | [pipeline  :cv_model_evalua...:1476] | 🐞 Fold 4: Internal split: ~13680 train / ~1520 valid.
+2025-12-03 09:15:09 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Fitting model for fold 4...
+2025-12-03 09:15:09 | DEBUG    | [pretrai...:__init__          :  75] | 🐞 Initializing PretrainedViT:
+2025-12-03 09:15:09 | DEBUG    | [pretrai...:__init__          :  76] | 🐞   Model Variant: vit_b_16, Pretrained: True
+2025-12-03 09:15:09 | DEBUG    | [pretrai...:__init__          :  77] | 🐞   Is Hybrid Input: False
+2025-12-03 09:15:09 | DEBUG    | [pretrai...:__init__          :  80] | 🐞   Unfreeze Strategy (Encoder Blocks): encoder_tail
+2025-12-03 09:15:09 | DEBUG    | [pretrai...:__init__          :  82] | 🐞   Num Transformer Blocks to Unfreeze: 6
+2025-12-03 09:15:09 | DEBUG    | [pretrai...:__init__          :  83] | 🐞   Unfreeze CLS: True, PosEmb: True, PatchEmb: False, EncoderLN: True
+2025-12-03 09:15:09 | DEBUG    | [pretrai...:__init__          :  85] | 🐞   Custom Head Hidden Dims: None, Head Dropout: 0.5
+2025-12-03 09:15:10 | DEBUG    | [pretrai...:__init__          : 106] | 🐞 Loaded vit_b_16 from torchvision.
+2025-12-03 09:15:10 | DEBUG    | [pretrai...:__init__          : 283] | 🐞 Created simple linear head (dropout: 0.5), in_feat=768.
+2025-12-03 09:15:10 | INFO     | [pretrai...:__init__          : 293] | ℹ️ PretrainedViT (standard) - Trainable: CLS Token, Positional Embeddings, 6 Encoder Blocks, Encoder LayerNorm, Classification Head.
+2025-12-03 09:15:10 | INFO     | [pretrai...:__init__          : 313] | ℹ️ PretrainedViT (standard): Trainable params: 42.69M / Total params: 85.80M (49.75%)
+2025-12-03 09:15:10 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 1520 original samples.
+2025-12-03 09:15:10 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-12-03 09:15:10 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 13680 samples.
+2025-12-03 09:15:10 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=13680, batch_size=16, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 09:15:10 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=1520, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 09:18:26 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp           lr      dur
+2025-12-03 09:18:26 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ----------  -------
+2025-12-03 09:18:26 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.7995      ▼ 0.5125     ▲ 0.8579      ▼ 0.3754        4.9975e-05  196.237
+2025-12-03 09:21:41 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.8490      ▼ 0.3858        0.852      ▼ 0.3687        4.9901e-05  194.372
+2025-12-03 09:24:57 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.8701      ▼ 0.3399     ▲ 0.8632      ▼ 0.3570        4.9778e-05  196.578
+2025-12-03 09:28:11 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.8731      ▼ 0.3234     ▲ 0.8730      ▼ 0.3319        4.9606e-05  193.772
+2025-12-03 09:31:28 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.8817      ▼ 0.3055     ▲ 0.8737        0.3371        4.9386e-05  197.083
+2025-12-03 09:34:44 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6     ▲ 0.8858      ▼ 0.2880     ▲ 0.8770      ▼ 0.3281        4.9117e-05  195.814
+2025-12-03 09:37:59 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7     ▲ 0.8909      ▼ 0.2801       0.8678        0.3618        4.8801e-05  194.721
+2025-12-03 09:41:15 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8     ▲ 0.8955      ▼ 0.2711     ▲ 0.8914      ▼ 0.2898        4.8438e-05  195.554
+2025-12-03 09:44:30 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9     ▲ 0.8979      ▼ 0.2638       0.8862        0.3082        4.8028e-05  194.829
+2025-12-03 09:47:46 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10     ▲ 0.9003      ▼ 0.2531       0.8763        0.3271        4.7574e-05  195.742
+2025-12-03 09:51:00 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11     ▲ 0.9051      ▼ 0.2451     ▲ 0.9013      ▼ 0.2783        4.7075e-05  194.367
+2025-12-03 09:54:15 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12     ▲ 0.9076      ▼ 0.2371       0.8914        0.3033        4.6532e-05  195.134
+2025-12-03 09:57:30 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13     ▲ 0.9104      ▼ 0.2317        0.877        0.3268        4.5947e-05  194.077
+2025-12-03 10:00:48 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14     ▲ 0.9134      ▼ 0.2219       0.8829         0.318        4.5321e-05  197.962
+2025-12-03 10:04:00 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15     ▲ 0.9148      ▼ 0.2151          0.9        0.2877        4.4655e-05  191.79
+2025-12-03 10:07:18 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9164      ▼ 0.2082       0.8961        0.3057        4.395e-05  198.165
+2025-12-03 10:10:32 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17     ▲ 0.9201      ▼ 0.2069       0.8908        0.3147        4.3208e-05  194.187
+2025-12-03 10:13:49 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18     ▲ 0.9213      ▼ 0.2005       0.8961        0.2861        4.2431e-05  196.798
+2025-12-03 10:17:03 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19     ▲ 0.9262      ▼ 0.1928       0.8921        0.3225        4.1619e-05  194.125
+2025-12-03 10:20:19 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20       0.9232      ▼ 0.1897       0.8908        0.3134        4.0776e-05  195.71
+2025-12-03 10:23:36 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21     ▲ 0.9285      ▼ 0.1818       0.8849         0.329        3.9901e-05  196.148
+2025-12-03 10:26:51 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22     ▲ 0.9294      ▼ 0.1748       0.8974        0.3186        3.8997e-05  194.92
+2025-12-03 10:30:05 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23     ▲ 0.9314      ▼ 0.1709     ▲ 0.9026        0.3065        3.8066e-05  194.25
+2025-12-03 10:33:20 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24     ▲ 0.9340      ▼ 0.1674       0.8954        0.3051        3.711e-05  195.088
+2025-12-03 10:36:38 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25     ▲ 0.9368      ▼ 0.1592       0.8796        0.3637        3.613e-05  197.764
+2025-12-03 10:39:51 | INFO     | [pipeline  :cv_model_evalua...:1500] | ℹ️ Using best model from epoch 26
+2025-12-03 10:39:51 | INFO     | [pipeline  :cv_model_evalua...:1503] | ℹ️ Evaluating model on outer test set for fold 4...
+2025-12-03 10:39:51 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 10:40:10 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 10:40:29 | DEBUG    | [pipeline  :_compute_metrics  : 479] | 🐞 Computed Metrics: Acc=0.8955, Macro F1=0.9005
+2025-12-03 10:40:29 | INFO     | [pipeline  :cv_model_evalua...:1522] | ℹ️ Fold 4 Test Scores: Acc=0.8955, F1=0.9005
+2025-12-03 10:40:29 | INFO     | [pipeline  :cv_model_evalua...:1451] | ℹ️ --- Starting CV Evaluation Fold 5/5 ---
+2025-12-03 10:40:29 | DEBUG    | [pipeline  :cv_model_evalua...:1457] | 🐞 Outer split (full set): 15200 train / 3800 test samples.
+2025-12-03 10:40:29 | DEBUG    | [pipeline  :cv_model_evalua...:1476] | 🐞 Fold 5: Internal split: ~13680 train / ~1520 valid.
+2025-12-03 10:40:29 | INFO     | [pipeline  :cv_model_evalua...:1486] | ℹ️ Fitting model for fold 5...
+2025-12-03 10:40:29 | DEBUG    | [pretrai...:__init__          :  75] | 🐞 Initializing PretrainedViT:
+2025-12-03 10:40:29 | DEBUG    | [pretrai...:__init__          :  76] | 🐞   Model Variant: vit_b_16, Pretrained: True
+2025-12-03 10:40:29 | DEBUG    | [pretrai...:__init__          :  77] | 🐞   Is Hybrid Input: False
+2025-12-03 10:40:29 | DEBUG    | [pretrai...:__init__          :  80] | 🐞   Unfreeze Strategy (Encoder Blocks): encoder_tail
+2025-12-03 10:40:29 | DEBUG    | [pretrai...:__init__          :  82] | 🐞   Num Transformer Blocks to Unfreeze: 6
+2025-12-03 10:40:29 | DEBUG    | [pretrai...:__init__          :  83] | 🐞   Unfreeze CLS: True, PosEmb: True, PatchEmb: False, EncoderLN: True
+2025-12-03 10:40:29 | DEBUG    | [pretrai...:__init__          :  85] | 🐞   Custom Head Hidden Dims: None, Head Dropout: 0.5
+2025-12-03 10:40:29 | DEBUG    | [pretrai...:__init__          : 106] | 🐞 Loaded vit_b_16 from torchvision.
+2025-12-03 10:40:29 | DEBUG    | [pretrai...:__init__          : 283] | 🐞 Created simple linear head (dropout: 0.5), in_feat=768.
+2025-12-03 10:40:29 | INFO     | [pretrai...:__init__          : 293] | ℹ️ PretrainedViT (standard) - Trainable: CLS Token, Positional Embeddings, 6 Encoder Blocks, Encoder LayerNorm, Classification Head.
+2025-12-03 10:40:29 | INFO     | [pretrai...:__init__          : 313] | ℹ️ PretrainedViT (standard): Trainable params: 42.69M / Total params: 85.80M (49.75%)
+2025-12-03 10:40:29 | DEBUG    | [adapter   :get_split_datasets: 205] | 🐞 Validation split for fold created with 1520 original samples.
+2025-12-03 10:40:30 | DEBUG    | [adapter   :get_split_datasets: 245] | 🐞 No offline augmentations will be applied.
+2025-12-03 10:40:30 | DEBUG    | [adapter   :get_split_datasets: 252] | 🐞 Total training split for fold created with 13680 samples.
+2025-12-03 10:40:30 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for training: dataset_len=13680, batch_size=16, shuffle=True, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 10:40:30 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=1520, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 10:43:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️   epoch    train_acc    train_loss    valid_acc    valid_loss   cp           lr      dur
+2025-12-03 10:43:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️ -------  -----------  ------------  -----------  ------------  ----  ----------  -------
+2025-12-03 10:43:47 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       1     ▲ 0.8018      ▼ 0.5160     ▲ 0.8395      ▼ 0.4131        4.9975e-05  197.415
+2025-12-03 10:47:01 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       2     ▲ 0.8493      ▼ 0.3842     ▲ 0.8651      ▼ 0.3418        4.9901e-05  193.949
+2025-12-03 10:50:17 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       3     ▲ 0.8641      ▼ 0.3496       0.8592        0.3511        4.9778e-05  195.322
+2025-12-03 10:53:32 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       4     ▲ 0.8736      ▼ 0.3267     ▲ 0.8697      ▼ 0.3354        4.9606e-05  195.494
+2025-12-03 10:56:48 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       5     ▲ 0.8797      ▼ 0.3057       0.8671        0.3395        4.9386e-05  195.706
+2025-12-03 11:00:02 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       6     ▲ 0.8871      ▼ 0.2955       0.8678        0.3396        4.9117e-05  194.239
+2025-12-03 11:03:17 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       7     ▲ 0.8874      ▼ 0.2800       0.8632        0.3945        4.8801e-05  194.931
+2025-12-03 11:06:35 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       8     ▲ 0.8943      ▼ 0.2712     ▲ 0.8757        0.3468        4.8438e-05  197.024
+2025-12-03 11:09:48 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️       9     ▲ 0.9009      ▼ 0.2573       0.8651          0.39        4.8028e-05  193.708
+2025-12-03 11:13:04 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      10       0.9007      ▼ 0.2546     ▲ 0.8763      ▼ 0.3244        4.7574e-05  195.489
+2025-12-03 11:16:17 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      11     ▲ 0.9056      ▼ 0.2425       0.8724      ▼ 0.3212        4.7075e-05  193.102
+2025-12-03 11:19:34 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      12     ▲ 0.9085      ▼ 0.2362       0.8743        0.3356        4.6532e-05  196.307
+2025-12-03 11:22:49 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      13     ▲ 0.9113      ▼ 0.2287        0.875        0.3355        4.5947e-05  194.963
+2025-12-03 11:26:05 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      14       0.9097      ▼ 0.2282       0.8625         0.416        4.5321e-05  195.891
+2025-12-03 11:29:19 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      15     ▲ 0.9146      ▼ 0.2153     ▲ 0.8796        0.3302        4.4655e-05  194.569
+2025-12-03 11:32:35 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      16     ▲ 0.9176      ▼ 0.2129     ▲ 0.8875        0.3281        4.395e-05  195.71
+2025-12-03 11:35:51 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      17     ▲ 0.9206      ▼ 0.2020       0.8842        0.3398        4.3208e-05  195.685
+2025-12-03 11:39:07 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      18       0.9186         0.204       0.8816        0.3221        4.2431e-05  195.538
+2025-12-03 11:42:23 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      19     ▲ 0.9241      ▼ 0.1898     ▲ 0.8914      ▼ 0.3173        4.1619e-05  196.189
+2025-12-03 11:45:37 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      20       0.9236        0.1936       0.8763         0.367        4.0776e-05  193.514
+2025-12-03 11:48:53 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      21     ▲ 0.9260      ▼ 0.1860        0.877         0.373        3.9901e-05  196.414
+2025-12-03 11:52:07 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      22     ▲ 0.9309      ▼ 0.1747       0.8849        0.3489        3.8997e-05  194.037
+2025-12-03 11:55:24 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      23       0.9285        0.1787       0.8763        0.3501        3.8066e-05  196.705
+2025-12-03 11:58:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      24     ▲ 0.9333      ▼ 0.1709        0.877        0.3414        3.711e-05  195.375
+2025-12-03 12:01:55 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      25       0.9328      ▼ 0.1693       0.8789        0.3386        3.613e-05  195.308
+2025-12-03 12:05:10 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      26       0.9327      ▼ 0.1638       0.8888        0.3515        3.5129e-05  195.183
+2025-12-03 12:08:25 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      27     ▲ 0.9356      ▼ 0.1583       0.8842        0.3453        3.4109e-05  194.868
+2025-12-03 12:11:40 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      28     ▲ 0.9404      ▼ 0.1514       0.8862        0.3448        3.3071e-05  194.345
+2025-12-03 12:14:55 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      29     ▲ 0.9424      ▼ 0.1484       0.8822         0.348        3.2018e-05  195.294
+2025-12-03 12:18:12 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      30     ▲ 0.9435      ▼ 0.1462       0.8862        0.3817        3.0952e-05  196.988
+2025-12-03 12:21:27 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      31         0.94        0.1488       0.8783        0.3743        2.9875e-05  194.612
+2025-12-03 12:24:45 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      32     ▲ 0.9439      ▼ 0.1420     ▲ 0.8954        0.3332        2.8789e-05  198.175
+2025-12-03 12:27:59 | INFO     | [callbacks :on_epoch_end      : 131] | ℹ️      33     ▲ 0.9455      ▼ 0.1398       0.8822        0.3556        2.7696e-05  193.846
+2025-12-03 12:31:17 | INFO     | [pipeline  :cv_model_evalua...:1500] | ℹ️ Using best model from epoch 34
+2025-12-03 12:31:17 | INFO     | [pipeline  :cv_model_evalua...:1503] | ℹ️ Evaluating model on outer test set for fold 5...
+2025-12-03 12:31:17 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 12:31:36 | DEBUG    | [adapter   :get_iterator      : 373] | 🐞 Creating DataLoader for validation/evaluation: dataset_len=3800, batch_size=16, shuffle=False, drop_last=False, collate_fn_type='function', loader_kwargs={'num_workers': 0, 'pin_memory': False}
+2025-12-03 12:31:54 | DEBUG    | [pipeline  :_compute_metrics  : 479] | 🐞 Computed Metrics: Acc=0.8932, Macro F1=0.8971
+2025-12-03 12:31:54 | INFO     | [pipeline  :cv_model_evalua...:1522] | ℹ️ Fold 5 Test Scores: Acc=0.8932, F1=0.8971
+2025-12-03 12:31:54 | DEBUG    | [pipeline  :_save_results     : 527] | 🐞 Results detail level overridden for this run to: 2
+2025-12-03 12:31:54 | DEBUG    | [pipeline  :_save_results     : 534] | 🐞 Saving results for cv_model_evaluation_full_025151 (detail level: 2)
+2025-12-03 12:31:55 | INFO     | [pipeline  :_save_results     : 632] | ℹ️ Results JSON saved via repository to: experiments/GCD/pvit/20251203_025151_seed42/cv_model_evaluation_full_025151/cv_model_evaluation_results.json
+2025-12-03 12:31:55 | INFO     | [pipeline  :cv_model_evalua...:1632] | ℹ️ Plotting cv for eval results for cv_model_evaluation_full_025151 (plot level 2).
+2025-12-03 12:31:55 | INFO     | [plotter   :plot_cv_model_e...: 834] | ℹ️ Plotting cv_model_evaluation results for: cv_model_evaluation_full_025151
+2025-12-03 12:31:55 | INFO     | [plotter   :_generate_aggre...: 296] | ℹ️ Aggregated metrics CSV saved via repository to: experiments/GCD/pvit/20251203_025151_seed42/cv_model_evaluation_full_025151/cv_model_evaluation_plots/aggregated_metrics_table.csv
+2025-12-03 12:31:56 | INFO     | [plotter   :plot_cv_model_e...: 889] | ℹ️ Generating grouped plots per fold for 5 folds...
+2025-12-03 12:32:03 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/GCD/pvit/20251203_025151_seed42/cv_model_evaluation_full_025151/cv_model_evaluation_plots/fold_1_metrics_table.csv
+2025-12-03 12:32:03 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/GCD/pvit/20251203_025151_seed42/cv_model_evaluation_full_025151/cv_model_evaluation_plots/fold_2_metrics_table.csv
+2025-12-03 12:32:03 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/GCD/pvit/20251203_025151_seed42/cv_model_evaluation_full_025151/cv_model_evaluation_plots/fold_3_metrics_table.csv
+2025-12-03 12:32:03 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/GCD/pvit/20251203_025151_seed42/cv_model_evaluation_full_025151/cv_model_evaluation_plots/fold_4_metrics_table.csv
+2025-12-03 12:32:03 | INFO     | [plotter   :_generate_metri...: 241] | ℹ️ Metrics CSV saved via repository to: experiments/GCD/pvit/20251203_025151_seed42/cv_model_evaluation_full_025151/cv_model_evaluation_plots/fold_5_metrics_table.csv
+2025-12-03 12:32:03 | INFO     | [plotter   :plot_cv_model_e...:1038] | ℹ️ Finished plotting for cv_model_evaluation: cv_model_evaluation_full_025151
+2025-12-03 12:32:03 | INFO     | [pipeline  :cv_model_evalua...:1648] | ℹ️ CV Evaluation Summary (on full data, 5 folds, 95% CI):
+2025-12-03 12:32:03 | INFO     | [pipeline  :cv_model_evalua...:1654] | ℹ️   Accuracy            : 0.8987 +/- 0.0100
+2025-12-03 12:32:03 | INFO     | [pipeline  :cv_model_evalua...:1654] | ℹ️   F1 Macro            : 0.8998 +/- 0.0119
+2025-12-03 12:32:03 | INFO     | [pipeline  :cv_model_evalua...:1654] | ℹ️   Precision Macro     : 0.8990 +/- 0.0163
+2025-12-03 12:32:03 | INFO     | [pipeline  :cv_model_evalua...:1654] | ℹ️   Recall Macro        : 0.9021 +/- 0.0082
+2025-12-03 12:32:03 | INFO     | [pipeline  :cv_model_evalua...:1654] | ℹ️   Specificity Macro   : 0.9818 +/- 0.0016
+2025-12-03 12:32:03 | INFO     | [pipeline  :cv_model_evalua...:1654] | ℹ️   Roc Auc Macro       : 0.9903 +/- 0.0011
+2025-12-03 12:32:03 | INFO     | [pipeline  :cv_model_evalua...:1654] | ℹ️   Pr Auc Macro        : 0.9578 +/- 0.0068
+2025-12-03 12:32:03 | INFO     | [executor  :run               : 298] | ℹ️ --- Method cv_model_evaluation (Op ID: cv_model_evaluation_0) completed successfully in 34811.50s ---
+2025-12-03 12:32:03 | INFO     | [executor  :run               : 355] | ℹ️ Pipeline execution finished successfully in 34811.50s for Executor Run ID: 20251203_025151_seed42.
+2025-12-03 12:32:03 | INFO     | [executor  :run               : 361] | ℹ️ Executor run for 20251203_025151_seed42 attempting final log operations.
+2025-12-03 12:32:03 | DEBUG    | [executor  :_upload_and_cle...: 207] | 🐞 Flushing and closing log handler for: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD\pvit\20251203_025151_seed42\executor_run_20251203_025151_seed42.log before upload/cleanup.
+2025-12-03 12:32:03 | INFO     | [executor  :_upload_and_cle...: 233] | ℹ️ Main executor log file available at: C:\Users\Stefan Alexandrescu\Documents\GitHub\UBB-Y3-AI-Research\model_src\experiments\GCD\pvit\20251203_025151_seed42\executor_run_20251203_025151_seed42.log
+2025-12-03 12:32:03 | INFO     | [main      :<module>          : 346] | ℹ️ --- Final Execution Results Summary ---
+2025-12-03 12:32:03 | INFO     | [main      :<module>          : 357] | ℹ️ Method executor_run_id: Completed. Result: 20251203_025151_seed42
+2025-12-03 12:32:03 | INFO     | [main      :<module>          : 357] | ℹ️ Method seed_used: Completed. Result: 42
+2025-12-03 12:32:03 | INFO     | [main      :<module>          : 354] | ℹ️ Method cv_model_evaluation_0: Completed. (Acc: 0.8987, F1: 0.8998, BestScore: nan)

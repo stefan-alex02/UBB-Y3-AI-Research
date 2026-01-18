@@ -398,6 +398,52 @@ def get_no_augmentation_transform(img_size: Tuple[int, int]) -> transforms.Compo
     ])
 
 
+def get_ccsn_resnet_augmentations(img_size: Tuple[int, int] = (224, 224)) -> transforms.Compose:
+    """
+    A strong augmentation set for fine-tuning on CCSN, which has ground elements.
+    Avoids aggressive rotations and vertical flips.
+    """
+    return transforms.Compose([
+        # Use RandomResizedCrop to handle varying image sizes/aspect ratios from original dataset
+        # and provide scale (zoom) and crop augmentation.
+        transforms.RandomResizedCrop(img_size, scale=(0.8, 1.0)),
+
+        transforms.RandomHorizontalFlip(p=0.5),
+
+        # ColorJitter is a very effective augmentation.
+        transforms.ColorJitter(brightness=0.3, contrast=0.3, saturation=0.3, hue=0.1),
+
+        # Optional: Add small affine transforms for more diversity
+        transforms.RandomAffine(degrees=10, translate=(0.05, 0.05), shear=5),
+
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+
+def get_eurosat_resnet_augmentations(img_size: Tuple[int, int] = (224, 224)) -> transforms.Compose:
+    """
+    A strong augmentation set for fine-tuning on EuroSAT.
+    Includes aggressive geometric transforms suitable for top-down satellite imagery.
+    """
+    return transforms.Compose([
+        transforms.RandomResizedCrop(img_size, scale=(0.8, 1.0)),
+
+        # Be aggressive with flips and rotations
+        transforms.RandomHorizontalFlip(p=0.5),
+        transforms.RandomVerticalFlip(p=0.5),  # Vertical flips are okay for top-down view
+        transforms.RandomRotation(degrees=90),  # Allow rotations up to 90 degrees
+
+        transforms.ColorJitter(brightness=0.4, contrast=0.4, saturation=0.4, hue=0.1),
+
+        # Optional but often helpful for satellite images:
+        transforms.RandomGrayscale(p=0.1),  # Sometimes texture is more important than color
+
+        transforms.ToTensor(),
+        transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])
+    ])
+
+
 class ImageDatasetHandler:
     """
     Handles loading and managing image datasets for deep learning applications.
@@ -500,6 +546,10 @@ class ImageDatasetHandler:
             self.train_transform = get_paper_replication_augmentation_ccsn(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.DEFAULT_STANDARD:
             self.train_transform = get_default_standard_augmentations(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.CCSN_RESNET:
+            self.train_transform = get_ccsn_resnet_augmentations(self.img_size)
+        elif self.augmentation_strategy_enum == AugmentationStrategy.EUROSAT_RESNET:
+            self.train_transform = get_eurosat_resnet_augmentations(self.img_size)
         elif self.augmentation_strategy_enum == AugmentationStrategy.NO_AUGMENTATION:
             self.train_transform = self.eval_transform
         else:
