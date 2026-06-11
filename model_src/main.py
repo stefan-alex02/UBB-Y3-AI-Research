@@ -1,6 +1,6 @@
 import traceback
 from pathlib import Path, PurePath
-from typing import List
+from typing import List, Any
 
 import numpy as np
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "GCD"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
+    selected_dataset = "ccsn"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
     # selected_dataset = selected_dataset.lower()
 
     # Select Model:
@@ -98,7 +98,7 @@ if __name__ == "__main__":
 
     username: str = 'eugen2'
 
-    images_to_predict_info: List[any] = [
+    images_to_predict_info: List[Any] = [
         # ImagePredictionTask(image_id='TG Mures_25-05-2025_square', image_format='jpg', prediction_id='p1'),
         # ImagePredictionTask(image_id='Brasov_18-05-2025_square', image_format='png', prediction_id='p2'),
         # ImagePredictionTask(image_id='Brasov_19-05-2025_square', image_format='png', prediction_id='p3'),
