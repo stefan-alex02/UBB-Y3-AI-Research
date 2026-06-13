@@ -50,7 +50,7 @@ if __name__ == "__main__":
     # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet', 'cloudnet'
 
     # Weights for class imbalance
-    use_weighted_loss_for_run = False
+    use_weighted_loss_for_run = True
 
 
     # Offline Augmentation:
