@@ -42,7 +42,7 @@ if __name__ == "__main__":
 
     # --- Configuration ---
     # Select Dataset:
-    selected_dataset = "GCD"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
+    selected_dataset = "ccsn"  # 'GCD', 'GCDf', 'mGCD', 'mGCDf', 'swimcat', 'ccsn', 'eurosat'
     # selected_dataset = selected_dataset.lower()
 
     # Select Model:
@@ -50,11 +50,11 @@ if __name__ == "__main__":
     # 'cnn', 'pvit', 'swin', 'svit', 'hyvit', 'cnn_feat', 'stfeat', 'xcloud', 'mcloud', 'resnet', 'shufflenet', 'cloudnet'
 
     # Weights for class imbalance
-    use_weighted_loss_for_run = True
+    use_weighted_loss_for_run = False
 
 
     # Offline Augmentation:
-    offline_augmentation = False
+    offline_augmentation = True
 
     # Chosen sequence index: (1-7)
     # 1: Single Train and Eval
@@ -64,7 +64,7 @@ if __name__ == "__main__":
     # 5: Non-Nested Grid Search + CV Evaluation (Requires FLAT or FIXED with force_flat=True)
     # 6: Load Pre-trained and Evaluate
     # 7: Load Pre-trained and Predict on New Images
-    chosen_sequence_idx = 1
+    chosen_sequence_idx = 4
 
     # Image size for the model
     img_size = (224, 224)
